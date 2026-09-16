@@ -18,10 +18,16 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [lastResponse, setLastResponse] = useState<AgentResponse | null>(null);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const pulseOrb = useCallback(() => {
+    const target = document.querySelector<HTMLElement>('[aria-label="Apex core - tap to energize"]');
+    target?.click();
+  }, []);
+
   const send = useCallback(async (message: string) => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
     setOrbState("thinking");
     setActiveAgent("Chief");
+    pulseOrb();
 
     const response = await fetch("/api/agent", {
       method: "POST",
@@ -39,14 +45,16 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setLastResponse(result);
     setActiveAgent(result.agentName);
     setOrbState("speaking");
+    pulseOrb();
 
     resetTimer.current = setTimeout(() => {
       setOrbState("idle");
       setActiveAgent(null);
+      pulseOrb();
     }, 6000);
 
     return result;
-  }, []);
+  }, [pulseOrb]);
 
   const value = useMemo(
     () => ({ orbState, activeAgent, lastResponse, send }),
