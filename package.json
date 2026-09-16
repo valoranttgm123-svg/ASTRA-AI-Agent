@@ -1,6 +1,6 @@
 {
-  "name": "astra-ai-agent",
-  "version": "0.1.0",
+  "name": "apex-ui",
+  "version": "1.0.0",
   "description": "ASTRA personal multi-agent AI interface built on the APEX-UI visual foundation.",
   "license": "MIT",
   "private": false,
