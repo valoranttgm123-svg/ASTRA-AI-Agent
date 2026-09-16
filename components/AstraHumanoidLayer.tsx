@@ -18,23 +18,18 @@ export default function AstraHumanoidLayer() {
         overflow: "hidden",
       }}
     >
-      {/*
-        Central visual well. This intentionally sits above the legacy APEX orb
-        and reasoning-web centre so the live humanoid is the primary interface.
-        The graph remains visible around the outside edge.
-      */}
       <div
         style={{
           position: "absolute",
           left: "50%",
-          top: "48%",
-          width: "min(900px, 72vw)",
-          height: "min(900px, 94vh)",
+          top: "47%",
+          width: "min(720px, 58vw)",
+          height: "min(780px, 88vh)",
           transform: "translate(-50%, -50%)",
-          borderRadius: "46%",
+          borderRadius: "50%",
           background:
-            "radial-gradient(ellipse at 50% 43%, rgba(2,8,15,.995) 0%, rgba(2,10,19,.98) 34%, rgba(3,14,25,.93) 50%, rgba(3,19,32,.60) 67%, rgba(3,19,32,.12) 78%, transparent 86%)",
-          boxShadow: "inset 0 0 120px rgba(0,220,255,.035)",
+            "radial-gradient(ellipse at 50% 45%, rgba(0,229,255,.105) 0%, rgba(0,185,230,.045) 33%, rgba(0,115,170,.015) 54%, transparent 72%)",
+          filter: "blur(8px)",
         }}
       />
 
@@ -43,10 +38,10 @@ export default function AstraHumanoidLayer() {
           position: "absolute",
           left: "50%",
           top: "49%",
-          width: "min(900px, 72vw)",
-          height: "min(900px, 94vh)",
+          width: "min(940px, 76vw)",
+          height: "min(920px, 96vh)",
           transform: "translate(-50%, -50%)",
-          filter: "drop-shadow(0 0 28px rgba(0,229,255,.22))",
+          filter: "drop-shadow(0 0 32px rgba(0,229,255,.30))",
         }}
       >
         <AstraLiveHumanoid state={avatarState} speechLevel={speechLevel} />
