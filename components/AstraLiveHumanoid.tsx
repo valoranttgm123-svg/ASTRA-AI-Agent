@@ -31,15 +31,15 @@ function LiveRig({ state, speechLevel = 0 }: Props) {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
     };
-    for (let i = 0; i < 520; i += 1) {
+    for (let i = 0; i < 760; i += 1) {
       const a = rand() * Math.PI * 2;
       const u = rand() * 2 - 1;
       const shell = 1.02 + rand() * 0.38;
       const s = Math.sqrt(Math.max(0, 1 - u * u));
       data.push(
-        Math.cos(a) * s * 0.86 * shell,
-        2.22 + u * 1.05 * shell,
-        Math.sin(a) * s * 0.72 * shell,
+        Math.cos(a) * s * 0.92 * shell,
+        2.22 + u * 1.08 * shell,
+        Math.sin(a) * s * 0.76 * shell,
       );
     }
     return new Float32Array(data);
@@ -129,27 +129,27 @@ function LiveRig({ state, speechLevel = 0 }: Props) {
   const active = state !== "idle";
   const speaking = state === "speaking";
   const thinking = state === "thinking";
-  const energy = speaking ? "#ffae38" : thinking ? "#c9fbff" : "#13e8ff";
+  const energy = speaking ? "#ffae38" : thinking ? "#d9fdff" : "#17edff";
 
   return (
-    <group ref={root} position={[0, -0.05, 0]}>
+    <group ref={root} position={[0, -0.12, 0]} scale={[1.12, 1.12, 1.12]}>
       <group ref={shoulders} position={[0, -0.64, 0]}>
         <mesh scale={[2.15, 0.72, 0.72]}>
           <sphereGeometry args={[1, 72, 48]} />
           <meshStandardMaterial
-            color="#062a35"
+            color="#0a5260"
             emissive={energy}
-            emissiveIntensity={active ? 0.72 : 0.42}
+            emissiveIntensity={active ? 1.55 : 1.08}
             transparent
-            opacity={0.25}
-            roughness={0.42}
-            metalness={0.18}
+            opacity={0.56}
+            roughness={0.32}
+            metalness={0.08}
             depthWrite={false}
           />
         </mesh>
         <mesh scale={[2.18, 0.74, 0.74]}>
           <sphereGeometry args={[1, 40, 28]} />
-          <meshBasicMaterial color={energy} wireframe transparent opacity={0.075} depthWrite={false} />
+          <meshBasicMaterial color={energy} wireframe transparent opacity={0.24} depthWrite={false} />
         </mesh>
       </group>
 
@@ -157,11 +157,11 @@ function LiveRig({ state, speechLevel = 0 }: Props) {
         <mesh scale={[0.5, 0.92, 0.48]}>
           <cylinderGeometry args={[0.58, 0.66, 1.25, 48, 8, true]} />
           <meshStandardMaterial
-            color="#06323d"
+            color="#0b4a56"
             emissive={energy}
-            emissiveIntensity={0.55}
+            emissiveIntensity={1.25}
             transparent
-            opacity={0.28}
+            opacity={0.52}
             depthWrite={false}
           />
         </mesh>
@@ -171,39 +171,39 @@ function LiveRig({ state, speechLevel = 0 }: Props) {
         <mesh scale={[0.9, 1.12, 0.78]}>
           <sphereGeometry args={[1, 96, 64]} />
           <meshStandardMaterial
-            color="#071f28"
+            color="#0a414c"
             emissive={energy}
-            emissiveIntensity={active ? 0.95 : 0.58}
+            emissiveIntensity={active ? 1.85 : 1.28}
             transparent
-            opacity={0.31}
-            roughness={0.38}
-            metalness={0.1}
+            opacity={0.62}
+            roughness={0.26}
+            metalness={0.06}
             depthWrite={false}
           />
         </mesh>
-        <mesh scale={[0.905, 1.125, 0.785]}>
-          <sphereGeometry args={[1, 44, 32]} />
-          <meshBasicMaterial color={energy} wireframe transparent opacity={active ? 0.14 : 0.09} depthWrite={false} />
+        <mesh scale={[0.908, 1.13, 0.79]}>
+          <sphereGeometry args={[1, 52, 38]} />
+          <meshBasicMaterial color={energy} wireframe transparent opacity={active ? 0.34 : 0.27} depthWrite={false} />
         </mesh>
 
-        <mesh ref={leftEye} position={[-0.31, 0.12, 0.72]} scale={[0.18, 0.035, 0.035]}>
+        <mesh ref={leftEye} position={[-0.31, 0.12, 0.72]} scale={[0.2, 0.038, 0.038]}>
           <sphereGeometry args={[1, 24, 16]} />
-          <meshBasicMaterial color="#bffcff" transparent opacity={active ? 0.78 : 0.48} depthWrite={false} />
+          <meshBasicMaterial color="#e0ffff" transparent opacity={active ? 1 : 0.86} depthWrite={false} />
         </mesh>
-        <mesh ref={rightEye} position={[0.31, 0.12, 0.72]} scale={[0.18, 0.035, 0.035]}>
+        <mesh ref={rightEye} position={[0.31, 0.12, 0.72]} scale={[0.2, 0.038, 0.038]}>
           <sphereGeometry args={[1, 24, 16]} />
-          <meshBasicMaterial color="#bffcff" transparent opacity={active ? 0.78 : 0.48} depthWrite={false} />
+          <meshBasicMaterial color="#e0ffff" transparent opacity={active ? 1 : 0.86} depthWrite={false} />
         </mesh>
 
         <group ref={jaw} position={[0, -0.47, 0.04]}>
           <mesh scale={[0.61, 0.36, 0.6]}>
             <sphereGeometry args={[1, 48, 32, 0, Math.PI * 2, Math.PI * 0.44, Math.PI * 0.56]} />
             <meshStandardMaterial
-              color="#06252f"
+              color="#0b4652"
               emissive={speaking ? "#ff9d2e" : energy}
-              emissiveIntensity={speaking ? 1.1 : 0.5}
+              emissiveIntensity={speaking ? 2.1 : 1.1}
               transparent
-              opacity={0.27}
+              opacity={0.54}
               depthWrite={false}
             />
           </mesh>
@@ -215,10 +215,10 @@ function LiveRig({ state, speechLevel = 0 }: Props) {
           <bufferAttribute attach="attributes-position" args={[particles, 3]} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.018}
+          size={0.024}
           color={energy}
           transparent
-          opacity={active ? 0.64 : 0.34}
+          opacity={active ? 0.88 : 0.64}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           sizeAttenuation
@@ -227,12 +227,12 @@ function LiveRig({ state, speechLevel = 0 }: Props) {
 
       <group ref={halo} position={[0, 1.75, -0.55]}>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[1.45, 0.012, 6, 96]} />
-          <meshBasicMaterial color="#10e7ff" transparent opacity={0.18} depthWrite={false} />
+          <torusGeometry args={[1.45, 0.015, 8, 110]} />
+          <meshBasicMaterial color="#17edff" transparent opacity={0.38} depthWrite={false} />
         </mesh>
         <mesh rotation={[Math.PI / 2.4, 0.2, 0.15]}>
-          <torusGeometry args={[1.72, 0.009, 6, 96]} />
-          <meshBasicMaterial color={speaking ? "#ffae38" : "#10e7ff"} transparent opacity={0.1} depthWrite={false} />
+          <torusGeometry args={[1.72, 0.011, 8, 110]} />
+          <meshBasicMaterial color={speaking ? "#ffae38" : "#17edff"} transparent opacity={0.24} depthWrite={false} />
         </mesh>
       </group>
     </group>
@@ -242,14 +242,15 @@ function LiveRig({ state, speechLevel = 0 }: Props) {
 export default function AstraLiveHumanoid({ state, speechLevel = 0 }: Props) {
   return (
     <Canvas
-      camera={{ position: [0, 1.1, 6.6], fov: 39, near: 0.1, far: 30 }}
-      dpr={[1, 1.4]}
+      camera={{ position: [0, 1.08, 5.55], fov: 42, near: 0.1, far: 30 }}
+      dpr={[1, 1.5]}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       style={{ width: "100%", height: "100%", pointerEvents: "none" }}
     >
-      <ambientLight intensity={0.22} />
-      <pointLight position={[0, 3.4, 3.8]} intensity={2.2} color="#7df7ff" />
-      <pointLight position={[2.8, 0.8, 2.4]} intensity={0.8} color="#ff9f31" />
+      <ambientLight intensity={0.62} />
+      <pointLight position={[0, 3.5, 3.8]} intensity={4.2} color="#9afaff" />
+      <pointLight position={[-2.8, 1.3, 2.2]} intensity={1.7} color="#16eaff" />
+      <pointLight position={[2.8, 0.8, 2.4]} intensity={1.45} color="#ff9f31" />
       <LiveRig state={state} speechLevel={speechLevel} />
     </Canvas>
   );
