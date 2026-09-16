@@ -13,12 +13,13 @@ export default function AstraHumanoidLayer() {
       aria-hidden="true"
       style={{
         position: "absolute",
-        inset: "2vh 0 3vh",
-        zIndex: 2,
+        inset: "1vh 0 2vh",
+        zIndex: 5,
         pointerEvents: "none",
-        opacity: 0.74,
-        maskImage: "linear-gradient(to bottom, transparent 0%, black 9%, black 88%, transparent 100%)",
-        WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 9%, black 88%, transparent 100%)",
+        opacity: 0.92,
+        mixBlendMode: "screen",
+        maskImage: "linear-gradient(to bottom, transparent 0%, black 6%, black 91%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 6%, black 91%, transparent 100%)",
       }}
     >
       <AstraHumanoid3D state={orbState} />
@@ -26,14 +27,14 @@ export default function AstraHumanoidLayer() {
         style={{
           position: "absolute",
           left: "50%",
-          top: "13%",
+          top: "8%",
           transform: "translateX(-50%)",
           fontFamily: "var(--font-mono)",
           fontSize: "clamp(8px, 0.8vw, 11px)",
           letterSpacing: "0.22em",
           textTransform: "uppercase",
-          color: "rgba(155,244,255,0.55)",
-          textShadow: "0 0 14px rgba(0,229,255,0.45)",
+          color: "rgba(190,250,255,0.78)",
+          textShadow: "0 0 18px rgba(0,229,255,0.75)",
           whiteSpace: "nowrap",
         }}
       >
