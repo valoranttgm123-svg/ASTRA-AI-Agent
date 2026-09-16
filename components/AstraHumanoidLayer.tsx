@@ -1,7 +1,7 @@
 "use client";
 
 import { useAstraRuntime } from "./AstraRuntime";
-import AstraReferenceEntity from "./AstraReferenceEntity";
+import AstraReferenceEntityV4 from "./AstraReferenceEntityV4";
 
 export default function AstraHumanoidLayer() {
   const { orbState, activeAgent } = useAstraRuntime();
@@ -15,24 +15,24 @@ export default function AstraHumanoidLayer() {
         zIndex: 5,
         pointerEvents: "none",
         overflow: "hidden",
-        maskImage: "linear-gradient(to bottom, transparent 0%, black 2%, black 96%, transparent 100%)",
-        WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 2%, black 96%, transparent 100%)",
+        maskImage: "linear-gradient(to bottom, transparent 0%, black 1.5%, black 97%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 1.5%, black 97%, transparent 100%)",
       }}
     >
-      <AstraReferenceEntity state={orbState} />
+      <AstraReferenceEntityV4 state={orbState} />
 
       <div
         style={{
           position: "absolute",
-          left: "50%",
-          top: "6.5%",
+          left: "53%",
+          top: "4.5%",
           transform: "translateX(-50%)",
           fontFamily: "var(--font-mono)",
-          fontSize: "clamp(8px, 0.72vw, 10px)",
-          letterSpacing: "0.28em",
+          fontSize: "clamp(7px, 0.65vw, 9px)",
+          letterSpacing: "0.26em",
           textTransform: "uppercase",
-          color: "rgba(176,248,255,0.68)",
-          textShadow: "0 0 16px rgba(0,229,255,0.62)",
+          color: "rgba(165,245,255,0.58)",
+          textShadow: "0 0 14px rgba(0,229,255,0.48)",
           whiteSpace: "nowrap",
         }}
       >
