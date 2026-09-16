@@ -4,14 +4,7 @@ import { FormEvent, useState } from "react";
 import { useAstraRuntime } from "./AstraRuntime";
 
 export default function AstraConsole() {
-  const {
-    avatarState,
-    activeAgent,
-    lastResponse,
-    send,
-    voiceEnabled,
-    setVoiceEnabled,
-  } = useAstraRuntime();
+  const { orbState, activeAgent, lastResponse, send } = useAstraRuntime();
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,32 +31,11 @@ export default function AstraConsole() {
       <div className="astra-console__head">
         <div>
           <div className="astra-console__brand">ASTRA</div>
-          <div className="astra-console__subtitle">LIVE HUMANOID CORE</div>
+          <div className="astra-console__subtitle">PERSONAL AI CORE</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            type="button"
-            onClick={() => setVoiceEnabled(!voiceEnabled)}
-            aria-pressed={voiceEnabled}
-            title="Toggle ASTRA voice"
-            style={{
-              border: "1px solid rgba(78,228,255,.24)",
-              background: voiceEnabled ? "rgba(0,229,255,.09)" : "rgba(255,255,255,.025)",
-              color: voiceEnabled ? "rgba(117,242,255,.92)" : "rgba(255,255,255,.42)",
-              borderRadius: 5,
-              padding: "5px 8px",
-              fontFamily: "var(--font-mono)",
-              fontSize: 8,
-              letterSpacing: ".12em",
-              cursor: "pointer",
-            }}
-          >
-            VOICE {voiceEnabled ? "ON" : "OFF"}
-          </button>
-          <div className={`astra-console__state astra-console__state--${avatarState}`}>
-            <span />
-            {activeAgent ? `${activeAgent} · ${avatarState}` : avatarState}
-          </div>
+        <div className={`astra-console__state astra-console__state--${orbState}`}>
+          <span />
+          {activeAgent ? `${activeAgent} · ${orbState}` : orbState}
         </div>
       </div>
 
@@ -76,7 +48,7 @@ export default function AstraConsole() {
             <p>{lastResponse.message}</p>
           </>
         ) : (
-          <p>Ketik perintah. Humanoid akan bereaksi mengikuti state ASTRA.</p>
+          <p>Ketik perintah untuk mengaktifkan ASTRA Core.</p>
         )}
       </div>
 
