@@ -1,7 +1,6 @@
-import AstraWorld from "@/components/AstraWorld";
+import ApexWorld from "@/components/ApexWorld";
 import ApexOverviewPanel from "@/components/ApexOverviewPanel";
 import AstraConsole from "@/components/AstraConsole";
-import AstraHumanoidLayer from "@/components/AstraHumanoidLayer";
 import { AstraRuntimeProvider } from "@/components/AstraRuntime";
 
 export default function Home() {
@@ -14,8 +13,7 @@ export default function Home() {
         <ApexOverviewPanel />
 
         <section style={{ position: "relative", height: "100vh", minHeight: 620 }}>
-          <AstraWorld />
-          <AstraHumanoidLayer />
+          <ApexWorld />
         </section>
 
         <AstraConsole />
