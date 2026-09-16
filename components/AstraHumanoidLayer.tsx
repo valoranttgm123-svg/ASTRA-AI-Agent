@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useAstraRuntime } from "./AstraRuntime";
+import AstraHumanoidFallback from "./AstraHumanoidFallback";
 
 const AstraHumanoid3D = dynamic(() => import("./AstraHumanoid3D"), { ssr: false });
 
@@ -22,7 +23,10 @@ export default function AstraHumanoidLayer() {
         WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 6%, black 91%, transparent 100%)",
       }}
     >
-      <AstraHumanoid3D state={orbState} />
+      <AstraHumanoidFallback state={orbState} />
+      <div style={{ position: "absolute", inset: 0 }}>
+        <AstraHumanoid3D state={orbState} />
+      </div>
       <div
         style={{
           position: "absolute",

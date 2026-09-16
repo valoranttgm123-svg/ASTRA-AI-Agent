@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { OrbState } from "./ApexHeroOrb";
@@ -209,11 +209,27 @@ function Humanoid({ state }: { state: OrbState }) {
 }
 
 export default function AstraHumanoid3D({ state = "idle" }: { state?: OrbState }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) return null;
+
   return (
     <Canvas
       camera={{ position: [0, 0.05, 8.2], fov: 44, near: 0.1, far: 30 }}
-      dpr={[1, 1.5]}
-      gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+      dpr={1}
+      gl={{ alpha: true, antialias: false, powerPreference: "default" }}
+      onCreated={({ gl }) => {
+        const canvas = gl.domElement;
+        canvas.addEventListener(
+          "webglcontextlost",
+          (event) => {
+            event.preventDefault();
+            console.warn("[ASTRA] Humanoid WebGL context lost; switching to persistent fallback.");
+            setFailed(true);
+          },
+          { once: true },
+        );
+      }}
       style={{ width: "100%", height: "100%", pointerEvents: "none" }}
     >
       <Humanoid state={state} />
