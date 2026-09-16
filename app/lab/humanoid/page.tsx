@@ -1,4 +1,4 @@
-import HumanoidLabV5 from "@/components/lab/HumanoidLabV5";
+import HumanoidLabV6 from "@/components/lab/HumanoidLabV6";
 
 export const metadata = {
   title: "ASTRA Humanoid Lab",
@@ -8,7 +8,7 @@ export const metadata = {
 export default function HumanoidLabPage() {
   return (
     <div className="astra-humanoid-lab-route">
-      <HumanoidLabV5 />
+      <HumanoidLabV6 />
       <style>{`
         html,
         body {
