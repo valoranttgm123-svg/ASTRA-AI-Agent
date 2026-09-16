@@ -13,7 +13,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Screen-reader-only content (used by the accessible agent list). */
 .visually-hidden {
   position: absolute !important;
   width: 1px;
@@ -26,9 +25,6 @@ body {
   border: 0;
 }
 
-/* ── Overview lamp panel: pinned to the top-left, out of document flow ──
-   Without position:fixed the panel takes layout height and pushes the world
-   down (leaving a black band at the top). */
 .apex-overview {
   position: fixed;
   top: 10px;
@@ -37,6 +33,142 @@ body {
   max-width: 92vw;
   z-index: 30;
 }
+
+.astra-console {
+  position: fixed;
+  right: clamp(14px, 2.4vw, 34px);
+  bottom: clamp(14px, 2.4vw, 28px);
+  z-index: 55;
+  width: min(430px, calc(100vw - 28px));
+  border: 1px solid rgba(0, 229, 255, 0.24);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(3, 10, 19, 0.82);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.42), 0 0 44px rgba(0,229,255,0.08);
+  font-family: var(--font-mono);
+}
+
+.astra-console__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0,229,255,0.12);
+}
+
+.astra-console__brand {
+  color: #dffbff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+}
+
+.astra-console__subtitle {
+  margin-top: 4px;
+  color: rgba(223,251,255,0.38);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+}
+
+.astra-console__state {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: rgba(255,255,255,0.5);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.astra-console__state span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7f9bb3;
+}
+
+.astra-console__state--thinking span {
+  background: #f5a623;
+  box-shadow: 0 0 12px rgba(245,166,35,0.9);
+}
+
+.astra-console__state--speaking span {
+  background: #00e5ff;
+  box-shadow: 0 0 12px rgba(0,229,255,0.9);
+}
+
+.astra-console__output {
+  min-height: 78px;
+  max-height: 180px;
+  overflow: auto;
+  padding: 14px 16px;
+  color: rgba(240,253,255,0.68);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.astra-console__output p {
+  margin: 0;
+}
+
+.astra-console__agent {
+  margin-bottom: 6px;
+  color: #00e5ff;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.astra-console__error {
+  color: #ff9c9c;
+}
+
+.astra-console__form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid rgba(0,229,255,0.1);
+}
+
+.astra-console__form input,
+.astra-console__form button {
+  font: inherit;
+}
+
+.astra-console__form input {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  outline: none;
+  padding: 11px 12px;
+  color: #effcff;
+  background: rgba(255,255,255,0.04);
+}
+
+.astra-console__form input:focus {
+  border-color: rgba(0,229,255,0.5);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+}
+
+.astra-console__form button {
+  border: 1px solid rgba(0,229,255,0.28);
+  border-radius: 10px;
+  padding: 0 14px;
+  color: #bff8ff;
+  background: rgba(0,229,255,0.08);
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  font-size: 9px;
+}
+
+.astra-console__form button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 @media (max-width: 1000px) {
   .apex-overview {
     position: absolute;
@@ -45,13 +177,17 @@ body {
   }
 }
 
-/* Agent-node breathing (ReasoningWeb). */
+@media (max-width: 700px) {
+  .sb-hint { display: none; }
+  .astra-console {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    width: auto;
+  }
+}
+
 @keyframes agentPulse {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.06); }
-}
-
-/* Status-bar hint is hidden on small screens. */
-@media (max-width: 700px) {
-  .sb-hint { display: none; }
 }
