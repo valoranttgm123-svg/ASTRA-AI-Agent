@@ -6,5 +6,39 @@ export const metadata = {
 };
 
 export default function HumanoidLabPage() {
-  return <HumanoidLab />;
+  return (
+    <div className="astra-humanoid-lab-route">
+      <HumanoidLab />
+      <style>{`
+        html,
+        body {
+          min-height: 100%;
+        }
+
+        .astra-humanoid-lab-route {
+          height: 100vh;
+          min-height: 620px;
+          overflow: hidden;
+        }
+
+        .astra-humanoid-lab-route > main,
+        .astra-humanoid-lab-route > main > div,
+        .astra-humanoid-lab-route > main > div > section {
+          height: 100%;
+          min-height: 0 !important;
+        }
+
+        .astra-humanoid-lab-route > main > div > aside {
+          height: 100%;
+          box-sizing: border-box;
+        }
+
+        .astra-humanoid-lab-route canvas {
+          display: block !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+      `}</style>
+    </div>
+  );
 }
