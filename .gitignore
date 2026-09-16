@@ -2,8 +2,25 @@ node_modules/
 .next/
 out/
 build/
-.env*.local
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
 .vercel
+
+# Local ASTRA runtime data / credentials
+.astra/
+data/private/
+secrets/
+credentials/
+*.sqlite
+*.sqlite3
+*.db
