@@ -8,10 +8,12 @@ import type { AstraAvatarState } from "@/lib/avatar/types";
 
 const ARTWORK = "/assets/astra-humanoid/astra-idle-v1.webp";
 const SAMPLE_W = 320;
-const SAMPLE_H = 180;
+const SAMPLE_H = 194;
 const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
+const HEAD_CENTER_Y = (0.5 - 0.37) * WORLD_H;
+const BASE_POINT_SIZE = 2.25;
 
 const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
@@ -27,6 +29,7 @@ type ParticleData = {
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
+
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setReduced(media.matches);
@@ -34,6 +37,7 @@ function useReducedMotion() {
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
+
   return reduced;
 }
 
@@ -61,19 +65,21 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
       const b = pixels[i + 2];
       const a = pixels[i + 3] / 255;
       const brightness = Math.max(r, g, b) / 255;
-      if (a < 0.2 || brightness < 0.075) continue;
+
+      // Keep illuminated cyan/orange artwork and suppress almost-black background.
+      if (a < 0.12 || brightness < 0.045) continue;
 
       const nx = x / (SAMPLE_W - 1);
       const ny = y / (SAMPLE_H - 1);
       const wx = (nx - 0.5) * WORLD_W;
       const wy = (0.5 - ny) * WORLD_H;
 
-      // Approved artwork head region. Only these samples gain depth/rotation.
-      const hx = (nx - 0.5) / 0.18;
-      const hy = (ny - 0.39) / 0.29;
+      // Head mask follows the approved artwork. Only head samples get rounded depth.
+      const hx = (nx - 0.5) / 0.17;
+      const hy = (ny - 0.37) / 0.30;
       const rr = hx * hx + hy * hy;
       const isHead = rr <= 1;
-      const depth = isHead ? Math.sqrt(Math.max(0, 1 - rr)) * 0.7 : 0;
+      const depth = isHead ? Math.sqrt(Math.max(0, 1 - rr)) * 0.72 : 0;
 
       pos.push(wx, wy, depth);
       color.setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace);
@@ -104,13 +110,24 @@ function ParticleArtwork({
   reducedMotion: boolean;
 }) {
   const points = useRef<THREE.Points>(null);
+  const glow = useRef<THREE.Points>(null);
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
 
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(data.positions), 3));
+    g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(data.colors), 3));
+    g.computeBoundingSphere();
+    return g;
+  }, [data]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
   useFrame(({ pointer, clock }, dt) => {
     if (!points.current) return;
-    const geom = points.current.geometry;
-    const attr = geom.getAttribute("position") as THREE.BufferAttribute;
+
+    const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
     const arr = attr.array as Float32Array;
     const base = data.original;
     const t = clock.elapsedTime;
@@ -125,7 +142,7 @@ function ParticleArtwork({
       target.current.yaw = 0.11 + Math.sin(t * 0.45) * 0.035;
       target.current.pitch = -0.025;
     } else if (state === "speaking") {
-      target.current.yaw = Math.sin(t * 0.6) * 0.035;
+      target.current.yaw = Math.sin(t * 0.6) * 0.038;
       target.current.pitch = Math.sin(t * 1.4) * 0.018;
     } else {
       target.current.yaw = Math.sin(t * 0.22) * 0.012;
@@ -140,8 +157,10 @@ function ParticleArtwork({
     const sy = Math.sin(current.current.yaw);
     const cp = Math.cos(current.current.pitch);
     const sp = Math.sin(current.current.pitch);
-    const chest = effects && !reducedMotion ? Math.sin(t * 0.8) * 0.012 : 0;
-    const speakingPulse = state === "speaking" && effects ? 1 + Math.abs(Math.sin(t * 8.2)) * 0.28 : 1;
+    const chest = effects && !reducedMotion ? Math.sin(t * 0.78) * 0.014 : 0;
+    const speakingPulse = state === "speaking" && effects
+      ? 1 + Math.abs(Math.sin(t * 8.2)) * 0.18
+      : 1;
 
     for (let i = 0; i < data.count; i += 1) {
       const o = i * 3;
@@ -150,54 +169,73 @@ function ParticleArtwork({
       const z0 = base[o + 2];
 
       if (data.head[i]) {
+        // Rotate around the head/neck region so the face turns instead of orbiting the scene origin.
+        const yRel = y0 - HEAD_CENTER_Y;
         const x1 = x0 * cy + z0 * sy;
         const z1 = -x0 * sy + z0 * cy;
-        const y1 = y0 * cp - z1 * sp;
-        const z2 = y0 * sp + z1 * cp;
+        const y1 = yRel * cp - z1 * sp;
+        const z2 = yRel * sp + z1 * cp;
         arr[o] = x1;
-        arr[o + 1] = y1;
+        arr[o + 1] = y1 + HEAD_CENTER_Y;
         arr[o + 2] = z2;
       } else {
-        const anchor = THREE.MathUtils.clamp((-y0 - 0.25) / 1.8, 0, 1);
+        const chestWeight = THREE.MathUtils.clamp((-y0 + 0.2) / 2.2, 0, 1);
         arr[o] = x0;
-        arr[o + 1] = y0 + chest * anchor;
+        arr[o + 1] = y0 + chest * chestWeight;
         arr[o + 2] = z0;
       }
     }
 
     attr.needsUpdate = true;
-    const material = points.current.material as THREE.PointsMaterial;
+
     const turn = Math.abs(current.current.yaw) / 0.42;
-    material.size = (effects ? 0.032 : 0.025) * (1 + turn * 0.28) * speakingPulse;
-    material.opacity = effects ? 0.88 : 1;
+    const mainMaterial = points.current.material as THREE.PointsMaterial;
+    mainMaterial.size = BASE_POINT_SIZE * (1 + turn * 0.28) * speakingPulse;
+    mainMaterial.opacity = effects ? 0.96 : 1;
+
+    if (glow.current) {
+      const glowMaterial = glow.current.material as THREE.PointsMaterial;
+      glowMaterial.size = BASE_POINT_SIZE * 2.5 * (1 + turn * 0.18);
+      glowMaterial.opacity = state === "speaking" ? 0.16 : 0.1;
+    }
   });
 
-  const geometry = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(data.positions), 3));
-    g.setAttribute("color", new THREE.BufferAttribute(data.colors, 3));
-    return g;
-  }, [data]);
-
-  useEffect(() => () => geometry.dispose(), [geometry]);
-
   return (
-    <points ref={points} geometry={geometry}>
-      <pointsMaterial
-        vertexColors
-        size={0.032}
-        sizeAttenuation
-        transparent
-        opacity={0.9}
-        depthWrite={false}
-        toneMapped={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
+    <group>
+      <points ref={glow} geometry={geometry}>
+        <pointsMaterial
+          vertexColors
+          size={BASE_POINT_SIZE * 2.5}
+          sizeAttenuation
+          transparent
+          opacity={0.1}
+          depthWrite={false}
+          toneMapped={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      <points ref={points} geometry={geometry}>
+        <pointsMaterial
+          vertexColors
+          size={BASE_POINT_SIZE}
+          sizeAttenuation
+          transparent
+          opacity={0.96}
+          depthWrite={false}
+          toneMapped={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+    </group>
   );
 }
 
-function ParticleScene({ data, state, effects, reducedMotion }: {
+function ParticleScene({
+  data,
+  state,
+  effects,
+  reducedMotion,
+}: {
   data: ParticleData;
   state: AstraAvatarState;
   effects: boolean;
@@ -205,15 +243,16 @@ function ParticleScene({ data, state, effects, reducedMotion }: {
 }) {
   return (
     <Canvas
+      style={{ position: "absolute", inset: 0 }}
       camera={{ position: [0, 0, 7.2], fov: 38 }}
       dpr={[1, 1.6]}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.NoToneMapping }}
       onCreated={({ gl }) => {
+        gl.setClearColor(0x000000, 0);
         gl.outputColorSpace = THREE.SRGBColorSpace;
         gl.toneMapping = THREE.NoToneMapping;
       }}
     >
-      <color attach="background" args={["#000306"]} />
       <ParticleArtwork data={data} state={state} effects={effects} reducedMotion={reducedMotion} />
     </Canvas>
   );
@@ -224,6 +263,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const reducedMotion = useReducedMotion();
   const [data, setData] = useState<ParticleData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [sourceSize, setSourceSize] = useState<string>("loading");
   const [view, setView] = useState<ViewMode>("particles");
   const [effects, setEffects] = useState(true);
   const [technical, setTechnical] = useState(false);
@@ -236,10 +276,16 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   useEffect(() => {
     const image = new Image();
     image.decoding = "async";
-    image.src = ARTWORK;
+    image.src = `${ARTWORK}?v=9-visibility-fix`;
     image.onload = () => {
       try {
-        setData(buildParticleData(image));
+        setSourceSize(`${image.naturalWidth}×${image.naturalHeight}`);
+        const next = buildParticleData(image);
+        if (next.count < 500) {
+          throw new Error(`Sampling menghasilkan terlalu sedikit partikel (${next.count}).`);
+        }
+        setData(next);
+        setLoadError(null);
       } catch (error) {
         setLoadError(error instanceof Error ? error.message : "Gagal membaca artwork.");
       }
@@ -263,8 +309,10 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const effectiveEffects = effects && !reducedMotion;
   const state = runtime.avatarState;
+  const showReferenceOnly = view === "reference" || !effects;
+  const showParticles = view !== "reference" && effects;
+  const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.14;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -289,92 +337,224 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   };
 
   return (
-    <main style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden", background: "#000306", color: "#dffbff", fontFamily: "var(--font-mono)" }}>
+    <main
+      style={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        background: "#000306",
+        color: "#dffbff",
+        fontFamily: "var(--font-mono)",
+      }}
+    >
       <img
-        src={ARTWORK}
+        src={`${ARTWORK}?v=9-visibility-fix`}
         alt="Approved ASTRA idle artwork reference"
         style={{
-          position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
-          opacity: view === "reference" ? 1 : view === "compare" ? 0.92 : 0,
-          transition: "opacity 180ms ease", pointerEvents: "none",
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          opacity: referenceOpacity,
+          transition: "opacity 180ms ease",
+          pointerEvents: "none",
         }}
       />
 
-      <div style={{
-        position: "absolute", inset: 0,
-        opacity: view === "reference" ? 0 : 1,
-        clipPath: view === "compare" ? "inset(0 0 0 50%)" : "none",
-        pointerEvents: view === "reference" ? "none" : "auto",
-      }}>
-        {data ? (
-          <ParticleScene data={data} state={state} effects={effectiveEffects} reducedMotion={reducedMotion} />
-        ) : (
-          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "#5cdcea", letterSpacing: ".18em" }}>
-            {loadError ?? "SAMPLING APPROVED ARTWORK..."}
-          </div>
-        )}
-      </div>
+      {showParticles && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            clipPath: view === "compare" ? "inset(0 0 0 50%)" : "none",
+            pointerEvents: "auto",
+          }}
+        >
+          {data ? (
+            <ParticleScene data={data} state={state} effects reducedMotion={reducedMotion} />
+          ) : (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "grid",
+                placeItems: "center",
+                color: loadError ? "#ffb35f" : "#5cdcea",
+                letterSpacing: ".16em",
+                fontSize: 11,
+                textAlign: "center",
+                padding: 24,
+              }}
+            >
+              {loadError ?? "SAMPLING APPROVED ARTWORK..."}
+            </div>
+          )}
+        </div>
+      )}
 
-      {view === "compare" && <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: 1, background: "rgba(255,255,255,.42)", pointerEvents: "none" }} />}
+      {view === "compare" && effects && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: "50%",
+            width: 1,
+            background: "rgba(255,255,255,.42)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA // HUMANOID V9</div>
-        <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>IMAGE-DRIVEN PARTICLE ENTITY</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA // HUMANOID V9.1</div>
+        <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
+          IMAGE-DRIVEN PARTICLE ENTITY
+        </div>
       </header>
 
-      <button onClick={exit} style={{ position: "absolute", top: 16, right: 18, zIndex: 30, border: "1px solid rgba(97,239,255,.55)", background: "rgba(0,8,12,.78)", color: "#aaf8ff", borderRadius: 18, padding: "8px 14px", fontFamily: "inherit", fontSize: 10, letterSpacing: ".16em" }}>
-        EXIT
-      </button>
+      <button onClick={exit} style={exitStyle}>EXIT</button>
 
-      <section style={{ position: "absolute", left: 18, right: 18, bottom: 18, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18, pointerEvents: "none" }}>
+      <section
+        style={{
+          position: "absolute",
+          left: 18,
+          right: 18,
+          bottom: 18,
+          zIndex: 25,
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 18,
+          pointerEvents: "none",
+        }}
+      >
         <div style={{ display: "grid", gap: 9, pointerEvents: "auto" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
             {STATES.map((item) => (
-              <button key={item} onClick={() => runtime.setAvatarState(item)} style={buttonStyle(state === item)}>{item.toUpperCase()}</button>
+              <button key={item} onClick={() => runtime.setAvatarState(item)} style={buttonStyle(state === item)}>
+                {item.toUpperCase()}
+              </button>
             ))}
           </div>
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
             {(["reference", "particles", "compare"] as ViewMode[]).map((item) => (
-              <button key={item} onClick={() => setView(item)} style={buttonStyle(view === item)}>{item.toUpperCase()}</button>
+              <button key={item} onClick={() => setView(item)} style={buttonStyle(view === item)}>
+                {item.toUpperCase()}
+              </button>
             ))}
-            <button onClick={() => setEffects((v) => !v)} style={buttonStyle(!effects)}>{effects ? "EFFECTS ON" : "EFFECTS OFF"}</button>
-            <button onClick={() => setTechnical((v) => !v)} style={buttonStyle(technical)}>TECHNICAL</button>
+            <button onClick={() => setEffects((value) => !value)} style={buttonStyle(!effects)}>
+              {effects ? "EFFECTS ON" : "EFFECTS OFF"}
+            </button>
+            <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
+              TECHNICAL
+            </button>
           </div>
         </div>
 
-        <div style={{ width: "min(440px, 44vw)", minWidth: 280, pointerEvents: "auto", border: "1px solid rgba(54,228,247,.28)", background: "rgba(0,7,11,.82)", backdropFilter: "blur(12px)", borderRadius: 14, padding: 12, boxShadow: "0 16px 60px rgba(0,0,0,.34)" }}>
+        <div style={consoleStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 9, letterSpacing: ".18em", color: "#65eafb" }}>
             <span>{runtime.activeAgent ?? "ASTRA CORE"}</span>
             <span>{state.toUpperCase()}</span>
           </div>
-          <div style={{ minHeight: 42, marginTop: 10, color: "rgba(225,250,255,.72)", fontFamily: "var(--font-mono)", fontSize: 11, lineHeight: 1.5 }}>
+          <div style={{ minHeight: 42, marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
             {runtime.lastResponse?.message ?? "Approved artwork is driving the humanoid particle field."}
           </div>
           <form onSubmit={submit} style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Ketik perintah ASTRA..." style={{ flex: 1, minWidth: 0, border: "1px solid rgba(98,221,239,.22)", borderRadius: 8, background: "rgba(3,16,22,.9)", color: "#e8fdff", padding: "10px 11px", fontFamily: "inherit", outline: "none" }} />
-            <button disabled={busy || !message.trim()} type="submit" style={{ ...buttonStyle(false), opacity: busy ? .55 : 1 }}>{busy ? "RUN" : "SEND"}</button>
+            <input
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="Ketik perintah ASTRA..."
+              style={inputStyle}
+            />
+            <button disabled={busy || !message.trim()} type="submit" style={{ ...buttonStyle(false), opacity: busy ? 0.55 : 1 }}>
+              {busy ? "RUN" : "SEND"}
+            </button>
           </form>
         </div>
       </section>
 
       {technical && (
-        <aside style={{ position: "absolute", top: 64, right: 18, width: 290, zIndex: 24, border: "1px solid rgba(79,220,239,.25)", background: "rgba(0,7,11,.9)", borderRadius: 12, padding: 14, backdropFilter: "blur(10px)", fontSize: 10, lineHeight: 1.75, color: "rgba(220,248,252,.68)" }}>
+        <aside style={technicalStyle}>
           <div style={{ color: "#5eeaff", letterSpacing: ".18em", marginBottom: 8 }}>TECHNICAL DETAILS</div>
           <div>Artwork: astra-idle-v1.webp</div>
+          <div>Source: {sourceSize}</div>
           <div>Sampler: {SAMPLE_W}×{SAMPLE_H}, step {STEP}px</div>
           <div>Particles: {data?.count ?? "loading"}</div>
+          <div>Point size: {BASE_POINT_SIZE}px + glow</div>
           <div>FPS: {fps ?? "..."}</div>
           <div>Last request latency: {latency === null ? "not measured" : `${latency} ms`}</div>
           <div>Reduced motion: {reducedMotion ? "ON" : "OFF"}</div>
           <div>Effects: {effects ? "ON" : "OFF"}</div>
           <div>Renderer: Three.js via React Three Fiber</div>
           <div>Color: sRGB input/output, NoToneMapping</div>
-          <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>State buttons currently reuse the approved idle artwork; no unapproved state images are invented.</div>
+          {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
+          <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
+            State buttons still reuse the approved idle artwork; no unapproved state images are invented.
+          </div>
         </aside>
       )}
     </main>
   );
 }
+
+const exitStyle: React.CSSProperties = {
+  position: "absolute",
+  top: 16,
+  right: 18,
+  zIndex: 30,
+  border: "1px solid rgba(97,239,255,.55)",
+  background: "rgba(0,8,12,.78)",
+  color: "#aaf8ff",
+  borderRadius: 18,
+  padding: "8px 14px",
+  fontFamily: "var(--font-mono)",
+  fontSize: 10,
+  letterSpacing: ".16em",
+  cursor: "pointer",
+};
+
+const consoleStyle: React.CSSProperties = {
+  width: "min(440px, 44vw)",
+  minWidth: 280,
+  pointerEvents: "auto",
+  border: "1px solid rgba(54,228,247,.28)",
+  background: "rgba(0,7,11,.82)",
+  backdropFilter: "blur(12px)",
+  borderRadius: 14,
+  padding: 12,
+  boxShadow: "0 16px 60px rgba(0,0,0,.34)",
+};
+
+const inputStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  border: "1px solid rgba(98,221,239,.22)",
+  borderRadius: 8,
+  background: "rgba(3,16,22,.9)",
+  color: "#e8fdff",
+  padding: "10px 11px",
+  fontFamily: "inherit",
+  outline: "none",
+};
+
+const technicalStyle: React.CSSProperties = {
+  position: "absolute",
+  top: 64,
+  right: 18,
+  width: 300,
+  zIndex: 24,
+  border: "1px solid rgba(79,220,239,.25)",
+  background: "rgba(0,7,11,.9)",
+  borderRadius: 12,
+  padding: 14,
+  backdropFilter: "blur(10px)",
+  fontSize: 10,
+  lineHeight: 1.75,
+  color: "rgba(220,248,252,.68)",
+};
 
 function buttonStyle(active: boolean): React.CSSProperties {
   return {
