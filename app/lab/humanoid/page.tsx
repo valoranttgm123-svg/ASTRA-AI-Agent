@@ -1,18 +1,19 @@
-import HumanoidLabV7b from "@/components/lab/HumanoidLabV7b";
+import HumanoidLabV8 from "@/components/lab/HumanoidLabV8";
 
 export const metadata = {
-  title: "ASTRA Humanoid Lab",
-  description: "Isolated rigged humanoid testing environment for ASTRA.",
+  title: "ASTRA Human Interface V8",
+  description: "Polished interactive humanoid entity interface for ASTRA.",
 };
 
 export default function HumanoidLabPage() {
   return (
     <div className="astra-humanoid-lab-route">
-      <HumanoidLabV7b />
+      <HumanoidLabV8 />
       <style>{`
         html,
         body {
           min-height: 100%;
+          background: #01070c;
         }
 
         .astra-humanoid-lab-route {
@@ -21,16 +22,9 @@ export default function HumanoidLabPage() {
           overflow: hidden;
         }
 
-        .astra-humanoid-lab-route > main,
-        .astra-humanoid-lab-route > main > div,
-        .astra-humanoid-lab-route > main > div > section {
+        .astra-humanoid-lab-route > main {
           height: 100%;
           min-height: 0 !important;
-        }
-
-        .astra-humanoid-lab-route > main > div > aside {
-          height: 100%;
-          box-sizing: border-box;
         }
 
         .astra-humanoid-lab-route canvas {
