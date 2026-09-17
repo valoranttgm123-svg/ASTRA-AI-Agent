@@ -9,62 +9,74 @@
 - No new paid service enabled.
 - No keys moved into browser code.
 
-## Recoverable copy
+## Recoverable copies
 
-- Backup branch before the image-driven rebuild: `backup/humanoid-v8-before-image-stage`.
-- Backup branch before the V9 visibility repair: `backup/humanoid-v9-before-visibility-fix`.
+- Backup before image-driven rebuild: `backup/humanoid-v8-before-image-stage`.
+- Backup before V9 visibility repair: `backup/humanoid-v9-before-visibility-fix`.
+- Backup before V9.2 renderer repair: `backup/humanoid-v9.1-before-v9.2`.
 
 ## Stage 1 — Approved artwork baseline + image-driven particle preview
 
 Approved idle artwork asset: `public/assets/astra-humanoid/astra-idle-v1.webp`.
 
 Implemented:
-- original approved artwork shown as the reference view;
+- original approved artwork reference view;
 - image pixels sampled into a Three.js particle field;
 - sampled RGB colors retained per particle;
-- head samples receive rounded depth so they can turn toward the mouse;
-- head motion glides instead of snapping;
-- body/chest movement remains separate from head movement;
+- rounded depth on head samples for mouse head-turn;
+- body/chest movement independent from head movement;
 - `REFERENCE`, `PARTICLES`, and split `COMPARE` modes;
-- `EFFECTS OFF` fallback;
-- `prefers-reduced-motion` respected;
-- technical details panel collapsed by default;
-- compact `IDLE`, `LISTENING`, `THINKING`, `SPEAKING` preview controls remain outside technical details;
-- main ASTRA interface has a dedicated `HUMANOID` button;
-- humanoid opens as a full-screen portal inside the existing `AstraRuntimeProvider`, so opening/closing it does not remount the assistant runtime;
-- visible `EXIT` control returns to the main interface;
-- request latency and FPS are shown only in Technical details;
-- command input still uses the existing `/api/agent` request path.
+- `EFFECTS OFF` neutral-artwork fallback;
+- reduced-motion support;
+- Technical details collapsed by default;
+- compact `IDLE`, `LISTENING`, `THINKING`, `SPEAKING` controls;
+- fullscreen Humanoid portal inside the existing `AstraRuntimeProvider`;
+- existing chat request path and assistant runtime preserved.
 
-## Stage 1.1 — Visibility repair
+## Stage 1.1 — Blank view repair
 
-Problem reported from browser screenshot: the humanoid center area was empty while the surrounding UI rendered correctly.
+Reported symptom: the humanoid center area was empty while surrounding UI rendered.
 
 Investigation:
-- the WebP artwork is present and decodes as a valid 640×388 image;
-- the Three.js scene and UI were mounted;
-- V9 used `PointsMaterial.size = 0.032`, which is effectively sub-pixel for this renderer and made the sampled particle field practically invisible.
+- artwork asset was valid and decoded as 640×388;
+- Three.js and the fullscreen portal were mounted;
+- particle visibility settings were incorrect for the scene.
 
-Fix:
-- particle size changed to a visible pixel-scale value with a second additive glow layer;
-- sampler aspect corrected from 320×180 to 320×194 to match the 640×388 artwork ratio;
-- particle threshold lowered slightly to preserve fine cyan/orange artwork detail;
-- Canvas made transparent and the approved artwork is retained underneath as a low-opacity safety/reference layer;
-- `EFFECTS OFF` now returns to the neutral approved artwork;
-- reference rendering changed to `object-fit: contain` so the approved proportions are not cropped;
-- head rotation now pivots around the head/neck region rather than the scene origin;
-- asset URL includes a cache-busting version query;
-- Technical details now reports source dimensions, particle count, point size, FPS and any load error.
+Fixes:
+- corrected sampler aspect to 320×194;
+- retained approved artwork beneath the Canvas as safety/reference;
+- changed reference rendering to `object-fit: contain`;
+- moved head pivot to the head/neck region;
+- added source/particle/FPS diagnostics.
+
+## Stage 1.2 — White-block / overdraw repair (V9.2)
+
+Reported symptom: the particle humanoid rendered as a huge white/pixelated block with cyan edges.
+
+Investigation:
+- WebGL is working; the screenshot proves the particle field is rendering;
+- `PointsMaterial` with `sizeAttenuation` enabled multiplied the point size by perspective scale, making each sample extremely large on screen;
+- two additive layers then accumulated color until the center saturated to white.
+
+Fixes:
+- base particles now use a fixed 2.1 px screen size with `sizeAttenuation={false}`;
+- base layer uses `NormalBlending` to preserve source cyan/orange colors;
+- glow remains additive but uses only 4.2 px and very low opacity;
+- depth test/write disabled for predictable flat artwork reconstruction;
+- renderer DPR capped at 1.25 and antialias disabled to reduce GPU load;
+- particle-view reference underlay reduced to 3.5% opacity;
+- speaking/thinking only make small opacity/size changes instead of multiplying point size heavily;
+- UI version label updated to `ASTRA // HUMANOID V9.2`.
 
 ### Current limitations / intentionally unfinished
 
-- Only the idle artwork is approved. No listening/thinking/speaking image filenames or artwork are invented. Those preview states currently change motion/lighting only while using the approved idle artwork.
-- Real microphone capture is not currently implemented in the existing ASTRA project. `beginListening/endListening` exist as runtime state hooks, but there is no browser microphone pipeline to preserve yet.
-- Browser `speechSynthesis` playback is not directly analyzable through Web Audio, so speaking visuals use playback status rather than measured loudness.
-- Assembly sequence, intermediate images, backdrop-specific highlight sampling, shockwave, and webcam index-finger tracking remain for later stages because no approved source files/timing have been supplied yet.
+- Only the idle artwork is approved. Listening/thinking/speaking currently reuse it with motion/state changes.
+- Real microphone capture is not yet implemented in the existing ASTRA project.
+- Browser `speechSynthesis` output is treated as playback status, not measured loudness.
+- Assembly sequence, intermediate images, backdrop highlight sampling, shockwave, and webcam index-finger tracking remain future stages.
 
 ### Verification required
 
-- GitHub Actions production build for the visibility repair.
-- Visible browser comparison between `REFERENCE` and `PARTICLES` after pulling the fixed commit.
+- GitHub Actions production build for V9.2.
+- Browser check of `REFERENCE`, `PARTICLES`, and `COMPARE` after pulling the merged V9.2 commit.
 - User approval of scale, alignment, particle density, color retention, and head-turn behavior.
