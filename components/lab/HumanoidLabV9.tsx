@@ -13,7 +13,8 @@ const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
 const HEAD_CENTER_Y = (0.5 - 0.37) * WORLD_H;
-const BASE_POINT_SIZE = 2.25;
+const BASE_POINT_SIZE = 2.1;
+const GLOW_POINT_SIZE = 4.2;
 
 const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
@@ -66,7 +67,6 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
       const a = pixels[i + 3] / 255;
       const brightness = Math.max(r, g, b) / 255;
 
-      // Keep illuminated cyan/orange artwork and suppress almost-black background.
       if (a < 0.12 || brightness < 0.045) continue;
 
       const nx = x / (SAMPLE_W - 1);
@@ -74,7 +74,6 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
       const wx = (nx - 0.5) * WORLD_W;
       const wy = (0.5 - ny) * WORLD_H;
 
-      // Head mask follows the approved artwork. Only head samples get rounded depth.
       const hx = (nx - 0.5) / 0.17;
       const hy = (ny - 0.37) / 0.30;
       const rr = hx * hx + hy * hy;
@@ -109,8 +108,8 @@ function ParticleArtwork({
   effects: boolean;
   reducedMotion: boolean;
 }) {
-  const points = useRef<THREE.Points>(null);
-  const glow = useRef<THREE.Points>(null);
+  const basePoints = useRef<THREE.Points>(null);
+  const glowPoints = useRef<THREE.Points>(null);
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
 
@@ -125,7 +124,7 @@ function ParticleArtwork({
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(({ pointer, clock }, dt) => {
-    if (!points.current) return;
+    if (!basePoints.current) return;
 
     const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
     const arr = attr.array as Float32Array;
@@ -136,17 +135,17 @@ function ParticleArtwork({
       target.current.yaw = 0;
       target.current.pitch = 0;
     } else if (state === "listening") {
-      target.current.yaw = THREE.MathUtils.clamp(pointer.x * 0.38, -0.42, 0.42);
-      target.current.pitch = THREE.MathUtils.clamp(-pointer.y * 0.15, -0.16, 0.16);
+      target.current.yaw = THREE.MathUtils.clamp(pointer.x * 0.34, -0.38, 0.38);
+      target.current.pitch = THREE.MathUtils.clamp(-pointer.y * 0.13, -0.14, 0.14);
     } else if (state === "thinking") {
-      target.current.yaw = 0.11 + Math.sin(t * 0.45) * 0.035;
-      target.current.pitch = -0.025;
+      target.current.yaw = 0.09 + Math.sin(t * 0.45) * 0.03;
+      target.current.pitch = -0.02;
     } else if (state === "speaking") {
-      target.current.yaw = Math.sin(t * 0.6) * 0.038;
-      target.current.pitch = Math.sin(t * 1.4) * 0.018;
+      target.current.yaw = Math.sin(t * 0.6) * 0.032;
+      target.current.pitch = Math.sin(t * 1.4) * 0.015;
     } else {
-      target.current.yaw = Math.sin(t * 0.22) * 0.012;
-      target.current.pitch = Math.sin(t * 0.31) * 0.006;
+      target.current.yaw = Math.sin(t * 0.22) * 0.01;
+      target.current.pitch = Math.sin(t * 0.31) * 0.005;
     }
 
     const smoothing = 1 - Math.exp(-dt * 6.5);
@@ -157,10 +156,7 @@ function ParticleArtwork({
     const sy = Math.sin(current.current.yaw);
     const cp = Math.cos(current.current.pitch);
     const sp = Math.sin(current.current.pitch);
-    const chest = effects && !reducedMotion ? Math.sin(t * 0.78) * 0.014 : 0;
-    const speakingPulse = state === "speaking" && effects
-      ? 1 + Math.abs(Math.sin(t * 8.2)) * 0.18
-      : 1;
+    const chest = effects && !reducedMotion ? Math.sin(t * 0.78) * 0.012 : 0;
 
     for (let i = 0; i < data.count; i += 1) {
       const o = i * 3;
@@ -169,7 +165,6 @@ function ParticleArtwork({
       const z0 = base[o + 2];
 
       if (data.head[i]) {
-        // Rotate around the head/neck region so the face turns instead of orbiting the scene origin.
         const yRel = y0 - HEAD_CENTER_Y;
         const x1 = x0 * cy + z0 * sy;
         const z1 = -x0 * sy + z0 * cy;
@@ -188,42 +183,44 @@ function ParticleArtwork({
 
     attr.needsUpdate = true;
 
-    const turn = Math.abs(current.current.yaw) / 0.42;
-    const mainMaterial = points.current.material as THREE.PointsMaterial;
-    mainMaterial.size = BASE_POINT_SIZE * (1 + turn * 0.28) * speakingPulse;
-    mainMaterial.opacity = effects ? 0.96 : 1;
+    const baseMaterial = basePoints.current.material as THREE.PointsMaterial;
+    baseMaterial.opacity = state === "speaking" ? 0.98 : 0.94;
+    baseMaterial.size = state === "speaking" ? BASE_POINT_SIZE * 1.08 : BASE_POINT_SIZE;
 
-    if (glow.current) {
-      const glowMaterial = glow.current.material as THREE.PointsMaterial;
-      glowMaterial.size = BASE_POINT_SIZE * 2.5 * (1 + turn * 0.18);
-      glowMaterial.opacity = state === "speaking" ? 0.16 : 0.1;
+    if (glowPoints.current) {
+      const glowMaterial = glowPoints.current.material as THREE.PointsMaterial;
+      glowMaterial.opacity = state === "speaking" ? 0.085 : state === "thinking" ? 0.065 : 0.045;
+      glowMaterial.size = state === "speaking" ? GLOW_POINT_SIZE * 1.06 : GLOW_POINT_SIZE;
     }
   });
 
   return (
     <group>
-      <points ref={glow} geometry={geometry}>
+      <points ref={glowPoints} geometry={geometry}>
         <pointsMaterial
           vertexColors
-          size={BASE_POINT_SIZE * 2.5}
-          sizeAttenuation
+          size={GLOW_POINT_SIZE}
+          sizeAttenuation={false}
           transparent
-          opacity={0.1}
+          opacity={0.045}
+          depthTest={false}
           depthWrite={false}
           toneMapped={false}
           blending={THREE.AdditiveBlending}
         />
       </points>
-      <points ref={points} geometry={geometry}>
+
+      <points ref={basePoints} geometry={geometry}>
         <pointsMaterial
           vertexColors
           size={BASE_POINT_SIZE}
-          sizeAttenuation
+          sizeAttenuation={false}
           transparent
-          opacity={0.96}
+          opacity={0.94}
+          depthTest={false}
           depthWrite={false}
           toneMapped={false}
-          blending={THREE.AdditiveBlending}
+          blending={THREE.NormalBlending}
         />
       </points>
     </group>
@@ -245,8 +242,8 @@ function ParticleScene({
     <Canvas
       style={{ position: "absolute", inset: 0 }}
       camera={{ position: [0, 0, 7.2], fov: 38 }}
-      dpr={[1, 1.6]}
-      gl={{ antialias: true, alpha: true, toneMapping: THREE.NoToneMapping }}
+      dpr={[1, 1.25]}
+      gl={{ antialias: false, alpha: true, powerPreference: "default", toneMapping: THREE.NoToneMapping }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0);
         gl.outputColorSpace = THREE.SRGBColorSpace;
@@ -276,7 +273,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   useEffect(() => {
     const image = new Image();
     image.decoding = "async";
-    image.src = `${ARTWORK}?v=9-visibility-fix`;
+    image.src = `${ARTWORK}?v=9.2-safe-renderer`;
     image.onload = () => {
       try {
         setSourceSize(`${image.naturalWidth}×${image.naturalHeight}`);
@@ -312,7 +309,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const state = runtime.avatarState;
   const showReferenceOnly = view === "reference" || !effects;
   const showParticles = view !== "reference" && effects;
-  const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.14;
+  const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.035;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -349,7 +346,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       }}
     >
       <img
-        src={`${ARTWORK}?v=9-visibility-fix`}
+        src={`${ARTWORK}?v=9.2-safe-renderer`}
         alt="Approved ASTRA idle artwork reference"
         style={{
           position: "absolute",
@@ -409,9 +406,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA // HUMANOID V9.1</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA // HUMANOID V9.2</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          IMAGE-DRIVEN PARTICLE ENTITY
+          GPU-SAFE IMAGE-DRIVEN PARTICLE ENTITY
         </div>
       </header>
 
@@ -483,7 +480,11 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Source: {sourceSize}</div>
           <div>Sampler: {SAMPLE_W}×{SAMPLE_H}, step {STEP}px</div>
           <div>Particles: {data?.count ?? "loading"}</div>
-          <div>Point size: {BASE_POINT_SIZE}px + glow</div>
+          <div>Base point: {BASE_POINT_SIZE}px fixed-screen</div>
+          <div>Glow point: {GLOW_POINT_SIZE}px / low opacity</div>
+          <div>Base blend: Normal</div>
+          <div>Glow blend: Additive</div>
+          <div>DPR cap: 1.25</div>
           <div>FPS: {fps ?? "..."}</div>
           <div>Last request latency: {latency === null ? "not measured" : `${latency} ms`}</div>
           <div>Reduced motion: {reducedMotion ? "ON" : "OFF"}</div>
@@ -492,7 +493,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            State buttons still reuse the approved idle artwork; no unapproved state images are invented.
+            V9.2 prevents additive overdraw from washing the humanoid into a white block.
           </div>
         </aside>
       )}
