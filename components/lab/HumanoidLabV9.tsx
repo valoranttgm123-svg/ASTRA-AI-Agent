@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAstraRuntime } from "@/components/AstraRuntime";
 import type { AstraAvatarState } from "@/lib/avatar/types";
+import { useFingerTracking, type FingerTrackingTarget } from "./useFingerTracking";
 
 const ARTWORK = "/assets/astra-humanoid/astra-idle-v1.webp";
 const SAMPLE_W = 320;
@@ -158,6 +159,7 @@ function ParticleArtwork({
   reducedMotion,
   speechLevel,
   quality,
+  trackingTarget,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
@@ -165,6 +167,7 @@ function ParticleArtwork({
   reducedMotion: boolean;
   speechLevel: number;
   quality: RenderQuality;
+  trackingTarget: { current: FingerTrackingTarget };
 }) {
   const basePoints = useRef<THREE.Points>(null);
   const glowPoints = useRef<THREE.Points>(null);
@@ -201,6 +204,14 @@ function ParticleArtwork({
     if (!effects || reducedMotion) {
       target.current.yaw = 0;
       target.current.pitch = 0;
+    } else if (trackingTarget.current.enabled) {
+      if (trackingTarget.current.active) {
+        target.current.yaw = THREE.MathUtils.clamp(trackingTarget.current.x * 0.34, -0.38, 0.38);
+        target.current.pitch = THREE.MathUtils.clamp(-trackingTarget.current.y * 0.13, -0.14, 0.14);
+      } else {
+        target.current.yaw = 0;
+        target.current.pitch = 0;
+      }
     } else if (state === "listening") {
       target.current.yaw = THREE.MathUtils.clamp(pointer.x * 0.34, -0.38, 0.38);
       target.current.pitch = THREE.MathUtils.clamp(-pointer.y * 0.13, -0.14, 0.14);
@@ -358,6 +369,7 @@ function ParticleScene({
   reducedMotion,
   speechLevel,
   quality,
+  trackingTarget,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
@@ -365,6 +377,7 @@ function ParticleScene({
   reducedMotion: boolean;
   speechLevel: number;
   quality: RenderQuality;
+  trackingTarget: { current: FingerTrackingTarget };
 }) {
   return (
     <Canvas
@@ -385,6 +398,7 @@ function ParticleScene({
         reducedMotion={reducedMotion}
         speechLevel={speechLevel}
         quality={quality}
+        trackingTarget={trackingTarget}
       />
     </Canvas>
   );
@@ -406,6 +420,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [latency, setLatency] = useState<number | null>(null);
   const [fps, setFps] = useState<number | null>(null);
   const fpsFrame = useRef({ frames: 0, started: 0 });
+  const preCameraFpsRef = useRef<number | null>(null);
 
   useEffect(() => {
     const image = new Image();
@@ -450,6 +465,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const state = runtime.avatarState;
   const resolvedQuality: RenderQuality =
     qualityMode === "auto" ? (autoLow ? "low" : "high") : qualityMode;
+  const tracking = useFingerTracking(resolvedQuality);
   const showReferenceOnly = view === "reference" || !effects;
   const showParticles = view !== "reference" && effects;
   const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.028;
@@ -464,6 +480,15 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       currentMode === "auto" ? "high" : currentMode === "high" ? "low" : "auto"
     );
     setAutoLow(false);
+  };
+
+  const toggleCamera = () => {
+    if (tracking.enabled) {
+      tracking.stop();
+      return;
+    }
+    preCameraFpsRef.current = fps;
+    void tracking.start();
   };
 
   const submit = async (event: FormEvent) => {
@@ -484,6 +509,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   };
 
   const exit = () => {
+    tracking.stop();
     if (onExit) onExit();
     else window.location.href = "/";
   };
@@ -562,6 +588,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               reducedMotion={reducedMotion}
               speechLevel={runtime.speechLevel}
               quality={resolvedQuality}
+              trackingTarget={tracking.targetRef}
             />
           ) : (
             <div
@@ -598,9 +625,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V10</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V10.1</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          GOD MODE // ADAPTIVE NEURAL PARTICLE ENTITY
+          GOD MODE // LOCAL INDEX-FINGER TRACKING
         </div>
       </header>
 
@@ -640,10 +667,30 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <button onClick={cycleQuality} style={buttonStyle(qualityMode !== "auto")}>
               QUALITY {qualityMode.toUpperCase()}
             </button>
+            <button onClick={toggleCamera} style={buttonStyle(tracking.enabled)}>
+              {tracking.enabled ? "CAMERA OFF" : "CAMERA ON"}
+            </button>
+            <span
+              style={{
+                alignSelf: "center",
+                padding: "0 4px",
+                color: tracking.error ? "#ffb35f" : tracking.handFound ? "#83ffbc" : tracking.enabled ? "#68ebff" : "rgba(128,234,247,.48)",
+                fontSize: 9,
+                letterSpacing: ".12em",
+                textShadow: "0 0 12px currentColor",
+              }}
+            >
+              ● {tracking.handFound ? "HAND FOUND" : tracking.status.toUpperCase()}
+            </span>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
             </button>
           </div>
+          {tracking.error && (
+            <div style={{ maxWidth: 430, color: "#ffb35f", fontSize: 9, lineHeight: 1.45, letterSpacing: ".04em" }}>
+              CAMERA: {tracking.error}
+            </div>
+          )}
         </div>
 
         <div style={consoleStyle}>
@@ -685,6 +732,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Energy layers: Additive</div>
           <div>DPR: {resolvedQuality === "high" ? "1.25" : "1.0"}</div>
           <div>FPS: {fps ?? "..."}</div>
+          <div>Pre-camera FPS: {preCameraFpsRef.current ?? "not measured"}</div>
+          <div>Camera: {tracking.enabled ? "ON" : "OFF"} / {tracking.status.toUpperCase()}</div>
+          <div>Hand: {tracking.handFound ? "FOUND" : "NOT FOUND"}</div>
+          <div>Hand delegate: {tracking.delegate ?? "not loaded"}</div>
+          <div>Tracking FPS: {tracking.trackingFps ?? "..."}</div>
+          <div>Inference: {tracking.processingMs === null ? "..." : `${tracking.processingMs} ms`}</div>
+          <div>Tracking privacy: frames processed locally; no recording/upload by ASTRA.</div>
           <div>Last request latency: {latency === null ? "not measured" : `${latency} ms`}</div>
           <div>Reduced motion: {reducedMotion ? "ON" : "OFF"}</div>
           <div>Effects: {effects ? "ON" : "OFF"}</div>
@@ -692,7 +746,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V10 MAX adds adaptive quality, cyan edge energy, orange neural-core sampling, voice-reactive intensity, and GPU-safe layered rendering.
+            V10.1 adds local MediaPipe index-finger tracking in a dedicated worker. No gesture actions are enabled in this stage.
           </div>
         </aside>
       )}
