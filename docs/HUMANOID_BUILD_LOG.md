@@ -80,3 +80,28 @@ Fixes:
 - GitHub Actions production build for V9.2.
 - Browser check of `REFERENCE`, `PARTICLES`, and `COMPARE` after pulling the merged V9.2 commit.
 - User approval of scale, alignment, particle density, color retention, and head-turn behavior.
+
+
+## Stage 2 — ASTRA MAX / Humanoid V10
+
+Goal: make the approved image-driven humanoid substantially more polished without changing the assistant runtime or adding a second renderer.
+
+Implemented:
+- version label upgraded to `ASTRA MAX // HUMANOID V10`;
+- adaptive `QUALITY AUTO / HIGH / LOW` control;
+- AUTO quality drops to the lighter profile when measured UI FPS falls below 44;
+- cyan edge samples are detected from the approved artwork and rendered as a dedicated profile-energy layer;
+- warm/orange artwork samples are detected and rendered as a dedicated neural-core layer;
+- speaking energy reacts to the existing runtime `speechLevel` instead of inventing a microphone amplitude;
+- orange face/core energy, cyan silhouette energy and scan-line atmosphere react to avatar state;
+- fixed-screen point sizing remains in place so the V9.1 white-block regression cannot return;
+- base color layer still uses Normal blending; only low-opacity energy layers use Additive blending;
+- HIGH uses DPR 1.25 while LOW uses DPR 1.0;
+- approved artwork, chat, orb, voice path, `/api/agent`, effects-off and reduced-motion behavior remain preserved;
+- no new paid service, secret, external model, or unapproved artwork added.
+
+Verification required:
+- GitHub Actions production build;
+- browser check on the target PC in AUTO quality;
+- compare `REFERENCE`, `PARTICLES`, and `COMPARE`;
+- confirm no white saturation and acceptable FPS before adding any later assembly/webcam stages.
