@@ -105,3 +105,37 @@ Verification required:
 - browser check on the target PC in AUTO quality;
 - compare `REFERENCE`, `PARTICLES`, and `COMPARE`;
 - confirm no white saturation and acceptable FPS before adding any later assembly/webcam stages.
+
+
+## Stage 2.1 — Local index-finger tracking (V10.1)
+
+Implemented:
+- official `@mediapipe/tasks-vision@1.0.1` Hand Landmarker;
+- MediaPipe inference runs in a dedicated module worker;
+- GPU delegate is attempted first and falls back to CPU if unavailable;
+- camera starts only after explicit `CAMERA ON` interaction;
+- camera is stopped and all media tracks are released on `CAMERA OFF`, Exit, and component unmount;
+- only one frame is in flight at a time; stale frames are discarded instead of queued;
+- tracking samples at about 15 FPS in HIGH and 10 FPS in LOW;
+- index fingertip landmark 8 becomes the humanoid head target;
+- camera X is mirrored for natural mirror-like control;
+- fingertip target is smoothed before the existing head-motion smoothing;
+- camera target has priority while enabled; when no hand is visible the head returns gently to neutral;
+- mouse tracking remains available when camera is off;
+- no gesture actions added;
+- camera status, hand-found state, delegate, tracking FPS, inference time, and pre-camera UI FPS are visible only in Technical details except for the compact active indicator;
+- AUTO render quality can still fall back to LOW if the added tracking load reduces UI FPS.
+
+Privacy / loading:
+- camera frames are processed on-device by MediaPipe Tasks and are not recorded or uploaded by ASTRA;
+- MediaPipe WASM is loaded from the pinned 1.0.1 jsDelivr package;
+- the official float16 Hand Landmarker task model is loaded from Google's MediaPipe model hosting;
+- no paid service or API key is required.
+
+Verification required:
+- production CI build with the worker bundle;
+- browser permission flow on the target PC;
+- CAMERA ON/OFF resource cleanup;
+- hand-found/no-hand return-to-neutral behavior;
+- responsiveness comparison using Pre-camera FPS vs current FPS;
+- confirm mouse fallback still works with camera off.
