@@ -13,18 +13,24 @@ const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
 const HEAD_CENTER_Y = (0.5 - 0.37) * WORLD_H;
-const BASE_POINT_SIZE = 2.1;
-const GLOW_POINT_SIZE = 4.2;
+const BASE_POINT_SIZE_HIGH = 1.7;
+const BASE_POINT_SIZE_LOW = 1.25;
+const GLOW_POINT_SIZE_HIGH = 3.6;
+const GLOW_POINT_SIZE_LOW = 2.5;
 
 const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
 type ViewMode = "reference" | "particles" | "compare";
+type QualityMode = "auto" | "low" | "high";
+type RenderQuality = "low" | "high";
 
 type ParticleData = {
   count: number;
   positions: Float32Array;
   colors: Float32Array;
   head: Uint8Array;
+  edge: Uint32Array;
+  warm: Uint32Array;
   original: Float32Array;
 };
 
@@ -56,7 +62,15 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
   const pos: number[] = [];
   const col: number[] = [];
   const mask: number[] = [];
+  const edgeIndices: number[] = [];
+  const warmIndices: number[] = [];
   const color = new THREE.Color();
+
+  const sampleBrightness = (sx: number, sy: number) => {
+    if (sx < 0 || sy < 0 || sx >= SAMPLE_W || sy >= SAMPLE_H) return 0;
+    const si = (sy * SAMPLE_W + sx) * 4;
+    return Math.max(pixels[si], pixels[si + 1], pixels[si + 2]) / 255;
+  };
 
   for (let y = 0; y < SAMPLE_H; y += STEP) {
     for (let x = 0; x < SAMPLE_W; x += STEP) {
@@ -80,10 +94,21 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
       const isHead = rr <= 1;
       const depth = isHead ? Math.sqrt(Math.max(0, 1 - rr)) * 0.72 : 0;
 
+      const particleIndex = mask.length;
+      const isEdge = brightness > 0.1 && (
+        sampleBrightness(x - STEP, y) < 0.035 ||
+        sampleBrightness(x + STEP, y) < 0.035 ||
+        sampleBrightness(x, y - STEP) < 0.035 ||
+        sampleBrightness(x, y + STEP) < 0.035
+      );
+      const isWarm = r > 105 && r > b * 1.55 && g > b * 1.12;
+
       pos.push(wx, wy, depth);
       color.setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace);
       col.push(color.r, color.g, color.b);
       mask.push(isHead ? 1 : 0);
+      if (isEdge) edgeIndices.push(particleIndex);
+      if (isWarm) warmIndices.push(particleIndex);
     }
   }
 
@@ -94,7 +119,36 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
     original: new Float32Array(positions),
     colors: new Float32Array(col),
     head: new Uint8Array(mask),
+    edge: new Uint32Array(edgeIndices),
+    warm: new Uint32Array(warmIndices),
   };
+}
+
+function createSubsetGeometry(indices: Uint32Array, source: Float32Array) {
+  const positions = new Float32Array(indices.length * 3);
+  for (let i = 0; i < indices.length; i += 1) {
+    const src = indices[i] * 3;
+    const dst = i * 3;
+    positions[dst] = source[src];
+    positions[dst + 1] = source[src + 1];
+    positions[dst + 2] = source[src + 2];
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return geometry;
+}
+
+function syncSubsetGeometry(geometry: THREE.BufferGeometry, indices: Uint32Array, source: Float32Array) {
+  const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
+  const target = attr.array as Float32Array;
+  for (let i = 0; i < indices.length; i += 1) {
+    const src = indices[i] * 3;
+    const dst = i * 3;
+    target[dst] = source[src];
+    target[dst + 1] = source[src + 1];
+    target[dst + 2] = source[src + 2];
+  }
+  attr.needsUpdate = true;
 }
 
 function ParticleArtwork({
@@ -102,14 +156,20 @@ function ParticleArtwork({
   state,
   effects,
   reducedMotion,
+  speechLevel,
+  quality,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
   effects: boolean;
   reducedMotion: boolean;
+  speechLevel: number;
+  quality: RenderQuality;
 }) {
   const basePoints = useRef<THREE.Points>(null);
   const glowPoints = useRef<THREE.Points>(null);
+  const edgePoints = useRef<THREE.Points>(null);
+  const warmPoints = useRef<THREE.Points>(null);
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
 
@@ -121,7 +181,14 @@ function ParticleArtwork({
     return g;
   }, [data]);
 
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  const edgeGeometry = useMemo(() => createSubsetGeometry(data.edge, data.positions), [data]);
+  const warmGeometry = useMemo(() => createSubsetGeometry(data.warm, data.positions), [data]);
+
+  useEffect(() => () => {
+    geometry.dispose();
+    edgeGeometry.dispose();
+    warmGeometry.dispose();
+  }, [geometry, edgeGeometry, warmGeometry]);
 
   useFrame(({ pointer, clock }, dt) => {
     if (!basePoints.current) return;
@@ -182,15 +249,44 @@ function ParticleArtwork({
     }
 
     attr.needsUpdate = true;
+    syncSubsetGeometry(edgeGeometry, data.edge, arr);
+    syncSubsetGeometry(warmGeometry, data.warm, arr);
+
+    const turn = Math.abs(current.current.yaw) / 0.38;
+    const baseSize = quality === "high" ? BASE_POINT_SIZE_HIGH : BASE_POINT_SIZE_LOW;
+    const glowSize = quality === "high" ? GLOW_POINT_SIZE_HIGH : GLOW_POINT_SIZE_LOW;
+    const voice = THREE.MathUtils.clamp(speechLevel, 0, 1);
+    const speakingBoost = state === "speaking" ? 1 + voice * 0.16 : 1;
 
     const baseMaterial = basePoints.current.material as THREE.PointsMaterial;
-    baseMaterial.opacity = state === "speaking" ? 0.98 : 0.94;
-    baseMaterial.size = state === "speaking" ? BASE_POINT_SIZE * 1.08 : BASE_POINT_SIZE;
+    baseMaterial.opacity = state === "speaking" ? 0.97 : 0.92;
+    baseMaterial.size = baseSize * speakingBoost;
 
     if (glowPoints.current) {
       const glowMaterial = glowPoints.current.material as THREE.PointsMaterial;
-      glowMaterial.opacity = state === "speaking" ? 0.085 : state === "thinking" ? 0.065 : 0.045;
-      glowMaterial.size = state === "speaking" ? GLOW_POINT_SIZE * 1.06 : GLOW_POINT_SIZE;
+      glowMaterial.opacity = quality === "high"
+        ? (state === "speaking" ? 0.07 + voice * 0.035 : state === "thinking" ? 0.055 : 0.032)
+        : 0.018;
+      glowMaterial.size = glowSize * speakingBoost;
+    }
+
+    if (edgePoints.current) {
+      const edgeMaterial = edgePoints.current.material as THREE.PointsMaterial;
+      edgeMaterial.opacity = quality === "high"
+        ? THREE.MathUtils.clamp(0.08 + turn * 0.34 + (state === "listening" ? 0.08 : 0), 0.08, 0.48)
+        : THREE.MathUtils.clamp(0.06 + turn * 0.2, 0.06, 0.25);
+      edgeMaterial.size = quality === "high" ? 2.8 + turn * 0.8 : 2.0 + turn * 0.4;
+    }
+
+    if (warmPoints.current) {
+      const warmMaterial = warmPoints.current.material as THREE.PointsMaterial;
+      const stateEnergy =
+        state === "speaking" ? 0.34 + voice * 0.4 :
+        state === "thinking" ? 0.34 :
+        state === "listening" ? 0.2 :
+        0.13;
+      warmMaterial.opacity = quality === "high" ? stateEnergy : stateEnergy * 0.65;
+      warmMaterial.size = quality === "high" ? 2.6 + voice * 1.1 : 1.9 + voice * 0.5;
     }
   });
 
@@ -210,13 +306,41 @@ function ParticleArtwork({
         />
       </points>
 
+      <points ref={edgePoints} geometry={edgeGeometry}>
+        <pointsMaterial
+          color="#70f5ff"
+          size={2.8}
+          sizeAttenuation={false}
+          transparent
+          opacity={0.1}
+          depthTest={false}
+          depthWrite={false}
+          toneMapped={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+
+      <points ref={warmPoints} geometry={warmGeometry}>
+        <pointsMaterial
+          color="#ff9b32"
+          size={2.6}
+          sizeAttenuation={false}
+          transparent
+          opacity={0.13}
+          depthTest={false}
+          depthWrite={false}
+          toneMapped={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+
       <points ref={basePoints} geometry={geometry}>
         <pointsMaterial
           vertexColors
-          size={BASE_POINT_SIZE}
+          size={BASE_POINT_SIZE_HIGH}
           sizeAttenuation={false}
           transparent
-          opacity={0.94}
+          opacity={0.92}
           depthTest={false}
           depthWrite={false}
           toneMapped={false}
@@ -232,17 +356,21 @@ function ParticleScene({
   state,
   effects,
   reducedMotion,
+  speechLevel,
+  quality,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
   effects: boolean;
   reducedMotion: boolean;
+  speechLevel: number;
+  quality: RenderQuality;
 }) {
   return (
     <Canvas
       style={{ position: "absolute", inset: 0 }}
       camera={{ position: [0, 0, 7.2], fov: 38 }}
-      dpr={[1, 1.25]}
+      dpr={quality === "high" ? 1.25 : 1}
       gl={{ antialias: false, alpha: true, powerPreference: "default", toneMapping: THREE.NoToneMapping }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0);
@@ -250,7 +378,14 @@ function ParticleScene({
         gl.toneMapping = THREE.NoToneMapping;
       }}
     >
-      <ParticleArtwork data={data} state={state} effects={effects} reducedMotion={reducedMotion} />
+      <ParticleArtwork
+        data={data}
+        state={state}
+        effects={effects}
+        reducedMotion={reducedMotion}
+        speechLevel={speechLevel}
+        quality={quality}
+      />
     </Canvas>
   );
 }
@@ -264,6 +399,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [view, setView] = useState<ViewMode>("particles");
   const [effects, setEffects] = useState(true);
   const [technical, setTechnical] = useState(false);
+  const [qualityMode, setQualityMode] = useState<QualityMode>("auto");
+  const [autoLow, setAutoLow] = useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [latency, setLatency] = useState<number | null>(null);
@@ -306,10 +443,28 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  useEffect(() => {
+    if (qualityMode === "auto" && fps !== null && fps < 44) setAutoLow(true);
+  }, [fps, qualityMode]);
+
   const state = runtime.avatarState;
+  const resolvedQuality: RenderQuality =
+    qualityMode === "auto" ? (autoLow ? "low" : "high") : qualityMode;
   const showReferenceOnly = view === "reference" || !effects;
   const showParticles = view !== "reference" && effects;
-  const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.035;
+  const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.028;
+  const energyOpacity =
+    state === "speaking" ? 0.34 :
+    state === "thinking" ? 0.27 :
+    state === "listening" ? 0.2 :
+    0.12;
+
+  const cycleQuality = () => {
+    setQualityMode((currentMode) =>
+      currentMode === "auto" ? "high" : currentMode === "high" ? "low" : "auto"
+    );
+    setAutoLow(false);
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -360,6 +515,36 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         }}
       />
 
+      {showParticles && effects && (
+        <>
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              background:
+                "radial-gradient(circle at 50% 38%, rgba(255,132,35,.28) 0%, rgba(255,132,35,.08) 10%, transparent 27%), radial-gradient(ellipse at 50% 64%, rgba(45,225,255,.12) 0%, transparent 50%)",
+              opacity: energyOpacity,
+              filter: resolvedQuality === "high" ? "blur(18px)" : "blur(8px)",
+              transition: "opacity 220ms ease",
+            }}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              opacity: resolvedQuality === "high" ? 0.055 : 0.025,
+              background:
+                "repeating-linear-gradient(180deg, rgba(90,235,255,.45) 0px, rgba(90,235,255,.45) 1px, transparent 1px, transparent 5px)",
+              mixBlendMode: "screen",
+            }}
+          />
+        </>
+      )}
+
       {showParticles && (
         <div
           style={{
@@ -370,7 +555,14 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           }}
         >
           {data ? (
-            <ParticleScene data={data} state={state} effects reducedMotion={reducedMotion} />
+            <ParticleScene
+              data={data}
+              state={state}
+              effects
+              reducedMotion={reducedMotion}
+              speechLevel={runtime.speechLevel}
+              quality={resolvedQuality}
+            />
           ) : (
             <div
               style={{
@@ -406,9 +598,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA // HUMANOID V9.2</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V10</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          GPU-SAFE IMAGE-DRIVEN PARTICLE ENTITY
+          GOD MODE // ADAPTIVE NEURAL PARTICLE ENTITY
         </div>
       </header>
 
@@ -445,6 +637,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <button onClick={() => setEffects((value) => !value)} style={buttonStyle(!effects)}>
               {effects ? "EFFECTS ON" : "EFFECTS OFF"}
             </button>
+            <button onClick={cycleQuality} style={buttonStyle(qualityMode !== "auto")}>
+              QUALITY {qualityMode.toUpperCase()}
+            </button>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
             </button>
@@ -480,11 +675,15 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Source: {sourceSize}</div>
           <div>Sampler: {SAMPLE_W}×{SAMPLE_H}, step {STEP}px</div>
           <div>Particles: {data?.count ?? "loading"}</div>
-          <div>Base point: {BASE_POINT_SIZE}px fixed-screen</div>
-          <div>Glow point: {GLOW_POINT_SIZE}px / low opacity</div>
+          <div>Quality: {qualityMode.toUpperCase()} → {resolvedQuality.toUpperCase()}</div>
+          <div>Base point: {resolvedQuality === "high" ? BASE_POINT_SIZE_HIGH : BASE_POINT_SIZE_LOW}px</div>
+          <div>Glow point: {resolvedQuality === "high" ? GLOW_POINT_SIZE_HIGH : GLOW_POINT_SIZE_LOW}px</div>
+          <div>Edge samples: {data?.edge.length ?? "loading"}</div>
+          <div>Warm/core samples: {data?.warm.length ?? "loading"}</div>
+          <div>Speech level: {runtime.speechLevel.toFixed(2)}</div>
           <div>Base blend: Normal</div>
-          <div>Glow blend: Additive</div>
-          <div>DPR cap: 1.25</div>
+          <div>Energy layers: Additive</div>
+          <div>DPR: {resolvedQuality === "high" ? "1.25" : "1.0"}</div>
           <div>FPS: {fps ?? "..."}</div>
           <div>Last request latency: {latency === null ? "not measured" : `${latency} ms`}</div>
           <div>Reduced motion: {reducedMotion ? "ON" : "OFF"}</div>
@@ -493,7 +692,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V9.2 prevents additive overdraw from washing the humanoid into a white block.
+            V10 MAX adds adaptive quality, cyan edge energy, orange neural-core sampling, voice-reactive intensity, and GPU-safe layered rendering.
           </div>
         </aside>
       )}
