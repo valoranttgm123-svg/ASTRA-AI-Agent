@@ -295,7 +295,7 @@ function ParticleArtwork({
       <points ref={glowPoints} geometry={geometry}>
         <pointsMaterial
           vertexColors
-          size={GLOW_POINT_SIZE}
+          size={GLOW_POINT_SIZE_HIGH}
           sizeAttenuation={false}
           transparent
           opacity={0.045}
