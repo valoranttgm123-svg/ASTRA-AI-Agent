@@ -221,7 +221,7 @@ function ParticleArtwork({
   const edgePoints = useRef<THREE.Points>(null);
   const warmPoints = useRef<THREE.Points>(null);
   const cyanPoints = useRef<THREE.Points>(null);
-  const zonePoints = useRef<Array<THREE.Points | null>>([]);
+  const zonePoints = useRef<Array<THREE.Points<any, any> | null>>([]);
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
   const currentProfile = useRef<StateProfile>({ ...profileForState(state) });
