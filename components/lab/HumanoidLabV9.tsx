@@ -32,8 +32,44 @@ type ParticleData = {
   head: Uint8Array;
   edge: Uint32Array;
   warm: Uint32Array;
+  cyan: Uint32Array;
+  zones: Uint32Array[];
   original: Float32Array;
 };
+
+type StateProfile = {
+  cyan: number;
+  warm: number;
+  field: number;
+  scan: number;
+  zone: number;
+  tone: number;
+};
+
+const STATE_PROFILES: Record<"idle" | "listening" | "thinking" | "speaking", StateProfile> = {
+  idle: { cyan: 0.08, warm: 0.10, field: 0.08, scan: 0.03, zone: 0.05, tone: 0.30 },
+  listening: { cyan: 0.40, warm: 0.10, field: 0.20, scan: 0.08, zone: 0.28, tone: 0.04 },
+  thinking: { cyan: 0.16, warm: 0.42, field: 0.29, scan: 0.11, zone: 0.34, tone: 0.72 },
+  speaking: { cyan: 0.22, warm: 0.50, field: 0.36, scan: 0.15, zone: 0.42, tone: 0.94 },
+};
+
+function profileForState(state: AstraAvatarState): StateProfile {
+  if (state === "listening" || state === "thinking" || state === "speaking") {
+    return STATE_PROFILES[state];
+  }
+  return STATE_PROFILES.idle;
+}
+
+function mixProfile(from: StateProfile, to: StateProfile, amount: number): StateProfile {
+  return {
+    cyan: THREE.MathUtils.lerp(from.cyan, to.cyan, amount),
+    warm: THREE.MathUtils.lerp(from.warm, to.warm, amount),
+    field: THREE.MathUtils.lerp(from.field, to.field, amount),
+    scan: THREE.MathUtils.lerp(from.scan, to.scan, amount),
+    zone: THREE.MathUtils.lerp(from.zone, to.zone, amount),
+    tone: THREE.MathUtils.lerp(from.tone, to.tone, amount),
+  };
+}
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -65,6 +101,8 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
   const mask: number[] = [];
   const edgeIndices: number[] = [];
   const warmIndices: number[] = [];
+  const cyanIndices: number[] = [];
+  const zoneBuckets: number[][] = Array.from({ length: 6 }, () => []);
   const color = new THREE.Color();
 
   const sampleBrightness = (sx: number, sy: number) => {
@@ -103,6 +141,11 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
         sampleBrightness(x, y + STEP) < 0.035
       );
       const isWarm = r > 105 && r > b * 1.55 && g > b * 1.12;
+      const isCyan = b > r * 1.12 && g > r * 1.08 && Math.max(g, b) > 75;
+      const radialX = (nx - 0.5) / 0.52;
+      const radialY = (ny - 0.39) / 0.72;
+      const radial = Math.sqrt(radialX * radialX + radialY * radialY);
+      const zoneIndex = Math.min(5, Math.max(0, Math.floor(radial * 5.4)));
 
       pos.push(wx, wy, depth);
       color.setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace);
@@ -110,6 +153,8 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
       mask.push(isHead ? 1 : 0);
       if (isEdge) edgeIndices.push(particleIndex);
       if (isWarm) warmIndices.push(particleIndex);
+      if (isCyan) cyanIndices.push(particleIndex);
+      if (radial <= 1.08) zoneBuckets[zoneIndex].push(particleIndex);
     }
   }
 
@@ -122,6 +167,8 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
     head: new Uint8Array(mask),
     edge: new Uint32Array(edgeIndices),
     warm: new Uint32Array(warmIndices),
+    cyan: new Uint32Array(cyanIndices),
+    zones: zoneBuckets.map((bucket) => new Uint32Array(bucket)),
   };
 }
 
@@ -173,8 +220,16 @@ function ParticleArtwork({
   const glowPoints = useRef<THREE.Points>(null);
   const edgePoints = useRef<THREE.Points>(null);
   const warmPoints = useRef<THREE.Points>(null);
+  const cyanPoints = useRef<THREE.Points>(null);
+  const zonePoints = useRef<Array<THREE.Points | null>>([]);
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
+  const currentProfile = useRef<StateProfile>({ ...profileForState(state) });
+  const transition = useRef({
+    progress: 1,
+    from: { ...profileForState(state) },
+    to: { ...profileForState(state) },
+  });
 
   const geometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
@@ -186,12 +241,27 @@ function ParticleArtwork({
 
   const edgeGeometry = useMemo(() => createSubsetGeometry(data.edge, data.positions), [data]);
   const warmGeometry = useMemo(() => createSubsetGeometry(data.warm, data.positions), [data]);
+  const cyanGeometry = useMemo(() => createSubsetGeometry(data.cyan, data.positions), [data]);
+  const zoneGeometries = useMemo(
+    () => data.zones.map((indices) => createSubsetGeometry(indices, data.positions)),
+    [data],
+  );
+
+  useEffect(() => {
+    transition.current = {
+      progress: reducedMotion ? 1 : 0,
+      from: { ...currentProfile.current },
+      to: { ...profileForState(state) },
+    };
+  }, [state, reducedMotion]);
 
   useEffect(() => () => {
     geometry.dispose();
     edgeGeometry.dispose();
     warmGeometry.dispose();
-  }, [geometry, edgeGeometry, warmGeometry]);
+    cyanGeometry.dispose();
+    zoneGeometries.forEach((zoneGeometry) => zoneGeometry.dispose());
+  }, [geometry, edgeGeometry, warmGeometry, cyanGeometry, zoneGeometries]);
 
   useFrame(({ pointer, clock }, dt) => {
     if (!basePoints.current) return;
@@ -262,6 +332,20 @@ function ParticleArtwork({
     attr.needsUpdate = true;
     syncSubsetGeometry(edgeGeometry, data.edge, arr);
     syncSubsetGeometry(warmGeometry, data.warm, arr);
+    syncSubsetGeometry(cyanGeometry, data.cyan, arr);
+    for (let zoneIndex = 0; zoneIndex < zoneGeometries.length; zoneIndex += 1) {
+      syncSubsetGeometry(zoneGeometries[zoneIndex], data.zones[zoneIndex], arr);
+    }
+
+    const transitionSpeed = reducedMotion ? 10 : 1 / 0.68;
+    transition.current.progress = Math.min(1, transition.current.progress + dt * transitionSpeed);
+    const easedProgress = THREE.MathUtils.smoothstep(transition.current.progress, 0, 1);
+    currentProfile.current = mixProfile(
+      transition.current.from,
+      transition.current.to,
+      easedProgress,
+    );
+    const profile = currentProfile.current;
 
     const turn = Math.abs(current.current.yaw) / 0.38;
     const baseSize = quality === "high" ? BASE_POINT_SIZE_HIGH : BASE_POINT_SIZE_LOW;
@@ -283,21 +367,51 @@ function ParticleArtwork({
 
     if (edgePoints.current) {
       const edgeMaterial = edgePoints.current.material as THREE.PointsMaterial;
+      const edgeEnergy = profile.cyan + turn * 0.34;
       edgeMaterial.opacity = quality === "high"
-        ? THREE.MathUtils.clamp(0.08 + turn * 0.34 + (state === "listening" ? 0.08 : 0), 0.08, 0.48)
-        : THREE.MathUtils.clamp(0.06 + turn * 0.2, 0.06, 0.25);
-      edgeMaterial.size = quality === "high" ? 2.8 + turn * 0.8 : 2.0 + turn * 0.4;
+        ? THREE.MathUtils.clamp(0.055 + edgeEnergy, 0.055, 0.5)
+        : THREE.MathUtils.clamp(0.04 + edgeEnergy * 0.55, 0.04, 0.28);
+      edgeMaterial.size = quality === "high" ? 2.5 + turn * 1.0 : 1.8 + turn * 0.5;
+    }
+
+    if (cyanPoints.current) {
+      const cyanMaterial = cyanPoints.current.material as THREE.PointsMaterial;
+      const listeningPulse = state === "listening" ? 0.04 + Math.sin(t * 2.4) * 0.025 : 0;
+      cyanMaterial.opacity = quality === "high"
+        ? THREE.MathUtils.clamp(profile.cyan * 0.72 + listeningPulse, 0.03, 0.38)
+        : THREE.MathUtils.clamp(profile.cyan * 0.4, 0.02, 0.18);
+      cyanMaterial.size = quality === "high" ? 2.15 : 1.55;
     }
 
     if (warmPoints.current) {
       const warmMaterial = warmPoints.current.material as THREE.PointsMaterial;
-      const stateEnergy =
-        state === "speaking" ? 0.34 + voice * 0.4 :
-        state === "thinking" ? 0.34 :
-        state === "listening" ? 0.2 :
-        0.13;
-      warmMaterial.opacity = quality === "high" ? stateEnergy : stateEnergy * 0.65;
-      warmMaterial.size = quality === "high" ? 2.6 + voice * 1.1 : 1.9 + voice * 0.5;
+      const stateVoice = state === "speaking" ? voice * 0.34 : 0;
+      const thinkingPulse = state === "thinking" ? (Math.sin(t * 1.7) + 1) * 0.025 : 0;
+      const stateEnergy = profile.warm + stateVoice + thinkingPulse;
+      warmMaterial.opacity = quality === "high"
+        ? THREE.MathUtils.clamp(stateEnergy, 0.05, 0.72)
+        : THREE.MathUtils.clamp(stateEnergy * 0.58, 0.035, 0.38);
+      warmMaterial.size = quality === "high" ? 2.45 + voice * 0.9 : 1.8 + voice * 0.4;
+    }
+
+    const cyanStateColor = new THREE.Color("#5ef5ff");
+    const warmStateColor = new THREE.Color("#ff9b32");
+    const zoneColor = cyanStateColor.clone().lerp(warmStateColor, profile.tone);
+    for (let zoneIndex = 0; zoneIndex < zonePoints.current.length; zoneIndex += 1) {
+      const zonePoint = zonePoints.current[zoneIndex];
+      if (!zonePoint) continue;
+      const zoneMaterial = zonePoint.material as THREE.PointsMaterial;
+      const zoneStart = zoneIndex * 0.105;
+      const waveGate = transition.current.progress >= 1
+        ? 1
+        : THREE.MathUtils.smoothstep(transition.current.progress, zoneStart, zoneStart + 0.26);
+      const faceBias = 1 - zoneIndex / Math.max(1, zonePoints.current.length - 1);
+      const speakingFace = state === "speaking" ? voice * 0.13 * faceBias : 0;
+      zoneMaterial.color.copy(zoneColor);
+      zoneMaterial.opacity = effects
+        ? THREE.MathUtils.clamp((profile.zone * (0.42 + faceBias * 0.58) + speakingFace) * waveGate, 0, 0.36)
+        : 0;
+      zoneMaterial.size = quality === "high" ? 2.2 + faceBias * 0.55 : 1.55 + faceBias * 0.25;
     }
   });
 
@@ -344,6 +458,42 @@ function ParticleArtwork({
           blending={THREE.AdditiveBlending}
         />
       </points>
+
+      <points ref={cyanPoints} geometry={cyanGeometry}>
+        <pointsMaterial
+          color="#5ef5ff"
+          size={2.15}
+          sizeAttenuation={false}
+          transparent
+          opacity={0.08}
+          depthTest={false}
+          depthWrite={false}
+          toneMapped={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+
+      {zoneGeometries.map((zoneGeometry, zoneIndex) => (
+        <points
+          key={zoneIndex}
+          ref={(node) => {
+            zonePoints.current[zoneIndex] = node;
+          }}
+          geometry={zoneGeometry}
+        >
+          <pointsMaterial
+            color="#5ef5ff"
+            size={2.1}
+            sizeAttenuation={false}
+            transparent
+            opacity={0.04}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </points>
+      ))}
 
       <points ref={basePoints} geometry={geometry}>
         <pointsMaterial
@@ -625,9 +775,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V10.1</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V11</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          GOD MODE // LOCAL INDEX-FINGER TRACKING
+          DYNAMIC STATE ENGINE // ONE APPROVED ARTWORK
         </div>
       </header>
 
@@ -727,6 +877,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Glow point: {resolvedQuality === "high" ? GLOW_POINT_SIZE_HIGH : GLOW_POINT_SIZE_LOW}px</div>
           <div>Edge samples: {data?.edge.length ?? "loading"}</div>
           <div>Warm/core samples: {data?.warm.length ?? "loading"}</div>
+          <div>Cyan samples: {data?.cyan.length ?? "loading"}</div>
+          <div>State radial zones: {data?.zones.length ?? "loading"}</div>
+          <div>State transition: 680 ms radial face-out</div>
           <div>Speech level: {runtime.speechLevel.toFixed(2)}</div>
           <div>Base blend: Normal</div>
           <div>Energy layers: Additive</div>
@@ -746,7 +899,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V10.1 adds local MediaPipe index-finger tracking in a dedicated worker. No gesture actions are enabled in this stage.
+            V11 keeps the same approved Idle artwork and creates Listening, Thinking, and Speaking entirely through particle energy, motion, and face-out radial transitions. No new state images are generated.
           </div>
         </aside>
       )}
