@@ -139,3 +139,29 @@ Verification required:
 - hand-found/no-hand return-to-neutral behavior;
 - responsiveness comparison using Pre-camera FPS vs current FPS;
 - confirm mouse fallback still works with camera off.
+
+
+## Stage 3 — Dynamic State Engine (V11)
+
+Goal: create distinct Idle, Listening, Thinking and Speaking visuals from the single approved ASTRA Idle artwork. No new state images are generated.
+
+Implemented:
+- the approved `astra-idle-v1.webp` remains the only artwork source;
+- sampled particles are additionally classified into cyan-energy samples, warm/orange samples, silhouette edges and six radial face-out zones;
+- state changes use a 680 ms radial transition that starts at the face and spreads outward;
+- rapid state changes target the newest state immediately instead of queueing old animations;
+- Listening increases cyan/head energy and subtle attention pulsing;
+- Thinking increases orange neural-core energy with a slow processing pulse;
+- Speaking increases face/core energy using the existing runtime `speechLevel`;
+- Idle returns all added state energy toward the neutral baseline;
+- state effects reuse the same Three.js scene, particle positions, head turn, chest motion and webcam tracking;
+- fixed-screen point sizing and V10 adaptive quality remain intact;
+- Effects Off and reduced-motion still return toward the neutral approved artwork;
+- no new artwork, external image generation, paid service or second renderer added.
+
+Verification required:
+- production CI build;
+- browser test of IDLE → LISTENING → THINKING → SPEAKING and rapid state switching;
+- confirm the face-out transition does not shift the humanoid;
+- confirm camera tracking still works in every state;
+- confirm AUTO/LOW remain responsive on the target PC.
