@@ -679,6 +679,8 @@ function ParticleArtwork({
           vertexColors
           size={GLOW_POINT_SIZE_HIGH}
           sizeAttenuation={false}
+          alphaMap={particleSprite}
+          alphaTest={0.04}
           transparent
           opacity={0.045}
           depthTest={false}
@@ -691,8 +693,10 @@ function ParticleArtwork({
       <points ref={edgePoints} geometry={edgeGeometry}>
         <pointsMaterial
           color="#70f5ff"
-          size={2.8}
+          size={2.1}
           sizeAttenuation={false}
+          alphaMap={particleSprite}
+          alphaTest={0.08}
           transparent
           opacity={0.1}
           depthTest={false}
@@ -705,8 +709,10 @@ function ParticleArtwork({
       <points ref={warmPoints} geometry={warmGeometry}>
         <pointsMaterial
           color="#ff9b32"
-          size={2.6}
+          size={1.95}
           sizeAttenuation={false}
+          alphaMap={particleSprite}
+          alphaTest={0.08}
           transparent
           opacity={0.13}
           depthTest={false}
@@ -719,8 +725,10 @@ function ParticleArtwork({
       <points ref={cyanPoints} geometry={cyanGeometry}>
         <pointsMaterial
           color="#5ef5ff"
-          size={2.15}
+          size={1.82}
           sizeAttenuation={false}
+          alphaMap={particleSprite}
+          alphaTest={0.08}
           transparent
           opacity={0.08}
           depthTest={false}
@@ -733,8 +741,10 @@ function ParticleArtwork({
       <points ref={voiceCorePoints} geometry={voiceCoreGeometry}>
         <pointsMaterial
           color="#ff7d22"
-          size={2.15}
+          size={1.88}
           sizeAttenuation={false}
+          alphaMap={particleSprite}
+          alphaTest={0.08}
           transparent
           opacity={0}
           depthTest={false}
@@ -747,8 +757,10 @@ function ParticleArtwork({
       <points ref={voiceFacePoints} geometry={voiceFaceGeometry}>
         <pointsMaterial
           color="#ffb15a"
-          size={1.95}
+          size={1.72}
           sizeAttenuation={false}
+          alphaMap={particleSprite}
+          alphaTest={0.08}
           transparent
           opacity={0}
           depthTest={false}
@@ -768,8 +780,10 @@ function ParticleArtwork({
         >
           <pointsMaterial
             color="#5ef5ff"
-            size={2.1}
+            size={1.82}
             sizeAttenuation={false}
+            alphaMap={particleSprite}
+            alphaTest={0.08}
             transparent
             opacity={0.04}
             depthTest={false}
@@ -785,6 +799,8 @@ function ParticleArtwork({
           vertexColors
           size={BASE_POINT_SIZE_HIGH}
           sizeAttenuation={false}
+          alphaMap={particleSprite}
+          alphaTest={0.16}
           transparent
           opacity={0.92}
           depthTest={false}
@@ -1267,7 +1283,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Mic transcript: {runtime.micTranscript || "—"}</div>
           <div>Base blend: Normal</div>
           <div>Energy layers: Additive</div>
-          <div>DPR: {resolvedQuality === "high" ? "1.25" : "1.0"}</div>
+          <div>DPR: {resolvedQuality === "high" ? "1.5" : "1.0"}</div>
+          <div>Particle sprite: 32px procedural round mask / linear filtered</div>
+          <div>Assembly easing: quintic smootherstep / deterministic curve</div>
           <div>FPS: {fps ?? "..."}</div>
           <div>Pre-camera FPS: {preCameraFpsRef.current ?? "not measured"}</div>
           <div>Camera: {tracking.enabled ? "ON" : "OFF"} / {tracking.status.toUpperCase()}</div>
@@ -1283,7 +1301,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12 adds a non-blocking 2.6 s particle assembly from one left-side source stream. Only the central humanoid assembles; the approved background remains stable. Head, neck, shoulders, then core settle into their existing V11.2.1 positions. REPLAY and SKIP do not interrupt chat, mic, speech playback, or camera tracking.
+            V12.0.1 sharpens the particle field with a procedural round sprite, smaller base/energy points, HIGH DPR 1.5, and linear filtering. Assembly motion now uses quintic smootherstep plus a deterministic curve instead of time-based jitter, so particles settle more smoothly without changing the ASTRA silhouette or runtime behavior.
           </div>
         </aside>
       )}
