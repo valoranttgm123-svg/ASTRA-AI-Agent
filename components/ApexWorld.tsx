@@ -411,7 +411,7 @@ export default function ApexWorld() {
                   <strong style={{ color: "rgba(235,252,255,.82)", fontWeight: 500 }}>
                     {event.label}
                   </strong>
-                  {event.agent ? " · " + event.agent.replaceAll("_", " ") : ""}
+                  {event.agent ? " · " + event.agent.replace(/_/g, " ") : ""}
                 </span>
               </div>
             ))
