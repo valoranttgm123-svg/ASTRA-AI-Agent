@@ -862,9 +862,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V14</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V15</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          BRAIN ↔ HUMANOID EVENT LINK // SHARED RUNTIME
+          REAL-TIME BRAIN TELEMETRY // NDJSON STREAM
         </div>
       </header>
 
@@ -885,7 +885,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         }}
       >
         <div style={{ color: "#69edff", fontSize: 8.5, letterSpacing: ".17em" }}>
-          BRAIN LINK // {(runtime.brainProvider ?? "standby").toUpperCase()}
+          BRAIN LINK // {(runtime.brainProvider ?? "standby").toUpperCase()} // {runtime.brainStreaming ? "LIVE" : "IDLE"}
         </div>
         <div style={{ marginTop: 4, color: "rgba(229,250,255,.72)", fontSize: 9 }}>
           {latestBrainEvent?.label ?? "No Brain event yet"}
@@ -1117,6 +1117,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Brain event count: {runtime.brainEvents.length}</div>
           <div>Brain latest event: {latestBrainEvent ? latestBrainEvent.type + " / " + latestBrainEvent.label : "NONE"}</div>
           <div>Brain latest agent: {latestBrainEvent?.agent ?? "—"}</div>
+          <div>Brain stream: {runtime.brainStreaming ? "LIVE" : "IDLE"} · NDJSON / request-scoped</div>
           <div>Brain visual pulse: truthful runtime/backend events only</div>
           <div>Brain tool telemetry: not fabricated when provider does not expose it</div>
           <div>Brain context memory: {runtime.lastResponse?.brain.context?.memoryEntries ?? 0} entries</div>
@@ -1185,7 +1186,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V14 links the Humanoid directly to the same ASTRA Brain event stream already used by Command Center. Genuine request, routing, memory, skill, provider, agent, blocked and response events now trigger short GPU particle pulses with event/provider-specific tones, while the Humanoid HUD exposes the real provider, agent, request mode and execution state. No tool-level activity is invented when the execution provider does not expose trustworthy telemetry.
+            V15 transports Brain lifecycle telemetry incrementally over a request-scoped NDJSON stream. Provider selection, agent start, provider failures, completion and response readiness now reach Runtime as they actually occur, so the same live trace drives Command Center nodes and Humanoid GPU pulses. Final response events are deduplicated against streamed events, and no timer-based or fabricated tool activity is introduced.
           </div>
         </aside>
       )}
