@@ -67,6 +67,7 @@ function isEngineeringRoute(selected: AstraAgentKey) {
 
 function isLocalExecutionRoute(selected: AstraAgentKey) {
   return (
+    selected === "chief_of_staff" ||
     selected === "developer" ||
     selected === "github" ||
     selected === "files" ||
@@ -712,8 +713,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       },
       tools: {
         enabled: true,
-        available: hermes.available || codex.available,
-        detail: `${toolsPolicyDetail(policy)} Tool execution is delegated to permitted Hermes/Codex capabilities; ASTRA does not invent tool activity when no provider reports it.`,
+        available:
+          hermes.available ||
+          (codex.available && codex.sandbox === "workspace-write"),
+        detail: `${toolsPolicyDetail(policy)} Codex sandbox: ${codex.sandbox}. Tool execution is delegated to permitted Hermes/Codex capabilities; ASTRA does not invent tool activity when no provider reports it.`,
       },
       cloud: {
         enabled: cloud.enabled,
