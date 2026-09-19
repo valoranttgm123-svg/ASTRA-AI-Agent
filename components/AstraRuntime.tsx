@@ -76,6 +76,7 @@ type AstraRuntimeValue = {
   brainStatus: AstraBrainStatus | null;
   brainEvents: AstraBrainEvent[];
   brainTrace: ReasoningTrace | null;
+  brainStreaming: boolean;
   send: (
     message: string,
     options?: { mode?: "chat" | "execute"; approved?: boolean },
@@ -137,6 +138,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [brainStatus, setBrainStatus] = useState<AstraBrainStatus | null>(null);
   const [brainEvents, setBrainEvents] = useState<AstraBrainEvent[]>([]);
   const [brainTrace, setBrainTrace] = useState<ReasoningTrace | null>(null);
+  const [brainStreaming, setBrainStreaming] = useState(false);
 
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -311,6 +313,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setSpeechLevel(0);
     setPlaybackActive(false);
     setActiveAgent("Chief");
+    setBrainStreaming(true);
 
     const requestAt = Date.now();
     const localEvent: AstraBrainEvent = {
@@ -420,6 +423,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       }
 
       requestControllerRef.current = null;
+      setBrainStreaming(false);
       setLastResponse(result);
       setActiveAgent(result.agentName);
       setBrainProvider(result.brain.provider);
@@ -508,6 +512,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       }
 
       requestControllerRef.current = null;
+      setBrainStreaming(false);
       if (error instanceof DOMException && error.name === "AbortError") {
         setOrbState("idle");
         setAvatarState("idle");
@@ -673,6 +678,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setSpeechLevel(0);
     setPlaybackActive(false);
     setActiveAgent(null);
+    setBrainStreaming(false);
   }, [cancelSpeech, clearResetTimer, invalidateRecognition]);
 
   const setVoiceEnabled = useCallback((enabled: boolean) => {
