@@ -427,29 +427,42 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         const seen = new Set(current.map((event) => event.id));
         const merged = [...current];
         for (const event of result.brain.events) {
-          if (!seen.has(event.id)) merged.push(event);
+          if (seen.has(event.id) || streamedFingerprints.has(fingerprint(event))) continue;
+          seen.add(event.id);
+          merged.push(event);
         }
         return merged.slice(-24);
       });
 
       const eventTrace = result.brain.events
-        .filter((event) => Boolean(event.visualNode))
+        .filter(
+          (event) =>
+            Boolean(event.visualNode) &&
+            !streamedFingerprints.has(fingerprint(event)),
+        )
         .map((event) => ({
           helper: event.visualNode as string,
           type: event.type,
           at: event.at,
         }));
 
-      setBrainTrace({
-        n: ++brainTraceSequenceRef.current,
-        trace:
-          eventTrace.length > 0
-            ? eventTrace
-            : result.brain.visualNodes.map((helper, index) => ({
+      setBrainTrace((current) => {
+        const fallbackTrace =
+          !current?.trace.length && eventTrace.length === 0
+            ? result.brain.visualNodes.map((helper, index) => ({
                 helper,
                 type: index === 0 ? "request.received" : "router.selected",
                 at: Date.now() + index,
-              })),
+              }))
+            : [];
+        return {
+          n: ++brainTraceSequenceRef.current,
+          trace: [
+            ...(current?.trace ?? []),
+            ...eventTrace,
+            ...fallbackTrace,
+          ].slice(-16),
+        };
       });
 
       setBrainStatus((current) => {
