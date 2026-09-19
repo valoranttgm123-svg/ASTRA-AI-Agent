@@ -7,6 +7,7 @@ import type {
   AstraBrainChatResult,
   AstraBrainEvent,
   AstraBrainProvider,
+  AstraBrainStatus,
 } from "@/lib/brain/types";
 
 type SpeechRecognitionAlternativeLike = {
@@ -67,6 +68,7 @@ type AstraRuntimeValue = {
   activeAgent: string | null;
   lastResponse: AstraBrainChatResult | null;
   brainProvider: AstraBrainProvider | null;
+  brainStatus: AstraBrainStatus | null;
   brainEvents: AstraBrainEvent[];
   brainTrace: ReasoningTrace | null;
   send: (message: string) => Promise<AstraBrainChatResult>;
@@ -123,6 +125,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [activeAgent, setActiveAgent] = useState<string | null>(null);
   const [lastResponse, setLastResponse] = useState<AstraBrainChatResult | null>(null);
   const [brainProvider, setBrainProvider] = useState<AstraBrainProvider | null>(null);
+  const [brainStatus, setBrainStatus] = useState<AstraBrainStatus | null>(null);
   const [brainEvents, setBrainEvents] = useState<AstraBrainEvent[]>([]);
   const [brainTrace, setBrainTrace] = useState<ReasoningTrace | null>(null);
 
@@ -167,6 +170,28 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     setMicSupported(Boolean(getSpeechRecognitionConstructor()));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetch("/api/agent", { method: "GET", cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as AstraBrainStatus;
+      })
+      .then((status) => {
+        if (cancelled || !status) return;
+        setBrainStatus(status);
+        setBrainProvider(status.provider);
+      })
+      .catch(() => {
+        // Chat still has routing-only fallback if the status request itself fails.
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => () => {
@@ -321,14 +346,39 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         }
         return merged.slice(-24);
       });
+
+      const eventTrace = result.brain.events
+        .filter((event) => Boolean(event.visualNode))
+        .map((event) => ({
+          helper: event.visualNode as string,
+          type: event.type,
+          at: event.at,
+        }));
+
       setBrainTrace({
         n: ++brainTraceSequenceRef.current,
-        trace: result.brain.visualNodes.map((helper, index) => ({
-          helper,
-          type: index === 0 ? "request.received" : "router.selected",
-          at: Date.now() + index,
-        })),
+        trace:
+          eventTrace.length > 0
+            ? eventTrace
+            : result.brain.visualNodes.map((helper, index) => ({
+                helper,
+                type: index === 0 ? "request.received" : "router.selected",
+                at: Date.now() + index,
+              })),
       });
+
+      setBrainStatus((current) => ({
+        ready: true,
+        provider: result.brain.provider,
+        mode: result.brain.provider === "hermes" ? "local" : "routing_only",
+        detail:
+          result.brain.provider === "hermes"
+            ? "Hermes handled the latest ASTRA request."
+            : "ASTRA used routing-only fallback for the latest request.",
+        endpoint: current?.endpoint,
+        model: current?.model,
+        fallback: "routing_only",
+      }));
       speak(result.message);
       return result;
     } catch (error) {
@@ -521,6 +571,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       activeAgent,
       lastResponse,
       brainProvider,
+      brainStatus,
       brainEvents,
       brainTrace,
       send,
@@ -543,6 +594,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       activeAgent,
       lastResponse,
       brainProvider,
+      brainStatus,
       brainEvents,
       brainTrace,
       send,

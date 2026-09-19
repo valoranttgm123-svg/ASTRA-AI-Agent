@@ -373,17 +373,38 @@ export default function ApexWorld() {
           pointerEvents: "none",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 5 }}>
           <span style={{ color: "#71efff", letterSpacing: ".16em" }}>ASTRA BRAIN</span>
-          <span style={{ color: runtime.brainProvider ? "#8ef6b8" : "rgba(255,255,255,.34)" }}>
+          <span
+            style={{
+              color:
+                runtime.brainProvider === "hermes"
+                  ? "#8ef6b8"
+                  : runtime.brainProvider === "routing_only"
+                    ? "#ffbf69"
+                    : "rgba(255,255,255,.34)",
+            }}
+          >
             {(runtime.brainProvider ?? "standby").toUpperCase()}
           </span>
+        </div>
+        <div
+          style={{
+            marginBottom: 8,
+            color: "rgba(215,244,250,.42)",
+            fontSize: 8.5,
+            letterSpacing: ".07em",
+          }}
+        >
+          {runtime.brainStatus
+            ? `${runtime.brainStatus.mode.toUpperCase()} · ${runtime.brainStatus.model ?? "ROUTER"}`
+            : "CHECKING LOCAL BRAIN..."}
         </div>
         <div style={{ display: "grid", gap: 5 }}>
           {runtime.brainEvents.length === 0 ? (
             <div style={{ color: "rgba(220,244,250,.38)" }}>No brain events yet.</div>
           ) : (
-            runtime.brainEvents.slice(-4).map((event) => (
+            runtime.brainEvents.slice(-5).map((event) => (
               <div
                 key={event.id}
                 style={{
@@ -400,11 +421,13 @@ export default function ApexWorld() {
                     borderRadius: "50%",
                     marginTop: 3,
                     background:
-                      event.type === "agent.blocked"
-                        ? "#ffb55e"
-                        : event.type === "response.ready"
+                      event.type === "agent.blocked" || event.type === "provider.unavailable"
+                        ? "#ff9d66"
+                        : event.type === "agent.completed" || event.type === "response.ready"
                           ? "#83ffbc"
-                          : "#63eaff",
+                          : event.type === "provider.selected"
+                            ? "#d7a2ff"
+                            : "#63eaff",
                   }}
                 />
                 <span>

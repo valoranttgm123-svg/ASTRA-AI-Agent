@@ -1,6 +1,6 @@
 # ASTRA Brain V1 — Architecture Decision
 
-Status: **Phase 1 implemented — Brain Adapter + Event Bus + Command Center trace; Hermes/Ollama/Codex execution still pending**
+Status: **Phase 2 implemented — Brain Adapter + Event Bus + Command Center trace + Hermes local gateway adapter; Ollama/Codex execution routing still pending**
 
 ## Goal
 
@@ -76,18 +76,24 @@ ASTRA must not couple the frontend directly to Hermes internals.
 
 ## ASTRA Brain Adapter
 
-### Phase 1 implementation status
+### Phase 2 implementation status
 
 Implemented in code:
 
 - `lib/brain/types.ts` defines the stable `AstraBrain` interface, provider/status types, brain events, and chat result envelope;
-- `lib/brain/adapter.ts` provides a routing-only adapter that wraps the existing ASTRA orchestrator;
+- `lib/brain/adapter.ts` now prefers Hermes local execution and keeps the routing-only adapter as a safe fallback;
+- `lib/brain/hermes.ts` is a server-only HTTP client for the Hermes local API server;
+- Hermes chat uses the OpenAI-compatible `POST /v1/chat/completions` endpoint;
+- Hermes health/status uses `GET /v1/capabilities`;
+- no Hermes API key is ever sent to the browser;
 - `/api/agent` POST now goes through the Brain Adapter instead of importing the orchestrator directly;
 - `/api/agent` GET exposes current Brain Adapter status;
 - ASTRA Runtime now exposes `brainProvider`, `brainEvents`, and `brainTrace`;
 - Command Center `ReasoningWeb` is driven by the real backend route trace;
 - the Command Center HUD displays recent Brain events;
-- provider/execution state is explicit: Phase 1 reports `routing_only` and does not pretend that Hermes/Ollama/Codex executed a task.
+- provider/execution state is explicit: successful Hermes turns report `hermes / executed`; unavailable Hermes falls back to `routing_only` and never pretends execution occurred;
+- Runtime loads Brain status on startup, so Command Center can show HERMES or ROUTING_ONLY before the first chat;
+- Command Center traces are now built from real Brain lifecycle events such as `provider.selected`, `agent.started`, `agent.completed`, and `provider.unavailable`.
 
 Current event path:
 
@@ -103,15 +109,19 @@ User / Humanoid / Console
           v
   ASTRA Brain Adapter
           |
-          v
- Existing rule router
+          +--> route specialist
           |
-          +--> Brain events
-          |      |
-          |      +--> Runtime event bus
-          |      +--> Command Center node trace
+          +--> Hermes local gateway
+          |       |
+          |       +--> /v1/chat/completions
+          |       +--> Hermes tools/agent loop
           |
-          +--> needs_provider response
+          +--> routing-only fallback
+          |
+          +--> Brain lifecycle events
+                  |
+                  +--> Runtime event bus
+                  +--> Command Center node trace
 ```
 
 ASTRA owns a stable adapter boundary:
@@ -143,6 +153,42 @@ AstraBrain
  |- OpenAIBrainAdapter
  |- OtherProviderAdapter
 ```
+
+## Hermes local gateway setup
+
+ASTRA does not call Hermes from the browser. The Next.js server route calls the local Hermes gateway on the machine running ASTRA.
+
+Hermes side (`~/.hermes/.env`):
+
+```env
+API_SERVER_ENABLED=true
+API_SERVER_KEY=choose-a-local-key
+```
+
+Start Hermes:
+
+```bash
+hermes gateway
+```
+
+ASTRA side (`.env.local`):
+
+```env
+ASTRA_HERMES_ENABLED=true
+ASTRA_HERMES_URL=http://127.0.0.1:8642
+ASTRA_HERMES_API_KEY=choose-a-local-key
+ASTRA_HERMES_MODEL=hermes-agent
+ASTRA_HERMES_TIMEOUT_MS=45000
+ASTRA_HERMES_STATUS_TIMEOUT_MS=1200
+```
+
+Behavior:
+
+- if Hermes is reachable and authorized, ASTRA executes the routed turn through Hermes;
+- if Hermes is stopped, times out, returns an error, or is disabled, ASTRA falls back to routing-only mode;
+- fallback is intentionally non-destructive: the existing Humanoid, voice, Command Center, and router remain usable;
+- browser CORS configuration is not required for this path because the browser talks only to `/api/agent`, not directly to Hermes;
+- no real key belongs in GitHub. Only placeholder variables are committed in `.env.example`.
 
 ## Routing policy
 
@@ -183,7 +229,7 @@ Required before paid cloud integration:
 2. ✅ Add stable ASTRA Brain Adapter boundary.
 3. ✅ Route existing `/api/agent` through the Brain Adapter.
 4. ✅ Add Brain Event Bus and Command Center trace integration.
-5. ⏳ Add Hermes local service/adapter.
+5. ✅ Add Hermes local service/adapter.
 6. ⏳ Connect Ollama as the default local model.
 7. ⏳ Add memory and skills.
 8. ⏳ Add Codex as the engineering specialist.

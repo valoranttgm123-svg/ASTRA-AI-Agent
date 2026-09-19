@@ -1,5 +1,7 @@
-import { runAgent } from "@/lib/agent/orchestrator";
+import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
+import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
 import type { AstraAgentKey } from "@/lib/agent/types";
+import { chatWithHermes, getHermesStatus } from "./hermes";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -24,11 +26,13 @@ function visualNode(agent: AstraAgentKey) {
   return VISUAL_NODE_BY_AGENT[agent];
 }
 
-function buildEvents(
-  selected: AstraAgentKey,
-  state: AstraBrainChatResult["state"],
-): AstraBrainEvent[] {
-  const now = Date.now();
+function routeFor(selected: AstraAgentKey): AstraAgentKey[] {
+  return selected === "chief_of_staff"
+    ? ["chief_of_staff"]
+    : ["chief_of_staff", selected];
+}
+
+function baseEvents(selected: AstraAgentKey, now = Date.now()): AstraBrainEvent[] {
   const events: AstraBrainEvent[] = [
     {
       id: `${now}-request`,
@@ -53,22 +57,45 @@ function buildEvents(
     });
   }
 
+  return events;
+}
+
+function routingOnlyEvents(
+  selected: AstraAgentKey,
+  state: AstraBrainChatResult["state"],
+  providerDetail?: string,
+): AstraBrainEvent[] {
+  const now = Date.now();
+  const events = baseEvents(selected, now);
+
+  if (providerDetail) {
+    events.push({
+      id: `${now}-provider-unavailable`,
+      type: "provider.unavailable",
+      at: now + 2,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Hermes unavailable",
+      detail: providerDetail,
+    });
+  }
+
   if (state === "needs_provider") {
     events.push({
       id: `${now}-blocked`,
       type: "agent.blocked",
-      at: now + 2,
+      at: now + 3,
       agent: selected,
       visualNode: visualNode(selected),
       label: "Execution waiting",
-      detail: "A model/tool provider is not configured for execution yet.",
+      detail: "A model/tool provider is not available for execution.",
     });
   }
 
   events.push({
     id: `${now}-response`,
     type: "response.ready",
-    at: now + 3,
+    at: now + 4,
     agent: selected,
     visualNode: visualNode(selected),
     label: "Response ready",
@@ -81,15 +108,53 @@ function buildEvents(
   return events;
 }
 
+function hermesEvents(selected: AstraAgentKey): AstraBrainEvent[] {
+  const now = Date.now();
+  return [
+    ...baseEvents(selected, now),
+    {
+      id: `${now}-provider`,
+      type: "provider.selected",
+      at: now + 2,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Hermes selected",
+      detail: "ASTRA Brain selected the local Hermes gateway.",
+    },
+    {
+      id: `${now}-started`,
+      type: "agent.started",
+      at: now + 3,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Agent started",
+      detail: `${ASTRA_AGENT_MAP[selected].name} started execution through Hermes.`,
+    },
+    {
+      id: `${now}-completed`,
+      type: "agent.completed",
+      at: now + 4,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Agent completed",
+      detail: `${ASTRA_AGENT_MAP[selected].name} completed the Hermes turn.`,
+    },
+    {
+      id: `${now}-response`,
+      type: "response.ready",
+      at: now + 5,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Response ready",
+      detail: "Hermes returned the final response to ASTRA Runtime.",
+    },
+  ];
+}
+
 class RoutingOnlyBrainAdapter implements AstraBrain {
   async chat(input: string): Promise<AstraBrainChatResult> {
     const response = await runAgent(input);
-    const route: AstraAgentKey[] =
-      response.agent === "chief_of_staff"
-        ? ["chief_of_staff"]
-        : ["chief_of_staff", response.agent];
-
-    const events = buildEvents(response.agent, response.state);
+    const route = routeFor(response.agent);
 
     return {
       ...response,
@@ -98,7 +163,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
         execution: response.state === "completed" ? "executed" : "routing_only",
         route,
         visualNodes: route.map(visualNode),
-        events,
+        events: routingOnlyEvents(response.agent, response.state),
       },
     };
   }
@@ -108,7 +173,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
   }
 
   async cancel() {
-    // Phase 1 has no long-running backend process to cancel.
+    // Routing-only mode has no long-running backend process to cancel.
   }
 
   async status(): Promise<AstraBrainStatus> {
@@ -116,10 +181,93 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
       ready: true,
       provider: "routing_only",
       mode: "routing_only",
-      detail:
-        "ASTRA Brain Adapter is active. Hermes/Ollama/Codex execution providers are not connected yet.",
+      detail: "ASTRA routing-only fallback is ready.",
     };
   }
 }
 
-export const astraBrain: AstraBrain = new RoutingOnlyBrainAdapter();
+class HermesPreferredBrainAdapter implements AstraBrain {
+  private readonly fallback = new RoutingOnlyBrainAdapter();
+
+  async chat(input: string): Promise<AstraBrainChatResult> {
+    const selected = selectAgent(input);
+    const agent = ASTRA_AGENT_MAP[selected];
+    const route = routeFor(selected);
+
+    try {
+      const result = await chatWithHermes({ input, agent });
+
+      return {
+        ok: true,
+        agent: selected,
+        agentName: agent.name,
+        state: "completed",
+        message: result.message,
+        requiresApproval: false,
+        brain: {
+          provider: "hermes",
+          execution: "executed",
+          route,
+          visualNodes: route.map(visualNode),
+          events: hermesEvents(selected),
+        },
+      };
+    } catch (error) {
+      const fallback = await this.fallback.chat(input);
+      const detail =
+        error instanceof Error
+          ? error.message
+          : "Hermes gateway is unavailable.";
+
+      return {
+        ...fallback,
+        brain: {
+          ...fallback.brain,
+          events: routingOnlyEvents(
+            fallback.agent,
+            fallback.state,
+            detail,
+          ),
+        },
+      };
+    }
+  }
+
+  async execute(task: { input: string }) {
+    return this.chat(task.input);
+  }
+
+  async cancel() {
+    // Phase 2 uses stateless chat/completions. Per-run stop support is planned
+    // when ASTRA adopts Hermes /v1/runs lifecycle endpoints.
+  }
+
+  async status(): Promise<AstraBrainStatus> {
+    const hermes = await getHermesStatus();
+
+    if (hermes.available) {
+      return {
+        ready: true,
+        provider: "hermes",
+        mode: "local",
+        endpoint: hermes.endpoint,
+        model: hermes.model,
+        fallback: "routing_only",
+        detail:
+          "ASTRA Brain is connected to the local Hermes gateway. Routing-only fallback remains available.",
+      };
+    }
+
+    return {
+      ready: true,
+      provider: "routing_only",
+      mode: "routing_only",
+      endpoint: hermes.endpoint,
+      model: hermes.model,
+      fallback: "routing_only",
+      detail: `${hermes.detail} ASTRA is using routing-only fallback.`,
+    };
+  }
+}
+
+export const astraBrain: AstraBrain = new HermesPreferredBrainAdapter();
