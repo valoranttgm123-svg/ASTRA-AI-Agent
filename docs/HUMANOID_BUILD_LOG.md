@@ -357,3 +357,52 @@ Target:
 - particles should remain round and crisp, but clearly visible at normal viewing distance on the user's HIGH-quality 1.5 DPR display;
 - avoid returning to the blocky/over-saturated appearance from earlier versions.
 
+## Stage 4.0.3 — GPU Particle Performance (V12.0.3)
+
+Goal:
+- improve localhost and production smoothness without reducing HIGH visual quality.
+
+Previous bottleneck:
+- the active V12 renderer looped over every particle on the CPU every frame;
+- it rewrote the base position buffer;
+- it then copied updated positions into edge, warm, cyan, voice-face, voice-core, and six radial-zone geometries;
+- HIGH DPR 1.5 and camera tracking amplified the visible cost on less powerful PCs.
+
+GPU refactor:
+- new `components/lab/AstraGpuParticles.tsx` is the active particle renderer;
+- base artwork positions/colors and classification data are uploaded to GPU buffers once;
+- head yaw/pitch rotation is calculated in the vertex shader;
+- chest/breathing displacement is calculated in the vertex shader;
+- V12 assembly interpolation is calculated in the vertex shader;
+- deterministic assembly curve/arc remains preserved;
+- state cyan/warm/zone energy is calculated from GPU attributes and small uniforms;
+- voice-reactive energy remains driven by the real V11.1 playback gate;
+- round particle shaping is generated directly from `gl_PointCoord` in the fragment shader;
+- the active renderer uses only two particle draw passes: base Normal blending + soft Additive glow;
+- CPU frame work is now limited to smoothing interaction values and updating small uniforms;
+- no particle position buffer is rewritten each frame by the active renderer;
+- no edge/warm/cyan/voice/zone subset geometry synchronization is performed each frame.
+
+Quality preserved:
+- HIGH DPR remains 1.5;
+- V12.0.2 HIGH base size remains 2.25 renderer pixels;
+- glow remains 4.0 renderer pixels in HIGH;
+- V12.0.2 visibility balance remains the reference target;
+- head tracking, mic, speaking states, assembly replay/skip, reduced-motion and Effects Off remain supported;
+- no new image, paid service, model provider, or external dependency added.
+
+Expected result:
+- substantially lower CPU cost during particle animation;
+- smoother assembly/head motion;
+- better responsiveness when camera tracking is enabled;
+- smaller difference between `next dev` and production runtime smoothness.
+
+Verification required:
+- production CI build;
+- browser shader compilation on Chrome/Edge;
+- compare FPS and Task Manager CPU/GPU before/after V12.0.3;
+- test HIGH with camera off and camera on;
+- replay assembly repeatedly;
+- confirm IDLE/LISTENING/THINKING/SPEAKING visuals remain readable;
+- confirm no regression to square particles or central color saturation.
+
