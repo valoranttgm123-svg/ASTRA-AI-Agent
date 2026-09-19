@@ -403,6 +403,13 @@ export default function AstraGpuParticles({
     };
   }, [assemblyRun, onShockwaveChange]);
 
+  useEffect(() => {
+    if ((!effects || reducedMotion || assemblySkipped) && shockwaveClock.current.active) {
+      shockwaveClock.current.active = false;
+      onShockwaveChange(false);
+    }
+  }, [effects, reducedMotion, assemblySkipped, onShockwaveChange]);
+
   useEffect(() => () => {
     geometry.dispose();
     baseMaterial.dispose();
