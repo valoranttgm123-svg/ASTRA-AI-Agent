@@ -532,8 +532,140 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     };
   }
 
-  async execute(task: { input: string }) {
-    return this.chat(task.input);
+  async execute(task: { input: string; approved?: boolean }) {
+    const input = task.input.trim();
+    const selected = selectAgent(input);
+    const agent = ASTRA_AGENT_MAP[selected];
+    const route = routeFor(selected);
+    const context = await buildExecutionContext(input, selected);
+    const failures: string[] = [];
+
+    const blocked = (
+      message: string,
+      detail: string,
+      requiresApproval = false,
+    ): AstraBrainChatResult => ({
+      ok: false,
+      agent: selected,
+      agentName: agent.name,
+      state: "blocked",
+      message,
+      requiresApproval,
+      brain: {
+        provider: "routing_only",
+        execution: "blocked",
+        requestedMode: "execute",
+        route,
+        visualNodes: route.map(visualNode),
+        events: routingOnlyEvents(selected, "blocked", context, detail),
+        ...envelopeContext(context),
+      },
+    });
+
+    if (context.policy.requireApproval && !task.approved) {
+      return blocked(
+        "ASTRA siap menjalankan tugas ini, tetapi eksekusi membutuhkan approval eksplisit. Gunakan EXECUTE TASK untuk menyetujui eksekusi.",
+        "Execution mode requested without explicit user approval.",
+        true,
+      );
+    }
+
+    if (isLocalExecutionRoute(selected)) {
+      const codexStatus = await getCodexStatus(context.policy);
+
+      if (!codexStatus.available) {
+        failures.push(codexStatus.detail);
+      } else if (codexStatus.sandbox !== "workspace-write") {
+        return blocked(
+          "Codex tersedia, tetapi ASTRA masih dalam mode read-only. Aktifkan ASTRA_ALLOW_FILE_WRITE=true dan ASTRA_CODEX_SANDBOX=workspace-write di .env.local, lalu restart ASTRA.",
+          "Codex execution is blocked because its effective sandbox is read-only.",
+        );
+      } else if (selected === "computer" && !context.policy.allowShell) {
+        return blocked(
+          "Tugas komputer membutuhkan izin shell. Set ASTRA_ALLOW_SHELL=true di .env.local, lalu restart ASTRA.",
+          "Computer execution is blocked because ASTRA_ALLOW_SHELL is false.",
+        );
+      } else {
+        try {
+          const codexContext = [
+            context.skillOnlyContext,
+            codexMayReceiveMemory() ? context.memory.text : "",
+          ]
+            .filter(Boolean)
+            .join("\n\n");
+
+          const result = await chatWithCodex({
+            input,
+            agent,
+            context: codexContext,
+            policyText: context.policyText,
+            policy: context.policy,
+            executionRequested: true,
+          });
+
+          return {
+            ok: true,
+            agent: selected,
+            agentName: agent.name,
+            state: "completed",
+            message: result.message,
+            requiresApproval: false,
+            brain: {
+              provider: "codex",
+              execution: "executed",
+              requestedMode: "execute",
+              route,
+              visualNodes: route.map(visualNode),
+              events: providerEvents(selected, "codex", context),
+              ...envelopeContext(context),
+            },
+          };
+        } catch (error) {
+          failures.push(
+            `Codex: ${error instanceof Error ? error.message : "execution failed"}`,
+          );
+        }
+      }
+    }
+
+    try {
+      const result = await chatWithHermes({
+        input,
+        agent,
+        context: context.localContext,
+        policyText: [
+          context.policyText,
+          "EXECUTION MODE: perform the requested task with real Hermes tools when available and permitted. Do not merely describe an action. Do not claim completion unless the tool actually completed it.",
+        ].join("\n"),
+      });
+
+      return {
+        ok: true,
+        agent: selected,
+        agentName: agent.name,
+        state: "completed",
+        message: result.message,
+        requiresApproval: false,
+        brain: {
+          provider: "hermes",
+          execution: "executed",
+          requestedMode: "execute",
+          route,
+          visualNodes: route.map(visualNode),
+          events: providerEvents(selected, "hermes", context),
+          ...envelopeContext(context),
+        },
+      };
+    } catch (error) {
+      failures.push(
+        `Hermes: ${error instanceof Error ? error.message : "unavailable"}`,
+      );
+    }
+
+    return blocked(
+      "ASTRA tidak menemukan executor yang dapat menjalankan tugas ini. Untuk tugas repo/file lokal, aktifkan Codex workspace-write. Untuk aksi aplikasi/email/web eksternal, sambungkan Hermes + tools/MCP dan izinkan aksi yang diperlukan.",
+      failures.join(" | ") || "No execution-capable provider is available.",
+    );
   }
 
   async cancel() {
