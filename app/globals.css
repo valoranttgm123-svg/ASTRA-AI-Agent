@@ -42,9 +42,10 @@ body {
   width: min(430px, calc(100vw - 28px));
   border: 1px solid rgba(0, 229, 255, 0.24);
   border-radius: 18px;
-  overflow: hidden;
+  overflow: auto;
+  max-height: calc(100dvh - 100px);
   background: rgba(3, 10, 19, 0.82);
-  backdrop-filter: blur(20px);
+  backdrop-filter: none;
   box-shadow: 0 18px 60px rgba(0,0,0,0.42), 0 0 44px rgba(0,229,255,0.08);
   font-family: var(--font-mono);
 }
@@ -111,7 +112,33 @@ body {
 
 .astra-console__output p {
   margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
+
+.brain-controls { font-size: 11px; color: #b8d6df; padding: 0 12px; }
+.brain-controls details { border-top: 1px solid #24404d; padding: 10px 0; }
+.brain-controls summary { cursor: pointer; color: #9cecf8; padding: 6px 0; }
+.brain-settings { display: grid; gap: 10px; padding-top: 12px; }
+.brain-controls label { display: grid; gap: 6px; }
+.brain-controls select, .brain-controls textarea { width: 100%; min-width: 0; color: #e5f6ff; background: #102231; border: 1px solid #36576b; border-radius: 7px; padding: 9px; font: inherit; }
+.brain-controls button { padding: 9px 12px; margin: 4px; border: 1px solid #37677a; border-radius: 7px; color: #b9f6ff; background: #12323d; cursor: pointer; font: inherit; }
+.brain-controls button:disabled { opacity: .5; cursor: default; }
+.brain-controls :focus-visible { outline: 2px solid #7ef0ff; outline-offset: 2px; }
+.brain-controls pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 140px; overflow: auto; }
+.brain-approval { padding: 12px; border: 1px solid #df9e55; border-radius: 8px; color: #f7dab8; }
+.brain-health { padding-left: 16px; display: grid; gap: 9px; }
+.brain-health span { display: block; margin-top: 4px; color: #9bb1bf; line-height: 1.5; }
+.brain-privacy { color: #9bb1bf; font-size: 10px; line-height: 1.6; }
+.brain-timeline { list-style: none; margin: 12px 0; padding: 0; max-height: 250px; overflow: auto; }
+.brain-timeline li { display: grid; grid-template-columns: 52px 1fr; gap: 8px; border-left: 2px solid #388eaa; padding: 8px; }
+.brain-timeline li[data-event$="error"], .brain-timeline li[data-event="approval.required"] { border-color: #ec986a; }
+.brain-timeline li[data-event$="completed"] { border-color: #78dbab; }
+.brain-timeline time { color: #92adbf; }
+.brain-timeline code { display: block; color: #8bdedc; }
+.brain-timeline p { margin: 4px 0 0; line-height: 1.5; }
+.brain-task-select { margin-top: 12px; }
+@media (max-width: 700px) { .astra-console { max-height: 62dvh; } }
 
 .astra-console__agent {
   margin-bottom: 6px;

@@ -1,6 +1,18 @@
 # ASTRA Brain V1 — Architecture Decision
 
-Status: **Phase 3 implemented — Brain Adapter + Event Bus + Command Center trace + Hermes primary local gateway + Ollama automatic local fallback; Codex execution routing still pending**
+Status: **B1–B8 foundation implemented; live providers remain capability-detected and opt-in**
+
+## Completion snapshot — 2026-09-19
+
+- Ollama is the automatic local inference route and supports a user-selected installed model plus allowlisted read-only tool calls.
+- Hermes is detected but cannot run its agent loop until `ASTRA_HERMES_AGENT_APPROVAL=true`; every Hermes task still receives a single-use UI confirmation because ASTRA cannot enforce permissions inside the gateway.
+- Codex uses an explicitly configured CLI, `codex exec --json`, an existing ChatGPT login, `--ignore-user-config`, ephemeral sessions, disabled apps/MCP, no network in the workspace sandbox, and read-only mode by default. ASTRA never falls back to an API key. A real read-only task was verified through this adapter on 2026-09-19.
+- Project memory is bounded retrieval from allowlisted text plus explicit `memory.save`; ASTRA does not store transcripts automatically.
+- MCP servers and tools use a server-owned allowlist. Remote MCP requires HTTPS and an explicit opt-in. Non-read-only tools require a one-use approval and remain globally disabled until external actions are enabled.
+- `/api/agent` accepts only same-origin loopback requests, limits body/concurrency/output, streams actual lifecycle events, and exposes cancellation by request ID.
+- The Command Center shows current-task states and a real event timeline; unavailable integrations stay grey.
+- The Humanoid consumes the same request lifecycle. Raw reasoning is never sent to the browser.
+- Sonor Workflow memory is deliberately deferred to the next stage.
 
 ## Goal
 
@@ -130,10 +142,9 @@ ASTRA owns a stable adapter boundary:
 
 ```ts
 interface AstraBrain {
-  chat(input: string): Promise<unknown>;
-  execute(task: unknown): Promise<unknown>;
-  cancel(): Promise<void>;
-  status(): Promise<unknown>;
+  chat(request: BrainRequest, options?: BrainOptions): Promise<AstraBrainChatResult>;
+  execute(request: BrainRequest, options?: BrainOptions): Promise<AstraBrainChatResult>;
+  status(): Promise<AstraBrainStatus>;
 }
 ```
 
@@ -229,11 +240,11 @@ Hermes unavailable + Ollama unavailable
   -> routing_only / needs_provider
 ```
 
-Important limitation:
-- Ollama fallback currently provides local model reasoning/chat only;
-- it does not yet own GitHub, shell, email, files, or MCP tools;
-- tool execution remains planned for Hermes/Codex/MCP phases;
-- ASTRA explicitly instructs the Ollama fallback not to claim external actions occurred.
+Important boundary:
+- Ollama receives only allowlisted read-only tools automatically;
+- write/external tools are never placed in Ollama's automatic tool set;
+- direct write/external calls require the UI approval flow and server opt-in;
+- ASTRA explicitly instructs models not to claim actions without actual tool evidence.
 
 ## Routing policy
 
@@ -276,10 +287,11 @@ Required before paid cloud integration:
 4. ✅ Add Brain Event Bus and Command Center trace integration.
 5. ✅ Add Hermes local service/adapter.
 6. ✅ Connect Ollama as the automatic local model fallback.
-7. ⏳ Add memory and skills.
-8. ⏳ Add Codex as the engineering specialist.
-9. ⏳ Add MCP/tools and permission controls.
-10. ⏳ Add paid cloud providers as disabled-by-default optional routes.
+7. ✅ Add bounded project memory and retrieval events.
+8. ✅ Add Codex engineering adapter and explicit approval route.
+9. ✅ Add MCP/tools, real lifecycle events and permission controls.
+10. ➡️ Connect Sonor workflow/memory after ASTRA stabilizes.
+11. ◻️ Paid cloud providers remain a future opt-in non-goal.
 
 ## Non-goals for V1
 

@@ -55,11 +55,12 @@ function nodeIdFromHelper(h) {
   return ({ create_visual: 'design', render_visual: 'design', visual: 'design' })[s] || s   // a visual lights Design
 }
 
-export default function ReasoningWeb({ state = 'standby', trace = null, mode = 'full', coreless = false, onSelect = null, light = false, roster = null, anchor = null, viewBox = null, traces = true }) {
+export default function ReasoningWeb({ state = 'standby', trace = null, mode = 'full', coreless = false, onSelect = null, light = false, roster = null, anchor = null, viewBox = null, traces = true, liveStates = null }) {
   const svgRef = useRef(null)
   const apiRef = useRef(null)
   const stateRef = useRef(state)
   stateRef.current = state
+  const liveStatesRef = useRef(liveStates); liveStatesRef.current = liveStates
   const onSelectRef = useRef(onSelect); onSelectRef.current = onSelect   // click a node → open its cockpit
 
   useEffect(() => {
@@ -163,7 +164,7 @@ export default function ReasoningWeb({ state = 'standby', trace = null, mode = '
         n.haloR = rr + 1.5; n.phase = rnd() * 6.283
         n.halo = mk('circle', { cx: n.x, cy: n.y, r: n.haloR, fill: n.col, filter: 'url(#rw-glow)', opacity: n.live ? 0.34 : 0.2 })
         nodesG.append(n.halo)
-        n.circ = mk('circle', { cx: n.x, cy: n.y, r: rr, fill: 'none', stroke: n.col, 'stroke-width': n.live ? 2 : 1.3, opacity: n.live ? 1 : 0.6 })
+        n.circ = mk('circle', { 'data-node': n.id, cx: n.x, cy: n.y, r: rr, fill: 'none', stroke: n.col, 'stroke-width': n.live ? 2 : 1.3, opacity: n.live ? 1 : 0.6 })
         if (!n.live) n.circ.setAttribute('stroke-dasharray', '2 2')
         nodesG.append(n.circ)
         const dx = n.x - AX, dy = n.y - AY, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d, off = rr + 11
@@ -276,13 +277,22 @@ export default function ReasoningWeb({ state = 'standby', trace = null, mode = '
       // Every node breathes on its OWN phase (ordered chaos — never all at once).
       for (let i = 0; i < allNodes.length; i++) {
         const n = allNodes[i]; if (!n.halo) continue
+        if (liveStatesRef.current) {
+          const status = liveStatesRef.current[n.id] || 'unavailable'
+          const color = ({ ready: '#00e5ff', running: '#f5a623', completed: '#78dbab', error: '#ef9696', unavailable: '#526575' })[status]
+          n.circ.setAttribute('stroke', color); n.circ.setAttribute('data-status', status)
+          n.circ.setAttribute('opacity', status === 'unavailable' ? 0.45 : 1)
+          n.halo.setAttribute('fill', color); n.halo.setAttribute('opacity', status === 'running' ? 0.28 + 0.18 * k : 0.10)
+          n.spoke.setAttribute('stroke', color); n.spoke.setAttribute('opacity', status === 'running' ? 0.8 : 0.22)
+          continue
+        }
         const kk = (Math.sin(phase * 0.85 + n.phase) + 1) / 2
         n.halo.setAttribute('opacity', (n.live ? 0.16 : 0.09) + (n.live ? 0.30 : 0.18) * kk)
         n.halo.setAttribute('r', n.haloR + 2 * kk)
       }
       // Ambient "thinking" — a constant gentle drift of faint motes from the core out to ALL parts.
       // Denser + faster when Apex is awake (two at a time), so the whole web feels alive.
-      if (mode === 'full' && t > nextAmbient && live.length < (awake ? 18 : 8)) {
+      if (!liveStatesRef.current && mode === 'full' && t > nextAmbient && live.length < (awake ? 18 : 8)) {
         const sp = apiRef.current.allSpokes
         if (sp.length) { spawn(sp[(Math.random() * sp.length) | 0], true); if (awake && Math.random() < 0.6) spawn(sp[(Math.random() * sp.length) | 0], true) }
         const base = 470 - 330 * lvl
@@ -302,7 +312,7 @@ export default function ReasoningWeb({ state = 'standby', trace = null, mode = '
   }, [mode, coreless, roster, anchor, viewBox, traces])
 
   useEffect(() => {
-    if (!trace || !apiRef.current) return
+    if (liveStatesRef.current || !trace || !apiRef.current) return
     const ids = (trace.trace || []).map((h) => nodeIdFromHelper(h.helper)).filter((id) => META[id])
     if (ids.length) apiRef.current.fire(ids)
   }, [trace?.n])

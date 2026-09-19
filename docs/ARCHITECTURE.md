@@ -6,11 +6,11 @@ ASTRA keeps the original APEX-UI visual layer and adds a real agent runtime behi
 
 1. **Interface** — Next.js / React UI, orb, reasoning graph, command console.
 2. **Runtime** — client state for idle, thinking, and speaking.
-3. **Agent API** — `/api/agent` validates requests and hands them to the orchestrator.
-4. **Orchestrator** — chooses the specialist agent and, later, the model/tool provider.
+3. **Agent API** — loopback-only `/api/agent` validates, streams and cancels requests.
+4. **Brain adapter** — chooses a specialist, retrieves context, selects an available provider and emits real events.
 5. **Agents** — focused specialists such as Developer, Research, Files, GitHub, Business, and Trading.
-6. **Tools** — future adapters for GitHub, filesystem, browser/search, email, calendar, database, and desktop control.
-7. **Memory** — future short-term and durable project context. Private runtime data must not be committed.
+6. **Tools** — built-in bounded read tools plus explicitly allowlisted MCP tools. Side effects use single-use approvals.
+7. **Memory** — bounded documentation retrieval and opt-in private `.astra/memory/notes.jsonl`; never committed.
 
 ## Current V1 flow
 
@@ -21,41 +21,33 @@ AstraConsole
    ↓
 POST /api/agent
    ↓
-runAgent()
+Brain adapter
    ↓
-keyword router
+specialist router + bounded memory
    ↓
-specialist selected
+Hermes / Ollama / Codex / direct tool
    ↓
-structured response
+NDJSON events + structured result
 ```
 
 The client runtime also advances the existing orb visual from idle → thinking → speaking so the interface reacts to a real request lifecycle.
 
 ## Provider boundary
 
-V1 intentionally contains no embedded API secrets and no hard-coded vendor dependency. A future provider adapter will live behind the orchestrator so cloud models or a local model can be swapped without rebuilding the UI.
+V1 contains no embedded secrets or automatic paid provider. Hermes and Ollama are loopback-only; Codex uses an already authenticated CLI and explicit per-task approval. A missing provider becomes `routing_only`, not a fake success.
 
-Suggested future structure:
+Implemented structure:
 
 ```text
-lib/agent/
-  orchestrator.ts
-  roster.ts
-  types.ts
-  providers/
-    local.ts
-    cloud.ts
-  tools/
-    github.ts
-    files.ts
-    browser.ts
-    email.ts
-    calendar.ts
-    computer.ts
-  memory/
-    short-term.ts
-    durable.ts
+lib/brain/
+  adapter.ts       provider and lifecycle coordinator
+  hermes.ts        reviewed local gateway adapter
+  ollama.ts        local model and read-only tool loop
+  codex.ts         isolated Codex engineering adapter
+  memory.ts        bounded retrieval and opt-in notes
+  tools.ts         built-ins and MCP allowlist
+  approvals.ts     single-use, task-bound approvals
+  http.ts          local API boundary and validation
 ```
 
 ## Approval model
@@ -71,3 +63,5 @@ Read-only actions may run automatically when enabled. External or destructive ac
 - shutting down or controlling a computer
 
 The `.env.example` defaults these capabilities to disabled until configured.
+
+The browser never receives provider keys, local filesystem roots, private memory paths, raw process errors, or model reasoning. Sonor integration is not part of this stage.

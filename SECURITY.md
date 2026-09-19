@@ -1,5 +1,16 @@
 # Security Policy
 
+## Brain V1 boundaries
+
+- `/api/agent` is loopback and same-origin only; keep ASTRA behind `127.0.0.1` until an authenticated remote-access design exists.
+- Project roots are an explicit server allowlist. Disk roots, path traversal, symlink escapes, NTFS alternate streams, secret-like files, private directories and oversized/binary files are denied.
+- Memory saves are explicit, size-limited and rejected when credential patterns are detected. `.astra/` stays ignored by Git.
+- Automatic Ollama tools are read-only. MCP tools are allowlisted; side-effect tools require both server opt-in and a single-use task-bound approval.
+- Hermes tool execution is disabled until the gateway policy is reviewed, then still requires approval per task.
+- Codex runs with ignored project/user configuration, ephemeral sessions, disabled apps/MCP/multi-agent, no workspace network, and read-only sandbox by default. Workspace-write requires server opt-in and per-task approval.
+- ASTRA never sends raw reasoning, provider diagnostics, secrets, filesystem roots, or private memory contents to the browser event log.
+- Paid provider fallback is absent, not merely hidden.
+
 ASTRA is designed so source code and documentation can live in GitHub while private credentials and local runtime data stay outside the repository.
 
 ## Never commit

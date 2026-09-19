@@ -4,7 +4,9 @@ ASTRA is a personal multi-agent AI project built on top of the open-source **APE
 
 ## Current status
 
-**V1 foundation is in progress.** The UI accepts a command, sends it to `/api/agent`, routes it to a specialist, and drives the request lifecycle (`idle → thinking → speaking`). No cloud AI secret is embedded in the repository. The current orchestrator intentionally stops at the provider boundary until a model/tool provider is configured.
+**Brain V1 B1–B8 is implemented.** ASTRA supports local Ollama, a reviewed Hermes gateway, an existing-login Codex engineering adapter, bounded project memory, allowlisted MCP tools, single-use approvals, real task events, cancellation, a live Command Center timeline, voice input/output, gestures, and the approved GPU Humanoid. Missing providers are shown as unavailable; no cloud AI secret or paid fallback is embedded.
+
+Sonor Workflow memory is the next integration stage and is not silently coupled to this release.
 
 ## Included agents
 
@@ -26,12 +28,26 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://127.0.0.1:3000`. The Brain API intentionally rejects non-loopback hosts.
 
-For production validation:
+### Windows local installation
+
+After setting `.env.local`, install the production build, hidden logon tasks, and the `ASTRA` desktop shortcut with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\install-local.ps1
+```
+
+The installer keeps both HTTP services on loopback: ASTRA at `http://127.0.0.1:3017` and Ollama at `http://127.0.0.1:11434`. It does not expose either service to the LAN or internet. To remove only the autostart tasks and shortcut without deleting project data or models, run `scripts\windows\uninstall-local.ps1`.
+
+For full validation:
 
 ```bash
 npm run build
+npm test
+npm run typecheck
+npm run lint
+npm audit --audit-level=high
 npm start
 ```
 
@@ -44,6 +60,14 @@ cp .env.example .env.local
 ```
 
 Do **not** commit `.env.local`, tokens, passwords, SSH keys, broker credentials, OAuth secrets, or private memory databases.
+
+Provider rules:
+- Ollama is local-first; choose only a model shown as installed.
+- Ollama extended thinking is off by default for responsive voice/chat; it can be enabled explicitly for harder tasks.
+- Hermes agent execution requires server opt-in and per-task approval.
+- Codex uses an existing ChatGPT CLI login, is read-only by default, and always asks before sending a task.
+- MCP tools must be explicitly allowlisted. Non-read-only tools also require server opt-in and a single-use approval.
+- paid provider fallback is not implemented.
 
 ## Codex project context
 

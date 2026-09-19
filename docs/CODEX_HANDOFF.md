@@ -1,10 +1,32 @@
 # ASTRA Codex Handoff
 
+## 2026-09-19 — Brain V1 local release verification
+
+- B1–B8 implementation is complete in `astra/brain-v1-complete`.
+- Production UI was verified at `http://127.0.0.1:3017` with zero browser console errors.
+- Ollama `0.34.2` + `qwen3.5:4b` completed both a short chat and a real allowlisted file-read tool turn. Extended thinking is disabled by default for responsive chat; project context is retrieved only for context-bearing requests.
+- Codex CLI `0.155.0`, using the existing ChatGPT login, completed a read-only project query after a single-use UI approval.
+- Hidden logon tasks `ASTRA-Agent` and `ASTRA-Ollama` plus an `ASTRA` desktop shortcut were installed and verified. Both services remain loopback-only.
+- Sonor/Graphify/Obsidian integration is intentionally the next stage. Hermes remains disabled. Physical microphone input was not verified by browser automation.
+
 This file is the short operational context for Codex. For the full history, read `docs/ASTRA_CONVERSATION_HISTORY.md`.
 
 Last updated: 2026-09-19
 
 ## Current project state
+
+Brain V1 foundation B1–B8 is implemented on feature branch `astra/brain-v1-complete`:
+- cancellable streaming API and real event bus;
+- Hermes guarded by gateway review and one-use approval;
+- Ollama model selection and read-only tool loop;
+- Codex CLI engineering adapter, disabled until an allowed CLI/login is verified;
+- bounded project memory and explicit save;
+- allowlisted MCP tools and permission gates;
+- real Command Center status/timeline;
+- shared Humanoid/Brain lifecycle;
+- 21 security/integration tests plus build/typecheck/lint/audit CI.
+
+Runtime facts must remain distinct from code readiness. On 2026-09-19, the Codex desktop binary could not be launched directly from WindowsApps. An isolated official Codex CLI 0.155.0 was then installed under `D:\ASTRA-Tools`; its existing ChatGPT login and one read-only ASTRA task were verified. This machine-level path is intentionally not committed. Sonor memory integration is the next stage after this branch is stable.
 
 Repository:
 - `valoranttgm123-svg/ASTRA-AI-Agent`

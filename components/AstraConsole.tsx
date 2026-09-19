@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useAstraRuntime } from "./AstraRuntime";
+import BrainControls from "./BrainControls";
 
 export default function AstraConsole() {
   const {
@@ -17,6 +18,7 @@ export default function AstraConsole() {
     micError,
     voiceEnabled,
     setVoiceEnabled,
+    stopInteraction,
   } = useAstraRuntime();
 
   const [message, setMessage] = useState("");
@@ -82,6 +84,7 @@ export default function AstraConsole() {
         )}
       </div>
 
+      <BrainControls />
       <form onSubmit={submit} className="astra-console__form">
         <input
           value={message}
@@ -114,6 +117,7 @@ export default function AstraConsole() {
         <button type="submit" disabled={runtimeBusy || !message.trim()}>
           {runtimeBusy ? "RUNNING" : "SEND"}
         </button>
+        <button type="button" onClick={stopInteraction}>STOP</button>
       </form>
     </section>
   );

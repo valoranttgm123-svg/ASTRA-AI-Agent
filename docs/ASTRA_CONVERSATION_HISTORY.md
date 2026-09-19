@@ -1,5 +1,18 @@
 # ASTRA Conversation-Derived Project History
 
+## 2026-09-19 — Brain V1 completion and local installation
+
+The user asked to complete the GitHub roadmap until ASTRA could be used as a Jarvis-style assistant, while deferring the Sonor workflow connection. Brain B1–B8 was implemented, secured, tested, and installed locally. Live browser tests verified Ollama chat, an Ollama file-reading tool turn, and a gated Codex read-only task. Windows logon tasks and a desktop shortcut were added. Sonor remains explicitly deferred to the next stage.
+
+## 2026-09-19 — Brain V1 B1–B8 completion decision
+
+- Continue the ASTRA roadmap from the shared ChatGPT project and GitHub, not the earlier Sonor task.
+- Finish and stabilize ASTRA first; connect Sonor Workflow/Graphify/Obsidian memory afterward.
+- Preserve local/free-first behavior, explicit permissions, real event evidence, voice/Humanoid integration, and GitHub CI.
+- Implemented bounded local project memory as the safe interim memory layer; it does not replace or pre-empt the later Sonor bridge.
+- Codex must use the existing ChatGPT/Codex entitlement when an allowed CLI login is available; never invent an API-key fallback.
+- Provider/tool connectivity is capability-detected and cannot be presented as working until verified on the running machine.
+
 Purpose: preserve the ASTRA project decisions and history from the user's conversations so future Codex sessions can continue without losing context.
 
 This is not a verbatim export of private ChatGPT internals. It records the project-relevant conversation history available to the assistant, while excluding secrets, credentials, hidden reasoning, and unrelated personal information.

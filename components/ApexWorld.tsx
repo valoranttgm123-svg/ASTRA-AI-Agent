@@ -16,12 +16,14 @@ import ReasoningWebJs from "./ReasoningWeb";
 import ShaderBackgroundJs from "./ShaderBackground";
 import OrbStatusBar from "./OrbStatusBar";
 import { useAstraRuntime } from "./AstraRuntime";
+import { graphStates } from "@/lib/brain/graph-state";
 
 export type NodeSel = { name: string; key: string; color: string };
 
 // the copied .jsx defaults onSelect to null, which TS infers as `null | undefined`
 const ReasoningWeb = ReasoningWebJs as unknown as React.ComponentType<{
   state?: string; trace?: unknown; mode?: string; coreless?: boolean;
+  liveStates?: Record<string, string>;
   onSelect?: (n: NodeSel) => void; light?: boolean;
 }>;
 const ShaderBackground = ShaderBackgroundJs as unknown as React.ComponentType<{
@@ -112,19 +114,15 @@ export const INFO: Record<string, AgentInfo> = {
     caps: ["Reads and files documents", "Connected and in use"] },
 };
 
-const STATUS_LINE: Record<AgentInfo["status"], { color: string; text: string }> = {
-  online: { color: "#34d399", text: "Online - Apex routes work to it automatically" },
-  standby: { color: "#c9a84c", text: "Standby - in active development" },
-  integration: { color: "#7f9bb3", text: "Integration - wired into the core" },
-};
-
 /* ── AGENT OVERVIEW window - the site's template (the app opens live cockpits) ── */
 export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => void }) {
+  const runtime = useAstraRuntime();
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{ sx: number; sy: number } | null>(null);
   const info = INFO[sel.key] ?? { role: "Specialist", status: "online" as const, caps: ["Part of the Apex core"] };
   const c = sel.color;
-  const status = STATUS_LINE[info.status];
+  const live = graphStates(runtime.brainEvents, runtime.brainStatus)[sel.key] || "unavailable";
+  const status = { color: live === "running" ? "#f5a623" : live === "completed" ? "#78dbab" : live === "error" ? "#ef9696" : live === "ready" ? "#00e5ff" : "#7f9bb3", text: live === "unavailable" ? "Belum terhubung / belum diimplementasikan" : "Status runtime: " + live };
 
   useEffect(() => {
     setPos({ x: Math.max(8, window.innerWidth / 2 - 170), y: Math.max(90, window.innerHeight * 0.16) });
@@ -195,7 +193,7 @@ export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => v
 
       <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
         <div>
-          <div style={{ fontSize: 9, letterSpacing: "0.14em", color: `${c}99`, marginBottom: 8, fontFamily: "var(--font-mono)" }}>WHAT IT HANDLES</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.14em", color: `${c}99`, marginBottom: 8, fontFamily: "var(--font-mono)" }}>LINGKUP PERAN · BUKAN BUKTI INTEGRASI</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {info.caps.map((cap) => (
               <div key={cap} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
@@ -235,26 +233,8 @@ export default function ApexWorld() {
   const [selected, setSelected] = useState<NodeSel | null>(null);
   const [reduced, setReduced] = useState(false);
 
-  // A tap cycles idle → thinking → speaking → idle. That state drives the
-  // backdrop, the light-cast and the reasoning web's activity level.
-  const [showState, setShowState] = useState<OrbState>("idle");
-  const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const orbState: OrbState = runtime.orbState !== "idle" ? runtime.orbState : showState;
-
-  const boost = () => {
-    const next: OrbState = showState === "idle" ? "thinking" : showState === "thinking" ? "speaking" : "idle";
-    setShowState(next);
-    if (showTimer.current) clearTimeout(showTimer.current);
-    showTimer.current = setTimeout(() => setShowState("idle"), 8000);
-  };
-  useEffect(() => () => { if (showTimer.current) clearTimeout(showTimer.current); }, []);
-
-  useEffect(() => {
-    if (runtime.orbState === "idle") return;
-    if (showTimer.current) clearTimeout(showTimer.current);
-    showTimer.current = null;
-    setShowState("idle");
-  }, [runtime.orbState]);
+  const orbState: OrbState = runtime.orbState;
+  const boost = () => { document.querySelector<HTMLInputElement>('[aria-label="Perintah ASTRA"]')?.focus(); };
 
   // Single entry point for opening an agent, shared by the SVG graph and the
   // hidden accessible list, so both routes behave identically.
@@ -310,6 +290,7 @@ export default function ApexWorld() {
         <ReasoningWeb
           state={webState}
           trace={runtime.brainTrace}
+          liveStates={graphStates(runtime.brainEvents, runtime.brainStatus)}
           mode="full"
           coreless
           onSelect={(n: NodeSel) => { openAgent(n); }}
@@ -339,7 +320,7 @@ export default function ApexWorld() {
       <div
         role="button"
         tabIndex={0}
-        aria-label="Apex core - tap to energize"
+        aria-label="ASTRA core - fokus ke perintah"
         onClick={boost}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); boost(); } }}
         onMouseDown={(e) => e.preventDefault()}

@@ -1,5 +1,14 @@
 # ASTRA Project Memory
 
+## Current verified runtime — 2026-09-19
+
+- Local UI: `http://127.0.0.1:3017` (loopback only).
+- Local model: Ollama `0.34.2`, `qwen3.5:4b`, stored under `D:\AI-Models\Ollama`.
+- Engineering provider: Codex CLI `0.155.0` using existing ChatGPT login, read-only by default and one-time approval gated.
+- Startup: hidden `ASTRA-Agent` and `ASTRA-Ollama` user logon tasks; desktop `ASTRA.url` shortcut.
+- Sonor/Graphify/Obsidian bridge: next stage, not part of Brain V1.
+- Physical microphone/headset capture: not verified in automated testing.
+
 > This file records important project decisions agreed during development.
 > It is intentionally concise and should be updated whenever architecture, interaction rules, or product direction changes.
 
@@ -138,11 +147,11 @@ Chosen direction:
 - Codex = engineering specialist;
 - optional cloud providers remain OFF by default.
 
-Brain is not implemented yet.
+Brain V1 B1–B8 is implemented behind `/api/agent` with local provider routing, real events, cancellation, bounded memory, tool permissions and an observable Command Center.
 
-The existing `/api/agent` flow remains a provider-free orchestrator until Brain integration starts.
+Brain sits behind an adapter so UI does not depend directly on Hermes/Ollama/Codex.
 
-Brain should sit behind an adapter so UI does not depend directly on Hermes/Ollama/Codex.
+Sonor Workflow/Graphify/Obsidian remains a later bridge. Do not copy transcripts or secrets into either memory system.
 
 ---
 
