@@ -18,6 +18,8 @@ const BASE_POINT_SIZE_HIGH = 1.7;
 const BASE_POINT_SIZE_LOW = 1.25;
 const GLOW_POINT_SIZE_HIGH = 3.6;
 const GLOW_POINT_SIZE_LOW = 2.5;
+const ASSEMBLY_DURATION_SECONDS = 2.6;
+const ASSEMBLY_WINDOW = 0.28;
 
 const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
@@ -35,6 +37,8 @@ type ParticleData = {
   cyan: Uint32Array;
   voiceFace: Uint32Array;
   voiceCore: Uint32Array;
+  assemblyPhase: Float32Array;
+  assemblySource: Float32Array;
   zones: Uint32Array[];
   original: Float32Array;
 };
@@ -73,6 +77,11 @@ function mixProfile(from: StateProfile, to: StateProfile, amount: number): State
   };
 }
 
+function hash01(value: number) {
+  const raw = Math.sin(value * 12.9898) * 43758.5453;
+  return raw - Math.floor(raw);
+}
+
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
 
@@ -106,6 +115,8 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
   const cyanIndices: number[] = [];
   const voiceFaceIndices: number[] = [];
   const voiceCoreIndices: number[] = [];
+  const assemblyPhaseValues: number[] = [];
+  const assemblySourceValues: number[] = [];
   const zoneBuckets: number[][] = Array.from({ length: 6 }, () => []);
   const color = new THREE.Color();
 
@@ -160,6 +171,45 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
         ny < 0.67 &&
         faceX < 0.105 &&
         brightness > 0.12;
+
+      // V12 assembles only the central humanoid. The surrounding approved
+      // artwork remains stable while head -> neck -> shoulders -> core arrives
+      // from one left-side particle stream.
+      const isAssemblyHead = isHead && ny < 0.52;
+      const isAssemblyNeck = ny >= 0.47 && ny < 0.65 && faceX < 0.12;
+      const isAssemblyShoulders =
+        ny >= 0.53 &&
+        ny < 0.86 &&
+        faceX >= 0.18 &&
+        faceX < 0.43;
+      const isAssemblyCore =
+        ny >= 0.55 &&
+        ny < 0.86 &&
+        faceX < 0.20;
+
+      const phaseNoise = hash01(particleIndex + 0.73);
+      let assemblyPhase = -1;
+      if (isAssemblyHead) {
+        assemblyPhase = 0.02 + phaseNoise * 0.07;
+      } else if (isAssemblyNeck) {
+        assemblyPhase = 0.23 + phaseNoise * 0.07;
+      } else if (isAssemblyShoulders) {
+        assemblyPhase = 0.43 + phaseNoise * 0.09;
+      } else if (isAssemblyCore) {
+        assemblyPhase = 0.68 + phaseNoise * 0.04;
+      }
+
+      if (assemblyPhase >= 0) {
+        assemblySourceValues.push(
+          -4.45 + (hash01(particleIndex * 1.17 + 2.1) - 0.5) * 0.90,
+          (hash01(particleIndex * 1.91 + 4.7) - 0.5) * WORLD_H * 1.22,
+          (hash01(particleIndex * 2.37 + 8.3) - 0.5) * 1.45,
+        );
+      } else {
+        assemblySourceValues.push(wx, wy, depth);
+      }
+      assemblyPhaseValues.push(assemblyPhase);
+
       const radialX = (nx - 0.5) / 0.52;
       const radialY = (ny - 0.39) / 0.72;
       const radial = Math.sqrt(radialX * radialX + radialY * radialY);
@@ -190,6 +240,8 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
     cyan: new Uint32Array(cyanIndices),
     voiceFace: new Uint32Array(voiceFaceIndices),
     voiceCore: new Uint32Array(voiceCoreIndices),
+    assemblyPhase: new Float32Array(assemblyPhaseValues),
+    assemblySource: new Float32Array(assemblySourceValues),
     zones: zoneBuckets.map((bucket) => new Uint32Array(bucket)),
   };
 }
@@ -229,6 +281,9 @@ function ParticleArtwork({
   playbackGate,
   quality,
   trackingTarget,
+  assemblyRun,
+  assemblySkipped,
+  onAssemblyComplete,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
@@ -237,6 +292,9 @@ function ParticleArtwork({
   playbackGate: number;
   quality: RenderQuality;
   trackingTarget: { current: FingerTrackingTarget };
+  assemblyRun: number;
+  assemblySkipped: boolean;
+  onAssemblyComplete: () => void;
 }) {
   const basePoints = useRef<THREE.Points>(null);
   const glowPoints = useRef<THREE.Points>(null);
@@ -247,6 +305,12 @@ function ParticleArtwork({
   const voiceCorePoints = useRef<THREE.Points>(null);
   const zonePoints = useRef<Array<THREE.Points<any, any> | null>>([]);
   const playbackEnvelope = useRef(0);
+  const assemblyClock = useRef({
+    run: assemblyRun,
+    startedAt: 0,
+    initialized: false,
+    completedRun: -1,
+  });
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
   const currentProfile = useRef<StateProfile>({ ...profileForState(state) });
@@ -282,6 +346,15 @@ function ParticleArtwork({
     };
   }, [state, reducedMotion]);
 
+  useEffect(() => {
+    assemblyClock.current = {
+      run: assemblyRun,
+      startedAt: 0,
+      initialized: false,
+      completedRun: -1,
+    };
+  }, [assemblyRun]);
+
   useEffect(() => () => {
     geometry.dispose();
     edgeGeometry.dispose();
@@ -307,6 +380,32 @@ function ParticleArtwork({
     const arr = attr.array as Float32Array;
     const base = data.original;
     const t = clock.elapsedTime;
+
+    let assemblyProgress = 1;
+    if (effects && !reducedMotion && !assemblySkipped) {
+      if (
+        assemblyClock.current.run !== assemblyRun ||
+        !assemblyClock.current.initialized
+      ) {
+        assemblyClock.current.run = assemblyRun;
+        assemblyClock.current.startedAt = t;
+        assemblyClock.current.initialized = true;
+        assemblyClock.current.completedRun = -1;
+      }
+      assemblyProgress = THREE.MathUtils.clamp(
+        (t - assemblyClock.current.startedAt) / ASSEMBLY_DURATION_SECONDS,
+        0,
+        1,
+      );
+    }
+
+    if (
+      assemblyProgress >= 1 &&
+      assemblyClock.current.completedRun !== assemblyRun
+    ) {
+      assemblyClock.current.completedRun = assemblyRun;
+      onAssemblyComplete();
+    }
 
     if (!effects || reducedMotion) {
       target.current.yaw = 0;
@@ -363,6 +462,33 @@ function ParticleArtwork({
         arr[o] = x0;
         arr[o + 1] = y0 + chest * chestWeight;
         arr[o + 2] = z0;
+      }
+
+      const assemblyPhase = data.assemblyPhase[i];
+      if (assemblyPhase >= 0 && assemblyProgress < 1) {
+        const localRaw = THREE.MathUtils.clamp(
+          (assemblyProgress - assemblyPhase) / ASSEMBLY_WINDOW,
+          0,
+          1,
+        );
+        const local = localRaw * localRaw * (3 - 2 * localRaw);
+        const targetX = arr[o];
+        const targetY = arr[o + 1];
+        const targetZ = arr[o + 2];
+        const sourceX = data.assemblySource[o];
+        const sourceY = data.assemblySource[o + 1];
+        const sourceZ = data.assemblySource[o + 2];
+        const arc = Math.sin(local * Math.PI);
+        const streamDrift =
+          (1 - local) * Math.sin(t * 2.7 + i * 0.17) * 0.045;
+
+        arr[o] = THREE.MathUtils.lerp(sourceX, targetX, local) + streamDrift;
+        arr[o + 1] =
+          THREE.MathUtils.lerp(sourceY, targetY, local) +
+          arc * (0.14 + hash01(i + 3.2) * 0.08);
+        arr[o + 2] =
+          THREE.MathUtils.lerp(sourceZ, targetZ, local) +
+          arc * (0.10 + hash01(i + 7.4) * 0.08);
       }
     }
 
@@ -641,6 +767,9 @@ function ParticleScene({
   playbackGate,
   quality,
   trackingTarget,
+  assemblyRun,
+  assemblySkipped,
+  onAssemblyComplete,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
@@ -649,6 +778,9 @@ function ParticleScene({
   playbackGate: number;
   quality: RenderQuality;
   trackingTarget: { current: FingerTrackingTarget };
+  assemblyRun: number;
+  assemblySkipped: boolean;
+  onAssemblyComplete: () => void;
 }) {
   return (
     <Canvas
@@ -670,6 +802,9 @@ function ParticleScene({
         playbackGate={playbackGate}
         quality={quality}
         trackingTarget={trackingTarget}
+        assemblyRun={assemblyRun}
+        assemblySkipped={assemblySkipped}
+        onAssemblyComplete={onAssemblyComplete}
       />
     </Canvas>
   );
@@ -684,6 +819,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [view, setView] = useState<ViewMode>("particles");
   const [effects, setEffects] = useState(true);
   const [technical, setTechnical] = useState(false);
+  const [assemblyRun, setAssemblyRun] = useState(1);
+  const [assemblySkipped, setAssemblySkipped] = useState(false);
+  const [assemblyActive, setAssemblyActive] = useState(true);
   const [qualityMode, setQualityMode] = useState<QualityMode>("auto");
   const [autoLow, setAutoLow] = useState(false);
   const [message, setMessage] = useState("");
@@ -740,7 +878,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const tracking = useFingerTracking(resolvedQuality);
   const showReferenceOnly = view === "reference" || !effects;
   const showParticles = view !== "reference" && effects;
-  const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.028;
+  const referenceOpacity = showReferenceOnly
+    ? 1
+    : view === "compare"
+      ? 1
+      : assemblyActive
+        ? 0.006
+        : 0.028;
   const energyOpacity =
     state === "speaking" ? 0.34 :
     state === "thinking" ? 0.27 :
@@ -766,6 +910,17 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const toggleMic = () => {
     if (runtime.micActive) runtime.endListening();
     else runtime.beginListening();
+  };
+
+  const replayAssembly = () => {
+    setAssemblySkipped(false);
+    setAssemblyActive(!reducedMotion && effects);
+    setAssemblyRun((currentRun) => currentRun + 1);
+  };
+
+  const skipAssembly = () => {
+    setAssemblySkipped(true);
+    setAssemblyActive(false);
   };
 
   const submit = async (event: FormEvent) => {
@@ -869,6 +1024,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               playbackGate={runtime.speechLevel}
               quality={resolvedQuality}
               trackingTarget={tracking.targetRef}
+              assemblyRun={assemblyRun}
+              assemblySkipped={assemblySkipped}
+              onAssemblyComplete={() => setAssemblyActive(false)}
             />
           ) : (
             <div
@@ -905,9 +1063,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V11.2.1</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          VOICE REACTIVE FACE // CONTROLLED ENERGY HOTFIX
+          ASSEMBLY SEQUENCE // HEAD → NECK → SHOULDERS → CORE
         </div>
       </header>
 
@@ -947,6 +1105,16 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <button onClick={cycleQuality} style={buttonStyle(qualityMode !== "auto")}>
               QUALITY {qualityMode.toUpperCase()}
             </button>
+            <button onClick={replayAssembly} style={buttonStyle(assemblyActive)}>
+              REPLAY ASSEMBLY
+            </button>
+            <button
+              onClick={skipAssembly}
+              disabled={!assemblyActive}
+              style={{ ...buttonStyle(false), opacity: assemblyActive ? 1 : 0.45 }}
+            >
+              SKIP
+            </button>
             <button onClick={toggleCamera} style={buttonStyle(tracking.enabled)}>
               {tracking.enabled ? "CAMERA OFF" : "CAMERA ON"}
             </button>
@@ -974,6 +1142,18 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               }}
             >
               ● {tracking.handFound ? "HAND FOUND" : tracking.status.toUpperCase()}
+            </span>
+            <span
+              style={{
+                alignSelf: "center",
+                padding: "0 4px",
+                color: assemblyActive ? "#ffc364" : "rgba(128,234,247,.48)",
+                fontSize: 9,
+                letterSpacing: ".12em",
+                textShadow: "0 0 12px currentColor",
+              }}
+            >
+              ● {assemblyActive ? "ASSEMBLING" : "ASSEMBLY READY"}
             </span>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
@@ -1036,6 +1216,10 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Voice core samples: {data?.voiceCore.length ?? "loading"}</div>
           <div>State radial zones: {data?.zones.length ?? "loading"}</div>
           <div>State transition: 680 ms radial face-out</div>
+          <div>Assembly duration: {ASSEMBLY_DURATION_SECONDS.toFixed(1)} s</div>
+          <div>Assembly order: head → neck → shoulders → core</div>
+          <div>Assembly source: single left-side particle stream</div>
+          <div>Assembly state: {assemblyActive ? "RUNNING" : assemblySkipped ? "SKIPPED" : "READY"}</div>
           <div>Playback active: {runtime.playbackActive ? "YES" : "NO"}</div>
           <div>Playback gate: {runtime.speechLevel.toFixed(0)} (event-driven, not loudness)</div>
           <div>Voice face driver: smoothed playback envelope + visual cadence</div>
@@ -1061,7 +1245,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V11.2.1 narrows voice-reactive masks to warm source pixels and caps additive energy so facial detail remains visible during playback. The pulse is still driven by real speechSynthesis events and is not measured loudness.
+            V12 adds a non-blocking 2.6 s particle assembly from one left-side source stream. Only the central humanoid assembles; the approved background remains stable. Head, neck, shoulders, then core settle into their existing V11.2.1 positions. REPLAY and SKIP do not interrupt chat, mic, speech playback, or camera tracking.
           </div>
         </aside>
       )}
