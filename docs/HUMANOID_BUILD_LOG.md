@@ -329,3 +329,31 @@ Verification required:
 - verify AUTO quality can still drop to LOW when needed;
 - confirm FPS remains acceptable on the target PC.
 
+## Stage 4.0.2 — Particle Visibility Balance (V12.0.2)
+
+Reported feedback:
+- HIGH quality was active but particles were still too difficult to see;
+- V12.0.1 round-mask sharpening made the effective visible dot smaller than intended on a DPR 1.5 canvas.
+
+Cause:
+- fixed-screen `PointsMaterial` sizes are evaluated in renderer pixels;
+- with HIGH DPR 1.5, a 1.45 px point produced roughly sub-1 CSS-pixel visual coverage before the round alpha mask;
+- the V12.0.1 alpha cutoff further reduced visible dot area.
+
+Fix:
+- HIGH base point increased to 2.25 renderer px;
+- LOW base point increased to 1.35 renderer px;
+- HIGH glow increased to 4.0 renderer px;
+- procedural round sprite coverage widened while retaining circular falloff;
+- base alpha cutoff reduced from 0.16 to 0.06;
+- energy-layer alpha cutoffs reduced from 0.08 to 0.04;
+- base opacity raised to 0.985 at non-speaking states;
+- cyan edge and cyan-state visibility lifted moderately;
+- warm/voice/core point sizes increased enough to remain visible at HIGH DPR;
+- V12.0.1 quintic smootherstep and deterministic assembly curve are preserved;
+- no change to particle count, artwork sampling density, camera tracking, mic, chat, state runtime, or provider architecture.
+
+Target:
+- particles should remain round and crisp, but clearly visible at normal viewing distance on the user's HIGH-quality 1.5 DPR display;
+- avoid returning to the blocky/over-saturated appearance from earlier versions.
+
