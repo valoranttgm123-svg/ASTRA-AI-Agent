@@ -1,6 +1,6 @@
 # ASTRA Brain V1 — Architecture Decision
 
-Status: **Phase 2 implemented — Brain Adapter + Event Bus + Command Center trace + Hermes local gateway adapter; Ollama/Codex execution routing still pending**
+Status: **Phase 3 implemented — Brain Adapter + Event Bus + Command Center trace + Hermes primary local gateway + Ollama automatic local fallback; Codex execution routing still pending**
 
 ## Goal
 
@@ -91,7 +91,7 @@ Implemented in code:
 - ASTRA Runtime now exposes `brainProvider`, `brainEvents`, and `brainTrace`;
 - Command Center `ReasoningWeb` is driven by the real backend route trace;
 - the Command Center HUD displays recent Brain events;
-- provider/execution state is explicit: successful Hermes turns report `hermes / executed`; unavailable Hermes falls back to `routing_only` and never pretends execution occurred;
+- provider/execution state is explicit: successful Hermes turns report `hermes / executed`; if Hermes is unavailable, ASTRA attempts local Ollama; only if both are unavailable does it fall back to `routing_only`;
 - Runtime loads Brain status on startup, so Command Center can show HERMES or ROUTING_ONLY before the first chat;
 - Command Center traces are now built from real Brain lifecycle events such as `provider.selected`, `agent.started`, `agent.completed`, and `provider.unavailable`.
 
@@ -115,6 +115,8 @@ User / Humanoid / Console
           |       |
           |       +--> /v1/chat/completions
           |       +--> Hermes tools/agent loop
+          |
+          +--> Ollama local fallback
           |
           +--> routing-only fallback
           |
@@ -185,10 +187,53 @@ ASTRA_HERMES_STATUS_TIMEOUT_MS=1200
 Behavior:
 
 - if Hermes is reachable and authorized, ASTRA executes the routed turn through Hermes;
-- if Hermes is stopped, times out, returns an error, or is disabled, ASTRA falls back to routing-only mode;
+- if Hermes is stopped, times out, returns an error, or is disabled, ASTRA automatically attempts local Ollama;
+- Ollama uses the configured model, or auto-selects the first installed local model when `ASTRA_OLLAMA_MODEL` is blank;
+- only if both Hermes and Ollama are unavailable does ASTRA fall back to routing-only mode;
 - fallback is intentionally non-destructive: the existing Humanoid, voice, Command Center, and router remain usable;
 - browser CORS configuration is not required for this path because the browser talks only to `/api/agent`, not directly to Hermes;
 - no real key belongs in GitHub. Only placeholder variables are committed in `.env.example`.
+
+## Ollama local fallback setup
+
+ASTRA talks to the Ollama HTTP server from the Next.js server process, never directly from the browser.
+
+Install/start Ollama and make sure at least one model exists, for example:
+
+```powershell
+ollama list
+ollama pull qwen2.5:3b
+```
+
+ASTRA side (`.env.local`):
+
+```env
+ASTRA_OLLAMA_ENABLED=true
+ASTRA_OLLAMA_URL=http://127.0.0.1:11434
+# Optional. Blank means auto-select first installed model.
+ASTRA_OLLAMA_MODEL=
+ASTRA_OLLAMA_TIMEOUT_MS=60000
+ASTRA_OLLAMA_STATUS_TIMEOUT_MS=1200
+```
+
+Runtime order:
+
+```text
+Hermes available
+  -> Hermes executes
+
+Hermes unavailable + Ollama available
+  -> Ollama executes local model turn
+
+Hermes unavailable + Ollama unavailable
+  -> routing_only / needs_provider
+```
+
+Important limitation:
+- Ollama fallback currently provides local model reasoning/chat only;
+- it does not yet own GitHub, shell, email, files, or MCP tools;
+- tool execution remains planned for Hermes/Codex/MCP phases;
+- ASTRA explicitly instructs the Ollama fallback not to claim external actions occurred.
 
 ## Routing policy
 
@@ -230,7 +275,7 @@ Required before paid cloud integration:
 3. ✅ Route existing `/api/agent` through the Brain Adapter.
 4. ✅ Add Brain Event Bus and Command Center trace integration.
 5. ✅ Add Hermes local service/adapter.
-6. ⏳ Connect Ollama as the default local model.
+6. ✅ Connect Ollama as the automatic local model fallback.
 7. ⏳ Add memory and skills.
 8. ⏳ Add Codex as the engineering specialist.
 9. ⏳ Add MCP/tools and permission controls.
