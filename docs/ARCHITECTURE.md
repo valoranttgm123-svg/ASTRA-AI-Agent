@@ -1,73 +1,134 @@
 # ASTRA Architecture
 
-ASTRA keeps the original APEX-UI visual layer and adds a real agent runtime behind it.
+ASTRA is one integrated AI operating environment. The Humanoid, Brain, and Command Center are different views of the same runtime, not disconnected demos.
 
 ## Layers
 
-1. **Interface** — Next.js / React UI, orb, reasoning graph, command console.
-2. **Runtime** — client state for idle, thinking, and speaking.
-3. **Agent API** — `/api/agent` validates requests and hands them to the orchestrator.
-4. **Orchestrator** — chooses the specialist agent and, later, the model/tool provider.
-5. **Agents** — focused specialists such as Developer, Research, Files, GitHub, Business, and Trading.
-6. **Tools** — future adapters for GitHub, filesystem, browser/search, email, calendar, database, and desktop control.
-7. **Memory** — future short-term and durable project context. Private runtime data must not be committed.
+1. **Interface / Humanoid** — Next.js / React UI, GPU particle Humanoid, chat, microphone, gesture input, voice playback.
+2. **Runtime / Event Bus** — real interaction state, request cancellation, Brain provider/events/trace.
+3. **Agent API** — `/api/agent` validates requests and delegates to the stable Brain Adapter.
+4. **ASTRA Brain Adapter** — routing, context assembly, provider selection, permission policy, fallback behavior.
+5. **Providers** — Hermes, Ollama, Codex CLI specialist, optional cloud.
+6. **Memory / Skills** — local private memory plus built-in/private route skills.
+7. **Tools / MCP** — execution delegated to permitted provider capabilities; side effects are policy-gated.
+8. **Command Center** — visualizes real Brain/runtime events only.
 
 ## Current V1 flow
 
 ```text
-User command
-   ↓
-AstraConsole
-   ↓
+USER
+  ↓
+Humanoid / Chat / Mic / Gesture
+  ↓
+ASTRA Runtime
+  ↓
 POST /api/agent
-   ↓
-runAgent()
-   ↓
-keyword router
-   ↓
-specialist selected
-   ↓
-structured response
-```
+  ↓
+ASTRA Brain Adapter
+  ├─ keyword specialist router
+  ├─ local Memory retrieval
+  ├─ route Skills
+  ├─ permission policy
+  └─ provider selection
+        ↓
+   engineering/GitHub:
+   Codex → Hermes → Ollama → explicit cloud → routing_only
 
-The client runtime also advances the existing orb visual from idle → thinking → speaking so the interface reacts to a real request lifecycle.
+   other routes:
+   Hermes → Ollama → explicit cloud → routing_only
+        ↓
+Brain lifecycle events
+  ├─ Runtime high-level state → Humanoid
+  └─ detailed trace → Command Center
+```
 
 ## Provider boundary
 
-V1 intentionally contains no embedded API secrets and no hard-coded vendor dependency. A future provider adapter will live behind the orchestrator so cloud models or a local model can be swapped without rebuilding the UI.
+The frontend never contains provider secrets.
 
-Suggested future structure:
+Server-side provider modules:
 
 ```text
-lib/agent/
-  orchestrator.ts
-  roster.ts
+lib/brain/
+  adapter.ts
   types.ts
-  providers/
-    local.ts
-    cloud.ts
-  tools/
-    github.ts
-    files.ts
-    browser.ts
-    email.ts
-    calendar.ts
-    computer.ts
-  memory/
-    short-term.ts
-    durable.ts
+  policy.ts
+  memory.ts
+  skills.ts
+  hermes.ts
+  ollama.ts
+  codex.ts
+  cloud.ts
 ```
 
-## Approval model
+### Hermes
 
-Read-only actions may run automatically when enabled. External or destructive actions should require explicit approval, including:
+Primary local gateway/orchestrator. It can own its own tool/MCP loop. ASTRA passes the current permission policy in provider instructions, but Hermes-side MCP permissions must also be configured to enforce side effects inside Hermes.
 
-- sending email
-- deleting or overwriting files
-- shell/PowerShell commands with side effects
-- Git push / merge
-- database writes
-- placing or closing trades
-- shutting down or controlling a computer
+### Ollama
 
-The `.env.example` defaults these capabilities to disabled until configured.
+Automatic local model fallback. It is a reasoning/chat path and must not claim external actions occurred when no tools are attached.
+
+### Codex
+
+Engineering/GitHub specialist using the local authenticated Codex CLI.
+
+Default sandbox is read-only. Workspace writes are only permitted when:
+- `ASTRA_CODEX_SANDBOX=workspace-write`; and
+- `ASTRA_ALLOW_FILE_WRITE=true`.
+
+### Optional cloud
+
+Disabled by default. It runs only when:
+- `ASTRA_CLOUD_ENABLED=true`; and
+- `ASTRA_ALLOW_PAID_CLOUD=true`; and
+- URL/key/model are configured.
+
+No silent paid escalation.
+
+## Memory and Skills
+
+Private runtime data lives outside Git:
+
+```text
+.astra/memory.json
+.astra/skills.json
+```
+
+The entire `.astra/` directory is gitignored.
+
+Memory is retrieved by lightweight local relevance scoring with strict size caps. Skills include committed built-ins plus optional private local extensions.
+
+Private memory is excluded from Codex/cloud by default.
+
+## Real event rule
+
+Command Center must never animate fake work.
+
+Current real Brain events include:
+- `request.received`
+- `router.selected`
+- `memory.loaded`
+- `skill.selected`
+- `policy.applied`
+- `provider.selected`
+- `provider.unavailable`
+- `agent.started`
+- `agent.completed`
+- `agent.blocked`
+- `response.ready`
+
+Tool-level events are added only when an execution provider exposes trustworthy tool telemetry.
+
+## Approval / permission model
+
+Read-only reasoning/inspection is the safe default.
+
+Configured policy flags:
+- `ASTRA_REQUIRE_APPROVAL`
+- `ASTRA_ALLOW_SHELL`
+- `ASTRA_ALLOW_FILE_WRITE`
+- `ASTRA_ALLOW_EXTERNAL_ACTIONS`
+- `ASTRA_ALLOW_PAID_CLOUD`
+
+Meaningful side effects such as external messages, file writes/deletes, repository pushes/merges, database writes, remote control, and trade execution must remain disabled unless an explicit permitted path exists.
