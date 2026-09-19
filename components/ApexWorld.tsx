@@ -309,6 +309,7 @@ export default function ApexWorld() {
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
         <ReasoningWeb
           state={webState}
+          trace={runtime.brainTrace}
           mode="full"
           coreless
           onSelect={(n: NodeSel) => { openAgent(n); }}
@@ -351,6 +352,72 @@ export default function ApexWorld() {
 
       {/* equalizer + STANDBY cluster */}
       <OrbStatusBar state={orbState} />
+
+      <aside
+        aria-label="ASTRA Brain activity"
+        style={{
+          position: "absolute",
+          top: 88,
+          right: 22,
+          zIndex: 6,
+          width: "min(280px, 30vw)",
+          minWidth: 220,
+          padding: "11px 12px",
+          border: "1px solid rgba(0,229,255,.18)",
+          borderRadius: 12,
+          background: "rgba(4,10,18,.72)",
+          color: "rgba(230,249,255,.72)",
+          fontFamily: "var(--font-mono)",
+          fontSize: 9.5,
+          letterSpacing: ".04em",
+          pointerEvents: "none",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+          <span style={{ color: "#71efff", letterSpacing: ".16em" }}>ASTRA BRAIN</span>
+          <span style={{ color: runtime.brainProvider ? "#8ef6b8" : "rgba(255,255,255,.34)" }}>
+            {(runtime.brainProvider ?? "standby").toUpperCase()}
+          </span>
+        </div>
+        <div style={{ display: "grid", gap: 5 }}>
+          {runtime.brainEvents.length === 0 ? (
+            <div style={{ color: "rgba(220,244,250,.38)" }}>No brain events yet.</div>
+          ) : (
+            runtime.brainEvents.slice(-4).map((event) => (
+              <div
+                key={event.id}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "7px 1fr",
+                  gap: 7,
+                  alignItems: "start",
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    marginTop: 3,
+                    background:
+                      event.type === "agent.blocked"
+                        ? "#ffb55e"
+                        : event.type === "response.ready"
+                          ? "#83ffbc"
+                          : "#63eaff",
+                  }}
+                />
+                <span>
+                  <strong style={{ color: "rgba(235,252,255,.82)", fontWeight: 500 }}>
+                    {event.label}
+                  </strong>
+                  {event.agent ? " · " + event.agent.replaceAll("_", " ") : ""}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </aside>
 
       {selected && <AgentOverview sel={selected} onClose={() => setSelected(null)} />}
     </div>
