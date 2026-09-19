@@ -14,10 +14,10 @@ const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
 const HEAD_CENTER_Y = (0.5 - 0.37) * WORLD_H;
-const BASE_POINT_SIZE_HIGH = 1.45;
-const BASE_POINT_SIZE_LOW = 1.10;
-const GLOW_POINT_SIZE_HIGH = 3.05;
-const GLOW_POINT_SIZE_LOW = 2.15;
+const BASE_POINT_SIZE_HIGH = 2.25;
+const BASE_POINT_SIZE_LOW = 1.35;
+const GLOW_POINT_SIZE_HIGH = 4.00;
+const GLOW_POINT_SIZE_LOW = 2.45;
 const ASSEMBLY_DURATION_SECONDS = 2.6;
 const ASSEMBLY_WINDOW = 0.34;
 
@@ -91,7 +91,7 @@ function createRoundParticleTexture() {
       const nx = ((x + 0.5) / size) * 2 - 1;
       const ny = ((y + 0.5) / size) * 2 - 1;
       const radius = Math.sqrt(nx * nx + ny * ny);
-      const raw = THREE.MathUtils.clamp((1 - radius) / 0.24, 0, 1);
+      const raw = THREE.MathUtils.clamp((1 - radius) / 0.30, 0, 1);
       const coverage = raw * raw * (3 - 2 * raw);
       const value = Math.round(coverage * 255);
       const offset = (y * size + x) * 4;
@@ -581,14 +581,14 @@ function ParticleArtwork({
     const speakingBoost = state === "speaking" ? 1 + voiceReactive * 0.025 : 1;
 
     const baseMaterial = basePoints.current.material as THREE.PointsMaterial;
-    baseMaterial.opacity = state === "speaking" ? 0.97 : 0.92;
+    baseMaterial.opacity = state === "speaking" ? 1.0 : 0.985;
     baseMaterial.size = baseSize * speakingBoost;
 
     if (glowPoints.current) {
       const glowMaterial = glowPoints.current.material as THREE.PointsMaterial;
       glowMaterial.opacity = quality === "high"
-        ? (state === "speaking" ? 0.040 + voiceReactive * 0.020 : state === "thinking" ? 0.055 : 0.032)
-        : (state === "speaking" ? 0.012 + voiceReactive * 0.008 : 0.018);
+        ? (state === "speaking" ? 0.055 + voiceReactive * 0.025 : state === "thinking" ? 0.068 : 0.044)
+        : (state === "speaking" ? 0.018 + voiceReactive * 0.010 : 0.023);
       glowMaterial.size = glowSize * speakingBoost;
     }
 
@@ -596,18 +596,18 @@ function ParticleArtwork({
       const edgeMaterial = edgePoints.current.material as THREE.PointsMaterial;
       const edgeEnergy = profile.cyan + turn * 0.34;
       edgeMaterial.opacity = quality === "high"
-        ? THREE.MathUtils.clamp(0.055 + edgeEnergy, 0.055, 0.5)
-        : THREE.MathUtils.clamp(0.04 + edgeEnergy * 0.55, 0.04, 0.28);
-      edgeMaterial.size = quality === "high" ? 2.10 + turn * 0.55 : 1.58 + turn * 0.28;
+        ? THREE.MathUtils.clamp(0.075 + edgeEnergy * 1.08, 0.075, 0.52)
+        : THREE.MathUtils.clamp(0.05 + edgeEnergy * 0.62, 0.05, 0.30);
+      edgeMaterial.size = quality === "high" ? 2.70 + turn * 0.65 : 1.78 + turn * 0.30;
     }
 
     if (cyanPoints.current) {
       const cyanMaterial = cyanPoints.current.material as THREE.PointsMaterial;
       const listeningPulse = state === "listening" ? 0.04 + Math.sin(t * 2.4) * 0.025 : 0;
       cyanMaterial.opacity = quality === "high"
-        ? THREE.MathUtils.clamp(profile.cyan * 0.72 + listeningPulse, 0.03, 0.38)
-        : THREE.MathUtils.clamp(profile.cyan * 0.4, 0.02, 0.18);
-      cyanMaterial.size = quality === "high" ? 1.82 : 1.38;
+        ? THREE.MathUtils.clamp(0.035 + profile.cyan * 0.90 + listeningPulse, 0.045, 0.42)
+        : THREE.MathUtils.clamp(0.025 + profile.cyan * 0.48, 0.025, 0.20);
+      cyanMaterial.size = quality === "high" ? 2.35 : 1.55;
     }
 
     if (warmPoints.current) {
@@ -619,8 +619,8 @@ function ParticleArtwork({
         ? THREE.MathUtils.clamp(stateEnergy, 0.05, 0.72)
         : THREE.MathUtils.clamp(stateEnergy * 0.58, 0.035, 0.38);
       warmMaterial.size = quality === "high"
-        ? 1.95 + voiceReactive * 0.12
-        : 1.48 + voiceReactive * 0.06;
+        ? 2.42 + voiceReactive * 0.15
+        : 1.62 + voiceReactive * 0.07;
     }
 
     if (voiceFacePoints.current) {
@@ -633,8 +633,8 @@ function ParticleArtwork({
           )
         : 0;
       faceMaterial.size = quality === "high"
-        ? 1.72 + voiceReactive * 0.18
-        : 1.36 + voiceReactive * 0.08;
+        ? 2.05 + voiceReactive * 0.20
+        : 1.48 + voiceReactive * 0.09;
     }
 
     if (voiceCorePoints.current) {
@@ -647,8 +647,8 @@ function ParticleArtwork({
           )
         : 0;
       coreMaterial.size = quality === "high"
-        ? 1.88 + coreReactive * 0.18
-        : 1.46 + coreReactive * 0.08;
+        ? 2.20 + coreReactive * 0.20
+        : 1.55 + coreReactive * 0.09;
     }
 
     const cyanStateColor = new THREE.Color("#5ef5ff");
@@ -668,7 +668,7 @@ function ParticleArtwork({
       zoneMaterial.opacity = effects
         ? THREE.MathUtils.clamp((profile.zone * (0.34 + faceBias * 0.50) + speakingFace) * waveGate, 0, 0.22)
         : 0;
-      zoneMaterial.size = quality === "high" ? 1.82 + faceBias * 0.34 : 1.38 + faceBias * 0.16;
+      zoneMaterial.size = quality === "high" ? 2.18 + faceBias * 0.38 : 1.50 + faceBias * 0.18;
     }
   });
 
@@ -680,9 +680,9 @@ function ParticleArtwork({
           size={GLOW_POINT_SIZE_HIGH}
           sizeAttenuation={false}
           alphaMap={particleSprite}
-          alphaTest={0.04}
+          alphaTest={0.02}
           transparent
-          opacity={0.045}
+          opacity={0.055}
           depthTest={false}
           depthWrite={false}
           toneMapped={false}
@@ -696,9 +696,9 @@ function ParticleArtwork({
           size={2.1}
           sizeAttenuation={false}
           alphaMap={particleSprite}
-          alphaTest={0.08}
+          alphaTest={0.04}
           transparent
-          opacity={0.1}
+          opacity={0.12}
           depthTest={false}
           depthWrite={false}
           toneMapped={false}
@@ -712,9 +712,9 @@ function ParticleArtwork({
           size={1.95}
           sizeAttenuation={false}
           alphaMap={particleSprite}
-          alphaTest={0.08}
+          alphaTest={0.04}
           transparent
-          opacity={0.13}
+          opacity={0.15}
           depthTest={false}
           depthWrite={false}
           toneMapped={false}
@@ -728,9 +728,9 @@ function ParticleArtwork({
           size={1.82}
           sizeAttenuation={false}
           alphaMap={particleSprite}
-          alphaTest={0.08}
+          alphaTest={0.04}
           transparent
-          opacity={0.08}
+          opacity={0.10}
           depthTest={false}
           depthWrite={false}
           toneMapped={false}
@@ -744,7 +744,7 @@ function ParticleArtwork({
           size={1.88}
           sizeAttenuation={false}
           alphaMap={particleSprite}
-          alphaTest={0.08}
+          alphaTest={0.04}
           transparent
           opacity={0}
           depthTest={false}
@@ -760,7 +760,7 @@ function ParticleArtwork({
           size={1.72}
           sizeAttenuation={false}
           alphaMap={particleSprite}
-          alphaTest={0.08}
+          alphaTest={0.04}
           transparent
           opacity={0}
           depthTest={false}
@@ -783,9 +783,9 @@ function ParticleArtwork({
             size={1.82}
             sizeAttenuation={false}
             alphaMap={particleSprite}
-            alphaTest={0.08}
+            alphaTest={0.04}
             transparent
-            opacity={0.04}
+            opacity={0.055}
             depthTest={false}
             depthWrite={false}
             toneMapped={false}
@@ -800,9 +800,9 @@ function ParticleArtwork({
           size={BASE_POINT_SIZE_HIGH}
           sizeAttenuation={false}
           alphaMap={particleSprite}
-          alphaTest={0.16}
+          alphaTest={0.06}
           transparent
-          opacity={0.92}
+          opacity={0.985}
           depthTest={false}
           depthWrite={false}
           toneMapped={false}
@@ -1117,9 +1117,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.1</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.2</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          CRISP PARTICLES // SMOOTHER ASSEMBLY MOTION
+          VISIBLE CRISP PARTICLES // HIGH-DPR BALANCE
         </div>
       </header>
 
@@ -1301,7 +1301,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.0.1 sharpens the particle field with a procedural round sprite, smaller base/energy points, HIGH DPR 1.5, and linear filtering. Assembly motion now uses quintic smootherstep plus a deterministic curve instead of time-based jitter, so particles settle more smoothly without changing the ASTRA silhouette or runtime behavior.
+            V12.0.2 compensates fixed-screen point sizes for HIGH DPR 1.5, enlarges the round particle core, lowers alpha cutoffs, and lifts base/cyan/orange visibility while retaining the crisp round sprite and V12.0.1 smoother assembly motion. The goal is stronger particle readability without returning to square or over-saturated blocks.
           </div>
         </aside>
       )}
