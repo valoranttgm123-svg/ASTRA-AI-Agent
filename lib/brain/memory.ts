@@ -56,24 +56,33 @@ function scoreEntry(inputTokens: Set<string>, entry: AstraMemoryEntry) {
 function normalizeEntries(value: unknown): AstraMemoryEntry[] {
   if (!Array.isArray(value)) return [];
 
-  return value
-    .map((item, index) => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as Record<string, unknown>;
-      const text = typeof record.text === "string" ? record.text.trim() : "";
-      if (!text) return null;
-      const id =
-        typeof record.id === "string" && record.id.trim()
-          ? record.id.trim()
-          : `memory-${index + 1}`;
-      const tags = Array.isArray(record.tags)
-        ? record.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 20)
-        : undefined;
-      const updatedAt =
-        typeof record.updatedAt === "string" ? record.updatedAt : undefined;
-      return { id, text: text.slice(0, 4000), tags, updatedAt };
-    })
-    .filter((entry): entry is AstraMemoryEntry => Boolean(entry));
+  const entries: AstraMemoryEntry[] = [];
+
+  value.forEach((item, index) => {
+    if (!item || typeof item !== "object") return;
+    const record = item as Record<string, unknown>;
+    const text = typeof record.text === "string" ? record.text.trim() : "";
+    if (!text) return;
+
+    const id =
+      typeof record.id === "string" && record.id.trim()
+        ? record.id.trim()
+        : `memory-${index + 1}`;
+    const tags = Array.isArray(record.tags)
+      ? record.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 20)
+      : undefined;
+    const updatedAt =
+      typeof record.updatedAt === "string" ? record.updatedAt : undefined;
+
+    entries.push({
+      id,
+      text: text.slice(0, 4000),
+      tags,
+      updatedAt,
+    });
+  });
+
+  return entries;
 }
 
 export async function getMemoryContext(input: string): Promise<AstraMemoryContext> {
