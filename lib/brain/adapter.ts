@@ -335,7 +335,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
     };
   }
 
-  async execute(task: { input: string; approved?: boolean }) {
+  async execute(task: { input: string; approved?: boolean }): Promise<AstraBrainChatResult> {
     const response = await this.chat(task.input);
     return {
       ...response,
@@ -533,7 +533,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     };
   }
 
-  async execute(task: { input: string; approved?: boolean }) {
+  async execute(task: { input: string; approved?: boolean }): Promise<AstraBrainChatResult> {
     const input = task.input.trim();
     const selected = selectAgent(input);
     const agent = ASTRA_AGENT_MAP[selected];
