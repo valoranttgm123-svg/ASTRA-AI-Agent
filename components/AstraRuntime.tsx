@@ -55,6 +55,11 @@ type ReasoningTrace = {
   }>;
 };
 
+type AstraBrainStreamPacket =
+  | { kind: "brain.event"; event: AstraBrainEvent }
+  | { kind: "result"; result: AstraBrainChatResult }
+  | { kind: "error"; error: string };
+
 type AstraRuntimeValue = {
   orbState: AstraOrbState;
   avatarState: AstraAvatarState;
@@ -324,7 +329,36 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     });
 
     try {
-      const response = await fetch("/api/agent", {
+      const streamedFingerprints = new Set<string>();
+      const fingerprint = (event: AstraBrainEvent) =>
+        `${event.type}|${event.agent ?? ""}|${event.provider ?? ""}|${event.label}`;
+
+      const applyStreamEvent = (event: AstraBrainEvent) => {
+        if (requestSequence !== requestSequenceRef.current) return;
+
+        streamedFingerprints.add(fingerprint(event));
+        setBrainEvents((current) => {
+          if (current.some((item) => item.id === event.id)) return current;
+          return [...current, event].slice(-24);
+        });
+
+        if (event.provider) setBrainProvider(event.provider);
+        if (event.agent && (event.type === "router.selected" || event.type === "agent.started")) {
+          setActiveAgent(event.agent.replace(/_/g, " "));
+        }
+
+        if (event.visualNode) {
+          setBrainTrace((current) => {
+            const next = [
+              ...(current?.trace ?? []),
+              { helper: event.visualNode as string, type: event.type, at: event.at },
+            ].slice(-16);
+            return { n: ++brainTraceSequenceRef.current, trace: next };
+          });
+        }
+      };
+
+      const response = await fetch("/api/agent/stream", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -338,8 +372,48 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       if (!response.ok) {
         throw new Error(`ASTRA request failed (${response.status})`);
       }
+      if (!response.body) {
+        throw new Error("ASTRA streaming response body is unavailable.");
+      }
 
-      const result = (await response.json()) as AstraBrainChatResult;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let result: AstraBrainChatResult | null = null;
+      let streamError: string | null = null;
+
+      const processLine = (line: string) => {
+        const value = line.trim();
+        if (!value) return;
+        const packet = JSON.parse(value) as AstraBrainStreamPacket;
+        if (packet.kind === "brain.event") {
+          applyStreamEvent(packet.event);
+        } else if (packet.kind === "result") {
+          result = packet.result;
+        } else if (packet.kind === "error") {
+          streamError = packet.error;
+        }
+      };
+
+      while (true) {
+        const { value: chunk, done } = await reader.read();
+        if (chunk) buffer += decoder.decode(chunk, { stream: !done });
+
+        let newline = buffer.indexOf("\n");
+        while (newline >= 0) {
+          const line = buffer.slice(0, newline);
+          buffer = buffer.slice(newline + 1);
+          processLine(line);
+          newline = buffer.indexOf("\n");
+        }
+
+        if (done) break;
+      }
+
+      buffer += decoder.decode();
+      if (buffer.trim()) processLine(buffer);
+      if (streamError) throw new Error(streamError);
+      if (!result) throw new Error("ASTRA stream ended without a final result.");
 
       if (requestSequence !== requestSequenceRef.current) {
         return result;
