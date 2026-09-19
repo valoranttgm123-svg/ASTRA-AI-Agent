@@ -481,6 +481,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const route = routeFor(selected);
     const context = await buildExecutionContext(input, selected);
     const failures: string[] = [];
+    emitInitialTelemetry(selected, context);
 
     if (isEngineeringRoute(selected)) {
       try {
@@ -490,6 +491,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         ]
           .filter(Boolean)
           .join("\n\n");
+        emitProviderStarted(selected, "codex");
         const result = await chatWithCodex({
           input,
           agent,
@@ -498,6 +500,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           policy: context.policy,
         });
 
+        emitProviderCompleted(selected, "codex");
         return {
           ok: true,
           agent: selected,
@@ -516,13 +519,14 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
-        failures.push(
-          `Codex: ${error instanceof Error ? error.message : "unavailable"}`,
-        );
+        const detail = `Codex: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitProviderUnavailable(selected, "codex", detail);
       }
     }
 
     try {
+      emitProviderStarted(selected, "hermes");
       const result = await chatWithHermes({
         input,
         agent,
@@ -530,6 +534,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         policyText: context.policyText,
       });
 
+      emitProviderCompleted(selected, "hermes");
       return {
         ok: true,
         agent: selected,
@@ -548,12 +553,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Hermes: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitProviderUnavailable(selected, "hermes", detail);
     }
 
     try {
+      emitProviderStarted(selected, "ollama");
       const result = await chatWithOllama({
         input,
         agent,
@@ -561,6 +567,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         policyText: context.policyText,
       });
 
+      emitProviderCompleted(selected, "ollama");
       return {
         ok: true,
         agent: selected,
@@ -579,13 +586,14 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Ollama: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Ollama: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitProviderUnavailable(selected, "ollama", detail);
     }
 
     if (context.policy.allowPaidCloud) {
       try {
+        emitProviderStarted(selected, "cloud");
         const cloudContext = [
           context.skillOnlyContext,
           cloudMayReceiveMemory(context.policy) ? context.memory.text : "",
@@ -601,6 +609,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           policy: context.policy,
         });
 
+        emitProviderCompleted(selected, "cloud");
         return {
           ok: true,
           agent: selected,
@@ -619,13 +628,18 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
-        failures.push(
-          `Cloud: ${error instanceof Error ? error.message : "unavailable"}`,
-        );
+        const detail = `Cloud: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitProviderUnavailable(selected, "cloud", detail);
       }
     }
 
     const fallback = await this.fallback.chat(input);
+    emitBlockedTelemetry(
+      selected,
+      failures.join(" | ") || "No permitted execution provider is currently available.",
+      "Execution waiting",
+    );
     return {
       ...fallback,
       brain: {
