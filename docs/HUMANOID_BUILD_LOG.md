@@ -617,3 +617,37 @@ Verification:
 - verify shockwave is clearly audible on laptop/monitor speakers at normal system volume;
 - confirm no obvious crackling or clipping.
 
+## Stage 4.1.3 — Loud SFX + Presence Layer (V12.1.3)
+
+Reported feedback:
+- V12.1.2 SFX still could not be heard clearly on the target system.
+
+Cause addressed:
+- most existing shockwave energy was concentrated in low/sub-bass frequencies;
+- laptop/monitor speakers can reproduce those frequencies poorly even when gain is increased.
+
+Fix:
+- stronger pre-limiter master gain;
+- DynamicsCompressor tightened to control the higher input level;
+- added post-limiter output gain stage;
+- core, rise, noise and impact layers all boosted again;
+- new sawtooth mid-frequency presence layer sweeps through roughly 260–920 Hz;
+- presence layer is band-limited and short so it increases audibility without becoming a continuous tone;
+- added `TEST SFX` button to play the effect immediately after browser audio unlock;
+- TEST SFX also enables SFX if it was off, making output routing easy to verify.
+
+Preserved:
+- browser user-gesture unlock requirement;
+- SFX ON/OFF control;
+- visual shockwave timing;
+- GPU render performance;
+- mic, voice and camera behavior;
+- no external audio file or dependency.
+
+Verification:
+- production CI build;
+- click TEST SFX and confirm immediate audible output;
+- compare with V12.1.2 on laptop/monitor speakers;
+- verify no obvious distortion/crackling at normal Windows volume;
+- if TEST SFX is still silent, treat it as a browser/Windows output-routing issue rather than shockwave gain.
+

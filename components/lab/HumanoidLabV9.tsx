@@ -366,16 +366,19 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     const now = context.currentTime;
     const master = context.createGain();
     const limiter = context.createDynamicsCompressor();
-    limiter.threshold.setValueAtTime(-18, now);
-    limiter.knee.setValueAtTime(18, now);
-    limiter.ratio.setValueAtTime(8, now);
-    limiter.attack.setValueAtTime(0.003, now);
-    limiter.release.setValueAtTime(0.18, now);
+    const outputGain = context.createGain();
+
+    limiter.threshold.setValueAtTime(-24, now);
+    limiter.knee.setValueAtTime(16, now);
+    limiter.ratio.setValueAtTime(12, now);
+    limiter.attack.setValueAtTime(0.002, now);
+    limiter.release.setValueAtTime(0.16, now);
+    outputGain.gain.setValueAtTime(1.65, now);
 
     master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(1.38, now + 0.025);
-    master.gain.exponentialRampToValueAtTime(0.0001, now + 2.15);
-    master.connect(limiter).connect(context.destination);
+    master.gain.exponentialRampToValueAtTime(2.25, now + 0.025);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 2.20);
+    master.connect(limiter).connect(outputGain).connect(context.destination);
 
     const coreGain = context.createGain();
     const core = context.createOscillator();
@@ -383,7 +386,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     core.frequency.setValueAtTime(74, now);
     core.frequency.exponentialRampToValueAtTime(39, now + 0.82);
     coreGain.gain.setValueAtTime(0.0001, now);
-    coreGain.gain.exponentialRampToValueAtTime(0.34, now + 0.035);
+    coreGain.gain.exponentialRampToValueAtTime(0.52, now + 0.035);
     coreGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.92);
     core.connect(coreGain).connect(master);
     core.start(now);
@@ -396,7 +399,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     rise.frequency.exponentialRampToValueAtTime(680, now + 0.82);
     rise.frequency.exponentialRampToValueAtTime(250, now + 1.42);
     riseGain.gain.setValueAtTime(0.0001, now + 0.08);
-    riseGain.gain.exponentialRampToValueAtTime(0.13, now + 0.36);
+    riseGain.gain.exponentialRampToValueAtTime(0.22, now + 0.36);
     riseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.52);
     rise.connect(riseGain).connect(master);
     rise.start(now + 0.08);
@@ -423,7 +426,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     noiseFilter.frequency.exponentialRampToValueAtTime(185, now + 1.55);
     noiseFilter.Q.setValueAtTime(0.7, now);
     noiseGain.gain.setValueAtTime(0.0001, now + 0.15);
-    noiseGain.gain.exponentialRampToValueAtTime(0.17, now + 0.36);
+    noiseGain.gain.exponentialRampToValueAtTime(0.24, now + 0.36);
     noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.70);
     noise.connect(noiseFilter).connect(noiseGain).connect(master);
     noise.start(now + 0.15);
@@ -435,17 +438,46 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     impact.frequency.setValueAtTime(118, now + 0.30);
     impact.frequency.exponentialRampToValueAtTime(52, now + 0.62);
     impactGain.gain.setValueAtTime(0.0001, now + 0.29);
-    impactGain.gain.exponentialRampToValueAtTime(0.22, now + 0.32);
+    impactGain.gain.exponentialRampToValueAtTime(0.36, now + 0.32);
     impactGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.69);
     impact.connect(impactGain).connect(master);
     impact.start(now + 0.29);
     impact.stop(now + 0.72);
+
+    // Mid-frequency presence layer so the shockwave remains clearly audible
+    // on laptop/monitor speakers that cannot reproduce deep bass efficiently.
+    const presence = context.createOscillator();
+    const presenceFilter = context.createBiquadFilter();
+    const presenceGain = context.createGain();
+    presence.type = "sawtooth";
+    presence.frequency.setValueAtTime(260, now + 0.18);
+    presence.frequency.exponentialRampToValueAtTime(920, now + 0.58);
+    presence.frequency.exponentialRampToValueAtTime(360, now + 1.12);
+    presenceFilter.type = "bandpass";
+    presenceFilter.frequency.setValueAtTime(720, now);
+    presenceFilter.Q.setValueAtTime(0.85, now);
+    presenceGain.gain.setValueAtTime(0.0001, now + 0.16);
+    presenceGain.gain.exponentialRampToValueAtTime(0.18, now + 0.30);
+    presenceGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.20);
+    presence.connect(presenceFilter).connect(presenceGain).connect(master);
+    presence.start(now + 0.16);
+    presence.stop(now + 1.24);
   }, []);
 
   const handleShockwaveChange = useCallback((active: boolean) => {
     setShockwaveActive(active);
     if (active) playShockwaveSfx();
   }, [playShockwaveSfx]);
+
+  const testShockwaveSfx = useCallback(async () => {
+    if (!sfxEnabledRef.current) {
+      sfxEnabledRef.current = true;
+      setSfxEnabled(true);
+    }
+    const context = await ensureSfxAudio();
+    if (!context || context.state !== "running") return;
+    playShockwaveSfx();
+  }, [ensureSfxAudio, playShockwaveSfx]);
 
   useEffect(() => {
     const unlock = () => {
@@ -710,9 +742,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1.2</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1.3</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          FINAL SHOCKWAVE // BOOSTED SFX + LIMITER
+          FINAL SHOCKWAVE // LOUD SFX + PRESENCE LAYER
         </div>
       </header>
 
@@ -793,6 +825,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
                   : sfxReady
                     ? "SFX ON"
                     : "SFX ARM"}
+            </button>
+            <button
+              onClick={() => void testShockwaveSfx()}
+              disabled={!sfxSupported}
+              style={{ ...buttonStyle(false), opacity: sfxSupported ? 1 : 0.45 }}
+            >
+              TEST SFX
             </button>
             <span
               style={{
@@ -893,8 +932,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Shockwave renderer: existing 2-pass GPU shader / no extra mesh</div>
           <div>Shockwave SFX: {!sfxSupported ? "UNSUPPORTED" : !sfxEnabled ? "OFF" : sfxReady ? "READY" : "WAITING FOR USER GESTURE"}</div>
           <div>SFX engine: Web Audio API / synthesized / no external audio asset</div>
-          <div>SFX output: boosted master + DynamicsCompressor limiter</div>
-          <div>SFX layers: stronger sub-core pulse + electric rise + filtered noise + impact</div>
+          <div>SFX output: high-gain master → compressor limiter → +4.3 dB output stage</div>
+          <div>SFX layers: boosted core + rise + filtered noise + impact + mid presence</div>
+          <div>SFX test: TEST SFX button plays immediately after browser audio unlock</div>
           <div>Playback active: {runtime.playbackActive ? "YES" : "NO"}</div>
           <div>Playback gate: {runtime.speechLevel.toFixed(0)} (event-driven, not loudness)</div>
           <div>Voice face driver: smoothed playback envelope + visual cadence</div>
@@ -931,7 +971,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.1.2 substantially raises shockwave audibility while adding a DynamicsCompressor limiter before the audio destination. Master gain and all four SFX layers are boosted, especially the core and impact, so the effect is clearer on laptop/monitor speakers without uncontrolled clipping. SFX ON/OFF and browser gesture arming remain unchanged.
+            V12.1.3 raises perceived loudness again with a stronger pre-limiter master, a post-limiter output stage, and a dedicated mid-frequency presence layer that is easier for laptop/monitor speakers to reproduce. A TEST SFX button now plays the effect immediately after audio unlock so output routing can be verified without waiting for assembly.
           </div>
         </aside>
       )}
