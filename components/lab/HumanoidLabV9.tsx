@@ -862,11 +862,38 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V13</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V14</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          GESTURE CONTROL // PINCH + OPEN PALM + FIST
+          BRAIN ↔ HUMANOID EVENT LINK // SHARED RUNTIME
         </div>
       </header>
+
+      <aside
+        aria-label="ASTRA Brain link status"
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 92,
+          zIndex: 20,
+          minWidth: 210,
+          padding: "8px 10px",
+          border: "1px solid rgba(87,231,248,.2)",
+          borderRadius: 10,
+          background: "rgba(0,7,11,.86)",
+          textAlign: "right",
+          pointerEvents: "none",
+        }}
+      >
+        <div style={{ color: "#69edff", fontSize: 8.5, letterSpacing: ".17em" }}>
+          BRAIN LINK // {(runtime.brainProvider ?? "standby").toUpperCase()}
+        </div>
+        <div style={{ marginTop: 4, color: "rgba(229,250,255,.72)", fontSize: 9 }}>
+          {latestBrainEvent?.label ?? "No Brain event yet"}
+        </div>
+        <div style={{ marginTop: 2, color: "rgba(217,244,250,.42)", fontSize: 8 }}>
+          {(latestBrainEvent?.agent ?? "chief_of_staff").replace(/_/g, " ")} · {brainRequestedMode.toUpperCase()} · {brainExecution.toUpperCase()}
+        </div>
+      </aside>
 
       <button onClick={exit} style={exitStyle}>EXIT</button>
 
@@ -1026,10 +1053,15 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 9, letterSpacing: ".18em", color: "#65eafb" }}>
             <span>{runtime.activeAgent ?? "ASTRA CORE"}</span>
             <span>
-              {runtime.lastResponse?.brain.requestedMode === "execute"
-                ? runtime.lastResponse.brain.execution.toUpperCase()
-                : state.toUpperCase()}
+              {(runtime.brainProvider ?? "standby").toUpperCase()} · {
+                runtime.lastResponse?.brain.requestedMode === "execute"
+                  ? runtime.lastResponse.brain.execution.toUpperCase()
+                  : state.toUpperCase()
+              }
             </span>
+          </div>
+          <div style={{ marginTop: 5, color: "rgba(198,240,247,.42)", fontSize: 8.5, letterSpacing: ".05em" }}>
+            BRAIN EVENT: {latestBrainEvent ? latestBrainEvent.type + " · " + latestBrainEvent.label : "standby"}
           </div>
           <div style={{ minHeight: 42, marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
             {runtime.micActive
@@ -1080,6 +1112,15 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Voice core samples: {data?.voiceCore.length ?? "loading"}</div>
           <div>State radial zones: {data?.zones.length ?? "loading"}</div>
           <div>State transition: 680 ms radial face-out</div>
+          <div>Brain provider: {(runtime.brainProvider ?? "standby").toUpperCase()}</div>
+          <div>Brain mode: {brainRequestedMode.toUpperCase()} / {brainExecution.toUpperCase()}</div>
+          <div>Brain event count: {runtime.brainEvents.length}</div>
+          <div>Brain latest event: {latestBrainEvent ? latestBrainEvent.type + " / " + latestBrainEvent.label : "NONE"}</div>
+          <div>Brain latest agent: {latestBrainEvent?.agent ?? "—"}</div>
+          <div>Brain visual pulse: truthful runtime/backend events only</div>
+          <div>Brain tool telemetry: not fabricated when provider does not expose it</div>
+          <div>Brain context memory: {runtime.lastResponse?.brain.context?.memoryEntries ?? 0} entries</div>
+          <div>Brain context skills: {runtime.lastResponse?.brain.context?.skills.join(", ") || "—"}</div>
           <div>Assembly duration: {ASSEMBLY_DURATION_SECONDS.toFixed(1)} s</div>
           <div>Assembly order: head → neck → shoulders → core</div>
           <div>Assembly source: single left-side particle stream</div>
@@ -1144,7 +1185,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V13 upgrades the existing local MediaPipe camera pipeline from index-finger tracking to real gesture control. PINCH replays assembly, OPEN PALM starts listening, and FIST stops the current ASTRA interaction. Gestures require three stable inference frames, must return to neutral before retriggering, and use a cooldown to prevent repeated accidental actions. No new model or cloud service is added.
+            V14 links the Humanoid directly to the same ASTRA Brain event stream already used by Command Center. Genuine request, routing, memory, skill, provider, agent, blocked and response events now trigger short GPU particle pulses with event/provider-specific tones, while the Humanoid HUD exposes the real provider, agent, request mode and execution state. No tool-level activity is invented when the execution provider does not expose trustworthy telemetry.
           </div>
         </aside>
       )}
