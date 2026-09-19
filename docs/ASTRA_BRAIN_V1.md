@@ -562,3 +562,36 @@ This preserves one event model for:
 
 A future streaming telemetry stage can transport trustworthy incremental backend events through SSE/WebSocket without changing the Brain Event type contract.
 
+## Real-time telemetry transport
+
+V15 adds a request-scoped NDJSON transport without changing the stable Brain Adapter result contract.
+
+```text
+ASTRA Runtime
+     |
+     | POST /api/agent/stream
+     v
+request-scoped telemetry sink
+     |
+     v
+ASTRA Brain Adapter
+     |
+     +--> request/router/context events
+     +--> provider.selected
+     +--> agent.started
+     +--> provider.unavailable (real failure only)
+     +--> agent.completed
+     +--> response.ready
+     |
+     v
+NDJSON packets -> Runtime -> Command Center + Humanoid
+```
+
+The sink uses Node `AsyncLocalStorage` so telemetry from concurrent requests remains request-local.
+
+Each stream ends with the same `AstraBrainChatResult` envelope used by the normal JSON API. Runtime deduplicates final envelope lifecycle events against events already delivered incrementally.
+
+Provider identity is carried structurally in `AstraBrainEvent.provider`; UI code does not infer provider state from labels.
+
+This transport still does not fabricate tool-level events. If Hermes, Codex, or another execution provider later exposes trustworthy incremental tool telemetry, those events can be added to the existing stream contract.
+
