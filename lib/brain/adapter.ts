@@ -20,6 +20,7 @@ import {
   toolsPolicyDetail,
 } from "./policy";
 import { getSkillContext, type AstraSkillContext } from "./skills";
+import { emitBrainEvent, emitBrainEvents } from "./telemetry";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -185,6 +186,115 @@ function providerLabel(provider: AstraBrainProvider) {
     default:
       return "Routing";
   }
+}
+
+function emitInitialTelemetry(selected: AstraAgentKey, context: ExecutionContext) {
+  const now = Date.now();
+  emitBrainEvents([
+    ...baseEvents(selected, now),
+    ...contextEvents(selected, context, now),
+  ]);
+}
+
+function emitProviderStarted(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+) {
+  const now = Date.now();
+  const label = providerLabel(provider);
+  emitBrainEvents([
+    {
+      id: `live-${now}-${provider}-selected`,
+      type: "provider.selected",
+      at: now,
+      agent: selected,
+      visualNode: provider === "codex" ? "developer" : visualNode(selected),
+      label: `${label} selected`,
+      detail: `ASTRA Brain selected ${label} for this live request.`,
+    },
+    {
+      id: `live-${now}-${provider}-started`,
+      type: "agent.started",
+      at: now + 1,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Agent started",
+      detail: `${ASTRA_AGENT_MAP[selected].name} started through ${label}.`,
+    },
+  ]);
+}
+
+function emitProviderUnavailable(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+  detail: string,
+) {
+  const now = Date.now();
+  emitBrainEvent({
+    id: `live-${now}-${provider}-unavailable`,
+    type: "provider.unavailable",
+    at: now,
+    agent: selected,
+    visualNode: provider === "codex" ? "developer" : visualNode(selected),
+    label: `${providerLabel(provider)} unavailable`,
+    detail,
+  });
+}
+
+function emitProviderCompleted(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+) {
+  const now = Date.now();
+  const label = providerLabel(provider);
+  emitBrainEvents([
+    {
+      id: `live-${now}-${provider}-completed`,
+      type: "agent.completed",
+      at: now,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Agent completed",
+      detail: `${ASTRA_AGENT_MAP[selected].name} completed the ${label} turn.`,
+    },
+    {
+      id: `live-${now}-${provider}-response`,
+      type: "response.ready",
+      at: now + 1,
+      agent: selected,
+      visualNode: "chief_of_staff",
+      label: "Response ready",
+      detail: `${label} returned the final response to ASTRA Runtime.`,
+    },
+  ]);
+}
+
+function emitBlockedTelemetry(
+  selected: AstraAgentKey,
+  detail: string,
+  label = "Execution blocked",
+) {
+  const now = Date.now();
+  emitBrainEvents([
+    {
+      id: `live-${now}-blocked`,
+      type: "agent.blocked",
+      at: now,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label,
+      detail,
+    },
+    {
+      id: `live-${now}-blocked-response`,
+      type: "response.ready",
+      at: now + 1,
+      agent: selected,
+      visualNode: "chief_of_staff",
+      label: "Response ready",
+      detail: "ASTRA returned the blocked/waiting state to Runtime.",
+    },
+  ]);
 }
 
 function providerEvents(
