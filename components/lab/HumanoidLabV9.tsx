@@ -18,6 +18,8 @@ const BASE_POINT_SIZE_HIGH = 1.7;
 const BASE_POINT_SIZE_LOW = 1.25;
 const GLOW_POINT_SIZE_HIGH = 3.6;
 const GLOW_POINT_SIZE_LOW = 2.5;
+const ASSEMBLY_DURATION_SECONDS = 2.6;
+const ASSEMBLY_WINDOW = 0.28;
 
 const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
@@ -35,6 +37,8 @@ type ParticleData = {
   cyan: Uint32Array;
   voiceFace: Uint32Array;
   voiceCore: Uint32Array;
+  assemblyPhase: Float32Array;
+  assemblySource: Float32Array;
   zones: Uint32Array[];
   original: Float32Array;
 };
@@ -73,6 +77,11 @@ function mixProfile(from: StateProfile, to: StateProfile, amount: number): State
   };
 }
 
+function hash01(value: number) {
+  const raw = Math.sin(value * 12.9898) * 43758.5453;
+  return raw - Math.floor(raw);
+}
+
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
 
@@ -106,6 +115,8 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
   const cyanIndices: number[] = [];
   const voiceFaceIndices: number[] = [];
   const voiceCoreIndices: number[] = [];
+  const assemblyPhaseValues: number[] = [];
+  const assemblySourceValues: number[] = [];
   const zoneBuckets: number[][] = Array.from({ length: 6 }, () => []);
   const color = new THREE.Color();
 
@@ -160,6 +171,45 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
         ny < 0.67 &&
         faceX < 0.105 &&
         brightness > 0.12;
+
+      // V12 assembles only the central humanoid. The surrounding approved
+      // artwork remains stable while head -> neck -> shoulders -> core arrives
+      // from one left-side particle stream.
+      const isAssemblyHead = isHead && ny < 0.52;
+      const isAssemblyNeck = ny >= 0.47 && ny < 0.65 && faceX < 0.12;
+      const isAssemblyShoulders =
+        ny >= 0.53 &&
+        ny < 0.86 &&
+        faceX >= 0.18 &&
+        faceX < 0.43;
+      const isAssemblyCore =
+        ny >= 0.55 &&
+        ny < 0.86 &&
+        faceX < 0.20;
+
+      const phaseNoise = hash01(particleIndex + 0.73);
+      let assemblyPhase = -1;
+      if (isAssemblyHead) {
+        assemblyPhase = 0.02 + phaseNoise * 0.07;
+      } else if (isAssemblyNeck) {
+        assemblyPhase = 0.23 + phaseNoise * 0.07;
+      } else if (isAssemblyShoulders) {
+        assemblyPhase = 0.43 + phaseNoise * 0.09;
+      } else if (isAssemblyCore) {
+        assemblyPhase = 0.68 + phaseNoise * 0.04;
+      }
+
+      if (assemblyPhase >= 0) {
+        assemblySourceValues.push(
+          -4.45 + (hash01(particleIndex * 1.17 + 2.1) - 0.5) * 0.90,
+          (hash01(particleIndex * 1.91 + 4.7) - 0.5) * WORLD_H * 1.22,
+          (hash01(particleIndex * 2.37 + 8.3) - 0.5) * 1.45,
+        );
+      } else {
+        assemblySourceValues.push(wx, wy, depth);
+      }
+      assemblyPhaseValues.push(assemblyPhase);
+
       const radialX = (nx - 0.5) / 0.52;
       const radialY = (ny - 0.39) / 0.72;
       const radial = Math.sqrt(radialX * radialX + radialY * radialY);
@@ -190,6 +240,8 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
     cyan: new Uint32Array(cyanIndices),
     voiceFace: new Uint32Array(voiceFaceIndices),
     voiceCore: new Uint32Array(voiceCoreIndices),
+    assemblyPhase: new Float32Array(assemblyPhaseValues),
+    assemblySource: new Float32Array(assemblySourceValues),
     zones: zoneBuckets.map((bucket) => new Uint32Array(bucket)),
   };
 }
