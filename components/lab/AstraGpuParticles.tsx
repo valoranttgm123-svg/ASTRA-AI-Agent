@@ -156,13 +156,22 @@ void main() {
     vAlpha = clamp(0.032 + glowEnergy * 0.16, 0.0, 0.28);
     gl_PointSize = uPointSize * (1.0 + glowEnergy * 0.08);
   } else {
+    vec3 liftedSource = pow(max(color, vec3(0.0)), vec3(0.72));
+    float sourceLuma = dot(liftedSource, vec3(0.2126, 0.7152, 0.0722));
+    float darkLift = (1.0 - smoothstep(0.05, 0.28, sourceLuma)) * 0.055;
+
     vec3 boosted =
-      color * 1.16 +
-      cyan * cyanEnergy * 0.11 +
-      warm * (warmEnergy + voiceEnergy) * 0.13;
-    float sourcePeak = max(boosted.r, max(boosted.g, boosted.b));
-    float shadowLift = (1.0 - smoothstep(0.06, 0.34, sourcePeak)) * 0.028;
-    vColor = clamp(boosted + vec3(shadowLift), 0.0, 1.0);
+      liftedSource * 1.20 +
+      vec3(darkLift) +
+      cyan * cyanEnergy * 0.15 +
+      warm * (warmEnergy + voiceEnergy) * 0.16;
+
+    float peak = max(boosted.r, max(boosted.g, boosted.b));
+    if (peak > 1.0) {
+      boosted /= peak;
+    }
+
+    vColor = clamp(boosted, 0.0, 1.0);
     vAlpha = 1.0;
     gl_PointSize = uPointSize;
   }
@@ -185,9 +194,9 @@ void main() {
   if (vGlowPass > 0.5) {
     alpha = 1.0 - smoothstep(0.14, 0.48, d);
   } else {
-    float brightCore = 1.0 - smoothstep(0.17, 0.31, d);
-    float softRim = 1.0 - smoothstep(0.31, 0.49, d);
-    alpha = max(brightCore, softRim * 0.46);
+    float brightCore = 1.0 - smoothstep(0.15, 0.30, d);
+    float softRim = 1.0 - smoothstep(0.30, 0.49, d);
+    alpha = max(brightCore, softRim * 0.58);
   }
 
   alpha *= vAlpha;
@@ -436,8 +445,8 @@ export default function AstraGpuParticles({
     }
 
     const chest = effects && !reducedMotion ? Math.sin(t * 0.78) * 0.012 : 0;
-    const baseSize = quality === "high" ? 2.55 : 1.50;
-    const glowSize = quality === "high" ? 3.55 : 2.20;
+    const baseSize = quality === "high" ? 2.80 : 1.62;
+    const glowSize = quality === "high" ? 3.65 : 2.28;
 
     const writeUniforms = (targetUniforms: Record<string, { value: number }>, glow: boolean) => {
       targetUniforms.uTime.value = t;
