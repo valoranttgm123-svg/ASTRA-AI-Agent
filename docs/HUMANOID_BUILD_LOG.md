@@ -406,3 +406,39 @@ Verification required:
 - confirm IDLE/LISTENING/THINKING/SPEAKING visuals remain readable;
 - confirm no regression to square particles or central color saturation.
 
+## Stage 4.0.4 — Compositor + GPU Diagnostics (V12.0.4)
+
+Goal:
+- address remaining perceived lag after the V12.0.3 GPU particle refactor without lowering HIGH visual quality.
+
+Remaining bottlenecks identified:
+- the fullscreen Canvas still requested MSAA/antialiasing even though particle edges are already smoothed in the fragment shader;
+- a fullscreen blurred energy overlay was composited over an animated WebGL canvas every frame;
+- scanlines used `mix-blend-mode: screen`, forcing extra compositor work;
+- console and technical panels used `backdrop-filter: blur(...)` over continuously changing WebGL content;
+- the old CPU particle renderer remained as dead source in the active module, increasing development transform/HMR work;
+- hardware-vs-software WebGL rendering was not visible to the user.
+
+Fixes:
+- WebGL MSAA disabled while keeping shader-smoothed round particle edges;
+- HIGH DPR remains 1.5;
+- fullscreen CSS blur removed from the energy overlay;
+- scanline `mix-blend-mode` removed;
+- console and Technical panels now use more opaque backgrounds instead of backdrop blur;
+- unused legacy CPU particle renderer and subset-geometry synchronization code removed from the active Humanoid module;
+- actual WebGL renderer/vendor are read from `WEBGL_debug_renderer_info` when available;
+- Technical panel now reports GPU renderer, GPU vendor, and a software-renderer warning;
+- SwiftShader/llvmpipe/software renderers are explicitly detected;
+- particle count, point sizes, V12.0.2 visibility, V12.0.3 GPU shader motion, camera tracking, mic, voice states, replay/skip, and HIGH quality are preserved.
+
+Important diagnostic:
+- if Technical shows `Software renderer: YES`, browser hardware acceleration/GPU selection is the primary bottleneck and code-side particle optimization cannot fully compensate for it.
+
+Verification required:
+- production CI build;
+- run on the target PC and inspect Technical > GPU renderer/vendor;
+- compare FPS with Technical panel closed and open;
+- compare `npm run dev` against `npm run build && npm run start`;
+- confirm HIGH quality remains visually equivalent to V12.0.3;
+- confirm no regression in particle shape, assembly, voice state, or camera tracking.
+
