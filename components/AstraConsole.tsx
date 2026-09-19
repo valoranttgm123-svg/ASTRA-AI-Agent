@@ -9,6 +9,7 @@ export default function AstraConsole() {
     activeAgent,
     lastResponse,
     send,
+    execute,
     beginListening,
     endListening,
     micSupported,
@@ -38,6 +39,23 @@ export default function AstraConsole() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "ASTRA request failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const executeTask = async () => {
+    const value = message.trim();
+    if (!value || runtimeBusy) return;
+
+    setBusy(true);
+    setError(null);
+    setMessage("");
+    try {
+      await execute(value);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : "ASTRA execution failed");
     } finally {
       setBusy(false);
     }
@@ -74,7 +92,9 @@ export default function AstraConsole() {
           </>
         ) : lastResponse ? (
           <>
-            <div className="astra-console__agent">{lastResponse.agentName}</div>
+            <div className="astra-console__agent">
+              {lastResponse.agentName} · {lastResponse.brain.execution.toUpperCase()}
+            </div>
             <p>{lastResponse.message}</p>
           </>
         ) : (
@@ -109,6 +129,15 @@ export default function AstraConsole() {
           title="Toggle ASTRA spoken responses"
         >
           {voiceEnabled ? "VOICE ON" : "VOICE OFF"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void executeTask()}
+          disabled={runtimeBusy || !message.trim()}
+          title="Approve and execute this task with permitted local tools"
+        >
+          {runtimeBusy ? "RUNNING" : "EXECUTE TASK"}
         </button>
 
         <button type="submit" disabled={runtimeBusy || !message.trim()}>
