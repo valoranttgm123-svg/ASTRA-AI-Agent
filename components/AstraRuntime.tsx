@@ -55,6 +55,7 @@ type AstraRuntimeValue = {
   send: (message: string) => Promise<AgentResponse>;
   beginListening: () => void;
   endListening: () => void;
+  stopInteraction: () => void;
   setAvatarState: (state: AstraAvatarState) => void;
   setVoiceEnabled: (enabled: boolean) => void;
 };
@@ -425,6 +426,25 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setOrbState("idle");
   }, [clearResetTimer]);
 
+  const stopInteraction = useCallback(() => {
+    clearResetTimer();
+
+    requestSequenceRef.current += 1;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+
+    invalidateRecognition();
+    cancelSpeech();
+
+    setMicError(null);
+    setMicTranscript("");
+    setOrbState("idle");
+    setAvatarState("idle");
+    setSpeechLevel(0);
+    setPlaybackActive(false);
+    setActiveAgent(null);
+  }, [cancelSpeech, clearResetTimer, invalidateRecognition]);
+
   const setVoiceEnabled = useCallback((enabled: boolean) => {
     setVoiceEnabledState(enabled);
     if (!enabled) {
@@ -449,6 +469,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       send,
       beginListening,
       endListening,
+      stopInteraction,
       setAvatarState,
       setVoiceEnabled,
     }),
@@ -467,6 +488,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       send,
       beginListening,
       endListening,
+      stopInteraction,
       setVoiceEnabled,
     ],
   );
