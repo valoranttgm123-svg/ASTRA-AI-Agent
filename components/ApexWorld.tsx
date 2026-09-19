@@ -374,7 +374,7 @@ export default function ApexWorld() {
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 5 }}>
-          <span style={{ color: "#71efff", letterSpacing: ".16em" }}>ASTRA BRAIN</span>
+          <span style={{ color: "#71efff", letterSpacing: ".16em" }}>ASTRA BRAIN {runtime.brainStreaming ? "· LIVE" : ""}</span>
           <span
             style={{
               color:
