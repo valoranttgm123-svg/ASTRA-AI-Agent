@@ -365,10 +365,17 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
 
     const now = context.currentTime;
     const master = context.createGain();
+    const limiter = context.createDynamicsCompressor();
+    limiter.threshold.setValueAtTime(-18, now);
+    limiter.knee.setValueAtTime(18, now);
+    limiter.ratio.setValueAtTime(8, now);
+    limiter.attack.setValueAtTime(0.003, now);
+    limiter.release.setValueAtTime(0.18, now);
+
     master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.82, now + 0.025);
+    master.gain.exponentialRampToValueAtTime(1.38, now + 0.025);
     master.gain.exponentialRampToValueAtTime(0.0001, now + 2.15);
-    master.connect(context.destination);
+    master.connect(limiter).connect(context.destination);
 
     const coreGain = context.createGain();
     const core = context.createOscillator();
@@ -376,7 +383,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     core.frequency.setValueAtTime(74, now);
     core.frequency.exponentialRampToValueAtTime(39, now + 0.82);
     coreGain.gain.setValueAtTime(0.0001, now);
-    coreGain.gain.exponentialRampToValueAtTime(0.20, now + 0.035);
+    coreGain.gain.exponentialRampToValueAtTime(0.34, now + 0.035);
     coreGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.92);
     core.connect(coreGain).connect(master);
     core.start(now);
@@ -389,7 +396,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     rise.frequency.exponentialRampToValueAtTime(680, now + 0.82);
     rise.frequency.exponentialRampToValueAtTime(250, now + 1.42);
     riseGain.gain.setValueAtTime(0.0001, now + 0.08);
-    riseGain.gain.exponentialRampToValueAtTime(0.055, now + 0.36);
+    riseGain.gain.exponentialRampToValueAtTime(0.13, now + 0.36);
     riseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.52);
     rise.connect(riseGain).connect(master);
     rise.start(now + 0.08);
@@ -416,7 +423,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     noiseFilter.frequency.exponentialRampToValueAtTime(185, now + 1.55);
     noiseFilter.Q.setValueAtTime(0.7, now);
     noiseGain.gain.setValueAtTime(0.0001, now + 0.15);
-    noiseGain.gain.exponentialRampToValueAtTime(0.085, now + 0.36);
+    noiseGain.gain.exponentialRampToValueAtTime(0.17, now + 0.36);
     noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.70);
     noise.connect(noiseFilter).connect(noiseGain).connect(master);
     noise.start(now + 0.15);
@@ -428,7 +435,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     impact.frequency.setValueAtTime(118, now + 0.30);
     impact.frequency.exponentialRampToValueAtTime(52, now + 0.62);
     impactGain.gain.setValueAtTime(0.0001, now + 0.29);
-    impactGain.gain.exponentialRampToValueAtTime(0.10, now + 0.32);
+    impactGain.gain.exponentialRampToValueAtTime(0.22, now + 0.32);
     impactGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.69);
     impact.connect(impactGain).connect(master);
     impact.start(now + 0.29);
@@ -703,9 +710,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1.1</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1.2</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          FINAL SHOCKWAVE // SYNTH SFX + GPU ENERGY
+          FINAL SHOCKWAVE // BOOSTED SFX + LIMITER
         </div>
       </header>
 
@@ -886,7 +893,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Shockwave renderer: existing 2-pass GPU shader / no extra mesh</div>
           <div>Shockwave SFX: {!sfxSupported ? "UNSUPPORTED" : !sfxEnabled ? "OFF" : sfxReady ? "READY" : "WAITING FOR USER GESTURE"}</div>
           <div>SFX engine: Web Audio API / synthesized / no external audio asset</div>
-          <div>SFX layers: sub-core pulse + electric rise + filtered noise + soft impact</div>
+          <div>SFX output: boosted master + DynamicsCompressor limiter</div>
+          <div>SFX layers: stronger sub-core pulse + electric rise + filtered noise + impact</div>
           <div>Playback active: {runtime.playbackActive ? "YES" : "NO"}</div>
           <div>Playback gate: {runtime.speechLevel.toFixed(0)} (event-driven, not loudness)</div>
           <div>Voice face driver: smoothed playback envelope + visual cadence</div>
@@ -923,7 +931,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.1.1 adds a synthesized Web Audio shockwave SFX synchronized to the existing GPU effect: low core pulse, electric rise, filtered energy noise, and a soft impact. SFX has its own ON/OFF control and no external audio file. Browser autoplay rules still require a user gesture before sound can start; REPLAY ASSEMBLY automatically arms/resumes the audio context.
+            V12.1.2 substantially raises shockwave audibility while adding a DynamicsCompressor limiter before the audio destination. Master gain and all four SFX layers are boosted, especially the core and impact, so the effect is clearer on laptop/monitor speakers without uncontrolled clipping. SFX ON/OFF and browser gesture arming remain unchanged.
           </div>
         </aside>
       )}
