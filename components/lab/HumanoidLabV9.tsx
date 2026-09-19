@@ -14,12 +14,12 @@ const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
 const HEAD_CENTER_Y = (0.5 - 0.37) * WORLD_H;
-const BASE_POINT_SIZE_HIGH = 1.7;
-const BASE_POINT_SIZE_LOW = 1.25;
-const GLOW_POINT_SIZE_HIGH = 3.6;
-const GLOW_POINT_SIZE_LOW = 2.5;
+const BASE_POINT_SIZE_HIGH = 1.45;
+const BASE_POINT_SIZE_LOW = 1.10;
+const GLOW_POINT_SIZE_HIGH = 3.05;
+const GLOW_POINT_SIZE_LOW = 2.15;
 const ASSEMBLY_DURATION_SECONDS = 2.6;
-const ASSEMBLY_WINDOW = 0.28;
+const ASSEMBLY_WINDOW = 0.34;
 
 const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
@@ -80,6 +80,35 @@ function mixProfile(from: StateProfile, to: StateProfile, amount: number): State
 function hash01(value: number) {
   const raw = Math.sin(value * 12.9898) * 43758.5453;
   return raw - Math.floor(raw);
+}
+
+function createRoundParticleTexture() {
+  const size = 32;
+  const pixels = new Uint8Array(size * size * 4);
+
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const nx = ((x + 0.5) / size) * 2 - 1;
+      const ny = ((y + 0.5) / size) * 2 - 1;
+      const radius = Math.sqrt(nx * nx + ny * ny);
+      const raw = THREE.MathUtils.clamp((1 - radius) / 0.24, 0, 1);
+      const coverage = raw * raw * (3 - 2 * raw);
+      const value = Math.round(coverage * 255);
+      const offset = (y * size + x) * 4;
+
+      pixels[offset] = value;
+      pixels[offset + 1] = value;
+      pixels[offset + 2] = value;
+      pixels[offset + 3] = 255;
+    }
+  }
+
+  const texture = new THREE.DataTexture(pixels, size, size, THREE.RGBAFormat);
+  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
 }
 
 function useReducedMotion() {
@@ -320,6 +349,8 @@ function ParticleArtwork({
     to: { ...profileForState(state) },
   });
 
+  const particleSprite = useMemo(() => createRoundParticleTexture(), []);
+
   const geometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(data.positions), 3));
@@ -356,6 +387,7 @@ function ParticleArtwork({
   }, [assemblyRun]);
 
   useEffect(() => () => {
+    particleSprite.dispose();
     geometry.dispose();
     edgeGeometry.dispose();
     warmGeometry.dispose();
@@ -364,6 +396,7 @@ function ParticleArtwork({
     voiceCoreGeometry.dispose();
     zoneGeometries.forEach((zoneGeometry) => zoneGeometry.dispose());
   }, [
+    particleSprite,
     geometry,
     edgeGeometry,
     warmGeometry,
@@ -471,7 +504,9 @@ function ParticleArtwork({
           0,
           1,
         );
-        const local = localRaw * localRaw * (3 - 2 * localRaw);
+        const local =
+          localRaw * localRaw * localRaw *
+          (localRaw * (localRaw * 6 - 15) + 10);
         const targetX = arr[o];
         const targetY = arr[o + 1];
         const targetZ = arr[o + 2];
@@ -479,10 +514,13 @@ function ParticleArtwork({
         const sourceY = data.assemblySource[o + 1];
         const sourceZ = data.assemblySource[o + 2];
         const arc = Math.sin(local * Math.PI);
-        const streamDrift =
-          (1 - local) * Math.sin(t * 2.7 + i * 0.17) * 0.045;
+        const curvePhase = hash01(i * 2.11 + 5.4) * Math.PI * 2;
+        const streamCurve =
+          Math.sin(local * Math.PI * 1.5 + curvePhase) *
+          Math.pow(1 - local, 2) *
+          0.014;
 
-        arr[o] = THREE.MathUtils.lerp(sourceX, targetX, local) + streamDrift;
+        arr[o] = THREE.MathUtils.lerp(sourceX, targetX, local) + streamCurve;
         arr[o + 1] =
           THREE.MathUtils.lerp(sourceY, targetY, local) +
           arc * (0.14 + hash01(i + 3.2) * 0.08);
@@ -560,7 +598,7 @@ function ParticleArtwork({
       edgeMaterial.opacity = quality === "high"
         ? THREE.MathUtils.clamp(0.055 + edgeEnergy, 0.055, 0.5)
         : THREE.MathUtils.clamp(0.04 + edgeEnergy * 0.55, 0.04, 0.28);
-      edgeMaterial.size = quality === "high" ? 2.5 + turn * 1.0 : 1.8 + turn * 0.5;
+      edgeMaterial.size = quality === "high" ? 2.10 + turn * 0.55 : 1.58 + turn * 0.28;
     }
 
     if (cyanPoints.current) {
@@ -569,7 +607,7 @@ function ParticleArtwork({
       cyanMaterial.opacity = quality === "high"
         ? THREE.MathUtils.clamp(profile.cyan * 0.72 + listeningPulse, 0.03, 0.38)
         : THREE.MathUtils.clamp(profile.cyan * 0.4, 0.02, 0.18);
-      cyanMaterial.size = quality === "high" ? 2.15 : 1.55;
+      cyanMaterial.size = quality === "high" ? 1.82 : 1.38;
     }
 
     if (warmPoints.current) {
@@ -581,8 +619,8 @@ function ParticleArtwork({
         ? THREE.MathUtils.clamp(stateEnergy, 0.05, 0.72)
         : THREE.MathUtils.clamp(stateEnergy * 0.58, 0.035, 0.38);
       warmMaterial.size = quality === "high"
-        ? 2.30 + voiceReactive * 0.18
-        : 1.72 + voiceReactive * 0.08;
+        ? 1.95 + voiceReactive * 0.12
+        : 1.48 + voiceReactive * 0.06;
     }
 
     if (voiceFacePoints.current) {
@@ -595,8 +633,8 @@ function ParticleArtwork({
           )
         : 0;
       faceMaterial.size = quality === "high"
-        ? 1.95 + voiceReactive * 0.28
-        : 1.48 + voiceReactive * 0.12;
+        ? 1.72 + voiceReactive * 0.18
+        : 1.36 + voiceReactive * 0.08;
     }
 
     if (voiceCorePoints.current) {
@@ -609,8 +647,8 @@ function ParticleArtwork({
           )
         : 0;
       coreMaterial.size = quality === "high"
-        ? 2.15 + coreReactive * 0.28
-        : 1.62 + coreReactive * 0.12;
+        ? 1.88 + coreReactive * 0.18
+        : 1.46 + coreReactive * 0.08;
     }
 
     const cyanStateColor = new THREE.Color("#5ef5ff");
@@ -630,7 +668,7 @@ function ParticleArtwork({
       zoneMaterial.opacity = effects
         ? THREE.MathUtils.clamp((profile.zone * (0.34 + faceBias * 0.50) + speakingFace) * waveGate, 0, 0.22)
         : 0;
-      zoneMaterial.size = quality === "high" ? 2.2 + faceBias * 0.55 : 1.55 + faceBias * 0.25;
+      zoneMaterial.size = quality === "high" ? 1.82 + faceBias * 0.34 : 1.38 + faceBias * 0.16;
     }
   });
 
@@ -786,8 +824,8 @@ function ParticleScene({
     <Canvas
       style={{ position: "absolute", inset: 0 }}
       camera={{ position: [0, 0, 7.2], fov: 38 }}
-      dpr={quality === "high" ? 1.25 : 1}
-      gl={{ antialias: false, alpha: true, powerPreference: "default", toneMapping: THREE.NoToneMapping }}
+      dpr={quality === "high" ? 1.5 : 1}
+      gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.NoToneMapping }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0);
         gl.outputColorSpace = THREE.SRGBColorSpace;
@@ -1063,9 +1101,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.1</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          ASSEMBLY SEQUENCE // HEAD → NECK → SHOULDERS → CORE
+          CRISP PARTICLES // SMOOTHER ASSEMBLY MOTION
         </div>
       </header>
 
