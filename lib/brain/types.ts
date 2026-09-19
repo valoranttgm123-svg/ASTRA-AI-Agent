@@ -25,6 +25,7 @@ export type AstraBrainEvent = {
   type: AstraBrainEventType;
   at: number;
   agent?: AstraAgentKey;
+  provider?: AstraBrainProvider;
   visualNode?: string;
   label: string;
   detail?: string;

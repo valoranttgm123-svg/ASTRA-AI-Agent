@@ -20,6 +20,7 @@ import {
   toolsPolicyDetail,
 } from "./policy";
 import { getSkillContext, type AstraSkillContext } from "./skills";
+import { emitBrainEvent, emitBrainEvents } from "./telemetry";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -187,6 +188,120 @@ function providerLabel(provider: AstraBrainProvider) {
   }
 }
 
+function emitInitialTelemetry(selected: AstraAgentKey, context: ExecutionContext) {
+  const now = Date.now();
+  emitBrainEvents([
+    ...baseEvents(selected, now),
+    ...contextEvents(selected, context, now),
+  ]);
+}
+
+function emitProviderStarted(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+) {
+  const now = Date.now();
+  const label = providerLabel(provider);
+  emitBrainEvents([
+    {
+      id: `live-${now}-${provider}-selected`,
+      type: "provider.selected",
+      at: now,
+      agent: selected,
+      provider,
+      visualNode: provider === "codex" ? "developer" : visualNode(selected),
+      label: `${label} selected`,
+      detail: `ASTRA Brain selected ${label} for this live request.`,
+    },
+    {
+      id: `live-${now}-${provider}-started`,
+      type: "agent.started",
+      at: now + 1,
+      agent: selected,
+      provider,
+      visualNode: visualNode(selected),
+      label: "Agent started",
+      detail: `${ASTRA_AGENT_MAP[selected].name} started through ${label}.`,
+    },
+  ]);
+}
+
+function emitProviderUnavailable(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+  detail: string,
+) {
+  const now = Date.now();
+  emitBrainEvent({
+    id: `live-${now}-${provider}-unavailable`,
+    type: "provider.unavailable",
+    at: now,
+    agent: selected,
+    provider,
+    visualNode: provider === "codex" ? "developer" : visualNode(selected),
+    label: `${providerLabel(provider)} unavailable`,
+    detail,
+  });
+}
+
+function emitProviderCompleted(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+) {
+  const now = Date.now();
+  const label = providerLabel(provider);
+  emitBrainEvents([
+    {
+      id: `live-${now}-${provider}-completed`,
+      type: "agent.completed",
+      at: now,
+      agent: selected,
+      provider,
+      visualNode: visualNode(selected),
+      label: "Agent completed",
+      detail: `${ASTRA_AGENT_MAP[selected].name} completed the ${label} turn.`,
+    },
+    {
+      id: `live-${now}-${provider}-response`,
+      type: "response.ready",
+      at: now + 1,
+      agent: selected,
+      provider,
+      visualNode: "chief_of_staff",
+      label: "Response ready",
+      detail: `${label} returned the final response to ASTRA Runtime.`,
+    },
+  ]);
+}
+
+function emitBlockedTelemetry(
+  selected: AstraAgentKey,
+  detail: string,
+  label = "Execution blocked",
+) {
+  const now = Date.now();
+  emitBrainEvents([
+    {
+      id: `live-${now}-blocked`,
+      type: "agent.blocked",
+      at: now,
+      agent: selected,
+      visualNode: visualNode(selected),
+      label,
+      detail,
+    },
+    {
+      id: `live-${now}-blocked-response`,
+      type: "response.ready",
+      at: now + 1,
+      agent: selected,
+      visualNode: "chief_of_staff",
+      label: "Response ready",
+      detail: "ASTRA returned the blocked/waiting state to Runtime.",
+    },
+  ]);
+}
+
 function providerEvents(
   selected: AstraAgentKey,
   provider: Exclude<AstraBrainProvider, "routing_only">,
@@ -205,6 +320,7 @@ function providerEvents(
       type: "provider.selected",
       at: startAt,
       agent: selected,
+      provider,
       visualNode: provider === "codex" ? "developer" : visualNode(selected),
       label: `${label} selected`,
       detail:
@@ -219,6 +335,7 @@ function providerEvents(
       type: "agent.started",
       at: startAt + 1,
       agent: selected,
+      provider,
       visualNode: visualNode(selected),
       label: "Agent started",
       detail: `${ASTRA_AGENT_MAP[selected].name} started execution through ${label}.`,
@@ -228,6 +345,7 @@ function providerEvents(
       type: "agent.completed",
       at: startAt + 2,
       agent: selected,
+      provider,
       visualNode: visualNode(selected),
       label: "Agent completed",
       detail: `${ASTRA_AGENT_MAP[selected].name} completed the ${label} turn.`,
@@ -237,6 +355,7 @@ function providerEvents(
       type: "response.ready",
       at: startAt + 3,
       agent: selected,
+      provider,
       visualNode: "chief_of_staff",
       label: "Response ready",
       detail: `${label} returned the final response to ASTRA Runtime.`,
@@ -371,6 +490,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const route = routeFor(selected);
     const context = await buildExecutionContext(input, selected);
     const failures: string[] = [];
+    emitInitialTelemetry(selected, context);
 
     if (isEngineeringRoute(selected)) {
       try {
@@ -380,6 +500,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         ]
           .filter(Boolean)
           .join("\n\n");
+        emitProviderStarted(selected, "codex");
         const result = await chatWithCodex({
           input,
           agent,
@@ -388,6 +509,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           policy: context.policy,
         });
 
+        emitProviderCompleted(selected, "codex");
         return {
           ok: true,
           agent: selected,
@@ -406,13 +528,14 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
-        failures.push(
-          `Codex: ${error instanceof Error ? error.message : "unavailable"}`,
-        );
+        const detail = `Codex: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitProviderUnavailable(selected, "codex", detail);
       }
     }
 
     try {
+      emitProviderStarted(selected, "hermes");
       const result = await chatWithHermes({
         input,
         agent,
@@ -420,6 +543,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         policyText: context.policyText,
       });
 
+      emitProviderCompleted(selected, "hermes");
       return {
         ok: true,
         agent: selected,
@@ -438,12 +562,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Hermes: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitProviderUnavailable(selected, "hermes", detail);
     }
 
     try {
+      emitProviderStarted(selected, "ollama");
       const result = await chatWithOllama({
         input,
         agent,
@@ -451,6 +576,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         policyText: context.policyText,
       });
 
+      emitProviderCompleted(selected, "ollama");
       return {
         ok: true,
         agent: selected,
@@ -469,13 +595,14 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Ollama: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Ollama: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitProviderUnavailable(selected, "ollama", detail);
     }
 
     if (context.policy.allowPaidCloud) {
       try {
+        emitProviderStarted(selected, "cloud");
         const cloudContext = [
           context.skillOnlyContext,
           cloudMayReceiveMemory(context.policy) ? context.memory.text : "",
@@ -491,6 +618,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           policy: context.policy,
         });
 
+        emitProviderCompleted(selected, "cloud");
         return {
           ok: true,
           agent: selected,
@@ -509,13 +637,18 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
-        failures.push(
-          `Cloud: ${error instanceof Error ? error.message : "unavailable"}`,
-        );
+        const detail = `Cloud: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitProviderUnavailable(selected, "cloud", detail);
       }
     }
 
     const fallback = await this.fallback.chat(input);
+    emitBlockedTelemetry(
+      selected,
+      failures.join(" | ") || "No permitted execution provider is currently available.",
+      "Execution waiting",
+    );
     return {
       ...fallback,
       brain: {
@@ -540,28 +673,32 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const route = routeFor(selected);
     const context = await buildExecutionContext(input, selected);
     const failures: string[] = [];
+    emitInitialTelemetry(selected, context);
 
     const blocked = (
       message: string,
       detail: string,
       requiresApproval = false,
-    ): AstraBrainChatResult => ({
-      ok: false,
-      agent: selected,
-      agentName: agent.name,
-      state: "blocked",
-      message,
-      requiresApproval,
-      brain: {
-        provider: "routing_only",
-        execution: "blocked",
-        requestedMode: "execute",
-        route,
-        visualNodes: route.map(visualNode),
-        events: routingOnlyEvents(selected, "blocked", context, detail),
-        ...envelopeContext(context),
-      },
-    });
+    ): AstraBrainChatResult => {
+      emitBlockedTelemetry(selected, detail);
+      return {
+        ok: false,
+        agent: selected,
+        agentName: agent.name,
+        state: "blocked",
+        message,
+        requiresApproval,
+        brain: {
+          provider: "routing_only",
+          execution: "blocked",
+          requestedMode: "execute",
+          route,
+          visualNodes: route.map(visualNode),
+          events: routingOnlyEvents(selected, "blocked", context, detail),
+          ...envelopeContext(context),
+        },
+      };
+    };
 
     if (context.policy.requireApproval && !task.approved) {
       return blocked(
@@ -576,6 +713,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
 
       if (!codexStatus.available) {
         failures.push(codexStatus.detail);
+        emitProviderUnavailable(selected, "codex", codexStatus.detail);
       } else if (codexStatus.sandbox !== "workspace-write") {
         return blocked(
           "Codex tersedia, tetapi ASTRA masih dalam mode read-only. Aktifkan ASTRA_ALLOW_FILE_WRITE=true dan ASTRA_CODEX_SANDBOX=workspace-write di .env.local, lalu restart ASTRA.",
@@ -595,6 +733,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             .filter(Boolean)
             .join("\n\n");
 
+          emitProviderStarted(selected, "codex");
           const result = await chatWithCodex({
             input,
             agent,
@@ -604,6 +743,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             executionRequested: true,
           });
 
+          emitProviderCompleted(selected, "codex");
           return {
             ok: true,
             agent: selected,
@@ -622,14 +762,15 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             },
           };
         } catch (error) {
-          failures.push(
-            `Codex: ${error instanceof Error ? error.message : "execution failed"}`,
-          );
+          const detail = `Codex: ${error instanceof Error ? error.message : "execution failed"}`;
+          failures.push(detail);
+          emitProviderUnavailable(selected, "codex", detail);
         }
       }
     }
 
     try {
+      emitProviderStarted(selected, "hermes");
       const result = await chatWithHermes({
         input,
         agent,
@@ -640,6 +781,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         ].join("\n"),
       });
 
+      emitProviderCompleted(selected, "hermes");
       return {
         ok: true,
         agent: selected,
@@ -658,9 +800,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Hermes: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitProviderUnavailable(selected, "hermes", detail);
     }
 
     return blocked(

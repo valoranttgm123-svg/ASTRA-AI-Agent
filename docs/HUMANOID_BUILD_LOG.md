@@ -755,3 +755,63 @@ Verification required:
 - confirm no regression in V13 gestures or V12.1 SFX/shockwave;
 - confirm draw passes remain 2.
 
+## Stage 7 — Real-Time Brain Telemetry (V15)
+
+Goal:
+- make Command Center and Humanoid react to Brain lifecycle events while the request is actually running, instead of receiving every backend lifecycle event only with the final response.
+
+Server telemetry:
+- added a request-scoped Brain event sink using Node `AsyncLocalStorage`;
+- the sink exists only inside the active request context and does not mix events between concurrent users/requests;
+- normal `/api/agent` JSON behavior remains available;
+- added `POST /api/agent/stream` using newline-delimited JSON (NDJSON);
+- the stream sends:
+  - `brain.event` packets as lifecycle events occur;
+  - one final `result` packet;
+  - an `error` packet on stream execution failure;
+- the streaming route uses the Node runtime and no-cache/no-transform headers.
+
+Truthful lifecycle emission:
+- route/context/memory/skills/policy telemetry is emitted after those steps actually complete;
+- `provider.selected` and `agent.started` are emitted immediately before a real provider call;
+- `provider.unavailable` is emitted only when that provider attempt really fails or is unavailable;
+- `agent.completed` and `response.ready` are emitted only after the provider returns successfully;
+- blocked execution emits the real blocked state;
+- Brain events now carry an optional structured `provider` field so the client never has to infer provider identity from display text;
+- no `tool.started` / `tool.completed` events are fabricated when the provider does not expose trustworthy tool telemetry.
+
+Runtime:
+- ASTRA Runtime now consumes `/api/agent/stream` incrementally;
+- each streamed event updates `brainEvents` immediately;
+- events with visual nodes update `brainTrace` immediately, so ReasoningWeb/Command Center can animate the real path while work is in progress;
+- provider identity updates live from the structured event field;
+- streamed event fingerprints are remembered per request;
+- final envelope events are deduplicated against already-streamed events;
+- final trace merges with the live trace instead of erasing failed-provider/fallback history;
+- `brainStreaming` is exposed through Runtime and becomes false on completion, failure, abort, or explicit STOP.
+
+UI:
+- Command Center shows `ASTRA BRAIN · LIVE` only while a real stream is active;
+- Humanoid is now V15 and shows `REAL-TIME BRAIN TELEMETRY // NDJSON STREAM`;
+- Humanoid Brain HUD shows LIVE/IDLE from the same Runtime stream state;
+- V14 GPU Brain pulses now trigger from incrementally arriving real events.
+
+Preserved:
+- Brain V1 provider order and permission policy;
+- JSON API compatibility;
+- V14 shared event model;
+- V13 gesture control;
+- V12.1 shockwave and SFX;
+- two-pass GPU particle renderer;
+- no paid service or new model dependency.
+
+Verification required:
+- production CI build;
+- send a request and confirm Command Center switches to LIVE before the final answer;
+- confirm route/provider/agent nodes update during the request;
+- force a local-provider failure and confirm `provider.unavailable` remains visible in the trace even if a fallback succeeds;
+- confirm Humanoid Brain HUD changes provider as streamed provider events arrive;
+- confirm result text and speech still occur only after the final result packet;
+- abort/STOP during a request and confirm `brainStreaming` returns to IDLE;
+- confirm concurrent requests do not leak telemetry across request scopes.
+
