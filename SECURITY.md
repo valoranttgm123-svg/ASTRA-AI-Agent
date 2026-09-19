@@ -1,6 +1,6 @@
 # Security Policy
 
-ASTRA is designed so source code and documentation can live in GitHub while private credentials and local runtime data stay outside the repository.
+ASTRA is designed so source code and public project documentation can live in GitHub while credentials and private runtime data stay outside the repository.
 
 ## Never commit
 
@@ -10,16 +10,69 @@ ASTRA is designed so source code and documentation can live in GitHub while priv
 - SSH private keys
 - `.env` or `.env.local`
 - browser/session cookies
-- personal databases or private memory stores
+- private memory databases
+- private custom skill data
 - broker credentials
+- Codex authentication/session files
 
 Use `.env.example` only as a template.
 
+## Local private data
+
+ASTRA uses the gitignored `.astra/` directory for optional private runtime context:
+
+```text
+.astra/memory.json
+.astra/skills.json
+```
+
+Do not move private memory into committed documentation.
+
+Private memory is not sent to Codex or optional cloud by default. Those paths require explicit configuration flags.
+
 ## Tool permissions
 
-ASTRA should use least privilege. New integrations should start read-only when possible. Actions with side effects must be gated by user approval unless the user explicitly configures a narrower trusted automation.
+ASTRA uses least privilege.
 
-High-impact examples include file deletion, external messages, database writes, repository merges, shell commands, remote computer control, and trade execution.
+Default policy:
+- approval required;
+- shell side effects disabled;
+- file writes disabled;
+- external actions disabled;
+- paid cloud disabled.
+
+Read-only reasoning and inspection are the safe default.
+
+### Codex
+
+Codex uses a read-only sandbox unless file-write permission is explicitly enabled. ASTRA does not store the user's Codex auth in the repository.
+
+### Hermes / MCP
+
+Hermes can run its own MCP/tool loop. ASTRA sends the permission policy in the Brain prompt, but Hermes/MCP must also be configured with matching least-privilege permissions because ASTRA cannot safely claim to intercept tool calls that the gateway does not expose.
+
+### Cloud
+
+Optional cloud execution requires two explicit gates:
+
+```env
+ASTRA_CLOUD_ENABLED=true
+ASTRA_ALLOW_PAID_CLOUD=true
+```
+
+No silent paid fallback.
+
+## High-impact side effects
+
+Examples that require an explicit permitted execution path:
+- sending email/messages;
+- deleting or overwriting files;
+- write-capable shell/PowerShell commands;
+- Git push/merge;
+- database writes;
+- placing/modifying/closing trades;
+- shutting down or controlling a computer;
+- remote system changes.
 
 ## Reporting
 
