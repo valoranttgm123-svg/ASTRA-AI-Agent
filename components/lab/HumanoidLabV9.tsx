@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAstraRuntime } from "@/components/AstraRuntime";
 import type { AstraAvatarState } from "@/lib/avatar/types";
+import type { AstraBrainEvent, AstraBrainProvider } from "@/lib/brain/types";
 import AstraGpuParticles from "./AstraGpuParticles";
 import { useFingerTracking, type FingerTrackingTarget } from "./useFingerTracking";
 
@@ -219,6 +220,47 @@ type GpuInfo = {
   software: boolean;
 };
 
+type BrainVisualSignal = {
+  eventId: string | null;
+  activity: number;
+  tone: number;
+};
+
+function providerTone(provider: AstraBrainProvider | null): number {
+  switch (provider) {
+    case "hermes": return 0.36;
+    case "ollama": return 0.08;
+    case "codex": return 0.62;
+    case "cloud": return 0.88;
+    case "routing_only": return 0.94;
+    default: return 0.05;
+  }
+}
+
+function brainSignalFor(
+  event: AstraBrainEvent | null,
+  provider: AstraBrainProvider | null,
+): BrainVisualSignal {
+  if (!event) return { eventId: null, activity: 0, tone: providerTone(provider) };
+
+  let activity = 0.45;
+  let tone = providerTone(provider);
+  switch (event.type) {
+    case "request.received": activity = 0.52; tone = 0.05; break;
+    case "router.selected": activity = 0.64; tone = 0.10; break;
+    case "memory.loaded": activity = 0.58; tone = 0.34; break;
+    case "skill.selected": activity = 0.64; tone = 0.58; break;
+    case "policy.applied": activity = 0.36; tone = 0.48; break;
+    case "provider.selected": activity = 0.78; tone = providerTone(provider); break;
+    case "agent.started": activity = 0.92; tone = providerTone(provider); break;
+    case "agent.completed": activity = 0.68; tone = 0.34; break;
+    case "provider.unavailable":
+    case "agent.blocked": activity = 0.98; tone = 1.0; break;
+    case "response.ready": activity = 0.62; tone = 0.30; break;
+  }
+  return { eventId: event.id, activity, tone };
+}
+
 function ParticleScene({
   data,
   state,
@@ -229,6 +271,9 @@ function ParticleScene({
   trackingTarget,
   assemblyRun,
   assemblySkipped,
+  brainEventId,
+  brainActivity,
+  brainTone,
   onAssemblyComplete,
   onShockwaveChange,
   onGpuInfo,
@@ -242,6 +287,9 @@ function ParticleScene({
   trackingTarget: { current: FingerTrackingTarget };
   assemblyRun: number;
   assemblySkipped: boolean;
+  brainEventId: string | null;
+  brainActivity: number;
+  brainTone: number;
   onAssemblyComplete: () => void;
   onShockwaveChange: (active: boolean) => void;
   onGpuInfo: (info: GpuInfo) => void;
@@ -288,6 +336,9 @@ function ParticleScene({
         trackingTarget={trackingTarget}
         assemblyRun={assemblyRun}
         assemblySkipped={assemblySkipped}
+        brainEventId={brainEventId}
+        brainActivity={brainActivity}
+        brainTone={brainTone}
         onAssemblyComplete={onAssemblyComplete}
         onShockwaveChange={onShockwaveChange}
       />
@@ -545,6 +596,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
 
   const state = runtime.avatarState;
   const runtimeBusy = busy || runtime.orbState === "thinking";
+  const latestBrainEvent =
+    runtime.brainEvents.length > 0
+      ? runtime.brainEvents[runtime.brainEvents.length - 1]
+      : null;
+  const brainSignal = brainSignalFor(latestBrainEvent, runtime.brainProvider);
+  const brainExecution = runtime.lastResponse?.brain.execution ?? "routing_only";
+  const brainRequestedMode = runtime.lastResponse?.brain.requestedMode ?? "chat";
   const resolvedQuality: RenderQuality =
     qualityMode === "auto" ? (autoLow ? "low" : "high") : qualityMode;
   const tracking = useFingerTracking(resolvedQuality);
@@ -762,6 +820,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               trackingTarget={tracking.targetRef}
               assemblyRun={assemblyRun}
               assemblySkipped={assemblySkipped}
+              brainEventId={brainSignal.eventId}
+              brainActivity={brainSignal.activity}
+              brainTone={brainSignal.tone}
               onAssemblyComplete={() => setAssemblyActive(false)}
               onShockwaveChange={handleShockwaveChange}
               onGpuInfo={setGpuInfo}
