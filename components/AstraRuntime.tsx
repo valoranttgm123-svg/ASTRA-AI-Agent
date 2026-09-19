@@ -382,7 +382,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let result: AstraBrainChatResult | null = null;
+      const resultBox: { current: AstraBrainChatResult | null } = { current: null };
       let streamError: string | null = null;
 
       const processLine = (line: string) => {
@@ -392,7 +392,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         if (packet.kind === "brain.event") {
           applyStreamEvent(packet.event);
         } else if (packet.kind === "result") {
-          result = packet.result;
+          resultBox.current = packet.result;
         } else if (packet.kind === "error") {
           streamError = packet.error;
         }
@@ -416,6 +416,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       buffer += decoder.decode();
       if (buffer.trim()) processLine(buffer);
       if (streamError) throw new Error(streamError);
+      const result = resultBox.current;
       if (!result) throw new Error("ASTRA stream ended without a final result.");
 
       if (requestSequence !== requestSequenceRef.current) {
