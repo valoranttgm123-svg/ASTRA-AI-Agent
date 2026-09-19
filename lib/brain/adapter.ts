@@ -26,6 +26,7 @@ import type {
   AstraBrainEvent,
   AstraBrainPermissionSnapshot,
   AstraBrainProvider,
+  AstraBrainRunOptions,
   AstraBrainStatus,
 } from "./types";
 
@@ -185,6 +186,172 @@ function providerLabel(provider: AstraBrainProvider) {
     default:
       return "Routing";
   }
+}
+
+let liveEventSequence = 0;
+
+function emitLiveEvent(
+  options: AstraBrainRunOptions | undefined,
+  event: Omit<AstraBrainEvent, "id" | "at">,
+) {
+  const at = Date.now();
+  liveEventSequence += 1;
+  const live: AstraBrainEvent = {
+    ...event,
+    id: `live-${at}-${liveEventSequence}-${event.type}`,
+    at,
+  };
+  options?.onEvent?.(live);
+  return live;
+}
+
+function emitLiveStart(
+  selected: AstraAgentKey,
+  options?: AstraBrainRunOptions,
+) {
+  emitLiveEvent(options, {
+    type: "request.received",
+    agent: "chief_of_staff",
+    visualNode: "chief_of_staff",
+    label: "Request received",
+    detail: "ASTRA Brain accepted the request.",
+  });
+
+  if (selected !== "chief_of_staff") {
+    emitLiveEvent(options, {
+      type: "router.selected",
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Route selected",
+      detail: `Chief routed the request to ${selected}.`,
+    });
+  }
+}
+
+function emitLiveContext(
+  selected: AstraAgentKey,
+  context: ExecutionContext,
+  options?: AstraBrainRunOptions,
+) {
+  if (context.memory.entries.length > 0) {
+    emitLiveEvent(options, {
+      type: "memory.loaded",
+      agent: "memory",
+      visualNode: "memory",
+      label: "Memory loaded",
+      detail: `Retrieved ${context.memory.entries.length} relevant local memory entr${context.memory.entries.length === 1 ? "y" : "ies"}.`,
+    });
+  }
+
+  if (context.skills.skills.length > 0) {
+    emitLiveEvent(options, {
+      type: "skill.selected",
+      agent: selected,
+      visualNode: visualNode(selected),
+      label: "Skills loaded",
+      detail: context.skills.skills.map((skill) => skill.id).join(", "),
+    });
+  }
+
+  emitLiveEvent(options, {
+    type: "policy.applied",
+    agent: selected,
+    visualNode: visualNode(selected),
+    label: "Permission policy applied",
+    detail: toolsPolicyDetail(context.policy),
+  });
+}
+
+function emitLiveProviderStart(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+  options?: AstraBrainRunOptions,
+) {
+  const label = providerLabel(provider);
+  emitLiveEvent(options, {
+    type: "provider.selected",
+    provider,
+    agent: selected,
+    visualNode: provider === "codex" ? "developer" : visualNode(selected),
+    label: `${label} selected`,
+    detail:
+      provider === "codex"
+        ? "ASTRA selected the local authenticated Codex CLI engineering specialist."
+        : provider === "cloud"
+          ? "ASTRA selected the explicitly opted-in cloud fallback."
+          : `ASTRA Brain selected the local ${label} provider.`,
+  });
+  emitLiveEvent(options, {
+    type: "agent.started",
+    provider,
+    agent: selected,
+    visualNode: visualNode(selected),
+    label: "Agent started",
+    detail: `${ASTRA_AGENT_MAP[selected].name} started execution through ${label}.`,
+  });
+}
+
+function emitLiveProviderUnavailable(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+  detail: string,
+  options?: AstraBrainRunOptions,
+) {
+  emitLiveEvent(options, {
+    type: "provider.unavailable",
+    provider,
+    agent: selected,
+    visualNode: provider === "codex" ? "developer" : visualNode(selected),
+    label: `${providerLabel(provider)} unavailable`,
+    detail,
+  });
+}
+
+function emitLiveProviderComplete(
+  selected: AstraAgentKey,
+  provider: Exclude<AstraBrainProvider, "routing_only">,
+  options?: AstraBrainRunOptions,
+) {
+  const label = providerLabel(provider);
+  emitLiveEvent(options, {
+    type: "agent.completed",
+    provider,
+    agent: selected,
+    visualNode: visualNode(selected),
+    label: "Agent completed",
+    detail: `${ASTRA_AGENT_MAP[selected].name} completed the ${label} turn.`,
+  });
+  emitLiveEvent(options, {
+    type: "response.ready",
+    provider,
+    agent: selected,
+    visualNode: "chief_of_staff",
+    label: "Response ready",
+    detail: `${label} returned the final response to ASTRA Runtime.`,
+  });
+}
+
+function emitLiveBlocked(
+  selected: AstraAgentKey,
+  detail: string,
+  options?: AstraBrainRunOptions,
+) {
+  emitLiveEvent(options, {
+    type: "agent.blocked",
+    provider: "routing_only",
+    agent: selected,
+    visualNode: visualNode(selected),
+    label: "Execution blocked",
+    detail,
+  });
+  emitLiveEvent(options, {
+    type: "response.ready",
+    provider: "routing_only",
+    agent: selected,
+    visualNode: "chief_of_staff",
+    label: "Response ready",
+    detail: "ASTRA returned a blocked/routing-only result.",
+  });
 }
 
 function providerEvents(
