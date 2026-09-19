@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAstraRuntime } from "@/components/AstraRuntime";
 import type { AstraAvatarState } from "@/lib/avatar/types";
+import AstraGpuParticles from "./AstraGpuParticles";
 import { useFingerTracking, type FingerTrackingTarget } from "./useFingerTracking";
 
 const ARTWORK = "/assets/astra-humanoid/astra-idle-v1.webp";
@@ -848,7 +849,7 @@ function ParticleScene({
         gl.toneMapping = THREE.NoToneMapping;
       }}
     >
-      <ParticleArtwork
+      <AstraGpuParticles
         data={data}
         state={state}
         effects={effects}
@@ -1117,9 +1118,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.2</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.3</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          VISIBLE CRISP PARTICLES // HIGH-DPR BALANCE
+          GPU PARTICLE PERFORMANCE // QUALITY PRESERVED
         </div>
       </header>
 
@@ -1298,10 +1299,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Reduced motion: {reducedMotion ? "ON" : "OFF"}</div>
           <div>Effects: {effects ? "ON" : "OFF"}</div>
           <div>Renderer: Three.js via React Three Fiber</div>
+          <div>Particle motion: GPU vertex shader</div>
+          <div>Particle shape/color: GPU fragment shader</div>
+          <div>Draw passes: 2 (base + glow), no per-frame geometry sync</div>
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.0.2 compensates fixed-screen point sizes for HIGH DPR 1.5, enlarges the round particle core, lowers alpha cutoffs, and lifts base/cyan/orange visibility while retaining the crisp round sprite and V12.0.1 smoother assembly motion. The goal is stronger particle readability without returning to square or over-saturated blocks.
+            V12.0.3 moves per-particle head motion, breathing, assembly, state energy, voice energy, round particle shaping, and glow to GPU shaders. The CPU now updates only small uniform values each frame instead of rewriting the full particle buffer and synchronizing edge/warm/cyan/voice/zone geometries. HIGH DPR 1.5 and V12.0.2 point visibility are preserved.
           </div>
         </aside>
       )}
