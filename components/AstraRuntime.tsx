@@ -1,8 +1,13 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { AgentResponse, AstraOrbState } from "@/lib/agent/types";
+import type { AstraOrbState } from "@/lib/agent/types";
 import type { AstraAvatarState } from "@/lib/avatar/types";
+import type {
+  AstraBrainChatResult,
+  AstraBrainEvent,
+  AstraBrainProvider,
+} from "@/lib/brain/types";
 
 type SpeechRecognitionAlternativeLike = {
   transcript: string;
@@ -40,6 +45,15 @@ type SpeechRecognitionLike = {
 
 type SpeechRecognitionConstructorLike = new () => SpeechRecognitionLike;
 
+type ReasoningTrace = {
+  n: number;
+  trace: Array<{
+    helper: string;
+    type: string;
+    at: number;
+  }>;
+};
+
 type AstraRuntimeValue = {
   orbState: AstraOrbState;
   avatarState: AstraAvatarState;
@@ -51,8 +65,11 @@ type AstraRuntimeValue = {
   micTranscript: string;
   micError: string | null;
   activeAgent: string | null;
-  lastResponse: AgentResponse | null;
-  send: (message: string) => Promise<AgentResponse>;
+  lastResponse: AstraBrainChatResult | null;
+  brainProvider: AstraBrainProvider | null;
+  brainEvents: AstraBrainEvent[];
+  brainTrace: ReasoningTrace | null;
+  send: (message: string) => Promise<AstraBrainChatResult>;
   beginListening: () => void;
   endListening: () => void;
   stopInteraction: () => void;
@@ -104,7 +121,10 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [micTranscript, setMicTranscript] = useState("");
   const [micError, setMicError] = useState<string | null>(null);
   const [activeAgent, setActiveAgent] = useState<string | null>(null);
-  const [lastResponse, setLastResponse] = useState<AgentResponse | null>(null);
+  const [lastResponse, setLastResponse] = useState<AstraBrainChatResult | null>(null);
+  const [brainProvider, setBrainProvider] = useState<AstraBrainProvider | null>(null);
+  const [brainEvents, setBrainEvents] = useState<AstraBrainEvent[]>([]);
+  const [brainTrace, setBrainTrace] = useState<ReasoningTrace | null>(null);
 
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -112,7 +132,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const requestSequenceRef = useRef(0);
   const requestControllerRef = useRef<AbortController | null>(null);
   const speechSequenceRef = useRef(0);
-  const sendRef = useRef<(message: string) => Promise<AgentResponse>>(async () => {
+  const brainTraceSequenceRef = useRef(0);
+  const sendRef = useRef<(message: string) => Promise<AstraBrainChatResult>>(async () => {
     throw new Error("ASTRA runtime is not ready.");
   });
 
@@ -254,6 +275,22 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setPlaybackActive(false);
     setActiveAgent("Chief");
 
+    const requestAt = Date.now();
+    const localEvent: AstraBrainEvent = {
+      id: `runtime-${requestSequence}-request`,
+      type: "request.received",
+      at: requestAt,
+      agent: "chief_of_staff",
+      visualNode: "chief_of_staff",
+      label: "Request received",
+      detail: "ASTRA Runtime forwarded the request to the Brain Adapter.",
+    };
+    setBrainEvents((current) => [...current, localEvent].slice(-24));
+    setBrainTrace({
+      n: ++brainTraceSequenceRef.current,
+      trace: [{ helper: "chief_of_staff", type: localEvent.type, at: requestAt }],
+    });
+
     try {
       const response = await fetch("/api/agent", {
         method: "POST",
@@ -266,7 +303,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         throw new Error(`ASTRA request failed (${response.status})`);
       }
 
-      const result = (await response.json()) as AgentResponse;
+      const result = (await response.json()) as AstraBrainChatResult;
 
       if (requestSequence !== requestSequenceRef.current) {
         return result;
@@ -275,6 +312,23 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       requestControllerRef.current = null;
       setLastResponse(result);
       setActiveAgent(result.agentName);
+      setBrainProvider(result.brain.provider);
+      setBrainEvents((current) => {
+        const seen = new Set(current.map((event) => event.id));
+        const merged = [...current];
+        for (const event of result.brain.events) {
+          if (!seen.has(event.id)) merged.push(event);
+        }
+        return merged.slice(-24);
+      });
+      setBrainTrace({
+        n: ++brainTraceSequenceRef.current,
+        trace: result.brain.visualNodes.map((helper, index) => ({
+          helper,
+          type: index === 0 ? "request.received" : "router.selected",
+          at: Date.now() + index,
+        })),
+      });
       speak(result.message);
       return result;
     } catch (error) {
@@ -466,6 +520,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       micError,
       activeAgent,
       lastResponse,
+      brainProvider,
+      brainEvents,
+      brainTrace,
       send,
       beginListening,
       endListening,
@@ -485,6 +542,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       micError,
       activeAgent,
       lastResponse,
+      brainProvider,
+      brainEvents,
+      brainTrace,
       send,
       beginListening,
       endListening,

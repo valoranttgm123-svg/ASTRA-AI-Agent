@@ -1,6 +1,6 @@
 # ASTRA Brain V1 — Architecture Decision
 
-Status: **Approved foundation / not fully implemented yet**
+Status: **Phase 1 implemented — Brain Adapter + Event Bus + Command Center trace; Hermes/Ollama/Codex execution still pending**
 
 ## Goal
 
@@ -76,6 +76,44 @@ ASTRA must not couple the frontend directly to Hermes internals.
 
 ## ASTRA Brain Adapter
 
+### Phase 1 implementation status
+
+Implemented in code:
+
+- `lib/brain/types.ts` defines the stable `AstraBrain` interface, provider/status types, brain events, and chat result envelope;
+- `lib/brain/adapter.ts` provides a routing-only adapter that wraps the existing ASTRA orchestrator;
+- `/api/agent` POST now goes through the Brain Adapter instead of importing the orchestrator directly;
+- `/api/agent` GET exposes current Brain Adapter status;
+- ASTRA Runtime now exposes `brainProvider`, `brainEvents`, and `brainTrace`;
+- Command Center `ReasoningWeb` is driven by the real backend route trace;
+- the Command Center HUD displays recent Brain events;
+- provider/execution state is explicit: Phase 1 reports `routing_only` and does not pretend that Hermes/Ollama/Codex executed a task.
+
+Current event path:
+
+```text
+User / Humanoid / Console
+          |
+          v
+     ASTRA Runtime
+          |
+          v
+     /api/agent
+          |
+          v
+  ASTRA Brain Adapter
+          |
+          v
+ Existing rule router
+          |
+          +--> Brain events
+          |      |
+          |      +--> Runtime event bus
+          |      +--> Command Center node trace
+          |
+          +--> needs_provider response
+```
+
 ASTRA owns a stable adapter boundary:
 
 ```ts
@@ -141,14 +179,16 @@ Required before paid cloud integration:
 
 ## Planned implementation order
 
-1. Finish V11.1 real interaction state wiring.
-2. Add Hermes local service/adapter.
-3. Connect Ollama as the default local model.
-4. Route existing `/api/agent` through the brain adapter.
-5. Add memory and skills.
-6. Add Codex as the engineering specialist.
-7. Add MCP/tools and permission controls.
-8. Add paid cloud providers as disabled-by-default optional routes.
+1. ✅ Finish real interaction state wiring.
+2. ✅ Add stable ASTRA Brain Adapter boundary.
+3. ✅ Route existing `/api/agent` through the Brain Adapter.
+4. ✅ Add Brain Event Bus and Command Center trace integration.
+5. ⏳ Add Hermes local service/adapter.
+6. ⏳ Connect Ollama as the default local model.
+7. ⏳ Add memory and skills.
+8. ⏳ Add Codex as the engineering specialist.
+9. ⏳ Add MCP/tools and permission controls.
+10. ⏳ Add paid cloud providers as disabled-by-default optional routes.
 
 ## Non-goals for V1
 
