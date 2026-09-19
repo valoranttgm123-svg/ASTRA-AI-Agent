@@ -372,7 +372,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let result: AstraBrainChatResult | null = null;
+      const streamState: { result: AstraBrainChatResult | null } = {
+        result: null,
+      };
 
       const handleBlock = (rawBlock: string) => {
         const block = rawBlock.replace(/\r/g, "").trim();
@@ -398,7 +400,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         }
 
         if (eventName === "result") {
-          result = payload as AstraBrainChatResult;
+          streamState.result = payload as AstraBrainChatResult;
           return;
         }
 
@@ -426,26 +428,27 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       buffer += decoder.decode().replace(/\r/g, "");
       if (buffer.trim()) handleBlock(buffer);
 
-      if (!result) {
+      const finalResult = streamState.result;
+      if (!finalResult) {
         throw new Error("ASTRA stream ended without a final result.");
       }
 
       if (requestSequence !== requestSequenceRef.current) {
-        return result;
+        return finalResult;
       }
 
       requestControllerRef.current = null;
       setBrainStreaming(false);
-      setLastResponse(result);
-      setActiveAgent(result.agentName);
-      setBrainProvider(result.brain.provider);
+      setLastResponse(finalResult);
+      setActiveAgent(finalResult.agentName);
+      setBrainProvider(finalResult.brain.provider);
 
       // V15 normally receives lifecycle events live. If a provider/path emits
       // no streaming callbacks, retain V14 compatibility by applying the final
       // event envelope only after the real response arrives.
       if (streamedEventCount === 0) {
-        setBrainEvents((current) => [...current, ...result.brain.events].slice(-24));
-        const eventTrace = result.brain.events
+        setBrainEvents((current) => [...current, ...finalResult.brain.events].slice(-24));
+        const eventTrace = finalResult.brain.events
           .filter((event) => Boolean(event.visualNode))
           .map((event) => ({
             helper: event.visualNode as string,
@@ -462,7 +465,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       }
 
       setBrainStatus((current) => {
-        const provider = result.brain.provider;
+        const provider = finalResult.brain.provider;
         const mode =
           provider === "cloud"
             ? "cloud"
@@ -492,12 +495,12 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
           endpoint: current?.endpoint,
           model: current?.model,
           fallback: current?.fallback ?? "routing_only",
-          permissions: result.brain.permissions ?? current?.permissions,
+          permissions: finalResult.brain.permissions ?? current?.permissions,
           features: current?.features,
         };
       });
-      speak(result.message);
-      return result;
+      speak(finalResult.message);
+      return finalResult;
     } catch (error) {
       if (requestSequence !== requestSequenceRef.current) {
         throw error;
