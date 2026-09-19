@@ -21,13 +21,15 @@ export type AstraAgent = {
 
 export type AgentRequest = {
   message: string;
+  mode?: "chat" | "execute";
+  approved?: boolean;
 };
 
 export type AgentResponse = {
   ok: boolean;
   agent: AstraAgentKey;
   agentName: string;
-  state: "completed" | "needs_provider" | "error";
+  state: "completed" | "needs_provider" | "blocked" | "error";
   message: string;
   requiresApproval?: boolean;
 };
