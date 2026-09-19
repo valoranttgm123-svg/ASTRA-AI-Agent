@@ -651,3 +651,58 @@ Verification:
 - verify no obvious distortion/crackling at normal Windows volume;
 - if TEST SFX is still silent, treat it as a browser/Windows output-routing issue rather than shockwave gain.
 
+## Stage 5 — Gesture Control (V13)
+
+Goal:
+- upgrade the existing local MediaPipe camera pipeline from index-finger head tracking into deliberate hand-gesture control without adding a new model or cloud service.
+
+Gesture detection:
+- reuses the same MediaPipe Hand Landmarker worker and the same 21 hand landmarks already produced for index tracking;
+- worker now derives three gestures:
+  - PINCH from normalized thumb-tip to index-tip distance;
+  - OPEN PALM from four extended fingers;
+  - FIST from low extended-finger count plus compact fingertip distance;
+- gesture classification runs in the existing worker so the React/UI thread does not receive the full landmark array;
+- no second camera pipeline or new inference dependency is introduced.
+
+Stability / anti-trigger:
+- raw gesture must remain stable for three inference frames;
+- neutral/no-gesture requires two frames to release the stable gesture;
+- a released gesture is required before the same gesture can trigger again;
+- 900 ms cooldown protects against fast accidental transitions;
+- the existing HIGH ~15 FPS / LOW ~10 FPS worker cadence remains unchanged.
+
+Actions:
+- PINCH → replay the V12 assembly sequence;
+- OPEN PALM → start real ASTRA microphone/listening when browser Speech Recognition is supported;
+- FIST → stop the current ASTRA interaction;
+- FIST stop now cleanly aborts any in-flight request, microphone recognition and speech playback through a new runtime `stopInteraction()` action, then returns ASTRA to IDLE;
+- gesture control can be disabled independently with GESTURES ON/OFF;
+- camera/index-finger head tracking remains active even when gesture actions are disabled.
+
+Diagnostics:
+- current stable gesture;
+- last gesture action;
+- pinch ratio;
+- extended-finger count;
+- gesture mapping and debounce rules;
+- existing camera delegate, tracking FPS and inference timing remain visible.
+
+Preserved:
+- V12.1 GPU shockwave;
+- V12.1.3 TEST SFX and loud presence-layer audio;
+- HIGH DPR / GPU particle performance;
+- chat, voice, mic and camera controls;
+- no generated image, external gesture model, paid API, or new provider.
+
+Verification required:
+- production CI build;
+- CAMERA ON: index finger still moves head;
+- hold PINCH for ~3 inference frames: assembly replays once only;
+- release hand, then PINCH again: a second replay is allowed;
+- OPEN PALM starts listening when browser mic recognition is available;
+- FIST while listening/thinking/speaking stops the current interaction and returns IDLE;
+- hold any gesture continuously: no repeated actions;
+- GESTURES OFF: head tracking still works but gesture actions do not execute;
+- verify LOW/AUTO quality remains responsive.
+

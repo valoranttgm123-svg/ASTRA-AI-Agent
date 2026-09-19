@@ -309,6 +309,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [assemblySkipped, setAssemblySkipped] = useState(false);
   const [assemblyActive, setAssemblyActive] = useState(true);
   const [shockwaveActive, setShockwaveActive] = useState(false);
+  const [gesturesEnabled, setGesturesEnabled] = useState(true);
+  const [lastGestureAction, setLastGestureAction] = useState("NONE");
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const [sfxReady, setSfxReady] = useState(false);
   const [sfxSupported, setSfxSupported] = useState(true);
@@ -322,6 +324,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const preCameraFpsRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sfxEnabledRef = useRef(true);
+  const gestureHandledIdRef = useRef(0);
 
   useEffect(() => {
     sfxEnabledRef.current = sfxEnabled;
@@ -602,6 +605,43 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     if (next) void ensureSfxAudio();
   };
 
+  useEffect(() => {
+    const event = tracking.gestureEvent;
+    if (!gesturesEnabled || !event || gestureHandledIdRef.current === event.id) return;
+
+    gestureHandledIdRef.current = event.id;
+
+    if (event.gesture === "pinch") {
+      setLastGestureAction("PINCH → REPLAY ASSEMBLY");
+      setShockwaveActive(false);
+      setAssemblySkipped(false);
+      setAssemblyActive(!reducedMotion && effects);
+      setAssemblyRun((currentRun) => currentRun + 1);
+      return;
+    }
+
+    if (event.gesture === "open_palm") {
+      setLastGestureAction("OPEN PALM → LISTENING");
+      if (runtime.micSupported && !runtime.micActive) {
+        runtime.beginListening();
+      } else if (!runtime.micSupported) {
+        runtime.setAvatarState("listening");
+      }
+      return;
+    }
+
+    if (event.gesture === "fist") {
+      setLastGestureAction("FIST → STOP");
+      runtime.stopInteraction();
+    }
+  }, [
+    effects,
+    gesturesEnabled,
+    reducedMotion,
+    runtime,
+    tracking.gestureEvent,
+  ]);
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const value = message.trim();
@@ -742,9 +782,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1.3</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V13</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          FINAL SHOCKWAVE // LOUD SFX + PRESENCE LAYER
+          GESTURE CONTROL // PINCH + OPEN PALM + FIST
         </div>
       </header>
 
@@ -798,6 +838,12 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               {tracking.enabled ? "CAMERA OFF" : "CAMERA ON"}
             </button>
             <button
+              onClick={() => setGesturesEnabled((value) => !value)}
+              style={buttonStyle(gesturesEnabled)}
+            >
+              {gesturesEnabled ? "GESTURES ON" : "GESTURES OFF"}
+            </button>
+            <button
               onClick={toggleMic}
               disabled={!runtime.micSupported}
               style={{ ...buttonStyle(runtime.micActive), opacity: runtime.micSupported ? 1 : 0.45 }}
@@ -844,6 +890,25 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               }}
             >
               ● {tracking.handFound ? "HAND FOUND" : tracking.status.toUpperCase()}
+            </span>
+            <span
+              style={{
+                alignSelf: "center",
+                padding: "0 4px",
+                color:
+                  tracking.gesture === "pinch"
+                    ? "#ffc364"
+                    : tracking.gesture === "open_palm"
+                      ? "#83ffbc"
+                      : tracking.gesture === "fist"
+                        ? "#ff8f78"
+                        : "rgba(128,234,247,.48)",
+                fontSize: 9,
+                letterSpacing: ".12em",
+                textShadow: "0 0 12px currentColor",
+              }}
+            >
+              ● GESTURE {gesturesEnabled ? tracking.gesture.toUpperCase().replace("_", " ") : "OFF"}
             </span>
             <span
               style={{
@@ -958,6 +1023,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Camera: {tracking.enabled ? "ON" : "OFF"} / {tracking.status.toUpperCase()}</div>
           <div>Hand: {tracking.handFound ? "FOUND" : "NOT FOUND"}</div>
           <div>Hand delegate: {tracking.delegate ?? "not loaded"}</div>
+          <div>Gesture control: {gesturesEnabled ? "ON" : "OFF"}</div>
+          <div>Gesture stable: {tracking.gesture.toUpperCase().replace("_", " ")}</div>
+          <div>Gesture action: {lastGestureAction}</div>
+          <div>Gesture mapping: PINCH → replay / OPEN PALM → mic / FIST → stop</div>
+          <div>Gesture debounce: 3 stable frames + release + 900 ms cooldown</div>
+          <div>Pinch ratio: {tracking.pinchRatio === null ? "..." : tracking.pinchRatio.toFixed(2)}</div>
+          <div>Extended fingers: {tracking.extendedFingers ?? "..."}</div>
           <div>Tracking FPS: {tracking.trackingFps ?? "..."}</div>
           <div>Inference: {tracking.processingMs === null ? "..." : `${tracking.processingMs} ms`}</div>
           <div>Tracking privacy: frames processed locally; no recording/upload by ASTRA.</div>
@@ -971,7 +1043,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.1.3 raises perceived loudness again with a stronger pre-limiter master, a post-limiter output stage, and a dedicated mid-frequency presence layer that is easier for laptop/monitor speakers to reproduce. A TEST SFX button now plays the effect immediately after audio unlock so output routing can be verified without waiting for assembly.
+            V13 upgrades the existing local MediaPipe camera pipeline from index-finger tracking to real gesture control. PINCH replays assembly, OPEN PALM starts listening, and FIST stops the current ASTRA interaction. Gestures require three stable inference frames, must return to neutral before retriggering, and use a cooldown to prevent repeated accidental actions. No new model or cloud service is added.
           </div>
         </aside>
       )}

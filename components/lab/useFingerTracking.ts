@@ -19,6 +19,13 @@ export type FingerTrackingStatus =
   | "error"
   | "unsupported";
 
+export type HandGesture = "none" | "pinch" | "open_palm" | "fist";
+
+export type GestureEvent = {
+  id: number;
+  gesture: Exclude<HandGesture, "none">;
+};
+
 function cameraErrorMessage(error: unknown) {
   if (error instanceof DOMException) {
     if (error.name === "NotAllowedError") return "Izin kamera ditolak.";
@@ -43,6 +50,13 @@ export function useFingerTracking(quality: TrackingQuality) {
   const qualityRef = useRef<TrackingQuality>(quality);
   const resultCounterRef = useRef({ count: 0, started: 0 });
   const runningRef = useRef(false);
+  const gestureCandidateRef = useRef<{ gesture: HandGesture; frames: number }>({
+    gesture: "none",
+    frames: 0,
+  });
+  const stableGestureRef = useRef<HandGesture>("none");
+  const gestureEventIdRef = useRef(0);
+  const lastGestureAtRef = useRef(0);
 
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState<FingerTrackingStatus>("off");
@@ -50,6 +64,10 @@ export function useFingerTracking(quality: TrackingQuality) {
   const [delegate, setDelegate] = useState<"GPU" | "CPU" | null>(null);
   const [processingMs, setProcessingMs] = useState<number | null>(null);
   const [trackingFps, setTrackingFps] = useState<number | null>(null);
+  const [gesture, setGesture] = useState<HandGesture>("none");
+  const [gestureEvent, setGestureEvent] = useState<GestureEvent | null>(null);
+  const [pinchRatio, setPinchRatio] = useState<number | null>(null);
+  const [extendedFingers, setExtendedFingers] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -91,6 +109,9 @@ export function useFingerTracking(quality: TrackingQuality) {
     targetRef.current.active = false;
     targetRef.current.x = 0;
     targetRef.current.y = 0;
+    gestureCandidateRef.current = { gesture: "none", frames: 0 };
+    stableGestureRef.current = "none";
+    lastGestureAtRef.current = 0;
 
     if (updateState) {
       setEnabled(false);
@@ -98,6 +119,10 @@ export function useFingerTracking(quality: TrackingQuality) {
       setDelegate(null);
       setProcessingMs(null);
       setTrackingFps(null);
+      setGesture("none");
+      setGestureEvent(null);
+      setPinchRatio(null);
+      setExtendedFingers(null);
       setStatus("off");
     }
   }, []);
@@ -201,6 +226,9 @@ export function useFingerTracking(quality: TrackingQuality) {
           x?: number;
           y?: number;
           processingMs?: number;
+          gesture?: HandGesture;
+          pinchRatio?: number;
+          extendedFingers?: number;
           message?: string;
         };
 
@@ -220,6 +248,48 @@ export function useFingerTracking(quality: TrackingQuality) {
               ? Math.round(message.processingMs * 10) / 10
               : null,
           );
+          setPinchRatio(
+            typeof message.pinchRatio === "number" && Number.isFinite(message.pinchRatio)
+              ? Math.round(message.pinchRatio * 100) / 100
+              : null,
+          );
+          setExtendedFingers(
+            typeof message.extendedFingers === "number"
+              ? message.extendedFingers
+              : null,
+          );
+
+          const rawGesture: HandGesture = found
+            ? message.gesture ?? "none"
+            : "none";
+
+          if (gestureCandidateRef.current.gesture === rawGesture) {
+            gestureCandidateRef.current.frames += 1;
+          } else {
+            gestureCandidateRef.current = { gesture: rawGesture, frames: 1 };
+          }
+
+          const requiredFrames = rawGesture === "none" ? 2 : 3;
+          if (gestureCandidateRef.current.frames >= requiredFrames) {
+            if (rawGesture === "none") {
+              if (stableGestureRef.current !== "none") {
+                stableGestureRef.current = "none";
+                setGesture("none");
+              }
+            } else if (stableGestureRef.current !== rawGesture) {
+              const gestureNow = performance.now();
+              if (gestureNow - lastGestureAtRef.current >= 900) {
+                stableGestureRef.current = rawGesture;
+                lastGestureAtRef.current = gestureNow;
+                setGesture(rawGesture);
+                gestureEventIdRef.current += 1;
+                setGestureEvent({
+                  id: gestureEventIdRef.current,
+                  gesture: rawGesture,
+                });
+              }
+            }
+          }
 
           const now = performance.now();
           if (!resultCounterRef.current.started) resultCounterRef.current.started = now;
@@ -283,6 +353,10 @@ export function useFingerTracking(quality: TrackingQuality) {
     delegate,
     processingMs,
     trackingFps,
+    gesture,
+    gestureEvent,
+    pinchRatio,
+    extendedFingers,
     error,
     start,
     stop,
