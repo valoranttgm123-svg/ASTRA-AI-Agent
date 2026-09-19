@@ -65,6 +65,15 @@ function isEngineeringRoute(selected: AstraAgentKey) {
   return selected === "developer" || selected === "github";
 }
 
+function isLocalExecutionRoute(selected: AstraAgentKey) {
+  return (
+    selected === "developer" ||
+    selected === "github" ||
+    selected === "files" ||
+    selected === "computer"
+  );
+}
+
 async function buildExecutionContext(
   input: string,
   selected: AstraAgentKey,
@@ -261,15 +270,19 @@ function routingOnlyEvents(
     offset += 1;
   }
 
-  if (state === "needs_provider") {
+  if (state === "needs_provider" || state === "blocked") {
     events.push({
       id: `${now}-blocked`,
       type: "agent.blocked",
       at: now + offset,
       agent: selected,
       visualNode: visualNode(selected),
-      label: "Execution waiting",
-      detail: "No permitted execution provider is currently available.",
+      label: state === "blocked" ? "Execution blocked" : "Execution waiting",
+      detail:
+        providerDetail ||
+        (state === "blocked"
+          ? "ASTRA permission policy blocked this execution request."
+          : "No permitted execution provider is currently available."),
     });
     offset += 1;
   }
@@ -284,7 +297,9 @@ function routingOnlyEvents(
     detail:
       state === "needs_provider"
         ? "Routing and context retrieval completed; execution did not run."
-        : "ASTRA completed the request.",
+        : state === "blocked"
+          ? "Execution was blocked by approval or permission policy."
+          : "ASTRA completed the request.",
   });
 
   return events;
@@ -375,6 +390,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           brain: {
             provider: "codex",
             execution: "executed",
+            requestedMode: "chat",
             route,
             visualNodes: route.map(visualNode),
             events: providerEvents(selected, "codex", context),
@@ -406,6 +422,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         brain: {
           provider: "hermes",
           execution: "executed",
+          requestedMode: "chat",
           route,
           visualNodes: route.map(visualNode),
           events: providerEvents(selected, "hermes", context),
@@ -436,6 +453,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         brain: {
           provider: "ollama",
           execution: "executed",
+          requestedMode: "chat",
           route,
           visualNodes: route.map(visualNode),
           events: providerEvents(selected, "ollama", context),
@@ -475,6 +493,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           brain: {
             provider: "cloud",
             execution: "executed",
+            requestedMode: "chat",
             route,
             visualNodes: route.map(visualNode),
             events: providerEvents(selected, "cloud", context),
