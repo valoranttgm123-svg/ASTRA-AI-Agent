@@ -367,18 +367,41 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
               })),
       });
 
-      setBrainStatus((current) => ({
-        ready: true,
-        provider: result.brain.provider,
-        mode: result.brain.provider === "hermes" ? "local" : "routing_only",
-        detail:
-          result.brain.provider === "hermes"
-            ? "Hermes handled the latest ASTRA request."
-            : "ASTRA used routing-only fallback for the latest request.",
-        endpoint: current?.endpoint,
-        model: current?.model,
-        fallback: "routing_only",
-      }));
+      setBrainStatus((current) => {
+        const provider = result.brain.provider;
+        const mode =
+          provider === "cloud"
+            ? "cloud"
+            : provider === "routing_only"
+              ? "routing_only"
+              : "local";
+
+        const providerName =
+          provider === "routing_only"
+            ? "Routing-only fallback"
+            : provider === "ollama"
+              ? "Ollama"
+              : provider === "codex"
+                ? "Codex"
+                : provider === "hermes"
+                  ? "Hermes"
+                  : "Cloud";
+
+        return {
+          ready: true,
+          provider,
+          mode,
+          detail:
+            provider === "routing_only"
+              ? "ASTRA used routing-only fallback for the latest request."
+              : `${providerName} handled the latest ASTRA request.`,
+          endpoint: current?.endpoint,
+          model: current?.model,
+          fallback: current?.fallback ?? "routing_only",
+          permissions: result.brain.permissions ?? current?.permissions,
+          features: current?.features,
+        };
+      });
       speak(result.message);
       return result;
     } catch (error) {
