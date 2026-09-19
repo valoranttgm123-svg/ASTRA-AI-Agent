@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { astraBrain } from "@/lib/brain/adapter";
 import type { AgentRequest } from "@/lib/agent/types";
 
+export async function GET() {
+  const status = await astraBrain.status();
+  return NextResponse.json(status);
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Partial<AgentRequest>;
