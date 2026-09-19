@@ -135,7 +135,7 @@ Runtime visual states:
 
 ## Current stage
 
-### V13 — Gesture Control
+### V13 — Gesture Control — COMPLETE
 
 Goal: upgrade the existing MediaPipe camera pipeline from pointer tracking into deliberate gesture control.
 
@@ -156,7 +156,7 @@ Requirements:
 - cooldown prevents accidental repeated actions;
 - GESTURES ON/OFF must not disable ordinary head tracking.
 
-V13 should preserve:
+V13 preserves:
 - V12.1 GPU shockwave;
 - V12.1.3 loud SFX;
 - mic / voice;
@@ -337,8 +337,8 @@ No node may appear active unless a real event supports that state.
 ✅ V12.0.x  Performance / visibility / clarity
 ✅ V12.1    Final shockwave
 ✅ V12.1.x  Shockwave SFX
-🔄 V13      Gesture Control
-⏳ Brain V1
+✅ V13      Gesture Control
+🔄 Brain V1
 ⏳ Command Center event integration
 ⏳ Brain-driven Humanoid/Command Center unification
 ```
