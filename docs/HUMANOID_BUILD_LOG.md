@@ -298,3 +298,34 @@ Verification required:
 - Effects Off and reduced-motion show the final form without forced motion;
 - AUTO/LOW quality remains smooth on the target PC.
 
+## Stage 4.0.1 — Particle Sharpness + Motion Polish (V12.0.1)
+
+Reported feedback:
+- particle field looked insufficiently sharp;
+- assembly motion felt less smooth than desired.
+
+Rendering polish:
+- base HIGH point size reduced from 1.7 px to 1.45 px;
+- base LOW point size reduced from 1.25 px to 1.10 px;
+- glow and state-energy point sizes reduced so the source artwork remains visually crisp;
+- all particle layers now use one shared procedural 32×32 round alpha texture;
+- round particle mask uses linear filtering and explicit alpha testing so points read as clean dots instead of square pixels;
+- HIGH renderer DPR increased from 1.25 to 1.5;
+- WebGL antialiasing enabled and high-performance GPU preference requested;
+- no extra image asset or external dependency added.
+
+Motion polish:
+- per-frame time-based assembly drift removed;
+- cubic smoothstep replaced with quintic smootherstep for zero-velocity-like entry/settling behavior;
+- assembly local window widened from 0.28 to 0.34 for gentler convergence;
+- lateral curve is now deterministic from particle index and local progress instead of elapsed-time jitter;
+- final particle positions, assembly order, runtime state logic, mic, speech, and camera tracking remain unchanged.
+
+Verification required:
+- production CI build;
+- compare V12 vs V12.0.1 at HIGH quality;
+- check face/core detail at idle and speaking;
+- replay assembly several times and confirm no micro-jitter near final positions;
+- verify AUTO quality can still drop to LOW when needed;
+- confirm FPS remains acceptable on the target PC.
+
