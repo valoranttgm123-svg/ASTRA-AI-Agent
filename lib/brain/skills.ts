@@ -114,33 +114,35 @@ function isAgentKey(value: string): value is AstraAgentKey {
 function normalizeLocalSkills(value: unknown): AstraSkill[] {
   if (!Array.isArray(value)) return [];
 
-  return value
-    .map((item, index) => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as Record<string, unknown>;
-      const instructions =
-        typeof record.instructions === "string" ? record.instructions.trim() : "";
-      if (!instructions) return null;
+  const skills: AstraSkill[] = [];
 
-      const rawAgents = Array.isArray(record.agents)
-        ? record.agents.filter((agent): agent is string => typeof agent === "string")
-        : [];
-      const agents = rawAgents.filter(isAgentKey);
-      if (agents.length === 0) return null;
+  value.forEach((item, index) => {
+    if (!item || typeof item !== "object") return;
+    const record = item as Record<string, unknown>;
+    const instructions =
+      typeof record.instructions === "string" ? record.instructions.trim() : "";
+    if (!instructions) return;
 
-      const id =
-        typeof record.id === "string" && record.id.trim()
-          ? record.id.trim()
-          : `local-skill-${index + 1}`;
+    const rawAgents = Array.isArray(record.agents)
+      ? record.agents.filter((agent): agent is string => typeof agent === "string")
+      : [];
+    const agents = rawAgents.filter(isAgentKey);
+    if (agents.length === 0) return;
 
-      return {
-        id,
-        agents,
-        instructions: instructions.slice(0, 3000),
-        source: "local" as const,
-      };
-    })
-    .filter((skill): skill is AstraSkill => Boolean(skill));
+    const id =
+      typeof record.id === "string" && record.id.trim()
+        ? record.id.trim()
+        : `local-skill-${index + 1}`;
+
+    skills.push({
+      id,
+      agents,
+      instructions: instructions.slice(0, 3000),
+      source: "local",
+    });
+  });
+
+  return skills;
 }
 
 export async function getSkillContext(agent: AstraAgentKey): Promise<AstraSkillContext> {
