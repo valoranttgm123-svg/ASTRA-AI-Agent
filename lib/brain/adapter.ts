@@ -2,6 +2,7 @@ import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
 import type { AstraAgentKey } from "@/lib/agent/types";
 import { chatWithHermes, getHermesStatus } from "./hermes";
+import { chatWithOllama, getOllamaStatus } from "./ollama";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -108,8 +109,17 @@ function routingOnlyEvents(
   return events;
 }
 
-function hermesEvents(selected: AstraAgentKey): AstraBrainEvent[] {
+function providerEvents(
+  selected: AstraAgentKey,
+  provider: "hermes" | "ollama",
+): AstraBrainEvent[] {
   const now = Date.now();
+  const providerLabel = provider === "hermes" ? "Hermes" : "Ollama";
+  const providerDetail =
+    provider === "hermes"
+      ? "ASTRA Brain selected the local Hermes gateway."
+      : "ASTRA Brain selected the local Ollama model fallback.";
+
   return [
     ...baseEvents(selected, now),
     {
@@ -118,8 +128,8 @@ function hermesEvents(selected: AstraAgentKey): AstraBrainEvent[] {
       at: now + 2,
       agent: selected,
       visualNode: visualNode(selected),
-      label: "Hermes selected",
-      detail: "ASTRA Brain selected the local Hermes gateway.",
+      label: `${providerLabel} selected`,
+      detail: providerDetail,
     },
     {
       id: `${now}-started`,
@@ -128,7 +138,7 @@ function hermesEvents(selected: AstraAgentKey): AstraBrainEvent[] {
       agent: selected,
       visualNode: visualNode(selected),
       label: "Agent started",
-      detail: `${ASTRA_AGENT_MAP[selected].name} started execution through Hermes.`,
+      detail: `${ASTRA_AGENT_MAP[selected].name} started execution through ${providerLabel}.`,
     },
     {
       id: `${now}-completed`,
@@ -137,7 +147,7 @@ function hermesEvents(selected: AstraAgentKey): AstraBrainEvent[] {
       agent: selected,
       visualNode: visualNode(selected),
       label: "Agent completed",
-      detail: `${ASTRA_AGENT_MAP[selected].name} completed the Hermes turn.`,
+      detail: `${ASTRA_AGENT_MAP[selected].name} completed the ${providerLabel} turn.`,
     },
     {
       id: `${now}-response`,
@@ -146,7 +156,7 @@ function hermesEvents(selected: AstraAgentKey): AstraBrainEvent[] {
       agent: selected,
       visualNode: visualNode(selected),
       label: "Response ready",
-      detail: "Hermes returned the final response to ASTRA Runtime.",
+      detail: `${providerLabel} returned the final response to ASTRA Runtime.`,
     },
   ];
 }
@@ -186,7 +196,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
   }
 }
 
-class HermesPreferredBrainAdapter implements AstraBrain {
+class LocalPreferredBrainAdapter implements AstraBrain {
   private readonly fallback = new RoutingOnlyBrainAdapter();
 
   async chat(input: string): Promise<AstraBrainChatResult> {
@@ -194,6 +204,7 @@ class HermesPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
 
+    let hermesError = "Hermes gateway is unavailable.";
     try {
       const result = await chatWithHermes({ input, agent });
 
@@ -209,28 +220,54 @@ class HermesPreferredBrainAdapter implements AstraBrain {
           execution: "executed",
           route,
           visualNodes: route.map(visualNode),
-          events: hermesEvents(selected),
+          events: providerEvents(selected, "hermes"),
         },
       };
     } catch (error) {
-      const fallback = await this.fallback.chat(input);
-      const detail =
+      hermesError =
         error instanceof Error
           ? error.message
           : "Hermes gateway is unavailable.";
+    }
+
+    let ollamaError = "Ollama is unavailable.";
+    try {
+      const result = await chatWithOllama({ input, agent });
 
       return {
-        ...fallback,
+        ok: true,
+        agent: selected,
+        agentName: agent.name,
+        state: "completed",
+        message: result.message,
+        requiresApproval: false,
         brain: {
-          ...fallback.brain,
-          events: routingOnlyEvents(
-            fallback.agent,
-            fallback.state,
-            detail,
-          ),
+          provider: "ollama",
+          execution: "executed",
+          route,
+          visualNodes: route.map(visualNode),
+          events: providerEvents(selected, "ollama"),
         },
       };
+    } catch (error) {
+      ollamaError =
+        error instanceof Error
+          ? error.message
+          : "Ollama is unavailable.";
     }
+
+    const fallback = await this.fallback.chat(input);
+    return {
+      ...fallback,
+      brain: {
+        ...fallback.brain,
+        events: routingOnlyEvents(
+          fallback.agent,
+          fallback.state,
+          `Hermes: ${hermesError} Ollama: ${ollamaError}`,
+        ),
+      },
+    };
   }
 
   async execute(task: { input: string }) {
@@ -238,8 +275,7 @@ class HermesPreferredBrainAdapter implements AstraBrain {
   }
 
   async cancel() {
-    // Phase 2 uses stateless chat/completions. Per-run stop support is planned
-    // when ASTRA adopts Hermes /v1/runs lifecycle endpoints.
+    // Current local providers use stateless request/response calls.
   }
 
   async status(): Promise<AstraBrainStatus> {
@@ -252,9 +288,23 @@ class HermesPreferredBrainAdapter implements AstraBrain {
         mode: "local",
         endpoint: hermes.endpoint,
         model: hermes.model,
-        fallback: "routing_only",
+        fallback: "ollama",
         detail:
-          "ASTRA Brain is connected to the local Hermes gateway. Routing-only fallback remains available.",
+          "ASTRA Brain is connected to Hermes. Ollama remains the local model fallback.",
+      };
+    }
+
+    const ollama = await getOllamaStatus();
+
+    if (ollama.available) {
+      return {
+        ready: true,
+        provider: "ollama",
+        mode: "local",
+        endpoint: ollama.endpoint,
+        model: ollama.model ?? undefined,
+        fallback: "routing_only",
+        detail: `${hermes.detail} ASTRA is using local Ollama model ${ollama.model}.`,
       };
     }
 
@@ -262,12 +312,12 @@ class HermesPreferredBrainAdapter implements AstraBrain {
       ready: true,
       provider: "routing_only",
       mode: "routing_only",
-      endpoint: hermes.endpoint,
-      model: hermes.model,
+      endpoint: ollama.endpoint,
+      model: ollama.model ?? undefined,
       fallback: "routing_only",
-      detail: `${hermes.detail} ASTRA is using routing-only fallback.`,
+      detail: `${hermes.detail} ${ollama.detail} ASTRA is using routing-only fallback.`,
     };
   }
 }
 
-export const astraBrain: AstraBrain = new HermesPreferredBrainAdapter();
+export const astraBrain: AstraBrain = new LocalPreferredBrainAdapter();
