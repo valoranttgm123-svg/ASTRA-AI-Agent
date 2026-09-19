@@ -15,6 +15,7 @@ import ApexHeroOrb, { type OrbState } from "./ApexHeroOrb";
 import ReasoningWebJs from "./ReasoningWeb";
 import ShaderBackgroundJs from "./ShaderBackground";
 import OrbStatusBar from "./OrbStatusBar";
+import { useAstraRuntime } from "./AstraRuntime";
 
 export type NodeSel = { name: string; key: string; color: string };
 
@@ -230,6 +231,7 @@ export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => v
 
 /* ── The world ── */
 export default function ApexWorld() {
+  const runtime = useAstraRuntime();
   const [selected, setSelected] = useState<NodeSel | null>(null);
   const [reduced, setReduced] = useState(false);
 
@@ -237,7 +239,7 @@ export default function ApexWorld() {
   // backdrop, the light-cast and the reasoning web's activity level.
   const [showState, setShowState] = useState<OrbState>("idle");
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const orbState: OrbState = showState;
+  const orbState: OrbState = runtime.orbState !== "idle" ? runtime.orbState : showState;
 
   const boost = () => {
     const next: OrbState = showState === "idle" ? "thinking" : showState === "thinking" ? "speaking" : "idle";
@@ -246,6 +248,13 @@ export default function ApexWorld() {
     showTimer.current = setTimeout(() => setShowState("idle"), 8000);
   };
   useEffect(() => () => { if (showTimer.current) clearTimeout(showTimer.current); }, []);
+
+  useEffect(() => {
+    if (runtime.orbState === "idle") return;
+    if (showTimer.current) clearTimeout(showTimer.current);
+    showTimer.current = null;
+    setShowState("idle");
+  }, [runtime.orbState]);
 
   // Single entry point for opening an agent, shared by the SVG graph and the
   // hidden accessible list, so both routes behave identically.
