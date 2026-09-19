@@ -165,3 +165,43 @@ Verification required:
 - confirm the face-out transition does not shift the humanoid;
 - confirm camera tracking still works in every state;
 - confirm AUTO/LOW remain responsive on the target PC.
+
+## Stage 3.1 — Real interaction states (V11.1)
+
+Goal: drive ASTRA avatar states from actual browser interaction events instead of preview-only or synthetic timing.
+
+Implemented:
+- browser Speech Recognition support through `SpeechRecognition` / `webkitSpeechRecognition` when available;
+- microphone only starts after an explicit user click;
+- actual recognition `onstart` drives `LISTENING`;
+- interim transcript is shown live in the ASTRA console and fullscreen humanoid;
+- final voice transcript is automatically sent through the existing `/api/agent` path;
+- request start drives `THINKING`;
+- `SPEAKING` starts only from the real `speechSynthesis.onstart` event;
+- `onpause`, `onresume`, `onend`, and `onerror` update playback state directly;
+- the old synthetic interval-based speech amplitude was removed;
+- legacy `speechLevel` is retained only as a binary event-driven playback gate for renderer compatibility (1 while actual speech playback is active, 0 otherwise);
+- technical diagnostics explicitly state that the playback gate is not measured audio loudness;
+- starting a newer microphone interaction aborts stale requests and cancels stale speech;
+- starting a newer text request aborts stale recognition/speech;
+- sequence guards prevent old mic, request, or speech events from overwriting the latest interaction state;
+- main ASTRA console includes MIC / STOP MIC and VOICE ON/OFF controls;
+- fullscreen Humanoid includes the same MIC and VOICE controls;
+- existing camera/index-finger tracking remains independent and preserved;
+- browser permission errors are surfaced without inventing a listening state;
+- no audio recording is stored by ASTRA.
+
+Architecture note:
+- ASTRA Brain V1 free-first decision is documented in `docs/ASTRA_BRAIN_V1.md`;
+- planned brain stack: Hermes orchestration + Ollama local default + Codex engineering specialist;
+- paid cloud providers remain optional and disabled by default.
+
+Verification required:
+- production CI build;
+- Chrome/Edge microphone permission flow on the target PC;
+- MIC -> LISTENING -> final transcript -> THINKING -> SPEAKING -> IDLE;
+- stop microphone before final transcript;
+- VOICE OFF path returns to idle without false SPEAKING;
+- rapid voice/text interruption confirms latest-state-wins behavior;
+- camera tracking remains functional while mic controls are available.
+
