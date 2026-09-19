@@ -664,28 +664,32 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const route = routeFor(selected);
     const context = await buildExecutionContext(input, selected);
     const failures: string[] = [];
+    emitInitialTelemetry(selected, context);
 
     const blocked = (
       message: string,
       detail: string,
       requiresApproval = false,
-    ): AstraBrainChatResult => ({
-      ok: false,
-      agent: selected,
-      agentName: agent.name,
-      state: "blocked",
-      message,
-      requiresApproval,
-      brain: {
-        provider: "routing_only",
-        execution: "blocked",
-        requestedMode: "execute",
-        route,
-        visualNodes: route.map(visualNode),
-        events: routingOnlyEvents(selected, "blocked", context, detail),
-        ...envelopeContext(context),
-      },
-    });
+    ): AstraBrainChatResult => {
+      emitBlockedTelemetry(selected, detail);
+      return {
+        ok: false,
+        agent: selected,
+        agentName: agent.name,
+        state: "blocked",
+        message,
+        requiresApproval,
+        brain: {
+          provider: "routing_only",
+          execution: "blocked",
+          requestedMode: "execute",
+          route,
+          visualNodes: route.map(visualNode),
+          events: routingOnlyEvents(selected, "blocked", context, detail),
+          ...envelopeContext(context),
+        },
+      };
+    };
 
     if (context.policy.requireApproval && !task.approved) {
       return blocked(
@@ -700,6 +704,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
 
       if (!codexStatus.available) {
         failures.push(codexStatus.detail);
+        emitProviderUnavailable(selected, "codex", codexStatus.detail);
       } else if (codexStatus.sandbox !== "workspace-write") {
         return blocked(
           "Codex tersedia, tetapi ASTRA masih dalam mode read-only. Aktifkan ASTRA_ALLOW_FILE_WRITE=true dan ASTRA_CODEX_SANDBOX=workspace-write di .env.local, lalu restart ASTRA.",
@@ -719,6 +724,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             .filter(Boolean)
             .join("\n\n");
 
+          emitProviderStarted(selected, "codex");
           const result = await chatWithCodex({
             input,
             agent,
@@ -728,6 +734,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             executionRequested: true,
           });
 
+          emitProviderCompleted(selected, "codex");
           return {
             ok: true,
             agent: selected,
@@ -746,14 +753,15 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             },
           };
         } catch (error) {
-          failures.push(
-            `Codex: ${error instanceof Error ? error.message : "execution failed"}`,
-          );
+          const detail = `Codex: ${error instanceof Error ? error.message : "execution failed"}`;
+          failures.push(detail);
+          emitProviderUnavailable(selected, "codex", detail);
         }
       }
     }
 
     try {
+      emitProviderStarted(selected, "hermes");
       const result = await chatWithHermes({
         input,
         agent,
@@ -764,6 +772,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         ].join("\n"),
       });
 
+      emitProviderCompleted(selected, "hermes");
       return {
         ok: true,
         agent: selected,
@@ -782,9 +791,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Hermes: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitProviderUnavailable(selected, "hermes", detail);
     }
 
     return blocked(
