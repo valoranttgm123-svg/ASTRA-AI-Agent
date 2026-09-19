@@ -26,8 +26,13 @@ export type AstraBrainEvent = {
   at: number;
   agent?: AstraAgentKey;
   visualNode?: string;
+  provider?: AstraBrainProvider;
   label: string;
   detail?: string;
+};
+
+export type AstraBrainRunOptions = {
+  onEvent?: (event: AstraBrainEvent) => void;
 };
 
 export type AstraBrainPermissionSnapshot = {
@@ -83,8 +88,11 @@ export type AstraBrainStatus = {
 };
 
 export interface AstraBrain {
-  chat(input: string): Promise<AstraBrainChatResult>;
-  execute(task: { input: string; approved?: boolean }): Promise<AstraBrainChatResult>;
+  chat(input: string, options?: AstraBrainRunOptions): Promise<AstraBrainChatResult>;
+  execute(
+    task: { input: string; approved?: boolean },
+    options?: AstraBrainRunOptions,
+  ): Promise<AstraBrainChatResult>;
   cancel(): Promise<void>;
   status(): Promise<AstraBrainStatus>;
 }

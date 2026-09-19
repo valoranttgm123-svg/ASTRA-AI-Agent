@@ -562,3 +562,47 @@ This preserves one event model for:
 
 A future streaming telemetry stage can transport trustworthy incremental backend events through SSE/WebSocket without changing the Brain Event type contract.
 
+## Real-time telemetry transport (V15)
+
+V15 removes the V14 limitation where Brain lifecycle information was normally visible only after the request/response envelope completed.
+
+Server path:
+
+```text
+ASTRA Runtime
+    |
+    | POST /api/agent/stream
+    | Accept: text/event-stream
+    v
+ASTRA Brain Adapter
+    |
+    +--> onEvent(request.received)
+    +--> onEvent(router.selected)
+    +--> memory + skills + policy
+    +--> onEvent(provider.selected)
+    +--> onEvent(agent.started)
+    +--> provider call
+    |      |
+    |      +--> unavailable -> live fallback event
+    |      +--> completed   -> live completion event
+    |
+    +--> onEvent(response.ready)
+    |
+    +--> final AstraBrainChatResult
+```
+
+The Browser receives:
+- `event: brain` as each trustworthy lifecycle point happens;
+- `event: result` once the final Brain result exists;
+- `event: error` for failures.
+
+The same runtime event bus continues to feed:
+- Command Center nodes/traces;
+- Command Center Brain activity list;
+- Humanoid Brain HUD;
+- Humanoid GPU Brain pulses.
+
+Provider-level lifecycle can now be live because ASTRA itself knows when it selects/starts/completes/fails a provider attempt. Tool-level lifecycle is still not synthesized. If Hermes/Codex later exposes reliable incremental tool events, those can extend the existing `AstraBrainEvent` contract without changing the transport.
+
+The non-streaming `POST /api/agent` route remains available for compatibility and diagnostics.
+
