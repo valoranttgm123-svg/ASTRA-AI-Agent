@@ -1,6 +1,6 @@
 # ASTRA Brain V1 — Architecture Decision
 
-Status: **Phase 3 implemented — Brain Adapter + Event Bus + Command Center trace + Hermes primary local gateway + Ollama automatic local fallback; Codex execution routing still pending**
+Status: **Brain V1 implementation complete — Brain Adapter + Event Bus + Command Center trace + Hermes/Ollama + durable local Memory/Skills + Codex engineering specialist + permission policy + explicit optional cloud guard**
 
 ## Goal
 
@@ -276,10 +276,163 @@ Required before paid cloud integration:
 4. ✅ Add Brain Event Bus and Command Center trace integration.
 5. ✅ Add Hermes local service/adapter.
 6. ✅ Connect Ollama as the automatic local model fallback.
-7. ⏳ Add memory and skills.
-8. ⏳ Add Codex as the engineering specialist.
-9. ⏳ Add MCP/tools and permission controls.
-10. ⏳ Add paid cloud providers as disabled-by-default optional routes.
+7. ✅ Add durable local memory retrieval and skills.
+8. ✅ Add Codex CLI as the engineering specialist.
+9. ✅ Add ASTRA permission policy for tools/side effects.
+10. ✅ Add paid cloud as an explicit disabled-by-default optional route.
+
+## Brain V1 completion details
+
+### Durable local Memory
+
+Implemented in `lib/brain/memory.ts`.
+
+Default private file:
+
+```text
+.astra/memory.json
+```
+
+The `.astra/` directory is gitignored. ASTRA never commits the user's private memory database.
+
+Memory format:
+
+```json
+[
+  {
+    "id": "project-note",
+    "text": "Private project context to retrieve when relevant.",
+    "tags": ["project", "context"],
+    "updatedAt": "2026-09-19"
+  }
+]
+```
+
+Retrieval is local keyword relevance ranking with entry/character caps. No vector database or paid embedding API is required for V1.
+
+### Skills
+
+Implemented in `lib/brain/skills.ts`.
+
+V1 includes built-in route-specific skills for:
+- orchestration;
+- engineering/repository work;
+- research;
+- memory retrieval;
+- files;
+- computer operations;
+- communication;
+- business;
+- trading safety.
+
+Optional private/local custom skills can be stored in:
+
+```text
+.astra/skills.json
+```
+
+They are loaded only for the matching routed specialist.
+
+### Codex engineering specialist
+
+Implemented in `lib/brain/codex.ts`.
+
+Engineering/GitHub routes now try the locally authenticated Codex CLI before Hermes/Ollama.
+
+Default execution:
+
+```text
+codex exec --json --ephemeral --skip-git-repo-check --sandbox read-only --cd <workspace>
+```
+
+Properties:
+- uses the existing local Codex/ChatGPT authentication;
+- does not require an OpenAI API key in ASTRA;
+- defaults to read-only;
+- workspace writes are possible only when both `ASTRA_CODEX_SANDBOX=workspace-write` and `ASTRA_ALLOW_FILE_WRITE=true`;
+- ASTRA watches the JSONL stream for the final `agent_message` / `turn.completed`;
+- private ASTRA memory is excluded from Codex by default and requires `ASTRA_CODEX_INCLUDE_MEMORY=true`.
+
+### Permission policy
+
+Implemented in `lib/brain/policy.ts`.
+
+Central flags:
+
+```env
+ASTRA_REQUIRE_APPROVAL=true
+ASTRA_ALLOW_SHELL=false
+ASTRA_ALLOW_FILE_WRITE=false
+ASTRA_ALLOW_EXTERNAL_ACTIONS=false
+ASTRA_ALLOW_PAID_CLOUD=false
+```
+
+The policy is:
+- injected into provider instructions;
+- hard-applied to Codex sandbox selection;
+- hard-applied to paid-cloud eligibility;
+- surfaced in Brain status/Command Center.
+
+Hermes can host its own MCP/tool loop. ASTRA does not fabricate tool-level events that Hermes does not expose. Side-effect enforcement inside Hermes must also be configured on the Hermes/MCP side.
+
+### Optional cloud
+
+Implemented in `lib/brain/cloud.ts`.
+
+Cloud is not part of the normal default path. It runs only when:
+
+```env
+ASTRA_CLOUD_ENABLED=true
+ASTRA_ALLOW_PAID_CLOUD=true
+```
+
+and URL/key/model are all configured.
+
+Private local memory is not sent to cloud unless:
+
+```env
+ASTRA_CLOUD_INCLUDE_MEMORY=true
+```
+
+### Provider order
+
+For engineering/GitHub tasks:
+
+```text
+Codex CLI
+  -> Hermes
+  -> Ollama
+  -> explicit cloud opt-in
+  -> routing_only
+```
+
+For other tasks:
+
+```text
+Hermes
+  -> Ollama
+  -> explicit cloud opt-in
+  -> routing_only
+```
+
+### Command Center telemetry
+
+The real event path now includes:
+- `request.received`;
+- `router.selected`;
+- `memory.loaded`;
+- `skill.selected`;
+- `policy.applied`;
+- `provider.selected`;
+- `provider.unavailable`;
+- `agent.started`;
+- `agent.completed`;
+- `agent.blocked`;
+- `response.ready`.
+
+The Command Center displays provider state and feature readiness for Memory, Skills, Codex, Tools, and Cloud.
+
+Tool-level `tool.started/tool.completed` events are intentionally not fabricated. They can be added when the execution provider exposes trustworthy tool telemetry.
 
 ## Non-goals for V1
 
