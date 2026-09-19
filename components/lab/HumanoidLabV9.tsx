@@ -204,7 +204,7 @@ function ParticleArtwork({
   state,
   effects,
   reducedMotion,
-  speechLevel,
+  playbackGate,
   quality,
   trackingTarget,
 }: {
@@ -212,7 +212,7 @@ function ParticleArtwork({
   state: AstraAvatarState;
   effects: boolean;
   reducedMotion: boolean;
-  speechLevel: number;
+  playbackGate: number;
   quality: RenderQuality;
   trackingTarget: { current: FingerTrackingTarget };
 }) {
@@ -350,7 +350,7 @@ function ParticleArtwork({
     const turn = Math.abs(current.current.yaw) / 0.38;
     const baseSize = quality === "high" ? BASE_POINT_SIZE_HIGH : BASE_POINT_SIZE_LOW;
     const glowSize = quality === "high" ? GLOW_POINT_SIZE_HIGH : GLOW_POINT_SIZE_LOW;
-    const voice = THREE.MathUtils.clamp(speechLevel, 0, 1);
+    const voice = THREE.MathUtils.clamp(playbackGate, 0, 1);
     const speakingBoost = state === "speaking" ? 1 + voice * 0.16 : 1;
 
     const baseMaterial = basePoints.current.material as THREE.PointsMaterial;
@@ -517,7 +517,7 @@ function ParticleScene({
   state,
   effects,
   reducedMotion,
-  speechLevel,
+  playbackGate,
   quality,
   trackingTarget,
 }: {
@@ -525,7 +525,7 @@ function ParticleScene({
   state: AstraAvatarState;
   effects: boolean;
   reducedMotion: boolean;
-  speechLevel: number;
+  playbackGate: number;
   quality: RenderQuality;
   trackingTarget: { current: FingerTrackingTarget };
 }) {
@@ -546,7 +546,7 @@ function ParticleScene({
         state={state}
         effects={effects}
         reducedMotion={reducedMotion}
-        speechLevel={speechLevel}
+        playbackGate={playbackGate}
         quality={quality}
         trackingTarget={trackingTarget}
       />
@@ -736,7 +736,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               state={state}
               effects
               reducedMotion={reducedMotion}
-              speechLevel={runtime.speechLevel}
+              playbackGate={runtime.speechLevel}
               quality={resolvedQuality}
               trackingTarget={tracking.targetRef}
             />
@@ -775,9 +775,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V11</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V11.1</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          DYNAMIC STATE ENGINE // ONE APPROVED ARTWORK
+          REAL INTERACTION STATES // MIC + PLAYBACK EVENTS
         </div>
       </header>
 
@@ -880,7 +880,11 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Cyan samples: {data?.cyan.length ?? "loading"}</div>
           <div>State radial zones: {data?.zones.length ?? "loading"}</div>
           <div>State transition: 680 ms radial face-out</div>
-          <div>Speech level: {runtime.speechLevel.toFixed(2)}</div>
+          <div>Playback active: {runtime.playbackActive ? "YES" : "NO"}</div>
+          <div>Playback gate: {runtime.speechLevel.toFixed(0)} (event-driven, not loudness)</div>
+          <div>Mic support: {runtime.micSupported ? "YES" : "NO"}</div>
+          <div>Mic active: {runtime.micActive ? "YES" : "NO"}</div>
+          <div>Mic transcript: {runtime.micTranscript || "—"}</div>
           <div>Base blend: Normal</div>
           <div>Energy layers: Additive</div>
           <div>DPR: {resolvedQuality === "high" ? "1.25" : "1.0"}</div>
@@ -899,7 +903,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V11 keeps the same approved Idle artwork and creates Listening, Thinking, and Speaking entirely through particle energy, motion, and face-out radial transitions. No new state images are generated.
+            V11.1 keeps the V11 particle state engine but drives Listening, Thinking, and Speaking from real browser interaction events. The playback gate is binary and event-driven; it is not presented as measured audio loudness.
           </div>
         </aside>
       )}
