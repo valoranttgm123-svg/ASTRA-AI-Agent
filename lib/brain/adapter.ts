@@ -29,11 +29,6 @@ function buildEvents(
   state: AstraBrainChatResult["state"],
 ): AstraBrainEvent[] {
   const now = Date.now();
-  const route =
-    selected === "chief_of_staff"
-      ? ["chief_of_staff" as const]
-      : (["chief_of_staff", selected] as AstraAgentKey[]);
-
   const events: AstraBrainEvent[] = [
     {
       id: `${now}-request`,
