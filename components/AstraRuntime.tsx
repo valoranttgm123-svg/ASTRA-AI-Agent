@@ -323,13 +323,11 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       });
       setBrainTrace({
         n: ++brainTraceSequenceRef.current,
-        trace: result.brain.events
-          .filter((event) => Boolean(event.visualNode))
-          .map((event) => ({
-            helper: event.visualNode as string,
-            type: event.type,
-            at: event.at,
-          })),
+        trace: result.brain.visualNodes.map((helper, index) => ({
+          helper,
+          type: index === 0 ? "request.received" : "router.selected",
+          at: Date.now() + index,
+        })),
       });
       speak(result.message);
       return result;
