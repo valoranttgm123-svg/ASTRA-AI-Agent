@@ -205,3 +205,35 @@ Verification required:
 - rapid voice/text interruption confirms latest-state-wins behavior;
 - camera tracking remains functional while mic controls are available.
 
+## Stage 3.2 — Voice Reactive Face (V11.2)
+
+Goal: make the ASTRA face/core visibly react while speech playback is actually active, without pretending to measure speech loudness.
+
+Implemented:
+- V11.1 binary playback gate remains sourced from real `speechSynthesis` events;
+- dedicated `voiceFace` particle subset is sampled from the approved head/face region;
+- dedicated `voiceCore` particle subset is sampled from the center face/neck/core region;
+- both subsets reuse the existing approved artwork and the same Three.js renderer;
+- playback gate is smoothed through a fast attack / soft release envelope to avoid abrupt visual snapping;
+- while actual playback is active, face and core receive orange additive energy;
+- face uses a faster visual cadence while core uses a slower cadence to make the response feel layered;
+- visual cadence is deterministic animation only and is not exposed or described as audio waveform/loudness;
+- `speechSynthesis.onpause` sets the real playback gate to zero, so reactive face/core energy fades;
+- `onresume` restores the gate and the reactive animation resumes;
+- `onend`, `onerror`, cancel, newer request, and microphone takeover all remove playback energy through the existing V11.1 event wiring;
+- reduced-motion keeps a steady, non-rhythmic playback energy instead of pulsing;
+- Effects Off suppresses all reactive voice layers;
+- HIGH quality uses brighter/larger face/core energy; LOW quality uses lighter layers;
+- camera/index-finger head tracking, chat, microphone recognition, adaptive quality, and V11 radial state transitions remain intact;
+- no generated image, second renderer, paid service, waveform simulation, or new external dependency was added.
+
+Verification required:
+- production CI build;
+- actual response playback: face/core pulse only after speech playback starts;
+- pause: reactive layers fade while the humanoid remains in speaking context;
+- resume: reactive layers restart cleanly;
+- voice off / stop / error: no lingering orange reactive energy;
+- reduced-motion: no rhythmic pulse;
+- LOW/AUTO quality remains responsive;
+- camera tracking remains stable during speech playback.
+
