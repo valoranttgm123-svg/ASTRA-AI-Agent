@@ -527,3 +527,38 @@ ASTRA returns `brain.execution = blocked` instead of pretending execution happen
 
 The Command Center and Humanoid can surface `CHAT / EXECUTE` request mode and `EXECUTED / BLOCKED` state from the real Brain response.
 
+## Humanoid event link
+
+V14 connects the fullscreen Humanoid to the same Brain Event Bus already consumed by Command Center.
+
+Shared source of truth:
+
+```text
+/api/agent
+   |
+   v
+ASTRA Brain Adapter
+   |
+   +--> Brain lifecycle events
+            |
+            +--> ASTRA Runtime
+                    |
+                    +--> Command Center trace/nodes
+                    |
+                    +--> Humanoid Brain HUD + GPU event pulse
+```
+
+Humanoid visual events are derived only from real `AstraBrainEvent` records already present in the runtime. No tool-level telemetry is fabricated. When a provider returns lifecycle events only with its final response, the Humanoid displays those events after they are actually received instead of pretending they streamed during execution.
+
+This preserves one event model for:
+- provider selection;
+- routing;
+- memory retrieval;
+- skills;
+- policy;
+- agent lifecycle;
+- blocked/unavailable states;
+- response readiness.
+
+A future streaming telemetry stage can transport trustworthy incremental backend events through SSE/WebSocket without changing the Brain Event type contract.
+
