@@ -8,6 +8,7 @@ import type { FingerTrackingTarget } from "./useFingerTracking";
 
 const ASSEMBLY_DURATION_SECONDS = 2.6;
 const ASSEMBLY_WINDOW = 0.34;
+const SHOCKWAVE_DURATION_SECONDS = 2.35;
 
 type RenderQuality = "low" | "high";
 
@@ -96,6 +97,8 @@ uniform float uStateZone;
 uniform float uStateTone;
 uniform float uVoice;
 uniform float uEffects;
+uniform float uShockwaveActive;
+uniform float uShockwaveProgress;
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -140,8 +143,36 @@ void main() {
     p.z += arc * (0.10 + fract(aSeed * 7.13) * 0.08);
   }
 
-  float cyanEnergy = aCyan * uStateCyan + aEdge * (0.08 + uStateCyan * 0.35);
-  float warmEnergy = aWarm * uStateWarm;
+  float shockProgress = clamp(uShockwaveProgress, 0.0, 1.0);
+  vec2 shockOrigin = vec2(0.0, -0.24);
+  vec2 shockVector = vec2(p.x, p.y) - shockOrigin;
+  float shockRadius = length(shockVector);
+  float travel = clamp((shockProgress - 0.08) / 0.78, 0.0, 1.0);
+  float waveRadius = mix(0.10, 4.75, travel);
+  float ring = 1.0 - smoothstep(0.0, 0.23, abs(shockRadius - waveRadius));
+  float waveFade =
+    smoothstep(0.04, 0.12, shockProgress) *
+    (1.0 - smoothstep(0.84, 1.0, shockProgress));
+  float coreLock =
+    (1.0 - smoothstep(0.10, 0.78, shockRadius)) *
+    (1.0 - smoothstep(0.04, 0.22, shockProgress));
+  float shockRing = ring * waveFade * uShockwaveActive;
+  float shockCore = coreLock * uShockwaveActive;
+  float shockEnergy = max(shockRing, shockCore);
+
+  if (shockRing > 0.001) {
+    vec2 direction = shockVector / max(shockRadius, 0.0001);
+    p.xy += direction * shockRing * (1.0 - travel) * 0.035;
+  }
+
+  float cyanEnergy =
+    aCyan * uStateCyan +
+    aEdge * (0.08 + uStateCyan * 0.35) +
+    shockRing * (0.34 + travel * 0.26);
+  float warmEnergy =
+    aWarm * uStateWarm +
+    shockCore * 0.62 +
+    shockRing * (1.0 - travel) * 0.16;
   float voiceEnergy = (aVoiceFace * 0.85 + aVoiceCore * 0.60) * uVoice;
   float zoneEnergy = aZone * uStateZone;
   float energy = (cyanEnergy + warmEnergy + voiceEnergy + zoneEnergy) * uEffects;
@@ -154,7 +185,7 @@ void main() {
     float glowEnergy = clamp(energy, 0.0, 1.25);
     vColor = mix(stateTint, color, 0.34) * (0.56 + glowEnergy * 0.82);
     vAlpha = clamp(0.032 + glowEnergy * 0.16, 0.0, 0.28);
-    gl_PointSize = uPointSize * (1.0 + glowEnergy * 0.08);
+    gl_PointSize = uPointSize * (1.0 + glowEnergy * 0.08 + shockEnergy * 0.14);
   } else {
     vec3 liftedSource = pow(max(color, vec3(0.0)), vec3(0.72));
     float sourceLuma = dot(liftedSource, vec3(0.2126, 0.7152, 0.0722));
@@ -173,7 +204,7 @@ void main() {
 
     vColor = clamp(boosted, 0.0, 1.0);
     vAlpha = 1.0;
-    gl_PointSize = uPointSize;
+    gl_PointSize = uPointSize * (1.0 + shockEnergy * 0.10);
   }
 
   vGlowPass = uGlowPass;
@@ -217,6 +248,7 @@ export default function AstraGpuParticles({
   assemblyRun,
   assemblySkipped,
   onAssemblyComplete,
+  onShockwaveChange,
 }: {
   data: ParticleDataLike;
   state: AstraAvatarState;
@@ -228,6 +260,7 @@ export default function AstraGpuParticles({
   assemblyRun: number;
   assemblySkipped: boolean;
   onAssemblyComplete: () => void;
+  onShockwaveChange: (active: boolean) => void;
 }) {
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
@@ -243,6 +276,11 @@ export default function AstraGpuParticles({
     startedAt: 0,
     initialized: false,
     completedRun: -1,
+  });
+  const shockwaveClock = useRef({
+    active: false,
+    startedAt: 0,
+    run: -1,
   });
 
   const geometry = useMemo(() => {
@@ -304,6 +342,8 @@ export default function AstraGpuParticles({
     uStateTone: { value: 0.30 },
     uVoice: { value: 0 },
     uEffects: { value: 1 },
+    uShockwaveActive: { value: 0 },
+    uShockwaveProgress: { value: 1 },
   }), []);
 
   const glowUniforms = useMemo(() => {
@@ -352,7 +392,23 @@ export default function AstraGpuParticles({
       initialized: false,
       completedRun: -1,
     };
-  }, [assemblyRun]);
+    if (shockwaveClock.current.active) {
+      shockwaveClock.current.active = false;
+      onShockwaveChange(false);
+    }
+    shockwaveClock.current = {
+      active: false,
+      startedAt: 0,
+      run: assemblyRun,
+    };
+  }, [assemblyRun, onShockwaveChange]);
+
+  useEffect(() => {
+    if ((!effects || reducedMotion || assemblySkipped) && shockwaveClock.current.active) {
+      shockwaveClock.current.active = false;
+      onShockwaveChange(false);
+    }
+  }, [effects, reducedMotion, assemblySkipped, onShockwaveChange]);
 
   useEffect(() => () => {
     geometry.dispose();
@@ -442,6 +498,32 @@ export default function AstraGpuParticles({
     ) {
       assemblyClock.current.completedRun = assemblyRun;
       onAssemblyComplete();
+
+      if (effects && !reducedMotion && !assemblySkipped) {
+        shockwaveClock.current = {
+          active: true,
+          startedAt: t,
+          run: assemblyRun,
+        };
+        onShockwaveChange(true);
+      }
+    }
+
+    let shockwaveProgress = 1;
+    let shockwaveActive = 0;
+    if (shockwaveClock.current.active) {
+      shockwaveProgress = THREE.MathUtils.clamp(
+        (t - shockwaveClock.current.startedAt) / SHOCKWAVE_DURATION_SECONDS,
+        0,
+        1,
+      );
+      shockwaveActive = 1;
+
+      if (shockwaveProgress >= 1) {
+        shockwaveClock.current.active = false;
+        shockwaveActive = 0;
+        onShockwaveChange(false);
+      }
     }
 
     const chest = effects && !reducedMotion ? Math.sin(t * 0.78) * 0.012 : 0;
@@ -462,6 +544,8 @@ export default function AstraGpuParticles({
       targetUniforms.uStateTone.value = profile.tone;
       targetUniforms.uVoice.value = voice;
       targetUniforms.uEffects.value = effects ? 1 : 0;
+      targetUniforms.uShockwaveActive.value = shockwaveActive;
+      targetUniforms.uShockwaveProgress.value = shockwaveProgress;
     };
 
     writeUniforms(uniforms, false);

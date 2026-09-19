@@ -20,6 +20,7 @@ const GLOW_POINT_SIZE_HIGH = 3.65;
 const GLOW_POINT_SIZE_LOW = 2.28;
 const ASSEMBLY_DURATION_SECONDS = 2.6;
 const ASSEMBLY_WINDOW = 0.34;
+const SHOCKWAVE_DURATION_SECONDS = 2.35;
 
 const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
@@ -229,6 +230,7 @@ function ParticleScene({
   assemblyRun,
   assemblySkipped,
   onAssemblyComplete,
+  onShockwaveChange,
   onGpuInfo,
 }: {
   data: ParticleData;
@@ -241,6 +243,7 @@ function ParticleScene({
   assemblyRun: number;
   assemblySkipped: boolean;
   onAssemblyComplete: () => void;
+  onShockwaveChange: (active: boolean) => void;
   onGpuInfo: (info: GpuInfo) => void;
 }) {
   return (
@@ -286,6 +289,7 @@ function ParticleScene({
         assemblyRun={assemblyRun}
         assemblySkipped={assemblySkipped}
         onAssemblyComplete={onAssemblyComplete}
+        onShockwaveChange={onShockwaveChange}
       />
     </Canvas>
   );
@@ -304,6 +308,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [assemblyRun, setAssemblyRun] = useState(1);
   const [assemblySkipped, setAssemblySkipped] = useState(false);
   const [assemblyActive, setAssemblyActive] = useState(true);
+  const [shockwaveActive, setShockwaveActive] = useState(false);
   const [qualityMode, setQualityMode] = useState<QualityMode>("auto");
   const [autoLow, setAutoLow] = useState(false);
   const [message, setMessage] = useState("");
@@ -395,12 +400,14 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   };
 
   const replayAssembly = () => {
+    setShockwaveActive(false);
     setAssemblySkipped(false);
     setAssemblyActive(!reducedMotion && effects);
     setAssemblyRun((currentRun) => currentRun + 1);
   };
 
   const skipAssembly = () => {
+    setShockwaveActive(false);
     setAssemblySkipped(true);
     setAssemblyActive(false);
   };
@@ -507,6 +514,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               assemblyRun={assemblyRun}
               assemblySkipped={assemblySkipped}
               onAssemblyComplete={() => setAssemblyActive(false)}
+              onShockwaveChange={setShockwaveActive}
               onGpuInfo={setGpuInfo}
             />
           ) : (
@@ -544,9 +552,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.6</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          PARTICLE LUMINANCE LIFT // BRIGHTER MIDTONES
+          FINAL SHOCKWAVE // GPU POST-ASSEMBLY ENERGY
         </div>
       </header>
 
@@ -628,13 +636,17 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               style={{
                 alignSelf: "center",
                 padding: "0 4px",
-                color: assemblyActive ? "#ffc364" : "rgba(128,234,247,.48)",
+                color: assemblyActive
+                  ? "#ffc364"
+                  : shockwaveActive
+                    ? "#66efff"
+                    : "rgba(128,234,247,.48)",
                 fontSize: 9,
                 letterSpacing: ".12em",
                 textShadow: "0 0 12px currentColor",
               }}
             >
-              ● {assemblyActive ? "ASSEMBLING" : "ASSEMBLY READY"}
+              ● {assemblyActive ? "ASSEMBLING" : shockwaveActive ? "CORE SHOCKWAVE" : "ASSEMBLY READY"}
             </span>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
@@ -701,6 +713,10 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Assembly order: head → neck → shoulders → core</div>
           <div>Assembly source: single left-side particle stream</div>
           <div>Assembly state: {assemblyActive ? "RUNNING" : assemblySkipped ? "SKIPPED" : "READY"}</div>
+          <div>Final shockwave: {shockwaveActive ? "RUNNING" : "IDLE"}</div>
+          <div>Shockwave duration: {SHOCKWAVE_DURATION_SECONDS.toFixed(2)} s</div>
+          <div>Shockwave path: warm core lock → cyan/orange radial ring → fade</div>
+          <div>Shockwave renderer: existing 2-pass GPU shader / no extra mesh</div>
           <div>Playback active: {runtime.playbackActive ? "YES" : "NO"}</div>
           <div>Playback gate: {runtime.speechLevel.toFixed(0)} (event-driven, not loudness)</div>
           <div>Voice face driver: smoothed playback envelope + visual cadence</div>
@@ -737,7 +753,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.0.6 lifts particle midtones directly in the GPU shader using a controlled gamma remap, adds a small dark-particle floor, strengthens cyan/orange energy slightly, and caps highlights before output. Base points are slightly larger while glow remains tight, so the field is brighter without becoming a diffuse or saturated block.
+            V12.1 adds a GPU-only final shockwave after a natural assembly completion: the core locks warm briefly, then a controlled cyan-orange radial ring travels through the existing particle field and fades. It reuses the same two draw passes, adds no mesh/canvas, does not flash, and is suppressed by Skip, Effects Off, or reduced-motion.
           </div>
         </aside>
       )}

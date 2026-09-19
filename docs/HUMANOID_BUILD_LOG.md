@@ -509,3 +509,43 @@ Target:
 - individual dots must remain visible;
 - central orange face/core must remain controlled and avoid saturation.
 
+## Stage 4.1 — Final Shockwave (V12.1)
+
+Goal:
+- give the V12 assembly a clear final energy-release moment without adding a new renderer, mesh, canvas, image, or flashing effect.
+
+Implemented:
+- shockwave starts only after a natural assembly completion;
+- Skip does not trigger the shockwave;
+- Effects Off and reduced-motion suppress/cancel the shockwave;
+- the first phase briefly locks warm/orange energy around the humanoid core;
+- a cyan/orange radial ring then travels outward through the existing particle field;
+- the ring fades before reaching the end of the 2.35 second sequence;
+- particles receive only a very small radial displacement while the ring passes;
+- point-size amplification is capped and temporary;
+- highlight behavior still uses the V12.0.6 controlled luminance pipeline;
+- shockwave calculations run in the existing GPU vertex shader;
+- no additional geometry synchronization or CPU particle loop is introduced;
+- the active renderer remains exactly two particle draw passes: base + glow;
+- replaying assembly resets any in-progress shockwave cleanly;
+- the UI status changes from ASSEMBLING to CORE SHOCKWAVE to ASSEMBLY READY;
+- Technical details show shockwave state, duration, path and renderer mode.
+
+Performance/safety:
+- HIGH DPR remains 1.5;
+- MSAA remains OFF;
+- no CSS blur/backdrop-filter returns;
+- no flashing full-screen layer is used;
+- chat, mic, speech playback and camera tracking remain independent and usable;
+- no new dependency, image, paid service or provider change.
+
+Verification required:
+- production CI build;
+- open Humanoid and allow first assembly to finish naturally;
+- confirm warm core lock followed by outward cyan/orange ring;
+- confirm the effect fades back to normal particles without lingering brightness;
+- press REPLAY ASSEMBLY and confirm the sequence repeats once;
+- press SKIP during assembly and confirm no shockwave starts;
+- toggle Effects Off / reduced-motion and confirm no shockwave;
+- confirm FPS remains close to V12.0.6 because no extra draw pass was added.
+
