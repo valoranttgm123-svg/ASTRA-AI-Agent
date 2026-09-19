@@ -52,7 +52,7 @@ const STATE_PROFILES: Record<"idle" | "listening" | "thinking" | "speaking", Sta
   idle: { cyan: 0.08, warm: 0.10, field: 0.08, scan: 0.03, zone: 0.05, tone: 0.30 },
   listening: { cyan: 0.40, warm: 0.10, field: 0.20, scan: 0.08, zone: 0.28, tone: 0.04 },
   thinking: { cyan: 0.16, warm: 0.42, field: 0.29, scan: 0.11, zone: 0.34, tone: 0.72 },
-  speaking: { cyan: 0.22, warm: 0.50, field: 0.36, scan: 0.15, zone: 0.42, tone: 0.94 },
+  speaking: { cyan: 0.20, warm: 0.34, field: 0.28, scan: 0.11, zone: 0.24, tone: 0.82 },
 };
 
 function profileForState(state: AstraAvatarState): StateProfile {
@@ -149,15 +149,17 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
       const faceX = Math.abs(nx - 0.5);
       const isVoiceFace =
         isHead &&
-        ny > 0.22 &&
-        ny < 0.58 &&
-        faceX < 0.115 &&
-        brightness > 0.055;
+        isWarm &&
+        ny > 0.30 &&
+        ny < 0.55 &&
+        faceX < 0.085 &&
+        brightness > 0.16;
       const isVoiceCore =
-        ny > 0.46 &&
-        ny < 0.73 &&
-        faceX < 0.16 &&
-        brightness > 0.05;
+        isWarm &&
+        ny > 0.49 &&
+        ny < 0.67 &&
+        faceX < 0.105 &&
+        brightness > 0.12;
       const radialX = (nx - 0.5) / 0.52;
       const radialY = (ny - 0.39) / 0.72;
       const radial = Math.sqrt(radialX * radialX + radialY * radialY);
@@ -412,7 +414,7 @@ function ParticleArtwork({
       : 0.76 + Math.sin(t * 3.15 + 0.45) * 0.12;
     const voiceReactive = playbackEnvelope.current * visualRhythm;
     const coreReactive = playbackEnvelope.current * coreRhythm;
-    const speakingBoost = state === "speaking" ? 1 + voiceReactive * 0.08 : 1;
+    const speakingBoost = state === "speaking" ? 1 + voiceReactive * 0.025 : 1;
 
     const baseMaterial = basePoints.current.material as THREE.PointsMaterial;
     baseMaterial.opacity = state === "speaking" ? 0.97 : 0.92;
@@ -421,8 +423,8 @@ function ParticleArtwork({
     if (glowPoints.current) {
       const glowMaterial = glowPoints.current.material as THREE.PointsMaterial;
       glowMaterial.opacity = quality === "high"
-        ? (state === "speaking" ? 0.055 + voiceReactive * 0.05 : state === "thinking" ? 0.055 : 0.032)
-        : (state === "speaking" ? 0.014 + voiceReactive * 0.018 : 0.018);
+        ? (state === "speaking" ? 0.040 + voiceReactive * 0.020 : state === "thinking" ? 0.055 : 0.032)
+        : (state === "speaking" ? 0.012 + voiceReactive * 0.008 : 0.018);
       glowMaterial.size = glowSize * speakingBoost;
     }
 
@@ -446,43 +448,43 @@ function ParticleArtwork({
 
     if (warmPoints.current) {
       const warmMaterial = warmPoints.current.material as THREE.PointsMaterial;
-      const stateVoice = state === "speaking" ? voiceReactive * 0.27 : 0;
+      const stateVoice = state === "speaking" ? voiceReactive * 0.08 : 0;
       const thinkingPulse = state === "thinking" ? (Math.sin(t * 1.7) + 1) * 0.025 : 0;
       const stateEnergy = profile.warm + stateVoice + thinkingPulse;
       warmMaterial.opacity = quality === "high"
         ? THREE.MathUtils.clamp(stateEnergy, 0.05, 0.72)
         : THREE.MathUtils.clamp(stateEnergy * 0.58, 0.035, 0.38);
       warmMaterial.size = quality === "high"
-        ? 2.45 + voiceReactive * 0.62
-        : 1.8 + voiceReactive * 0.28;
+        ? 2.30 + voiceReactive * 0.18
+        : 1.72 + voiceReactive * 0.08;
     }
 
     if (voiceFacePoints.current) {
       const faceMaterial = voiceFacePoints.current.material as THREE.PointsMaterial;
       faceMaterial.opacity = effects
         ? THREE.MathUtils.clamp(
-            voiceReactive * (quality === "high" ? 0.50 : 0.27),
+            voiceReactive * (quality === "high" ? 0.22 : 0.12),
             0,
-            quality === "high" ? 0.5 : 0.27,
+            quality === "high" ? 0.22 : 0.12,
           )
         : 0;
       faceMaterial.size = quality === "high"
-        ? 2.35 + voiceReactive * 1.05
-        : 1.65 + voiceReactive * 0.48;
+        ? 1.95 + voiceReactive * 0.28
+        : 1.48 + voiceReactive * 0.12;
     }
 
     if (voiceCorePoints.current) {
       const coreMaterial = voiceCorePoints.current.material as THREE.PointsMaterial;
       coreMaterial.opacity = effects
         ? THREE.MathUtils.clamp(
-            coreReactive * (quality === "high" ? 0.34 : 0.18),
+            coreReactive * (quality === "high" ? 0.16 : 0.08),
             0,
-            quality === "high" ? 0.34 : 0.18,
+            quality === "high" ? 0.16 : 0.08,
           )
         : 0;
       coreMaterial.size = quality === "high"
-        ? 3.0 + coreReactive * 1.0
-        : 2.0 + coreReactive * 0.45;
+        ? 2.15 + coreReactive * 0.28
+        : 1.62 + coreReactive * 0.12;
     }
 
     const cyanStateColor = new THREE.Color("#5ef5ff");
@@ -497,10 +499,10 @@ function ParticleArtwork({
         ? 1
         : THREE.MathUtils.smoothstep(transition.current.progress, zoneStart, zoneStart + 0.26);
       const faceBias = 1 - zoneIndex / Math.max(1, zonePoints.current.length - 1);
-      const speakingFace = state === "speaking" ? voiceReactive * 0.14 * faceBias : 0;
+      const speakingFace = state === "speaking" ? voiceReactive * 0.045 * faceBias : 0;
       zoneMaterial.color.copy(zoneColor);
       zoneMaterial.opacity = effects
-        ? THREE.MathUtils.clamp((profile.zone * (0.42 + faceBias * 0.58) + speakingFace) * waveGate, 0, 0.36)
+        ? THREE.MathUtils.clamp((profile.zone * (0.34 + faceBias * 0.50) + speakingFace) * waveGate, 0, 0.22)
         : 0;
       zoneMaterial.size = quality === "high" ? 2.2 + faceBias * 0.55 : 1.55 + faceBias * 0.25;
     }
@@ -567,7 +569,7 @@ function ParticleArtwork({
       <points ref={voiceCorePoints} geometry={voiceCoreGeometry}>
         <pointsMaterial
           color="#ff7d22"
-          size={3}
+          size={2.15}
           sizeAttenuation={false}
           transparent
           opacity={0}
@@ -581,7 +583,7 @@ function ParticleArtwork({
       <points ref={voiceFacePoints} geometry={voiceFaceGeometry}>
         <pointsMaterial
           color="#ffb15a"
-          size={2.4}
+          size={1.95}
           sizeAttenuation={false}
           transparent
           opacity={0}
@@ -903,9 +905,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V11.2</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V11.2.1</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          VOICE REACTIVE FACE // REAL PLAYBACK EVENTS
+          VOICE REACTIVE FACE // CONTROLLED ENERGY HOTFIX
         </div>
       </header>
 
@@ -1059,7 +1061,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V11.2 adds dedicated face/core playback layers driven only by real speechSynthesis playback events. The rhythmic pulse is a visual cadence, not an audio waveform or measured loudness. Pause/stop fades the reactive layers; reduced-motion uses steady energy instead of rhythmic pulsing.
+            V11.2.1 narrows voice-reactive masks to warm source pixels and caps additive energy so facial detail remains visible during playback. The pulse is still driven by real speechSynthesis events and is not measured loudness.
           </div>
         </aside>
       )}
