@@ -48,7 +48,8 @@ export type AstraBrainFeatureStatus = {
 
 export type AstraBrainEnvelope = {
   provider: AstraBrainProvider;
-  execution: "routing_only" | "executed";
+  execution: "routing_only" | "executed" | "blocked";
+  requestedMode?: "chat" | "execute";
   route: AstraAgentKey[];
   visualNodes: string[];
   events: AstraBrainEvent[];
@@ -83,7 +84,7 @@ export type AstraBrainStatus = {
 
 export interface AstraBrain {
   chat(input: string): Promise<AstraBrainChatResult>;
-  execute(task: { input: string }): Promise<AstraBrainChatResult>;
+  execute(task: { input: string; approved?: boolean }): Promise<AstraBrainChatResult>;
   cancel(): Promise<void>;
   status(): Promise<AstraBrainStatus>;
 }
