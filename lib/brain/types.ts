@@ -10,6 +10,9 @@ export type AstraBrainProvider =
 export type AstraBrainEventType =
   | "request.received"
   | "router.selected"
+  | "memory.loaded"
+  | "skill.selected"
+  | "policy.applied"
   | "provider.selected"
   | "provider.unavailable"
   | "agent.started"
@@ -27,12 +30,33 @@ export type AstraBrainEvent = {
   detail?: string;
 };
 
+export type AstraBrainPermissionSnapshot = {
+  requireApproval: boolean;
+  allowShell: boolean;
+  allowFileWrite: boolean;
+  allowExternalActions: boolean;
+  allowPaidCloud: boolean;
+};
+
+export type AstraBrainFeatureStatus = {
+  enabled: boolean;
+  available: boolean;
+  detail: string;
+  model?: string;
+  endpoint?: string;
+};
+
 export type AstraBrainEnvelope = {
   provider: AstraBrainProvider;
   execution: "routing_only" | "executed";
   route: AstraAgentKey[];
   visualNodes: string[];
   events: AstraBrainEvent[];
+  context?: {
+    memoryEntries: number;
+    skills: string[];
+  };
+  permissions?: AstraBrainPermissionSnapshot;
 };
 
 export type AstraBrainChatResult = AgentResponse & {
@@ -47,6 +71,14 @@ export type AstraBrainStatus = {
   endpoint?: string;
   model?: string;
   fallback?: AstraBrainProvider;
+  permissions?: AstraBrainPermissionSnapshot;
+  features?: {
+    memory: AstraBrainFeatureStatus;
+    skills: AstraBrainFeatureStatus;
+    codex: AstraBrainFeatureStatus;
+    tools: AstraBrainFeatureStatus;
+    cloud: AstraBrainFeatureStatus;
+  };
 };
 
 export interface AstraBrain {
