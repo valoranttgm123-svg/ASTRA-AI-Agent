@@ -862,9 +862,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V14</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V15</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          BRAIN ↔ HUMANOID EVENT LINK // SHARED RUNTIME
+          REAL-TIME BRAIN TELEMETRY // SSE
         </div>
       </header>
 
@@ -885,7 +885,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         }}
       >
         <div style={{ color: "#69edff", fontSize: 8.5, letterSpacing: ".17em" }}>
-          BRAIN LINK // {(runtime.brainProvider ?? "standby").toUpperCase()}
+          BRAIN LINK // {runtime.brainStreaming ? "LIVE" : "READY"} // {(runtime.brainProvider ?? "standby").toUpperCase()}
         </div>
         <div style={{ marginTop: 4, color: "rgba(229,250,255,.72)", fontSize: 9 }}>
           {latestBrainEvent?.label ?? "No Brain event yet"}
@@ -1113,6 +1113,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>State radial zones: {data?.zones.length ?? "loading"}</div>
           <div>State transition: 680 ms radial face-out</div>
           <div>Brain provider: {(runtime.brainProvider ?? "standby").toUpperCase()}</div>
+          <div>Brain transport: SSE / {runtime.brainStreaming ? "LIVE" : "IDLE"}</div>
           <div>Brain mode: {brainRequestedMode.toUpperCase()} / {brainExecution.toUpperCase()}</div>
           <div>Brain event count: {runtime.brainEvents.length}</div>
           <div>Brain latest event: {latestBrainEvent ? latestBrainEvent.type + " / " + latestBrainEvent.label : "NONE"}</div>
@@ -1185,7 +1186,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V14 links the Humanoid directly to the same ASTRA Brain event stream already used by Command Center. Genuine request, routing, memory, skill, provider, agent, blocked and response events now trigger short GPU particle pulses with event/provider-specific tones, while the Humanoid HUD exposes the real provider, agent, request mode and execution state. No tool-level activity is invented when the execution provider does not expose trustworthy telemetry.
+            V15 upgrades the shared Brain Event Bus to real-time SSE delivery. Humanoid and Command Center now receive request, route, context, provider, fallback, agent, blocked, and response lifecycle events as the backend reaches those stages. GPU Brain pulses still use the same two draw passes, and tool-level telemetry is still not fabricated when a provider does not expose it.
           </div>
         </aside>
       )}
