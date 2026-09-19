@@ -237,3 +237,33 @@ Verification required:
 - LOW/AUTO quality remains responsive;
 - camera tracking remains stable during speech playback.
 
+## Stage 3.2.1 — Voice Face Saturation Hotfix (V11.2.1)
+
+Reported symptom:
+- during `SPEAKING`, the center face/core became a large bright yellow/orange block;
+- humanoid detail was visually flattened by stacked additive layers.
+
+Cause:
+- V11.2 `voiceFace` and `voiceCore` masks accepted most bright pixels in broad central regions;
+- the general warm layer, radial speaking zones, global glow, face layer, and core layer all accumulated in the same area.
+
+Fix:
+- voice face/core masks now require original warm/orange source pixels;
+- face mask narrowed to the central warm face region;
+- core mask narrowed to the warm lower-face/neck/core region;
+- minimum source brightness raised for both voice subsets;
+- speaking profile warm/zone energy reduced;
+- global speaking glow reduced;
+- general warm speaking contribution reduced;
+- dedicated voice face/core opacity and point-size ceilings reduced substantially;
+- speaking radial-zone contribution reduced and hard-capped;
+- base artwork remains dominant so facial silhouette/detail stays readable;
+- playback event wiring, pause/resume behavior, microphone, camera/index tracking, adaptive quality, and reduced-motion behavior are unchanged.
+
+Verification required:
+- production CI build;
+- compare speaking state against the reported V11.2 screenshot;
+- confirm no central yellow/orange block;
+- confirm pulse remains visible but subtle;
+- confirm head shape and source cyan/orange structure remain readable throughout speech.
+
