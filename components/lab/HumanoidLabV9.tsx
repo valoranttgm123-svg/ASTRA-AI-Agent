@@ -662,6 +662,25 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     }
   };
 
+  const executeTask = async () => {
+    const value = message.trim();
+    if (!value || runtimeBusy) return;
+    setBusy(true);
+    const started = performance.now();
+    try {
+      await runtime.execute(value);
+      setLatency(Math.round(performance.now() - started));
+      setMessage("");
+    } catch (error) {
+      setLatency(Math.round(performance.now() - started));
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        // Runtime owns the visible error state; keep the lab responsive.
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const exit = () => {
     tracking.stop();
     if (onExit) onExit();
@@ -945,7 +964,11 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         <div style={consoleStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 9, letterSpacing: ".18em", color: "#65eafb" }}>
             <span>{runtime.activeAgent ?? "ASTRA CORE"}</span>
-            <span>{state.toUpperCase()}</span>
+            <span>
+              {runtime.lastResponse?.brain.requestedMode === "execute"
+                ? runtime.lastResponse.brain.execution.toUpperCase()
+                : state.toUpperCase()}
+            </span>
           </div>
           <div style={{ minHeight: 42, marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
             {runtime.micActive
@@ -959,6 +982,15 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               placeholder="Ketik perintah ASTRA..."
               style={inputStyle}
             />
+            <button
+              disabled={runtimeBusy || !message.trim()}
+              type="button"
+              onClick={() => void executeTask()}
+              style={{ ...buttonStyle(true), opacity: runtimeBusy ? 0.55 : 1 }}
+              title="Approve and execute this task with permitted local tools"
+            >
+              {runtimeBusy ? "RUN" : "EXECUTE"}
+            </button>
             <button
               disabled={runtimeBusy || !message.trim()}
               type="submit"
