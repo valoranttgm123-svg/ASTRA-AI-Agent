@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAstraRuntime } from "@/components/AstraRuntime";
 import type { AstraAvatarState } from "@/lib/avatar/types";
@@ -309,6 +309,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [assemblySkipped, setAssemblySkipped] = useState(false);
   const [assemblyActive, setAssemblyActive] = useState(true);
   const [shockwaveActive, setShockwaveActive] = useState(false);
+  const [sfxEnabled, setSfxEnabled] = useState(true);
+  const [sfxReady, setSfxReady] = useState(false);
+  const [sfxSupported, setSfxSupported] = useState(true);
   const [qualityMode, setQualityMode] = useState<QualityMode>("auto");
   const [autoLow, setAutoLow] = useState(false);
   const [message, setMessage] = useState("");
@@ -317,6 +320,146 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [fps, setFps] = useState<number | null>(null);
   const fpsFrame = useRef({ frames: 0, started: 0 });
   const preCameraFpsRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sfxEnabledRef = useRef(true);
+
+  useEffect(() => {
+    sfxEnabledRef.current = sfxEnabled;
+  }, [sfxEnabled]);
+
+  const ensureSfxAudio = useCallback(async () => {
+    const AudioContextCtor =
+      window.AudioContext ??
+      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+    if (!AudioContextCtor) {
+      setSfxSupported(false);
+      setSfxReady(false);
+      return null;
+    }
+
+    let context = audioContextRef.current;
+    if (!context) {
+      context = new AudioContextCtor();
+      audioContextRef.current = context;
+    }
+
+    if (context.state === "suspended") {
+      try {
+        await context.resume();
+      } catch {
+        setSfxReady(false);
+        return context;
+      }
+    }
+
+    setSfxReady(context.state === "running");
+    return context;
+  }, []);
+
+  const playShockwaveSfx = useCallback(() => {
+    if (!sfxEnabledRef.current) return;
+
+    const context = audioContextRef.current;
+    if (!context || context.state !== "running") return;
+
+    const now = context.currentTime;
+    const master = context.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.82, now + 0.025);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 2.15);
+    master.connect(context.destination);
+
+    const coreGain = context.createGain();
+    const core = context.createOscillator();
+    core.type = "sine";
+    core.frequency.setValueAtTime(74, now);
+    core.frequency.exponentialRampToValueAtTime(39, now + 0.82);
+    coreGain.gain.setValueAtTime(0.0001, now);
+    coreGain.gain.exponentialRampToValueAtTime(0.20, now + 0.035);
+    coreGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.92);
+    core.connect(coreGain).connect(master);
+    core.start(now);
+    core.stop(now + 0.95);
+
+    const riseGain = context.createGain();
+    const rise = context.createOscillator();
+    rise.type = "triangle";
+    rise.frequency.setValueAtTime(145, now + 0.10);
+    rise.frequency.exponentialRampToValueAtTime(680, now + 0.82);
+    rise.frequency.exponentialRampToValueAtTime(250, now + 1.42);
+    riseGain.gain.setValueAtTime(0.0001, now + 0.08);
+    riseGain.gain.exponentialRampToValueAtTime(0.055, now + 0.36);
+    riseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.52);
+    rise.connect(riseGain).connect(master);
+    rise.start(now + 0.08);
+    rise.stop(now + 1.56);
+
+    const noiseDuration = 1.55;
+    const noiseBuffer = context.createBuffer(
+      1,
+      Math.ceil(context.sampleRate * noiseDuration),
+      context.sampleRate,
+    );
+    const channel = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < channel.length; i += 1) {
+      const envelope = 1 - i / channel.length;
+      channel[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const noise = context.createBufferSource();
+    const noiseFilter = context.createBiquadFilter();
+    const noiseGain = context.createGain();
+    noise.buffer = noiseBuffer;
+    noiseFilter.type = "bandpass";
+    noiseFilter.frequency.setValueAtTime(760, now + 0.18);
+    noiseFilter.frequency.exponentialRampToValueAtTime(185, now + 1.55);
+    noiseFilter.Q.setValueAtTime(0.7, now);
+    noiseGain.gain.setValueAtTime(0.0001, now + 0.15);
+    noiseGain.gain.exponentialRampToValueAtTime(0.085, now + 0.36);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.70);
+    noise.connect(noiseFilter).connect(noiseGain).connect(master);
+    noise.start(now + 0.15);
+    noise.stop(now + 1.72);
+
+    const impact = context.createOscillator();
+    const impactGain = context.createGain();
+    impact.type = "sine";
+    impact.frequency.setValueAtTime(118, now + 0.30);
+    impact.frequency.exponentialRampToValueAtTime(52, now + 0.62);
+    impactGain.gain.setValueAtTime(0.0001, now + 0.29);
+    impactGain.gain.exponentialRampToValueAtTime(0.10, now + 0.32);
+    impactGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.69);
+    impact.connect(impactGain).connect(master);
+    impact.start(now + 0.29);
+    impact.stop(now + 0.72);
+  }, []);
+
+  const handleShockwaveChange = useCallback((active: boolean) => {
+    setShockwaveActive(active);
+    if (active) playShockwaveSfx();
+  }, [playShockwaveSfx]);
+
+  useEffect(() => {
+    const unlock = () => {
+      if (sfxEnabledRef.current) void ensureSfxAudio();
+    };
+    window.addEventListener("pointerdown", unlock, { once: true, capture: true });
+    window.addEventListener("keydown", unlock, { once: true, capture: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlock, true);
+      window.removeEventListener("keydown", unlock, true);
+    };
+  }, [ensureSfxAudio]);
+
+  useEffect(() => () => {
+    const context = audioContextRef.current;
+    audioContextRef.current = null;
+    if (context && context.state !== "closed") {
+      void context.close();
+    }
+  }, []);
 
   useEffect(() => {
     const image = new Image();
@@ -400,6 +543,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   };
 
   const replayAssembly = () => {
+    if (sfxEnabledRef.current) void ensureSfxAudio();
     setShockwaveActive(false);
     setAssemblySkipped(false);
     setAssemblyActive(!reducedMotion && effects);
@@ -410,6 +554,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     setShockwaveActive(false);
     setAssemblySkipped(true);
     setAssemblyActive(false);
+  };
+
+  const toggleSfx = () => {
+    const next = !sfxEnabledRef.current;
+    sfxEnabledRef.current = next;
+    setSfxEnabled(next);
+    if (next) void ensureSfxAudio();
   };
 
   const submit = async (event: FormEvent) => {
@@ -514,7 +665,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               assemblyRun={assemblyRun}
               assemblySkipped={assemblySkipped}
               onAssemblyComplete={() => setAssemblyActive(false)}
-              onShockwaveChange={setShockwaveActive}
+              onShockwaveChange={handleShockwaveChange}
               onGpuInfo={setGpuInfo}
             />
           ) : (
@@ -552,9 +703,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.1.1</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          FINAL SHOCKWAVE // GPU POST-ASSEMBLY ENERGY
+          FINAL SHOCKWAVE // SYNTH SFX + GPU ENERGY
         </div>
       </header>
 
@@ -619,6 +770,22 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               style={buttonStyle(runtime.voiceEnabled)}
             >
               {runtime.voiceEnabled ? "VOICE ON" : "VOICE OFF"}
+            </button>
+            <button
+              onClick={toggleSfx}
+              disabled={!sfxSupported}
+              style={{
+                ...buttonStyle(sfxEnabled && sfxReady),
+                opacity: sfxSupported ? 1 : 0.45,
+              }}
+            >
+              {!sfxSupported
+                ? "SFX N/A"
+                : !sfxEnabled
+                  ? "SFX OFF"
+                  : sfxReady
+                    ? "SFX ON"
+                    : "SFX ARM"}
             </button>
             <span
               style={{
@@ -717,6 +884,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Shockwave duration: {SHOCKWAVE_DURATION_SECONDS.toFixed(2)} s</div>
           <div>Shockwave path: warm core lock → cyan/orange radial ring → fade</div>
           <div>Shockwave renderer: existing 2-pass GPU shader / no extra mesh</div>
+          <div>Shockwave SFX: {!sfxSupported ? "UNSUPPORTED" : !sfxEnabled ? "OFF" : sfxReady ? "READY" : "WAITING FOR USER GESTURE"}</div>
+          <div>SFX engine: Web Audio API / synthesized / no external audio asset</div>
+          <div>SFX layers: sub-core pulse + electric rise + filtered noise + soft impact</div>
           <div>Playback active: {runtime.playbackActive ? "YES" : "NO"}</div>
           <div>Playback gate: {runtime.speechLevel.toFixed(0)} (event-driven, not loudness)</div>
           <div>Voice face driver: smoothed playback envelope + visual cadence</div>
@@ -753,7 +923,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.1 adds a GPU-only final shockwave after a natural assembly completion: the core locks warm briefly, then a controlled cyan-orange radial ring travels through the existing particle field and fades. It reuses the same two draw passes, adds no mesh/canvas, does not flash, and is suppressed by Skip, Effects Off, or reduced-motion.
+            V12.1.1 adds a synthesized Web Audio shockwave SFX synchronized to the existing GPU effect: low core pulse, electric rise, filtered energy noise, and a soft impact. SFX has its own ON/OFF control and no external audio file. Browser autoplay rules still require a user gesture before sound can start; REPLAY ASSEMBLY automatically arms/resumes the audio context.
           </div>
         </aside>
       )}

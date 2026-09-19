@@ -549,3 +549,42 @@ Verification required:
 - toggle Effects Off / reduced-motion and confirm no shockwave;
 - confirm FPS remains close to V12.0.6 because no extra draw pass was added.
 
+## Stage 4.1.1 — Shockwave SFX (V12.1.1)
+
+Goal:
+- add a synchronized sound identity to the V12.1 final shockwave without shipping an external audio file or adding a dependency.
+
+Implemented:
+- Web Audio API synthesis only; no MP3/WAV asset is required;
+- shockwave audio is triggered from the same real shockwave lifecycle callback used by the GPU visual;
+- SFX layers:
+  - low sine core pulse;
+  - triangle electric rise;
+  - filtered broadband energy/noise sweep;
+  - soft low-frequency impact;
+- volume envelopes are short and capped;
+- SFX has an independent ON/OFF control and does not depend on VOICE ON/OFF;
+- first browser pointer/keyboard gesture attempts to unlock/resume the AudioContext;
+- REPLAY ASSEMBLY explicitly resumes/arms the AudioContext because that button click is a valid user gesture;
+- Technical details report SFX supported/ready/waiting-for-gesture state;
+- AudioContext is closed when the Humanoid component unmounts.
+
+Browser autoplay behavior:
+- the first automatic assembly/shockwave can remain silent if the user has not interacted with the page after Humanoid mounted;
+- this is browser autoplay policy, not an ASTRA playback failure;
+- pressing REPLAY ASSEMBLY arms audio, then the following shockwave should play normally.
+
+Preserved:
+- V12.1 GPU shockwave remains two render passes;
+- no extra particle loop;
+- HIGH DPR 1.5 and compositor performance remain unchanged;
+- mic, speech synthesis, camera tracking and ASTRA runtime stay independent.
+
+Verification required:
+- production CI build;
+- open Humanoid, click REPLAY ASSEMBLY, and confirm SFX ARM becomes SFX ON;
+- allow assembly to finish and confirm low pulse -> rise -> impact is synchronized with CORE SHOCKWAVE;
+- toggle SFX OFF and confirm visual shockwave continues silently;
+- toggle VOICE OFF and confirm SFX can still play;
+- leave/re-enter Humanoid and confirm AudioContext cleanup/re-arm behavior.
+
