@@ -1,7 +1,7 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAstraRuntime } from "@/components/AstraRuntime";
 import type { AstraAvatarState } from "@/lib/avatar/types";
@@ -14,7 +14,6 @@ const SAMPLE_H = 194;
 const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
-const HEAD_CENTER_Y = (0.5 - 0.37) * WORLD_H;
 const BASE_POINT_SIZE_HIGH = 2.25;
 const BASE_POINT_SIZE_LOW = 1.35;
 const GLOW_POINT_SIZE_HIGH = 4.00;
@@ -44,72 +43,9 @@ type ParticleData = {
   original: Float32Array;
 };
 
-type StateProfile = {
-  cyan: number;
-  warm: number;
-  field: number;
-  scan: number;
-  zone: number;
-  tone: number;
-};
-
-const STATE_PROFILES: Record<"idle" | "listening" | "thinking" | "speaking", StateProfile> = {
-  idle: { cyan: 0.08, warm: 0.10, field: 0.08, scan: 0.03, zone: 0.05, tone: 0.30 },
-  listening: { cyan: 0.40, warm: 0.10, field: 0.20, scan: 0.08, zone: 0.28, tone: 0.04 },
-  thinking: { cyan: 0.16, warm: 0.42, field: 0.29, scan: 0.11, zone: 0.34, tone: 0.72 },
-  speaking: { cyan: 0.20, warm: 0.34, field: 0.28, scan: 0.11, zone: 0.24, tone: 0.82 },
-};
-
-function profileForState(state: AstraAvatarState): StateProfile {
-  if (state === "listening" || state === "thinking" || state === "speaking") {
-    return STATE_PROFILES[state];
-  }
-  return STATE_PROFILES.idle;
-}
-
-function mixProfile(from: StateProfile, to: StateProfile, amount: number): StateProfile {
-  return {
-    cyan: THREE.MathUtils.lerp(from.cyan, to.cyan, amount),
-    warm: THREE.MathUtils.lerp(from.warm, to.warm, amount),
-    field: THREE.MathUtils.lerp(from.field, to.field, amount),
-    scan: THREE.MathUtils.lerp(from.scan, to.scan, amount),
-    zone: THREE.MathUtils.lerp(from.zone, to.zone, amount),
-    tone: THREE.MathUtils.lerp(from.tone, to.tone, amount),
-  };
-}
-
 function hash01(value: number) {
   const raw = Math.sin(value * 12.9898) * 43758.5453;
   return raw - Math.floor(raw);
-}
-
-function createRoundParticleTexture() {
-  const size = 32;
-  const pixels = new Uint8Array(size * size * 4);
-
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      const nx = ((x + 0.5) / size) * 2 - 1;
-      const ny = ((y + 0.5) / size) * 2 - 1;
-      const radius = Math.sqrt(nx * nx + ny * ny);
-      const raw = THREE.MathUtils.clamp((1 - radius) / 0.30, 0, 1);
-      const coverage = raw * raw * (3 - 2 * raw);
-      const value = Math.round(coverage * 255);
-      const offset = (y * size + x) * 4;
-
-      pixels[offset] = value;
-      pixels[offset + 1] = value;
-      pixels[offset + 2] = value;
-      pixels[offset + 3] = 255;
-    }
-  }
-
-  const texture = new THREE.DataTexture(pixels, size, size, THREE.RGBAFormat);
-  texture.magFilter = THREE.LinearFilter;
-  texture.minFilter = THREE.LinearFilter;
-  texture.generateMipmaps = false;
-  texture.needsUpdate = true;
-  return texture;
 }
 
 function useReducedMotion() {
@@ -276,543 +212,11 @@ function buildParticleData(image: HTMLImageElement): ParticleData {
   };
 }
 
-function createSubsetGeometry(indices: Uint32Array, source: Float32Array) {
-  const positions = new Float32Array(indices.length * 3);
-  for (let i = 0; i < indices.length; i += 1) {
-    const src = indices[i] * 3;
-    const dst = i * 3;
-    positions[dst] = source[src];
-    positions[dst + 1] = source[src + 1];
-    positions[dst + 2] = source[src + 2];
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  return geometry;
-}
-
-function syncSubsetGeometry(geometry: THREE.BufferGeometry, indices: Uint32Array, source: Float32Array) {
-  const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
-  const target = attr.array as Float32Array;
-  for (let i = 0; i < indices.length; i += 1) {
-    const src = indices[i] * 3;
-    const dst = i * 3;
-    target[dst] = source[src];
-    target[dst + 1] = source[src + 1];
-    target[dst + 2] = source[src + 2];
-  }
-  attr.needsUpdate = true;
-}
-
-function ParticleArtwork({
-  data,
-  state,
-  effects,
-  reducedMotion,
-  playbackGate,
-  quality,
-  trackingTarget,
-  assemblyRun,
-  assemblySkipped,
-  onAssemblyComplete,
-}: {
-  data: ParticleData;
-  state: AstraAvatarState;
-  effects: boolean;
-  reducedMotion: boolean;
-  playbackGate: number;
-  quality: RenderQuality;
-  trackingTarget: { current: FingerTrackingTarget };
-  assemblyRun: number;
-  assemblySkipped: boolean;
-  onAssemblyComplete: () => void;
-}) {
-  const basePoints = useRef<THREE.Points>(null);
-  const glowPoints = useRef<THREE.Points>(null);
-  const edgePoints = useRef<THREE.Points>(null);
-  const warmPoints = useRef<THREE.Points>(null);
-  const cyanPoints = useRef<THREE.Points>(null);
-  const voiceFacePoints = useRef<THREE.Points>(null);
-  const voiceCorePoints = useRef<THREE.Points>(null);
-  const zonePoints = useRef<Array<THREE.Points<any, any> | null>>([]);
-  const playbackEnvelope = useRef(0);
-  const assemblyClock = useRef({
-    run: assemblyRun,
-    startedAt: 0,
-    initialized: false,
-    completedRun: -1,
-  });
-  const target = useRef({ yaw: 0, pitch: 0 });
-  const current = useRef({ yaw: 0, pitch: 0 });
-  const currentProfile = useRef<StateProfile>({ ...profileForState(state) });
-  const transition = useRef({
-    progress: 1,
-    from: { ...profileForState(state) },
-    to: { ...profileForState(state) },
-  });
-
-  const particleSprite = useMemo(() => createRoundParticleTexture(), []);
-
-  const geometry = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(data.positions), 3));
-    g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(data.colors), 3));
-    g.computeBoundingSphere();
-    return g;
-  }, [data]);
-
-  const edgeGeometry = useMemo(() => createSubsetGeometry(data.edge, data.positions), [data]);
-  const warmGeometry = useMemo(() => createSubsetGeometry(data.warm, data.positions), [data]);
-  const cyanGeometry = useMemo(() => createSubsetGeometry(data.cyan, data.positions), [data]);
-  const voiceFaceGeometry = useMemo(() => createSubsetGeometry(data.voiceFace, data.positions), [data]);
-  const voiceCoreGeometry = useMemo(() => createSubsetGeometry(data.voiceCore, data.positions), [data]);
-  const zoneGeometries = useMemo(
-    () => data.zones.map((indices) => createSubsetGeometry(indices, data.positions)),
-    [data],
-  );
-
-  useEffect(() => {
-    transition.current = {
-      progress: reducedMotion ? 1 : 0,
-      from: { ...currentProfile.current },
-      to: { ...profileForState(state) },
-    };
-  }, [state, reducedMotion]);
-
-  useEffect(() => {
-    assemblyClock.current = {
-      run: assemblyRun,
-      startedAt: 0,
-      initialized: false,
-      completedRun: -1,
-    };
-  }, [assemblyRun]);
-
-  useEffect(() => () => {
-    particleSprite.dispose();
-    geometry.dispose();
-    edgeGeometry.dispose();
-    warmGeometry.dispose();
-    cyanGeometry.dispose();
-    voiceFaceGeometry.dispose();
-    voiceCoreGeometry.dispose();
-    zoneGeometries.forEach((zoneGeometry) => zoneGeometry.dispose());
-  }, [
-    particleSprite,
-    geometry,
-    edgeGeometry,
-    warmGeometry,
-    cyanGeometry,
-    voiceFaceGeometry,
-    voiceCoreGeometry,
-    zoneGeometries,
-  ]);
-
-  useFrame(({ pointer, clock }, dt) => {
-    if (!basePoints.current) return;
-
-    const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
-    const arr = attr.array as Float32Array;
-    const base = data.original;
-    const t = clock.elapsedTime;
-
-    let assemblyProgress = 1;
-    if (effects && !reducedMotion && !assemblySkipped) {
-      if (
-        assemblyClock.current.run !== assemblyRun ||
-        !assemblyClock.current.initialized
-      ) {
-        assemblyClock.current.run = assemblyRun;
-        assemblyClock.current.startedAt = t;
-        assemblyClock.current.initialized = true;
-        assemblyClock.current.completedRun = -1;
-      }
-      assemblyProgress = THREE.MathUtils.clamp(
-        (t - assemblyClock.current.startedAt) / ASSEMBLY_DURATION_SECONDS,
-        0,
-        1,
-      );
-    }
-
-    if (
-      assemblyProgress >= 1 &&
-      assemblyClock.current.completedRun !== assemblyRun
-    ) {
-      assemblyClock.current.completedRun = assemblyRun;
-      onAssemblyComplete();
-    }
-
-    if (!effects || reducedMotion) {
-      target.current.yaw = 0;
-      target.current.pitch = 0;
-    } else if (trackingTarget.current.enabled) {
-      if (trackingTarget.current.active) {
-        target.current.yaw = THREE.MathUtils.clamp(trackingTarget.current.x * 0.34, -0.38, 0.38);
-        target.current.pitch = THREE.MathUtils.clamp(-trackingTarget.current.y * 0.13, -0.14, 0.14);
-      } else {
-        target.current.yaw = 0;
-        target.current.pitch = 0;
-      }
-    } else if (state === "listening") {
-      target.current.yaw = THREE.MathUtils.clamp(pointer.x * 0.34, -0.38, 0.38);
-      target.current.pitch = THREE.MathUtils.clamp(-pointer.y * 0.13, -0.14, 0.14);
-    } else if (state === "thinking") {
-      target.current.yaw = 0.09 + Math.sin(t * 0.45) * 0.03;
-      target.current.pitch = -0.02;
-    } else if (state === "speaking") {
-      target.current.yaw = Math.sin(t * 0.6) * 0.032;
-      target.current.pitch = Math.sin(t * 1.4) * 0.015;
-    } else {
-      target.current.yaw = Math.sin(t * 0.22) * 0.01;
-      target.current.pitch = Math.sin(t * 0.31) * 0.005;
-    }
-
-    const smoothing = 1 - Math.exp(-dt * 6.5);
-    current.current.yaw = THREE.MathUtils.lerp(current.current.yaw, target.current.yaw, smoothing);
-    current.current.pitch = THREE.MathUtils.lerp(current.current.pitch, target.current.pitch, smoothing);
-
-    const cy = Math.cos(current.current.yaw);
-    const sy = Math.sin(current.current.yaw);
-    const cp = Math.cos(current.current.pitch);
-    const sp = Math.sin(current.current.pitch);
-    const chest = effects && !reducedMotion ? Math.sin(t * 0.78) * 0.012 : 0;
-
-    for (let i = 0; i < data.count; i += 1) {
-      const o = i * 3;
-      const x0 = base[o];
-      const y0 = base[o + 1];
-      const z0 = base[o + 2];
-
-      if (data.head[i]) {
-        const yRel = y0 - HEAD_CENTER_Y;
-        const x1 = x0 * cy + z0 * sy;
-        const z1 = -x0 * sy + z0 * cy;
-        const y1 = yRel * cp - z1 * sp;
-        const z2 = yRel * sp + z1 * cp;
-        arr[o] = x1;
-        arr[o + 1] = y1 + HEAD_CENTER_Y;
-        arr[o + 2] = z2;
-      } else {
-        const chestWeight = THREE.MathUtils.clamp((-y0 + 0.2) / 2.2, 0, 1);
-        arr[o] = x0;
-        arr[o + 1] = y0 + chest * chestWeight;
-        arr[o + 2] = z0;
-      }
-
-      const assemblyPhase = data.assemblyPhase[i];
-      if (assemblyPhase >= 0 && assemblyProgress < 1) {
-        const localRaw = THREE.MathUtils.clamp(
-          (assemblyProgress - assemblyPhase) / ASSEMBLY_WINDOW,
-          0,
-          1,
-        );
-        const local =
-          localRaw * localRaw * localRaw *
-          (localRaw * (localRaw * 6 - 15) + 10);
-        const targetX = arr[o];
-        const targetY = arr[o + 1];
-        const targetZ = arr[o + 2];
-        const sourceX = data.assemblySource[o];
-        const sourceY = data.assemblySource[o + 1];
-        const sourceZ = data.assemblySource[o + 2];
-        const arc = Math.sin(local * Math.PI);
-        const curvePhase = hash01(i * 2.11 + 5.4) * Math.PI * 2;
-        const streamCurve =
-          Math.sin(local * Math.PI * 1.5 + curvePhase) *
-          Math.pow(1 - local, 2) *
-          0.014;
-
-        arr[o] = THREE.MathUtils.lerp(sourceX, targetX, local) + streamCurve;
-        arr[o + 1] =
-          THREE.MathUtils.lerp(sourceY, targetY, local) +
-          arc * (0.14 + hash01(i + 3.2) * 0.08);
-        arr[o + 2] =
-          THREE.MathUtils.lerp(sourceZ, targetZ, local) +
-          arc * (0.10 + hash01(i + 7.4) * 0.08);
-      }
-    }
-
-    attr.needsUpdate = true;
-    syncSubsetGeometry(edgeGeometry, data.edge, arr);
-    syncSubsetGeometry(warmGeometry, data.warm, arr);
-    syncSubsetGeometry(cyanGeometry, data.cyan, arr);
-    syncSubsetGeometry(voiceFaceGeometry, data.voiceFace, arr);
-    syncSubsetGeometry(voiceCoreGeometry, data.voiceCore, arr);
-    for (let zoneIndex = 0; zoneIndex < zoneGeometries.length; zoneIndex += 1) {
-      syncSubsetGeometry(zoneGeometries[zoneIndex], data.zones[zoneIndex], arr);
-    }
-
-    const transitionSpeed = reducedMotion ? 10 : 1 / 0.68;
-    transition.current.progress = Math.min(1, transition.current.progress + dt * transitionSpeed);
-    const easedProgress = THREE.MathUtils.smoothstep(transition.current.progress, 0, 1);
-    currentProfile.current = mixProfile(
-      transition.current.from,
-      transition.current.to,
-      easedProgress,
-    );
-    const profile = currentProfile.current;
-
-    const turn = Math.abs(current.current.yaw) / 0.38;
-    const baseSize = quality === "high" ? BASE_POINT_SIZE_HIGH : BASE_POINT_SIZE_LOW;
-    const glowSize = quality === "high" ? GLOW_POINT_SIZE_HIGH : GLOW_POINT_SIZE_LOW;
-
-    // V11.2: playbackGate is binary and comes from real speechSynthesis events.
-    // The rhythm below is only a visual cadence; it is never presented as measured loudness.
-    const playbackTarget =
-      effects && state === "speaking"
-        ? THREE.MathUtils.clamp(playbackGate, 0, 1)
-        : 0;
-    const envelopeRate = playbackTarget > playbackEnvelope.current ? 12 : 6.5;
-    const envelopeEase = 1 - Math.exp(-dt * envelopeRate);
-    playbackEnvelope.current = THREE.MathUtils.lerp(
-      playbackEnvelope.current,
-      playbackTarget,
-      envelopeEase,
-    );
-
-    const visualRhythm = reducedMotion
-      ? 0.74
-      : 0.70 +
-        Math.pow((Math.sin(t * 5.7) + 1) * 0.5, 1.7) * 0.20 +
-        Math.pow((Math.sin(t * 9.8 + 0.9) + 1) * 0.5, 2.2) * 0.10;
-    const coreRhythm = reducedMotion
-      ? 0.70
-      : 0.76 + Math.sin(t * 3.15 + 0.45) * 0.12;
-    const voiceReactive = playbackEnvelope.current * visualRhythm;
-    const coreReactive = playbackEnvelope.current * coreRhythm;
-    const speakingBoost = state === "speaking" ? 1 + voiceReactive * 0.025 : 1;
-
-    const baseMaterial = basePoints.current.material as THREE.PointsMaterial;
-    baseMaterial.opacity = state === "speaking" ? 1.0 : 0.985;
-    baseMaterial.size = baseSize * speakingBoost;
-
-    if (glowPoints.current) {
-      const glowMaterial = glowPoints.current.material as THREE.PointsMaterial;
-      glowMaterial.opacity = quality === "high"
-        ? (state === "speaking" ? 0.055 + voiceReactive * 0.025 : state === "thinking" ? 0.068 : 0.044)
-        : (state === "speaking" ? 0.018 + voiceReactive * 0.010 : 0.023);
-      glowMaterial.size = glowSize * speakingBoost;
-    }
-
-    if (edgePoints.current) {
-      const edgeMaterial = edgePoints.current.material as THREE.PointsMaterial;
-      const edgeEnergy = profile.cyan + turn * 0.34;
-      edgeMaterial.opacity = quality === "high"
-        ? THREE.MathUtils.clamp(0.075 + edgeEnergy * 1.08, 0.075, 0.52)
-        : THREE.MathUtils.clamp(0.05 + edgeEnergy * 0.62, 0.05, 0.30);
-      edgeMaterial.size = quality === "high" ? 2.70 + turn * 0.65 : 1.78 + turn * 0.30;
-    }
-
-    if (cyanPoints.current) {
-      const cyanMaterial = cyanPoints.current.material as THREE.PointsMaterial;
-      const listeningPulse = state === "listening" ? 0.04 + Math.sin(t * 2.4) * 0.025 : 0;
-      cyanMaterial.opacity = quality === "high"
-        ? THREE.MathUtils.clamp(0.035 + profile.cyan * 0.90 + listeningPulse, 0.045, 0.42)
-        : THREE.MathUtils.clamp(0.025 + profile.cyan * 0.48, 0.025, 0.20);
-      cyanMaterial.size = quality === "high" ? 2.35 : 1.55;
-    }
-
-    if (warmPoints.current) {
-      const warmMaterial = warmPoints.current.material as THREE.PointsMaterial;
-      const stateVoice = state === "speaking" ? voiceReactive * 0.08 : 0;
-      const thinkingPulse = state === "thinking" ? (Math.sin(t * 1.7) + 1) * 0.025 : 0;
-      const stateEnergy = profile.warm + stateVoice + thinkingPulse;
-      warmMaterial.opacity = quality === "high"
-        ? THREE.MathUtils.clamp(stateEnergy, 0.05, 0.72)
-        : THREE.MathUtils.clamp(stateEnergy * 0.58, 0.035, 0.38);
-      warmMaterial.size = quality === "high"
-        ? 2.42 + voiceReactive * 0.15
-        : 1.62 + voiceReactive * 0.07;
-    }
-
-    if (voiceFacePoints.current) {
-      const faceMaterial = voiceFacePoints.current.material as THREE.PointsMaterial;
-      faceMaterial.opacity = effects
-        ? THREE.MathUtils.clamp(
-            voiceReactive * (quality === "high" ? 0.22 : 0.12),
-            0,
-            quality === "high" ? 0.22 : 0.12,
-          )
-        : 0;
-      faceMaterial.size = quality === "high"
-        ? 2.05 + voiceReactive * 0.20
-        : 1.48 + voiceReactive * 0.09;
-    }
-
-    if (voiceCorePoints.current) {
-      const coreMaterial = voiceCorePoints.current.material as THREE.PointsMaterial;
-      coreMaterial.opacity = effects
-        ? THREE.MathUtils.clamp(
-            coreReactive * (quality === "high" ? 0.16 : 0.08),
-            0,
-            quality === "high" ? 0.16 : 0.08,
-          )
-        : 0;
-      coreMaterial.size = quality === "high"
-        ? 2.20 + coreReactive * 0.20
-        : 1.55 + coreReactive * 0.09;
-    }
-
-    const cyanStateColor = new THREE.Color("#5ef5ff");
-    const warmStateColor = new THREE.Color("#ff9b32");
-    const zoneColor = cyanStateColor.clone().lerp(warmStateColor, profile.tone);
-    for (let zoneIndex = 0; zoneIndex < zonePoints.current.length; zoneIndex += 1) {
-      const zonePoint = zonePoints.current[zoneIndex];
-      if (!zonePoint) continue;
-      const zoneMaterial = zonePoint.material as THREE.PointsMaterial;
-      const zoneStart = zoneIndex * 0.105;
-      const waveGate = transition.current.progress >= 1
-        ? 1
-        : THREE.MathUtils.smoothstep(transition.current.progress, zoneStart, zoneStart + 0.26);
-      const faceBias = 1 - zoneIndex / Math.max(1, zonePoints.current.length - 1);
-      const speakingFace = state === "speaking" ? voiceReactive * 0.045 * faceBias : 0;
-      zoneMaterial.color.copy(zoneColor);
-      zoneMaterial.opacity = effects
-        ? THREE.MathUtils.clamp((profile.zone * (0.34 + faceBias * 0.50) + speakingFace) * waveGate, 0, 0.22)
-        : 0;
-      zoneMaterial.size = quality === "high" ? 2.18 + faceBias * 0.38 : 1.50 + faceBias * 0.18;
-    }
-  });
-
-  return (
-    <group>
-      <points ref={glowPoints} geometry={geometry}>
-        <pointsMaterial
-          vertexColors
-          size={GLOW_POINT_SIZE_HIGH}
-          sizeAttenuation={false}
-          alphaMap={particleSprite}
-          alphaTest={0.02}
-          transparent
-          opacity={0.055}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-
-      <points ref={edgePoints} geometry={edgeGeometry}>
-        <pointsMaterial
-          color="#70f5ff"
-          size={2.1}
-          sizeAttenuation={false}
-          alphaMap={particleSprite}
-          alphaTest={0.04}
-          transparent
-          opacity={0.12}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-
-      <points ref={warmPoints} geometry={warmGeometry}>
-        <pointsMaterial
-          color="#ff9b32"
-          size={1.95}
-          sizeAttenuation={false}
-          alphaMap={particleSprite}
-          alphaTest={0.04}
-          transparent
-          opacity={0.15}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-
-      <points ref={cyanPoints} geometry={cyanGeometry}>
-        <pointsMaterial
-          color="#5ef5ff"
-          size={1.82}
-          sizeAttenuation={false}
-          alphaMap={particleSprite}
-          alphaTest={0.04}
-          transparent
-          opacity={0.10}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-
-      <points ref={voiceCorePoints} geometry={voiceCoreGeometry}>
-        <pointsMaterial
-          color="#ff7d22"
-          size={1.88}
-          sizeAttenuation={false}
-          alphaMap={particleSprite}
-          alphaTest={0.04}
-          transparent
-          opacity={0}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-
-      <points ref={voiceFacePoints} geometry={voiceFaceGeometry}>
-        <pointsMaterial
-          color="#ffb15a"
-          size={1.72}
-          sizeAttenuation={false}
-          alphaMap={particleSprite}
-          alphaTest={0.04}
-          transparent
-          opacity={0}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-
-      {zoneGeometries.map((zoneGeometry, zoneIndex) => (
-        <points
-          key={zoneIndex}
-          ref={(node) => {
-            zonePoints.current[zoneIndex] = node;
-          }}
-          geometry={zoneGeometry}
-        >
-          <pointsMaterial
-            color="#5ef5ff"
-            size={1.82}
-            sizeAttenuation={false}
-            alphaMap={particleSprite}
-            alphaTest={0.04}
-            transparent
-            opacity={0.055}
-            depthTest={false}
-            depthWrite={false}
-            toneMapped={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </points>
-      ))}
-
-      <points ref={basePoints} geometry={geometry}>
-        <pointsMaterial
-          vertexColors
-          size={BASE_POINT_SIZE_HIGH}
-          sizeAttenuation={false}
-          alphaMap={particleSprite}
-          alphaTest={0.06}
-          transparent
-          opacity={0.985}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          blending={THREE.NormalBlending}
-        />
-      </points>
-    </group>
-  );
-}
+type GpuInfo = {
+  renderer: string;
+  vendor: string;
+  software: boolean;
+};
 
 function ParticleScene({
   data,
@@ -825,6 +229,7 @@ function ParticleScene({
   assemblyRun,
   assemblySkipped,
   onAssemblyComplete,
+  onGpuInfo,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
@@ -836,17 +241,38 @@ function ParticleScene({
   assemblyRun: number;
   assemblySkipped: boolean;
   onAssemblyComplete: () => void;
+  onGpuInfo: (info: GpuInfo) => void;
 }) {
   return (
     <Canvas
       style={{ position: "absolute", inset: 0 }}
       camera={{ position: [0, 0, 7.2], fov: 38 }}
       dpr={quality === "high" ? 1.5 : 1}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.NoToneMapping }}
+      gl={{ antialias: false, alpha: true, powerPreference: "high-performance", toneMapping: THREE.NoToneMapping }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0);
         gl.outputColorSpace = THREE.SRGBColorSpace;
         gl.toneMapping = THREE.NoToneMapping;
+
+        const context = gl.getContext();
+        const debugInfo = context.getExtension("WEBGL_debug_renderer_info") as
+          | { UNMASKED_RENDERER_WEBGL: number; UNMASKED_VENDOR_WEBGL: number }
+          | null;
+        const renderer = String(
+          debugInfo
+            ? context.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+            : context.getParameter(context.RENDERER),
+        );
+        const vendor = String(
+          debugInfo
+            ? context.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+            : context.getParameter(context.VENDOR),
+        );
+        onGpuInfo({
+          renderer,
+          vendor,
+          software: /swiftshader|llvmpipe|software/i.test(renderer),
+        });
       }}
     >
       <AstraGpuParticles
@@ -874,6 +300,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [view, setView] = useState<ViewMode>("particles");
   const [effects, setEffects] = useState(true);
   const [technical, setTechnical] = useState(false);
+  const [gpuInfo, setGpuInfo] = useState<GpuInfo | null>(null);
   const [assemblyRun, setAssemblyRun] = useState(1);
   const [assemblySkipped, setAssemblySkipped] = useState(false);
   const [assemblyActive, setAssemblyActive] = useState(true);
@@ -1042,7 +469,6 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               background:
                 "radial-gradient(circle at 50% 38%, rgba(255,132,35,.28) 0%, rgba(255,132,35,.08) 10%, transparent 27%), radial-gradient(ellipse at 50% 64%, rgba(45,225,255,.12) 0%, transparent 50%)",
               opacity: energyOpacity,
-              filter: resolvedQuality === "high" ? "blur(18px)" : "blur(8px)",
               transition: "opacity 220ms ease",
             }}
           />
@@ -1054,8 +480,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               pointerEvents: "none",
               opacity: resolvedQuality === "high" ? 0.055 : 0.025,
               background:
-                "repeating-linear-gradient(180deg, rgba(90,235,255,.45) 0px, rgba(90,235,255,.45) 1px, transparent 1px, transparent 5px)",
-              mixBlendMode: "screen",
+                "repeating-linear-gradient(180deg, rgba(90,235,255,.22) 0px, rgba(90,235,255,.22) 1px, transparent 1px, transparent 5px)",
             }}
           />
         </>
@@ -1082,6 +507,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               assemblyRun={assemblyRun}
               assemblySkipped={assemblySkipped}
               onAssemblyComplete={() => setAssemblyActive(false)}
+              onGpuInfo={setGpuInfo}
             />
           ) : (
             <div
@@ -1118,9 +544,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.3</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.4</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          GPU PARTICLE PERFORMANCE // QUALITY PRESERVED
+          GPU + COMPOSITOR PERFORMANCE // DIAGNOSTICS
         </div>
       </header>
 
@@ -1285,7 +711,11 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Base blend: Normal</div>
           <div>Energy layers: Additive</div>
           <div>DPR: {resolvedQuality === "high" ? "1.5" : "1.0"}</div>
-          <div>Particle sprite: 32px procedural round mask / linear filtered</div>
+          <div>MSAA: OFF (shader-smoothed round particles)</div>
+          <div>GPU renderer: {gpuInfo?.renderer ?? "detecting..."}</div>
+          <div>GPU vendor: {gpuInfo?.vendor ?? "detecting..."}</div>
+          <div>Software renderer: {gpuInfo ? (gpuInfo.software ? "YES — performance warning" : "NO") : "detecting..."}</div>
+          <div>Particle sprite: GPU gl_PointCoord round mask</div>
           <div>Assembly easing: quintic smootherstep / deterministic curve</div>
           <div>FPS: {fps ?? "..."}</div>
           <div>Pre-camera FPS: {preCameraFpsRef.current ?? "not measured"}</div>
@@ -1305,7 +735,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.0.3 moves per-particle head motion, breathing, assembly, state energy, voice energy, round particle shaping, and glow to GPU shaders. The CPU now updates only small uniform values each frame instead of rewriting the full particle buffer and synchronizing edge/warm/cyan/voice/zone geometries. HIGH DPR 1.5 and V12.0.2 point visibility are preserved.
+            V12.0.4 removes redundant MSAA because the particle fragment shader already smooths round edges, removes fullscreen CSS blur/backdrop compositing over the continuously changing Canvas, and exposes the actual WebGL renderer. HIGH DPR 1.5 and particle visibility remain unchanged. If Software renderer reports YES, Chrome is not using the hardware GPU and that becomes the primary performance issue.
           </div>
         </aside>
       )}
@@ -1334,8 +764,7 @@ const consoleStyle: React.CSSProperties = {
   minWidth: 280,
   pointerEvents: "auto",
   border: "1px solid rgba(54,228,247,.28)",
-  background: "rgba(0,7,11,.82)",
-  backdropFilter: "blur(12px)",
+  background: "rgba(0,7,11,.94)",
   borderRadius: 14,
   padding: 12,
   boxShadow: "0 16px 60px rgba(0,0,0,.34)",
@@ -1360,10 +789,9 @@ const technicalStyle: React.CSSProperties = {
   width: 300,
   zIndex: 24,
   border: "1px solid rgba(79,220,239,.25)",
-  background: "rgba(0,7,11,.9)",
+  background: "rgba(0,7,11,.96)",
   borderRadius: 12,
   padding: 14,
-  backdropFilter: "blur(10px)",
   fontSize: 10,
   lineHeight: 1.75,
   color: "rgba(220,248,252,.68)",
