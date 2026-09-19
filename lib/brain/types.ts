@@ -10,6 +10,10 @@ export type AstraBrainProvider =
 export type AstraBrainEventType =
   | "request.received"
   | "router.selected"
+  | "provider.selected"
+  | "provider.unavailable"
+  | "agent.started"
+  | "agent.completed"
   | "agent.blocked"
   | "response.ready";
 
@@ -40,6 +44,9 @@ export type AstraBrainStatus = {
   provider: AstraBrainProvider;
   mode: "routing_only" | "local" | "cloud";
   detail: string;
+  endpoint?: string;
+  model?: string;
+  fallback?: AstraBrainProvider;
 };
 
 export interface AstraBrain {
