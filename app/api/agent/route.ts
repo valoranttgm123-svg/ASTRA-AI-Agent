@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runAgent } from "@/lib/agent/orchestrator";
+import { astraBrain } from "@/lib/brain/adapter";
 import type { AgentRequest } from "@/lib/agent/types";
 
 export async function POST(request: Request) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await runAgent(message);
+    const result = await astraBrain.chat(message);
     return NextResponse.json(result);
   } catch {
     return NextResponse.json(
