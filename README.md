@@ -1,10 +1,10 @@
 # ASTRA AI Agent
 
-ASTRA is a personal multi-agent AI project built on top of the open-source **APEX-UI** visual foundation. The repository keeps the orb, particle core, shader background, and reasoning graph while adding an agent runtime, command console, API route, routing layer, security defaults, and a path toward real tools and memory.
+ASTRA is a personal multi-agent AI project built on top of the open-source **APEX-UI** visual foundation. The repository keeps the orb, particle core, shader background, and reasoning graph while adding a real runtime, GPU Humanoid, local-first Brain Adapter, Memory/Skills, provider routing, Codex engineering specialization, permission controls, and Command Center telemetry.
 
 ## Current status
 
-**V1 foundation is in progress.** The UI accepts a command, sends it to `/api/agent`, routes it to a specialist, and drives the request lifecycle (`idle → thinking → speaking`). No cloud AI secret is embedded in the repository. The current orchestrator intentionally stops at the provider boundary until a model/tool provider is configured.
+**Brain V1 architecture is implemented.** The UI accepts text/mic/gesture input, drives the real interaction lifecycle, routes requests through the ASTRA Brain Adapter, loads local Memory/Skills, chooses a permitted provider, and streams real Brain lifecycle events into the Command Center. Hermes and Ollama are local-first paths; Codex is the engineering specialist; optional paid cloud is disabled by default.
 
 ## Included agents
 
@@ -65,18 +65,25 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the runtime design and ap
 High-level flow:
 
 ```text
-ASTRA UI
+Humanoid / Chat / Mic / Gesture
    ↓
-Command Console
+ASTRA Runtime / Event Bus
    ↓
 /api/agent
    ↓
-Orchestrator
+ASTRA Brain Adapter
+   ├─ Memory / Skills / Permission Policy
+   ├─ Hermes
+   ├─ Ollama
+   ├─ Codex engineering specialist
+   └─ optional cloud (explicit opt-in only)
    ↓
-Specialist Agent
-   ↓
-Provider / Tool Adapter
+real Brain events
+   ├─ Humanoid high-level state
+   └─ Command Center detailed trace
 ```
+
+Private local context belongs in `.astra/`, which is gitignored. See `.env.example` and `docs/ASTRA_BRAIN_V1.md` for provider and safety configuration.
 
 ## Repository safety
 
