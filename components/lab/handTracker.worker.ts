@@ -10,6 +10,71 @@ let landmarker: HandLandmarker | null = null;
 let delegate: "GPU" | "CPU" = "CPU";
 let initialized = false;
 
+type GestureName = "none" | "pinch" | "open_palm" | "fist";
+
+type LandmarkLike = {
+  x: number;
+  y: number;
+  z?: number;
+};
+
+function distance2D(a?: LandmarkLike, b?: LandmarkLike) {
+  if (!a || !b) return Number.POSITIVE_INFINITY;
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function classifyGesture(hand?: LandmarkLike[]): {
+  gesture: GestureName;
+  pinchRatio: number;
+  extendedFingers: number;
+} {
+  if (!hand || hand.length < 21) {
+    return { gesture: "none", pinchRatio: 99, extendedFingers: 0 };
+  }
+
+  const wrist = hand[0];
+  const palmWidth = Math.max(distance2D(hand[5], hand[17]), 0.035);
+  const pinchRatio = distance2D(hand[4], hand[8]) / palmWidth;
+
+  const fingers = [
+    { tip: 8, pip: 6 },
+    { tip: 12, pip: 10 },
+    { tip: 16, pip: 14 },
+    { tip: 20, pip: 18 },
+  ];
+
+  let extendedFingers = 0;
+  for (const finger of fingers) {
+    const tipDistance = distance2D(wrist, hand[finger.tip]);
+    const pipDistance = distance2D(wrist, hand[finger.pip]);
+    if (tipDistance > pipDistance * 1.16) {
+      extendedFingers += 1;
+    }
+  }
+
+  if (pinchRatio < 0.42) {
+    return { gesture: "pinch", pinchRatio, extendedFingers };
+  }
+
+  if (extendedFingers >= 4) {
+    return { gesture: "open_palm", pinchRatio, extendedFingers };
+  }
+
+  const avgTipDistance =
+    (distance2D(wrist, hand[8]) +
+      distance2D(wrist, hand[12]) +
+      distance2D(wrist, hand[16]) +
+      distance2D(wrist, hand[20])) /
+    4 /
+    palmWidth;
+
+  if (extendedFingers <= 1 && avgTipDistance < 2.45) {
+    return { gesture: "fist", pinchRatio, extendedFingers };
+  }
+
+  return { gesture: "none", pinchRatio, extendedFingers };
+}
+
 async function createLandmarker(preferred: "GPU" | "CPU") {
   const vision = await FilesetResolver.forVisionTasks(WASM_ROOT);
   return HandLandmarker.createFromOptions(vision, {
@@ -47,14 +112,18 @@ async function handleFrame(bitmap: ImageBitmap, timestamp: number) {
   const started = performance.now();
   try {
     const result = landmarker.detectForVideo(bitmap, timestamp);
-    const hand = result.landmarks?.[0];
+    const hand = result.landmarks?.[0] as LandmarkLike[] | undefined;
     const tip = hand?.[8];
+    const gesture = classifyGesture(hand);
 
     self.postMessage({
       type: "result",
       found: Boolean(tip),
       x: tip?.x ?? 0.5,
       y: tip?.y ?? 0.5,
+      gesture: gesture.gesture,
+      pinchRatio: gesture.pinchRatio,
+      extendedFingers: gesture.extendedFingers,
       processingMs: performance.now() - started,
       timestamp,
     });
