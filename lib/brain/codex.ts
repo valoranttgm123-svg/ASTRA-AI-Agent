@@ -27,6 +27,10 @@ function parseTimeout(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed >= 500 ? parsed : fallback;
 }
 
+export function codexMayReceiveMemory() {
+  return envFlag("ASTRA_CODEX_INCLUDE_MEMORY", false);
+}
+
 function getCodexConfig(policy?: AstraBrainPermissionSnapshot) {
   const requestedSandbox = process.env.ASTRA_CODEX_SANDBOX?.trim();
   const sandbox: "read-only" | "workspace-write" =
