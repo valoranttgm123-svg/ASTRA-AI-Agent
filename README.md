@@ -45,6 +45,19 @@ cp .env.example .env.local
 
 Do **not** commit `.env.local`, tokens, passwords, SSH keys, broker credentials, OAuth secrets, or private memory databases.
 
+## Codex project context
+
+This repository stores the ASTRA project handoff/context so future Codex sessions can continue without rebuilding history from scratch.
+
+Start here:
+- `AGENTS.md`
+- `docs/CODEX_HANDOFF.md`
+- `docs/ASTRA_CONVERSATION_HISTORY.md`
+- `docs/HUMANOID_BUILD_LOG.md`
+- `docs/ASTRA_BRAIN_V1.md`
+
+The stored history contains project decisions and implementation context, not credentials, hidden reasoning, or private system prompts.
+
 ## Architecture
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the runtime design and approval model.
