@@ -134,9 +134,13 @@ export async function getHermesStatus(): Promise<HermesStatus> {
 export async function chatWithHermes({
   input,
   agent,
+  context,
+  policyText,
 }: {
   input: string;
   agent: AstraAgent;
+  context?: string;
+  policyText?: string;
 }) {
   const config = getHermesConfig();
   if (!config.enabled) {
@@ -149,9 +153,13 @@ export async function chatWithHermes({
     `Specialist role: ${agent.role}.`,
     `Specialist capabilities: ${agent.capabilities.join(", ")}.`,
     "Answer in the same language as the user unless they ask otherwise.",
-    "Use Hermes tools only when they are available and appropriate.",
+    "Use Hermes tools only when they are available, appropriate, and allowed by ASTRA policy.",
     "Do not claim an external action happened unless the tool actually completed it.",
-  ].join("\n");
+    policyText || "",
+    context || "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const response = await withTimeout(config.chatTimeoutMs, (signal) =>
     fetch(`${config.rootUrl}/v1/chat/completions`, {
