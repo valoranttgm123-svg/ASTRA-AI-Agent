@@ -170,7 +170,6 @@ export async function chatWithCloud({
         authorization: `Bearer ${value.apiKey}`,
       },
       cache: "no-store",
-      signal,
       body: JSON.stringify({
         model: value.model,
         stream: false,
