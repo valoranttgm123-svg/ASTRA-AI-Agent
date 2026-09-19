@@ -405,6 +405,10 @@ export default function ApexWorld() {
           {runtime.brainStatus
             ? `${runtime.brainStatus.mode.toUpperCase()} · ${runtime.brainStatus.model ?? "ROUTER"}`
             : "CHECKING LOCAL BRAIN..."}
+          {" · "}
+          <span style={{ color: runtime.brainStreaming ? "#83ffbc" : "rgba(215,244,250,.34)" }}>
+            SSE {runtime.brainStreaming ? "LIVE" : "IDLE"}
+          </span>
         </div>
         {runtime.brainStatus?.features && (
           <div
