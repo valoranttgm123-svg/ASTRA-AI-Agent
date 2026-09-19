@@ -169,12 +169,14 @@ export async function chatWithCodex({
   context,
   policyText,
   policy,
+  executionRequested = false,
 }: {
   input: string;
   agent: AstraAgent;
   context?: string;
   policyText?: string;
   policy: AstraBrainPermissionSnapshot;
+  executionRequested?: boolean;
 }) {
   const config = getCodexConfig(policy);
   if (!config.enabled) throw new Error("Codex specialist is disabled.");
@@ -190,6 +192,11 @@ export async function chatWithCodex({
     config.sandbox === "read-only"
       ? "This turn is read-only: inspect, reason, diagnose, and propose patches, but do not modify files."
       : "Workspace writes are enabled by ASTRA policy. Keep changes minimal and verify them.",
+    executionRequested
+      ? config.sandbox === "workspace-write"
+        ? "EXECUTION MODE: perform the requested task now inside the configured workspace. Do not merely describe a patch. Make the permitted changes, run relevant verification commands, and report what actually completed."
+        : "EXECUTION MODE was requested, but the Codex sandbox is read-only. Do not claim files were changed."
+      : "CHAT MODE: inspect or reason as requested; do not make changes unless execution mode is explicitly requested.",
     "Do not use paid APIs or external side effects unless the ASTRA policy explicitly allows them.",
     "Return a concise final result in the same language as the user.",
     "",

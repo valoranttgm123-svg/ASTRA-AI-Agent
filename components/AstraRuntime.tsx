@@ -71,7 +71,11 @@ type AstraRuntimeValue = {
   brainStatus: AstraBrainStatus | null;
   brainEvents: AstraBrainEvent[];
   brainTrace: ReasoningTrace | null;
-  send: (message: string) => Promise<AstraBrainChatResult>;
+  send: (
+    message: string,
+    options?: { mode?: "chat" | "execute"; approved?: boolean },
+  ) => Promise<AstraBrainChatResult>;
+  execute: (message: string) => Promise<AstraBrainChatResult>;
   beginListening: () => void;
   endListening: () => void;
   stopInteraction: () => void;
@@ -280,7 +284,10 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     window.speechSynthesis.speak(utterance);
   }, [clearResetTimer, settleIdle, voiceEnabledState]);
 
-  const send = useCallback(async (message: string) => {
+  const send = useCallback(async (
+    message: string,
+    options?: { mode?: "chat" | "execute"; approved?: boolean },
+  ) => {
     const value = message.trim();
     if (!value) throw new Error("ASTRA message is empty.");
 
@@ -320,7 +327,11 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       const response = await fetch("/api/agent", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: value }),
+        body: JSON.stringify({
+          message: value,
+          mode: options?.mode ?? "chat",
+          approved: Boolean(options?.approved),
+        }),
         signal: controller.signal,
       });
 
@@ -426,8 +437,13 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     }
   }, [cancelSpeech, clearResetTimer, invalidateRecognition, settleIdle, speak]);
 
+  const execute = useCallback(
+    (message: string) => send(message, { mode: "execute", approved: true }),
+    [send],
+  );
+
   useEffect(() => {
-    sendRef.current = send;
+    sendRef.current = (message: string) => send(message);
   }, [send]);
 
   const beginListening = useCallback(() => {
@@ -598,6 +614,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainEvents,
       brainTrace,
       send,
+      execute,
       beginListening,
       endListening,
       stopInteraction,
@@ -621,6 +638,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainEvents,
       brainTrace,
       send,
+      execute,
       beginListening,
       endListening,
       stopInteraction,

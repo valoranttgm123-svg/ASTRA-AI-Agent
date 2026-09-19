@@ -26,7 +26,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await astraBrain.chat(message);
+    const mode = body.mode === "execute" ? "execute" : "chat";
+    const result =
+      mode === "execute"
+        ? await astraBrain.execute({
+            input: message,
+            approved: Boolean(body.approved),
+          })
+        : await astraBrain.chat(message);
+
     return NextResponse.json(result);
   } catch {
     return NextResponse.json(

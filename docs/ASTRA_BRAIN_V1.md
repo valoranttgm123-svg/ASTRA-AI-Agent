@@ -440,3 +440,90 @@ Tool-level `tool.started/tool.completed` events are intentionally not fabricated
 - No browser-side provider secrets.
 - No dependency on a single model vendor.
 - No requirement for Claude/OpenAI API billing to make ASTRA useful.
+
+## Execution Mode V1
+
+ASTRA now distinguishes reasoning/chat from real task execution.
+
+UI semantics:
+
+```text
+SEND
+  -> chat / analysis / planning
+  -> does not grant write approval
+
+EXECUTE TASK
+  -> explicit per-request approval
+  -> Brain Adapter calls the execution path
+  -> local workspace tasks prefer Codex CLI in workspace-write mode
+  -> non-local tool tasks can use Hermes when its tools/MCP are available
+```
+
+API request envelope:
+
+```json
+{
+  "message": "fix the failing build",
+  "mode": "execute",
+  "approved": true
+}
+```
+
+The approval flag is not enough by itself. Server-side permission policy remains the hard boundary.
+
+For local repo/file execution, the effective Codex sandbox must be `workspace-write`. The repository includes a helper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\enable-local-execution.ps1
+```
+
+The helper updates only local `.env.local` and enables:
+
+```env
+ASTRA_CODEX_ENABLED=true
+ASTRA_CODEX_WORKDIR=<current ASTRA repo>
+ASTRA_CODEX_SANDBOX=workspace-write
+
+ASTRA_REQUIRE_APPROVAL=true
+ASTRA_ALLOW_FILE_WRITE=true
+ASTRA_ALLOW_SHELL=true
+ASTRA_ALLOW_EXTERNAL_ACTIONS=false
+ASTRA_ALLOW_PAID_CLOUD=false
+```
+
+This means:
+- code/file changes inside the configured ASTRA workspace can run after the user presses `EXECUTE TASK`;
+- shell commands used for local verification/builds are allowed;
+- remote/external actions remain blocked;
+- paid cloud remains blocked;
+- `SEND` remains the normal safe chat path.
+
+Disable local execution again with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\enable-local-execution.ps1 -Disable
+```
+
+### Execution routing
+
+Local workspace routes:
+
+```text
+developer / github / files / computer
+  -> Codex CLI workspace-write
+  -> verify actual completion
+  -> return executed result
+```
+
+If Codex is unavailable, ASTRA can attempt Hermes. For non-local actions, Hermes requires its own real tools/MCP configuration and ASTRA policy permission.
+
+Ollama remains a reasoning/chat fallback and is intentionally not treated as an action executor because no external tools are attached to the Ollama fallback.
+
+ASTRA returns `brain.execution = blocked` instead of pretending execution happened when:
+- per-request approval is missing;
+- Codex is read-only;
+- required shell permission is disabled;
+- no execution-capable provider is available.
+
+The Command Center and Humanoid can surface `CHAT / EXECUTE` request mode and `EXECUTED / BLOCKED` state from the real Brain response.
+
