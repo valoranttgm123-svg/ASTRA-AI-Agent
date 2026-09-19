@@ -9,7 +9,7 @@ Last updated: 2026-09-19
 Repository:
 - `valoranttgm123-svg/ASTRA-AI-Agent`
 
-Current stable main:
+Current stable architecture:
 - ASTRA Humanoid V13
 - gesture control: PINCH / OPEN PALM / FIST
 - loud synthesized shockwave SFX + presence layer
@@ -18,6 +18,13 @@ Current stable main:
 - real mic/speech state wiring
 - camera index-finger head tracking
 - runtime `stopInteraction()` for real cancellation
+- ASTRA Brain Adapter + real event trace
+- Hermes primary local gateway + Ollama fallback
+- local durable Memory/Skills
+- Codex CLI engineering specialist
+- central tool/side-effect permission policy
+- optional paid cloud guard, OFF by default
+- Command Center provider/feature telemetry
 
 V13:
 - PR #41 merged to `main`
@@ -137,7 +144,17 @@ Command Center real-time events
 Paid cloud:
 - optional;
 - OFF by default;
+- requires both `ASTRA_CLOUD_ENABLED=true` and `ASTRA_ALLOW_PAID_CLOUD=true`;
 - never silently used.
+
+Brain provider order:
+- engineering/GitHub: Codex → Hermes → Ollama → explicit cloud → routing-only;
+- other routes: Hermes → Ollama → explicit cloud → routing-only.
+
+Private memory:
+- default file `.astra/memory.json`;
+- gitignored;
+- not sent to Codex/cloud unless explicitly enabled.
 
 ## Command Center rule
 
@@ -190,18 +207,19 @@ Optimize architecture before lowering HIGH quality.
 - prefer local/free components before paid cloud;
 - direct implementation is preferred over lengthy speculation.
 
-## Next work after V13
+## Next work after Brain V1
 
-1. validate/tune V13 gesture thresholds on the target camera if needed;
-2. ASTRA Brain Adapter;
-3. Hermes adapter/service;
-4. Ollama local default;
-5. route `/api/agent` through Brain;
-6. durable Memory/Skills;
-7. Codex engineering specialist;
-8. MCP/tools permissions;
-9. Brain/runtime event bus;
-10. Command Center real event visualization.
+Brain V1 architecture is implemented. Do not rebuild these layers from scratch.
+
+Next work:
+1. validate/tune V13 gesture thresholds on the target camera only if real camera tests need it;
+2. configure local `.astra/memory.json` / `.astra/skills.json` when private context is desired;
+3. verify Codex CLI availability/auth on the target Windows machine;
+4. configure Hermes-side MCP/tool permissions to match ASTRA's policy flags;
+5. add provider-native `tool.started/tool.completed` telemetry only when Hermes/Codex exposes trustworthy events;
+6. add explicit UI approval flows before enabling destructive side effects;
+7. keep paid cloud OFF unless the user deliberately opts in;
+8. continue performance/UX work without degrading HIGH Humanoid quality.
 
 ## Local validation
 

@@ -169,9 +169,13 @@ export async function getOllamaStatus(): Promise<OllamaStatus> {
 export async function chatWithOllama({
   input,
   agent,
+  context,
+  policyText,
 }: {
   input: string;
   agent: AstraAgent;
+  context?: string;
+  policyText?: string;
 }) {
   const config = getOllamaConfig();
 
@@ -200,7 +204,11 @@ export async function chatWithOllama({
     "This Ollama fallback has no external tools attached yet.",
     "Do not claim that files, GitHub, email, browser, shell, or other external actions were completed.",
     "If the user asks for an action requiring a tool, explain that the local model can reason about it but execution needs Hermes/Codex/tools.",
-  ].join("\n");
+    policyText || "",
+    context || "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const response = await withTimeout(config.chatTimeoutMs, (signal) =>
     fetch(`${config.rootUrl}/api/chat`, {
