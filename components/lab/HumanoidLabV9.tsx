@@ -281,6 +281,9 @@ function ParticleArtwork({
   playbackGate,
   quality,
   trackingTarget,
+  assemblyRun,
+  assemblySkipped,
+  onAssemblyComplete,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
@@ -289,6 +292,9 @@ function ParticleArtwork({
   playbackGate: number;
   quality: RenderQuality;
   trackingTarget: { current: FingerTrackingTarget };
+  assemblyRun: number;
+  assemblySkipped: boolean;
+  onAssemblyComplete: () => void;
 }) {
   const basePoints = useRef<THREE.Points>(null);
   const glowPoints = useRef<THREE.Points>(null);
@@ -299,6 +305,12 @@ function ParticleArtwork({
   const voiceCorePoints = useRef<THREE.Points>(null);
   const zonePoints = useRef<Array<THREE.Points<any, any> | null>>([]);
   const playbackEnvelope = useRef(0);
+  const assemblyClock = useRef({
+    run: assemblyRun,
+    startedAt: 0,
+    initialized: false,
+    completedRun: -1,
+  });
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
   const currentProfile = useRef<StateProfile>({ ...profileForState(state) });
@@ -334,6 +346,15 @@ function ParticleArtwork({
     };
   }, [state, reducedMotion]);
 
+  useEffect(() => {
+    assemblyClock.current = {
+      run: assemblyRun,
+      startedAt: 0,
+      initialized: false,
+      completedRun: -1,
+    };
+  }, [assemblyRun]);
+
   useEffect(() => () => {
     geometry.dispose();
     edgeGeometry.dispose();
@@ -359,6 +380,32 @@ function ParticleArtwork({
     const arr = attr.array as Float32Array;
     const base = data.original;
     const t = clock.elapsedTime;
+
+    let assemblyProgress = 1;
+    if (effects && !reducedMotion && !assemblySkipped) {
+      if (
+        assemblyClock.current.run !== assemblyRun ||
+        !assemblyClock.current.initialized
+      ) {
+        assemblyClock.current.run = assemblyRun;
+        assemblyClock.current.startedAt = t;
+        assemblyClock.current.initialized = true;
+        assemblyClock.current.completedRun = -1;
+      }
+      assemblyProgress = THREE.MathUtils.clamp(
+        (t - assemblyClock.current.startedAt) / ASSEMBLY_DURATION_SECONDS,
+        0,
+        1,
+      );
+    }
+
+    if (
+      assemblyProgress >= 1 &&
+      assemblyClock.current.completedRun !== assemblyRun
+    ) {
+      assemblyClock.current.completedRun = assemblyRun;
+      onAssemblyComplete();
+    }
 
     if (!effects || reducedMotion) {
       target.current.yaw = 0;
@@ -415,6 +462,33 @@ function ParticleArtwork({
         arr[o] = x0;
         arr[o + 1] = y0 + chest * chestWeight;
         arr[o + 2] = z0;
+      }
+
+      const assemblyPhase = data.assemblyPhase[i];
+      if (assemblyPhase >= 0 && assemblyProgress < 1) {
+        const localRaw = THREE.MathUtils.clamp(
+          (assemblyProgress - assemblyPhase) / ASSEMBLY_WINDOW,
+          0,
+          1,
+        );
+        const local = localRaw * localRaw * (3 - 2 * localRaw);
+        const targetX = arr[o];
+        const targetY = arr[o + 1];
+        const targetZ = arr[o + 2];
+        const sourceX = data.assemblySource[o];
+        const sourceY = data.assemblySource[o + 1];
+        const sourceZ = data.assemblySource[o + 2];
+        const arc = Math.sin(local * Math.PI);
+        const streamDrift =
+          (1 - local) * Math.sin(t * 2.7 + i * 0.17) * 0.045;
+
+        arr[o] = THREE.MathUtils.lerp(sourceX, targetX, local) + streamDrift;
+        arr[o + 1] =
+          THREE.MathUtils.lerp(sourceY, targetY, local) +
+          arc * (0.14 + hash01(i + 3.2) * 0.08);
+        arr[o + 2] =
+          THREE.MathUtils.lerp(sourceZ, targetZ, local) +
+          arc * (0.10 + hash01(i + 7.4) * 0.08);
       }
     }
 
