@@ -1034,6 +1034,12 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Inference: {tracking.processingMs === null ? "..." : `${tracking.processingMs} ms`}</div>
           <div>Tracking privacy: frames processed locally; no recording/upload by ASTRA.</div>
           <div>Last request latency: {latency === null ? "not measured" : `${latency} ms`}</div>
+          <div>Brain provider: {(runtime.brainProvider ?? "standby").toUpperCase()}</div>
+          <div>
+            Brain event: {runtime.brainEvents.length
+              ? runtime.brainEvents[runtime.brainEvents.length - 1].label
+              : "none"}
+          </div>
           <div>Reduced motion: {reducedMotion ? "ON" : "OFF"}</div>
           <div>Effects: {effects ? "ON" : "OFF"}</div>
           <div>Renderer: Three.js via React Three Fiber</div>
