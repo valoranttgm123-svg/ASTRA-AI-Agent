@@ -14,10 +14,10 @@ const SAMPLE_H = 194;
 const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
-const BASE_POINT_SIZE_HIGH = 2.25;
-const BASE_POINT_SIZE_LOW = 1.35;
-const GLOW_POINT_SIZE_HIGH = 4.00;
-const GLOW_POINT_SIZE_LOW = 2.45;
+const BASE_POINT_SIZE_HIGH = 2.55;
+const BASE_POINT_SIZE_LOW = 1.50;
+const GLOW_POINT_SIZE_HIGH = 3.55;
+const GLOW_POINT_SIZE_LOW = 2.20;
 const ASSEMBLY_DURATION_SECONDS = 2.6;
 const ASSEMBLY_WINDOW = 0.34;
 
@@ -544,9 +544,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.4</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.5</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          GPU + COMPOSITOR PERFORMANCE // DIAGNOSTICS
+          PARTICLE CLARITY BOOST // CRISP CORE + SOFT RIM
         </div>
       </header>
 
@@ -715,6 +715,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>GPU renderer: {gpuInfo?.renderer ?? "detecting..."}</div>
           <div>GPU vendor: {gpuInfo?.vendor ?? "detecting..."}</div>
           <div>Software renderer: {gpuInfo ? (gpuInfo.software ? "YES — performance warning" : "NO") : "detecting..."}</div>
+          <div>Particle profile: crisp bright core + thin soft rim</div>
           <div>Particle sprite: GPU gl_PointCoord round mask</div>
           <div>Assembly easing: quintic smootherstep / deterministic curve</div>
           <div>FPS: {fps ?? "..."}</div>
@@ -735,7 +736,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.0.4 removes redundant MSAA because the particle fragment shader already smooths round edges, removes fullscreen CSS blur/backdrop compositing over the continuously changing Canvas, and exposes the actual WebGL renderer. HIGH DPR 1.5 and particle visibility remain unchanged. If Software renderer reports YES, Chrome is not using the hardware GPU and that becomes the primary performance issue.
+            V12.0.5 makes individual particles easier to read without increasing particle count: HIGH base points rise slightly, glow tightens, source colors gain controlled contrast, and each GPU point now renders a bright crisp core with a thin soft rim. HIGH DPR 1.5, GPU motion, compositor optimizations, and diagnostics remain unchanged.
           </div>
         </aside>
       )}

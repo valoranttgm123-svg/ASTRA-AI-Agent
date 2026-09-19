@@ -152,13 +152,18 @@ void main() {
 
   if (uGlowPass > 0.5) {
     float glowEnergy = clamp(energy, 0.0, 1.25);
-    vColor = mix(stateTint, color, 0.28) * (0.60 + glowEnergy * 0.90);
-    vAlpha = clamp(0.04 + glowEnergy * 0.20, 0.0, 0.34);
-    gl_PointSize = uPointSize * (1.0 + glowEnergy * 0.12);
+    vColor = mix(stateTint, color, 0.34) * (0.56 + glowEnergy * 0.82);
+    vAlpha = clamp(0.032 + glowEnergy * 0.16, 0.0, 0.28);
+    gl_PointSize = uPointSize * (1.0 + glowEnergy * 0.08);
   } else {
-    vec3 boosted = color + cyan * cyanEnergy * 0.10 + warm * (warmEnergy + voiceEnergy) * 0.12;
-    vColor = clamp(boosted, 0.0, 1.0);
-    vAlpha = 0.985;
+    vec3 boosted =
+      color * 1.16 +
+      cyan * cyanEnergy * 0.11 +
+      warm * (warmEnergy + voiceEnergy) * 0.13;
+    float sourcePeak = max(boosted.r, max(boosted.g, boosted.b));
+    float shadowLift = (1.0 - smoothstep(0.06, 0.34, sourcePeak)) * 0.028;
+    vColor = clamp(boosted + vec3(shadowLift), 0.0, 1.0);
+    vAlpha = 1.0;
     gl_PointSize = uPointSize;
   }
 
@@ -178,13 +183,15 @@ void main() {
   float alpha;
 
   if (vGlowPass > 0.5) {
-    alpha = 1.0 - smoothstep(0.18, 0.5, d);
+    alpha = 1.0 - smoothstep(0.14, 0.48, d);
   } else {
-    alpha = 1.0 - smoothstep(0.31, 0.49, d);
+    float brightCore = 1.0 - smoothstep(0.17, 0.31, d);
+    float softRim = 1.0 - smoothstep(0.31, 0.49, d);
+    alpha = max(brightCore, softRim * 0.46);
   }
 
   alpha *= vAlpha;
-  if (alpha < 0.015) discard;
+  if (alpha < 0.02) discard;
 
   gl_FragColor = vec4(vColor, alpha);
 }
@@ -429,8 +436,8 @@ export default function AstraGpuParticles({
     }
 
     const chest = effects && !reducedMotion ? Math.sin(t * 0.78) * 0.012 : 0;
-    const baseSize = quality === "high" ? 2.25 : 1.35;
-    const glowSize = quality === "high" ? 4.0 : 2.45;
+    const baseSize = quality === "high" ? 2.55 : 1.50;
+    const glowSize = quality === "high" ? 3.55 : 2.20;
 
     const writeUniforms = (targetUniforms: Record<string, { value: number }>, glow: boolean) => {
       targetUniforms.uTime.value = t;

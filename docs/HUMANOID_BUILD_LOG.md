@@ -442,3 +442,39 @@ Verification required:
 - confirm HIGH quality remains visually equivalent to V12.0.3;
 - confirm no regression in particle shape, assembly, voice state, or camera tracking.
 
+## Stage 4.0.5 — Particle Clarity Boost (V12.0.5)
+
+Goal:
+- make individual particles more visually distinct at normal viewing distance;
+- preserve V12.0.4 performance optimizations and HIGH DPR 1.5.
+
+Visual changes:
+- HIGH base point size increased modestly from 2.25 to 2.55 renderer pixels;
+- LOW base point size increased from 1.35 to 1.50;
+- HIGH glow tightened from 4.0 to 3.55 so glow does not wash over neighboring particles;
+- LOW glow tightened from 2.45 to 2.20;
+- base source RGB receives a controlled 1.16 contrast/brightness lift;
+- very dark source particles receive only a small capped shadow lift;
+- GPU fragment shader now renders each base point as:
+  - a bright crisp central core;
+  - a thin softer outer rim;
+- glow pass remains separate, softer and lower-alpha;
+- the result is intended to read as individual luminous particles instead of a diffuse cloud.
+
+Performance preserved:
+- particle count and sampler STEP remain unchanged;
+- GPU vertex/fragment pipeline remains active;
+- no per-frame geometry synchronization returns;
+- MSAA remains OFF;
+- HIGH DPR remains 1.5;
+- no CSS blur/backdrop-filter regression;
+- no new image, dependency, renderer pass, or paid service added.
+
+Verification required:
+- production CI build;
+- compare V12.0.4 and V12.0.5 in HIGH mode at the same browser zoom;
+- confirm dots are individually readable on face, shoulders, and surrounding field;
+- confirm glow does not merge neighboring particles into blocks;
+- confirm FPS remains effectively unchanged;
+- confirm GPU diagnostics still report hardware/software renderer correctly.
+
