@@ -613,6 +613,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   }, [fps, qualityMode]);
 
   const state = runtime.avatarState;
+  const runtimeBusy = busy || runtime.orbState === "thinking";
   const resolvedQuality: RenderQuality =
     qualityMode === "auto" ? (autoLow ? "low" : "high") : qualityMode;
   const tracking = useFingerTracking(resolvedQuality);
@@ -641,18 +642,26 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     void tracking.start();
   };
 
+  const toggleMic = () => {
+    if (runtime.micActive) runtime.endListening();
+    else runtime.beginListening();
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const value = message.trim();
-    if (!value || busy) return;
+    if (!value || runtimeBusy) return;
     setBusy(true);
     const started = performance.now();
     try {
       await runtime.send(value);
       setLatency(Math.round(performance.now() - started));
       setMessage("");
-    } catch {
+    } catch (error) {
       setLatency(Math.round(performance.now() - started));
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        // Runtime owns the visible error state; keep the lab responsive.
+      }
     } finally {
       setBusy(false);
     }
@@ -820,6 +829,19 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <button onClick={toggleCamera} style={buttonStyle(tracking.enabled)}>
               {tracking.enabled ? "CAMERA OFF" : "CAMERA ON"}
             </button>
+            <button
+              onClick={toggleMic}
+              disabled={!runtime.micSupported}
+              style={{ ...buttonStyle(runtime.micActive), opacity: runtime.micSupported ? 1 : 0.45 }}
+            >
+              {runtime.micActive ? "STOP MIC" : runtime.micSupported ? "MIC" : "MIC N/A"}
+            </button>
+            <button
+              onClick={() => runtime.setVoiceEnabled(!runtime.voiceEnabled)}
+              style={buttonStyle(runtime.voiceEnabled)}
+            >
+              {runtime.voiceEnabled ? "VOICE ON" : "VOICE OFF"}
+            </button>
             <span
               style={{
                 alignSelf: "center",
@@ -841,6 +863,11 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               CAMERA: {tracking.error}
             </div>
           )}
+          {runtime.micError && (
+            <div style={{ maxWidth: 430, color: "#ffb35f", fontSize: 9, lineHeight: 1.45, letterSpacing: ".04em" }}>
+              MIC: {runtime.micError}
+            </div>
+          )}
         </div>
 
         <div style={consoleStyle}>
@@ -849,7 +876,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <span>{state.toUpperCase()}</span>
           </div>
           <div style={{ minHeight: 42, marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
-            {runtime.lastResponse?.message ?? "Approved artwork is driving the humanoid particle field."}
+            {runtime.micActive
+              ? (runtime.micTranscript || "Silakan bicara...")
+              : runtime.lastResponse?.message ?? "Approved artwork is driving the humanoid particle field."}
           </div>
           <form onSubmit={submit} style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <input
@@ -858,8 +887,12 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               placeholder="Ketik perintah ASTRA..."
               style={inputStyle}
             />
-            <button disabled={busy || !message.trim()} type="submit" style={{ ...buttonStyle(false), opacity: busy ? 0.55 : 1 }}>
-              {busy ? "RUN" : "SEND"}
+            <button
+              disabled={runtimeBusy || !message.trim()}
+              type="submit"
+              style={{ ...buttonStyle(false), opacity: runtimeBusy ? 0.55 : 1 }}
+            >
+              {runtimeBusy ? "RUN" : "SEND"}
             </button>
           </form>
         </div>
