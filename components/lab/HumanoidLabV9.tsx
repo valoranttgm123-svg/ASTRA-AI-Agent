@@ -767,6 +767,9 @@ function ParticleScene({
   playbackGate,
   quality,
   trackingTarget,
+  assemblyRun,
+  assemblySkipped,
+  onAssemblyComplete,
 }: {
   data: ParticleData;
   state: AstraAvatarState;
@@ -775,6 +778,9 @@ function ParticleScene({
   playbackGate: number;
   quality: RenderQuality;
   trackingTarget: { current: FingerTrackingTarget };
+  assemblyRun: number;
+  assemblySkipped: boolean;
+  onAssemblyComplete: () => void;
 }) {
   return (
     <Canvas
@@ -796,6 +802,9 @@ function ParticleScene({
         playbackGate={playbackGate}
         quality={quality}
         trackingTarget={trackingTarget}
+        assemblyRun={assemblyRun}
+        assemblySkipped={assemblySkipped}
+        onAssemblyComplete={onAssemblyComplete}
       />
     </Canvas>
   );
@@ -810,6 +819,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [view, setView] = useState<ViewMode>("particles");
   const [effects, setEffects] = useState(true);
   const [technical, setTechnical] = useState(false);
+  const [assemblyRun, setAssemblyRun] = useState(1);
+  const [assemblySkipped, setAssemblySkipped] = useState(false);
+  const [assemblyActive, setAssemblyActive] = useState(true);
   const [qualityMode, setQualityMode] = useState<QualityMode>("auto");
   const [autoLow, setAutoLow] = useState(false);
   const [message, setMessage] = useState("");
@@ -866,7 +878,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const tracking = useFingerTracking(resolvedQuality);
   const showReferenceOnly = view === "reference" || !effects;
   const showParticles = view !== "reference" && effects;
-  const referenceOpacity = showReferenceOnly ? 1 : view === "compare" ? 1 : 0.028;
+  const referenceOpacity = showReferenceOnly
+    ? 1
+    : view === "compare"
+      ? 1
+      : assemblyActive
+        ? 0.006
+        : 0.028;
   const energyOpacity =
     state === "speaking" ? 0.34 :
     state === "thinking" ? 0.27 :
@@ -892,6 +910,17 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const toggleMic = () => {
     if (runtime.micActive) runtime.endListening();
     else runtime.beginListening();
+  };
+
+  const replayAssembly = () => {
+    setAssemblySkipped(false);
+    setAssemblyActive(!reducedMotion && effects);
+    setAssemblyRun((currentRun) => currentRun + 1);
+  };
+
+  const skipAssembly = () => {
+    setAssemblySkipped(true);
+    setAssemblyActive(false);
   };
 
   const submit = async (event: FormEvent) => {
@@ -995,6 +1024,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               playbackGate={runtime.speechLevel}
               quality={resolvedQuality}
               trackingTarget={tracking.targetRef}
+              assemblyRun={assemblyRun}
+              assemblySkipped={assemblySkipped}
+              onAssemblyComplete={() => setAssemblyActive(false)}
             />
           ) : (
             <div
@@ -1031,9 +1063,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V11.2.1</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          VOICE REACTIVE FACE // CONTROLLED ENERGY HOTFIX
+          ASSEMBLY SEQUENCE // HEAD → NECK → SHOULDERS → CORE
         </div>
       </header>
 
@@ -1073,6 +1105,16 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <button onClick={cycleQuality} style={buttonStyle(qualityMode !== "auto")}>
               QUALITY {qualityMode.toUpperCase()}
             </button>
+            <button onClick={replayAssembly} style={buttonStyle(assemblyActive)}>
+              REPLAY ASSEMBLY
+            </button>
+            <button
+              onClick={skipAssembly}
+              disabled={!assemblyActive}
+              style={{ ...buttonStyle(false), opacity: assemblyActive ? 1 : 0.45 }}
+            >
+              SKIP
+            </button>
             <button onClick={toggleCamera} style={buttonStyle(tracking.enabled)}>
               {tracking.enabled ? "CAMERA OFF" : "CAMERA ON"}
             </button>
@@ -1100,6 +1142,18 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               }}
             >
               ● {tracking.handFound ? "HAND FOUND" : tracking.status.toUpperCase()}
+            </span>
+            <span
+              style={{
+                alignSelf: "center",
+                padding: "0 4px",
+                color: assemblyActive ? "#ffc364" : "rgba(128,234,247,.48)",
+                fontSize: 9,
+                letterSpacing: ".12em",
+                textShadow: "0 0 12px currentColor",
+              }}
+            >
+              ● {assemblyActive ? "ASSEMBLING" : "ASSEMBLY READY"}
             </span>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
@@ -1162,6 +1216,10 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Voice core samples: {data?.voiceCore.length ?? "loading"}</div>
           <div>State radial zones: {data?.zones.length ?? "loading"}</div>
           <div>State transition: 680 ms radial face-out</div>
+          <div>Assembly duration: {ASSEMBLY_DURATION_SECONDS.toFixed(1)} s</div>
+          <div>Assembly order: head → neck → shoulders → core</div>
+          <div>Assembly source: single left-side particle stream</div>
+          <div>Assembly state: {assemblyActive ? "RUNNING" : assemblySkipped ? "SKIPPED" : "READY"}</div>
           <div>Playback active: {runtime.playbackActive ? "YES" : "NO"}</div>
           <div>Playback gate: {runtime.speechLevel.toFixed(0)} (event-driven, not loudness)</div>
           <div>Voice face driver: smoothed playback envelope + visual cadence</div>
@@ -1187,7 +1245,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V11.2.1 narrows voice-reactive masks to warm source pixels and caps additive energy so facial detail remains visible during playback. The pulse is still driven by real speechSynthesis events and is not measured loudness.
+            V12 adds a non-blocking 2.6 s particle assembly from one left-side source stream. Only the central humanoid assembles; the approved background remains stable. Head, neck, shoulders, then core settle into their existing V11.2.1 positions. REPLAY and SKIP do not interrupt chat, mic, speech playback, or camera tracking.
           </div>
         </aside>
       )}
