@@ -531,7 +531,7 @@ export default function AstraGpuParticles({
     const brainDecay = reducedMotion ? 1.8 : 0.72;
     brainEnvelope.current = Math.max(0, brainEnvelope.current - dt * brainDecay);
     const brainLevel =
-      effects *
+      (effects ? 1 : 0) *
       THREE.MathUtils.clamp(brainActivity, 0, 1) *
       brainEnvelope.current;
 
