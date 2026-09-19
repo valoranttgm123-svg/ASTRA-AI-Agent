@@ -588,3 +588,32 @@ Verification required:
 - toggle VOICE OFF and confirm SFX can still play;
 - leave/re-enter Humanoid and confirm AudioContext cleanup/re-arm behavior.
 
+## Stage 4.1.2 — Shockwave SFX Boost (V12.1.2)
+
+Reported feedback:
+- V12.1.1 shockwave SFX was too quiet to hear clearly.
+
+Fix:
+- master SFX gain increased substantially;
+- low core pulse gain increased;
+- electric rise gain increased;
+- filtered noise/energy layer gain increased;
+- impact gain increased;
+- a Web Audio `DynamicsCompressorNode` is inserted before the destination as a limiter;
+- limiter settings use a fast attack and moderate release to control peaks while preserving impact;
+- SFX remains fully synthesized with no external audio asset.
+
+Preserved:
+- SFX ON/OFF behavior;
+- browser user-gesture audio unlock;
+- REPLAY ASSEMBLY audio arming;
+- visual shockwave timing;
+- GPU rendering/performance;
+- mic/voice/camera behavior.
+
+Verification:
+- production CI build;
+- click REPLAY ASSEMBLY and confirm SFX ON;
+- verify shockwave is clearly audible on laptop/monitor speakers at normal system volume;
+- confirm no obvious crackling or clipping.
+
