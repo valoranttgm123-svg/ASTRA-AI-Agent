@@ -14,10 +14,10 @@ const SAMPLE_H = 194;
 const STEP = 2;
 const WORLD_W = 7.2;
 const WORLD_H = WORLD_W * (SAMPLE_H / SAMPLE_W);
-const BASE_POINT_SIZE_HIGH = 2.55;
-const BASE_POINT_SIZE_LOW = 1.50;
-const GLOW_POINT_SIZE_HIGH = 3.55;
-const GLOW_POINT_SIZE_LOW = 2.20;
+const BASE_POINT_SIZE_HIGH = 2.80;
+const BASE_POINT_SIZE_LOW = 1.62;
+const GLOW_POINT_SIZE_HIGH = 3.65;
+const GLOW_POINT_SIZE_LOW = 2.28;
 const ASSEMBLY_DURATION_SECONDS = 2.6;
 const ASSEMBLY_WINDOW = 0.34;
 
@@ -544,9 +544,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.5</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V12.0.6</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          PARTICLE CLARITY BOOST // CRISP CORE + SOFT RIM
+          PARTICLE LUMINANCE LIFT // BRIGHTER MIDTONES
         </div>
       </header>
 
@@ -715,7 +715,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>GPU renderer: {gpuInfo?.renderer ?? "detecting..."}</div>
           <div>GPU vendor: {gpuInfo?.vendor ?? "detecting..."}</div>
           <div>Software renderer: {gpuInfo ? (gpuInfo.software ? "YES — performance warning" : "NO") : "detecting..."}</div>
-          <div>Particle profile: crisp bright core + thin soft rim</div>
+          <div>Particle profile: crisp core + brighter midtones + soft rim</div>
+          <div>Luminance remap: gamma 0.72 / capped highlight normalization</div>
           <div>Particle sprite: GPU gl_PointCoord round mask</div>
           <div>Assembly easing: quintic smootherstep / deterministic curve</div>
           <div>FPS: {fps ?? "..."}</div>
@@ -736,7 +737,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V12.0.5 makes individual particles easier to read without increasing particle count: HIGH base points rise slightly, glow tightens, source colors gain controlled contrast, and each GPU point now renders a bright crisp core with a thin soft rim. HIGH DPR 1.5, GPU motion, compositor optimizations, and diagnostics remain unchanged.
+            V12.0.6 lifts particle midtones directly in the GPU shader using a controlled gamma remap, adds a small dark-particle floor, strengthens cyan/orange energy slightly, and caps highlights before output. Base points are slightly larger while glow remains tight, so the field is brighter without becoming a diffuse or saturated block.
           </div>
         </aside>
       )}
