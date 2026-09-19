@@ -267,3 +267,34 @@ Verification required:
 - confirm pulse remains visible but subtle;
 - confirm head shape and source cyan/orange structure remain readable throughout speech.
 
+## Stage 4 — Assembly Sequence (V12)
+
+Goal: make ASTRA visibly construct itself from its existing particle field without blocking chat or adding another renderer.
+
+Implemented:
+- one non-blocking 2.6 second assembly timeline;
+- assembly is applied inside the existing Three.js particle renderer;
+- only the central humanoid is assembled; the surrounding approved artwork/background remains stable;
+- source particles originate from a single left-side stream;
+- deterministic per-particle timing prevents random layout changes between replays;
+- assembly order is head -> neck -> shoulders -> core;
+- each particle follows a smooth eased path with a small vertical/depth arc before settling into its existing V11.2.1 final position;
+- final positions still receive normal head turn, chest motion, state energy, voice-reactive layers, and camera tracking;
+- `REPLAY ASSEMBLY` starts a fresh timeline without resetting chat/runtime state;
+- `SKIP` immediately resolves particles to their final positions;
+- chat requests, microphone recognition, speech playback, and camera/index-finger tracking remain usable while assembly is running;
+- reduced-motion and Effects Off resolve directly to the final approved form;
+- the faint reference underlay is reduced further while assembly is active so the particle construction remains visually readable;
+- no generated image, second renderer, paid service, new dependency, or change to `/api/agent` was introduced.
+
+Verification required:
+- production CI build;
+- first-open automatic assembly completes in about 2.6 seconds;
+- visible order reads as head -> neck -> shoulders -> core;
+- REPLAY works repeatedly without particle drift;
+- SKIP resolves immediately and leaves no particles stranded in the source stream;
+- send chat / use mic during assembly and confirm AI interaction is not blocked;
+- camera tracking continues after assembly completes;
+- Effects Off and reduced-motion show the final form without forced motion;
+- AUTO/LOW quality remains smooth on the target PC.
+
