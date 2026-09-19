@@ -478,3 +478,34 @@ Verification required:
 - confirm FPS remains effectively unchanged;
 - confirm GPU diagnostics still report hardware/software renderer correctly.
 
+## Stage 4.0.6 — Particle Luminance Lift (V12.0.6)
+
+Reported feedback:
+- V12.0.5 particles were crisp but the overall humanoid still looked too dark;
+- outer shoulders/field and many source-color particles disappeared into the near-black background.
+
+Fix:
+- base particle source colors are remapped in the GPU shader with a controlled gamma 0.72 midtone lift;
+- darker sampled particles receive a small capped luminance floor;
+- cyan state energy contribution is increased modestly;
+- warm/orange state energy contribution is increased modestly;
+- highlight normalization prevents already-bright particles from clipping into large white/yellow blocks;
+- HIGH base point size increases from 2.55 to 2.80 renderer pixels;
+- LOW base point size increases from 1.50 to 1.62;
+- glow stays comparatively tight at 3.65 HIGH / 2.28 LOW;
+- the base-point bright core is slightly wider and its soft rim is more visible.
+
+Performance/safety preserved:
+- no particle-count increase;
+- no additional draw pass;
+- GPU shader pipeline remains two passes;
+- HIGH DPR stays 1.5;
+- MSAA stays OFF;
+- no fullscreen CSS blur/backdrop-filter is reintroduced;
+- camera, mic, voice, assembly, state engine and diagnostics are unchanged.
+
+Target:
+- ASTRA should read brighter at normal viewing distance, especially shoulders and cyan field detail;
+- individual dots must remain visible;
+- central orange face/core must remain controlled and avoid saturation.
+
