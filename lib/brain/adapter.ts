@@ -554,8 +554,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       },
       tools: {
         enabled: true,
-        available: true,
-        detail: toolsPolicyDetail(policy),
+        available: hermes.available || codex.available,
+        detail: `${toolsPolicyDetail(policy)} Tool execution is delegated to permitted Hermes/Codex capabilities; ASTRA does not invent tool activity when no provider reports it.`,
       },
       cloud: {
         enabled: cloud.enabled,
