@@ -380,9 +380,15 @@ export default function ApexWorld() {
               color:
                 runtime.brainProvider === "hermes"
                   ? "#8ef6b8"
-                  : runtime.brainProvider === "routing_only"
-                    ? "#ffbf69"
-                    : "rgba(255,255,255,.34)",
+                  : runtime.brainProvider === "ollama"
+                    ? "#63eaff"
+                    : runtime.brainProvider === "codex"
+                      ? "#d7a2ff"
+                      : runtime.brainProvider === "cloud"
+                        ? "#ffb96b"
+                        : runtime.brainProvider === "routing_only"
+                          ? "#ffbf69"
+                          : "rgba(255,255,255,.34)",
             }}
           >
             {(runtime.brainProvider ?? "standby").toUpperCase()}
@@ -390,7 +396,7 @@ export default function ApexWorld() {
         </div>
         <div
           style={{
-            marginBottom: 8,
+            marginBottom: 5,
             color: "rgba(215,244,250,.42)",
             fontSize: 8.5,
             letterSpacing: ".07em",
@@ -400,6 +406,40 @@ export default function ApexWorld() {
             ? `${runtime.brainStatus.mode.toUpperCase()} · ${runtime.brainStatus.model ?? "ROUTER"}`
             : "CHECKING LOCAL BRAIN..."}
         </div>
+        {runtime.brainStatus?.features && (
+          <div
+            style={{
+              marginBottom: 8,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "3px 7px",
+              color: "rgba(215,244,250,.34)",
+              fontSize: 7.8,
+              letterSpacing: ".06em",
+            }}
+          >
+            {([
+              ["MEM", runtime.brainStatus.features.memory],
+              ["SKILL", runtime.brainStatus.features.skills],
+              ["CODEX", runtime.brainStatus.features.codex],
+              ["TOOLS", runtime.brainStatus.features.tools],
+              ["CLOUD", runtime.brainStatus.features.cloud],
+            ] as const).map(([label, feature]) => (
+              <span
+                key={label}
+                style={{
+                  color: feature.available
+                    ? "#83ffbc"
+                    : feature.enabled
+                      ? "#ffbf69"
+                      : "rgba(215,244,250,.28)",
+                }}
+              >
+                {label}:{feature.available ? "READY" : feature.enabled ? "WAIT" : "OFF"}
+              </span>
+            ))}
+          </div>
+        )}
         <div style={{ display: "grid", gap: 5 }}>
           {runtime.brainEvents.length === 0 ? (
             <div style={{ color: "rgba(220,244,250,.38)" }}>No brain events yet.</div>
@@ -425,9 +465,13 @@ export default function ApexWorld() {
                         ? "#ff9d66"
                         : event.type === "agent.completed" || event.type === "response.ready"
                           ? "#83ffbc"
-                          : event.type === "provider.selected"
+                          : event.type === "provider.selected" || event.type === "skill.selected"
                             ? "#d7a2ff"
-                            : "#63eaff",
+                            : event.type === "memory.loaded"
+                              ? "#6fffd4"
+                              : event.type === "policy.applied"
+                                ? "#9aaeb8"
+                                : "#63eaff",
                   }}
                 />
                 <span>
