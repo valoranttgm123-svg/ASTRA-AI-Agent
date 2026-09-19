@@ -334,8 +334,15 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
     };
   }
 
-  async execute(task: { input: string }) {
-    return this.chat(task.input);
+  async execute(task: { input: string; approved?: boolean }) {
+    const response = await this.chat(task.input);
+    return {
+      ...response,
+      brain: {
+        ...response.brain,
+        requestedMode: "execute" as const,
+      },
+    };
   }
 
   async cancel() {
