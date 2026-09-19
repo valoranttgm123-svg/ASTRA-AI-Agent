@@ -484,10 +484,15 @@ function envelopeContext(context: ExecutionContext) {
 }
 
 class RoutingOnlyBrainAdapter implements AstraBrain {
-  async chat(input: string): Promise<AstraBrainChatResult> {
+  async chat(
+    input: string,
+    options?: AstraBrainRunOptions,
+  ): Promise<AstraBrainChatResult> {
     const response = await runAgent(input);
     const route = routeFor(response.agent);
     const context = await buildExecutionContext(input, response.agent);
+    const events = routingOnlyEvents(response.agent, response.state, context);
+    for (const event of events) options?.onEvent?.(event);
 
     return {
       ...response,
@@ -496,14 +501,17 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
         execution: response.state === "completed" ? "executed" : "routing_only",
         route,
         visualNodes: route.map(visualNode),
-        events: routingOnlyEvents(response.agent, response.state, context),
+        events,
         ...envelopeContext(context),
       },
     };
   }
 
-  async execute(task: { input: string; approved?: boolean }): Promise<AstraBrainChatResult> {
-    const response = await this.chat(task.input);
+  async execute(
+    task: { input: string; approved?: boolean },
+    options?: AstraBrainRunOptions,
+  ): Promise<AstraBrainChatResult> {
+    const response = await this.chat(task.input, options);
     return {
       ...response,
       brain: {
@@ -532,14 +540,20 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
 class LocalPreferredBrainAdapter implements AstraBrain {
   private readonly fallback = new RoutingOnlyBrainAdapter();
 
-  async chat(input: string): Promise<AstraBrainChatResult> {
+  async chat(
+    input: string,
+    options?: AstraBrainRunOptions,
+  ): Promise<AstraBrainChatResult> {
     const selected = selectAgent(input);
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
+    emitLiveStart(selected, options);
     const context = await buildExecutionContext(input, selected);
+    emitLiveContext(selected, context, options);
     const failures: string[] = [];
 
     if (isEngineeringRoute(selected)) {
+      emitLiveProviderStart(selected, "codex", options);
       try {
         const codexContext = [
           context.skillOnlyContext,
@@ -554,6 +568,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           policyText: context.policyText,
           policy: context.policy,
         });
+        emitLiveProviderComplete(selected, "codex", options);
 
         return {
           ok: true,
@@ -573,12 +588,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
-        failures.push(
-          `Codex: ${error instanceof Error ? error.message : "unavailable"}`,
-        );
+        const detail = `Codex: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitLiveProviderUnavailable(selected, "codex", detail, options);
       }
     }
 
+    emitLiveProviderStart(selected, "hermes", options);
     try {
       const result = await chatWithHermes({
         input,
@@ -586,6 +602,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         context: context.localContext,
         policyText: context.policyText,
       });
+      emitLiveProviderComplete(selected, "hermes", options);
 
       return {
         ok: true,
@@ -605,11 +622,12 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Hermes: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitLiveProviderUnavailable(selected, "hermes", detail, options);
     }
 
+    emitLiveProviderStart(selected, "ollama", options);
     try {
       const result = await chatWithOllama({
         input,
@@ -617,6 +635,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         context: context.localContext,
         policyText: context.policyText,
       });
+      emitLiveProviderComplete(selected, "ollama", options);
 
       return {
         ok: true,
@@ -636,12 +655,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         },
       };
     } catch (error) {
-      failures.push(
-        `Ollama: ${error instanceof Error ? error.message : "unavailable"}`,
-      );
+      const detail = `Ollama: ${error instanceof Error ? error.message : "unavailable"}`;
+      failures.push(detail);
+      emitLiveProviderUnavailable(selected, "ollama", detail, options);
     }
 
     if (context.policy.allowPaidCloud) {
+      emitLiveProviderStart(selected, "cloud", options);
       try {
         const cloudContext = [
           context.skillOnlyContext,
@@ -657,6 +677,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           policyText: context.policyText,
           policy: context.policy,
         });
+        emitLiveProviderComplete(selected, "cloud", options);
 
         return {
           ok: true,
@@ -676,13 +697,18 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
-        failures.push(
-          `Cloud: ${error instanceof Error ? error.message : "unavailable"}`,
-        );
+        const detail = `Cloud: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitLiveProviderUnavailable(selected, "cloud", detail, options);
       }
     }
 
     const fallback = await this.fallback.chat(input);
+    emitLiveBlocked(
+      selected,
+      failures.join(" | ") || "No execution provider is currently available.",
+      options,
+    );
     return {
       ...fallback,
       brain: {
