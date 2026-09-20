@@ -12,24 +12,36 @@ import type { AstraMcpTransport } from "./mcp";
 import { discoverMcpToolRegistrations } from "./mcp";
 import type { AstraGitHubTransport } from "./github";
 import { createGitHubToolRegistrations, GhCliGitHubTransport } from "./github";
+import { BROWSER_TOOL_DEFINITIONS, BROWSER_TOOL_HANDLERS } from "./browser";
+import type { AstraResearchTransport } from "./research";
+import { createResearchToolRegistrations, SearXngResearchTransport } from "./research";
 
 export function createNativeToolRuntime(): AstraExecutableToolRegistry {
   return createExecutableToolRegistry(
-    NATIVE_TOOL_DEFINITIONS,
-    NATIVE_TOOL_HANDLERS,
+    [
+      ...NATIVE_TOOL_DEFINITIONS,
+      ...BROWSER_TOOL_DEFINITIONS,
+    ],
+    {
+      ...NATIVE_TOOL_HANDLERS,
+      ...BROWSER_TOOL_HANDLERS,
+    },
   );
 }
 
 export async function createToolRuntime(options?: {
   mcpTransports?: readonly AstraMcpTransport[];
   githubTransport?: AstraGitHubTransport;
+  researchTransport?: AstraResearchTransport;
   signal?: AbortSignal;
 }): Promise<AstraExecutableToolRegistry> {
   let definitions: AstraToolDefinition[] = [
     ...NATIVE_TOOL_DEFINITIONS,
+    ...BROWSER_TOOL_DEFINITIONS,
   ];
   const handlers: Record<string, AstraToolHandler> = {
     ...NATIVE_TOOL_HANDLERS,
+    ...BROWSER_TOOL_HANDLERS,
   };
 
   if (options?.githubTransport) {
@@ -46,6 +58,23 @@ export async function createToolRuntime(options?: {
     definitions.push(...github.definitions);
 
     for (const [id, handler] of Object.entries(github.handlers)) {
+      handlers[id] = handler;
+    }
+  }
+
+  if (options?.researchTransport) {
+    const research = await createResearchToolRegistrations(
+      options.researchTransport,
+    );
+    const researchIds = new Set(
+      research.definitions.map((definition) => definition.id),
+    );
+    definitions = definitions.filter(
+      (definition) => !researchIds.has(definition.id),
+    );
+    definitions.push(...research.definitions);
+
+    for (const [id, handler] of Object.entries(research.handlers)) {
       handlers[id] = handler;
     }
   }
@@ -70,6 +99,7 @@ export async function createDefaultToolRuntime(
 ): Promise<AstraExecutableToolRegistry> {
   return createToolRuntime({
     githubTransport: new GhCliGitHubTransport(),
+    researchTransport: new SearXngResearchTransport(),
     signal,
   });
 }
