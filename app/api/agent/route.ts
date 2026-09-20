@@ -1,4 +1,6 @@
 import { astraBrain } from "@/lib/brain/adapter";
+import { automationBrainRunner } from "@/lib/automation/brain-runner";
+import { ensureAutomationWorker } from "@/lib/automation/worker";
 import {
   errorResponse,
   guardRequest,
@@ -9,6 +11,7 @@ import {
 export async function GET(request: Request) {
   try {
     guardRequest(request);
+    ensureAutomationWorker(automationBrainRunner);
     return Response.json(await astraBrain.status());
   } catch (error) {
     return errorResponse(error);
