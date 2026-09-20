@@ -1,4 +1,5 @@
 import type { AstraAgent } from "@/lib/agent/types";
+import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_HERMES_URL = "http://127.0.0.1:8642";
 const DEFAULT_HERMES_MODEL = "hermes-agent";
@@ -177,6 +178,7 @@ export async function chatWithHermes({
     "Answer in the same language as the user unless they ask otherwise.",
     "Use Hermes tools only when they are available, appropriate, and allowed by ASTRA policy.",
     "Do not claim an external action happened unless the tool actually completed it.",
+    UNTRUSTED_RETRIEVED_CONTEXT_POLICY,
     policyText || "",
     context || "",
   ]
