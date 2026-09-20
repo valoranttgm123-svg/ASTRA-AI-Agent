@@ -119,7 +119,7 @@ export const ASTRA_CAPABILITY_NODES: readonly AstraCapabilityNode[] = [
     examples: ["Research this market", "Compare these options"],
     executionAgent: "researcher",
     permissionLevel: 1,
-    implementation: "partial",
+    implementation: "implemented",
     defaultState: "NOT_CONFIGURED",
     requiresConfiguration: true,
     color: CYAN,
