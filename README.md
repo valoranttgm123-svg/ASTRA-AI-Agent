@@ -19,6 +19,10 @@ ASTRA is a personal multi-agent AI project built on top of the open-source **APE
 - Business — business/POS support
 - Trading — market/trading tooling
 
+## Business specialists
+
+ASTRA includes implemented local business reasoning roles for Finance, Sales, Marketing, Ops, Editor and Analytics. Finance and Analytics also use deterministic native Level-1 tools for calculations/statistics. These roles analyze and draft; they do not imply CRM updates, messages sent, campaigns published, supplier actions, or database writes.
+
 ## Run locally
 
 ```bash
