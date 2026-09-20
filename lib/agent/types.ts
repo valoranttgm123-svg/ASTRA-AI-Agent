@@ -8,7 +8,8 @@ export type AstraInputTrigger =
   | "keyboard"
   | "microphone"
   | "gesture_open_palm"
-  | "api";
+  | "api"
+  | "automation";
 
 export type AstraInputModality =
   | "text"
