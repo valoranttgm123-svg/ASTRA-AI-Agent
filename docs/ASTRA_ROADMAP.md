@@ -841,3 +841,17 @@ Implemented on `astra/phase14d2-automation-approval-resume`:
 - tests cover per-run approval, exact resume input, permission ceiling, plan requirement and unclaimed-token rejection.
 
 Important behavior: claim-before-execute remains at-most-once. If planning/provider execution fails after claim, ASTRA does not silently retry the same occurrence.
+---
+
+## Phase 14D3A implementation checkpoint — live automation SSE
+
+Implemented on `astra/phase14d3a-automation-live-stream`:
+
+- loopback-only `POST /api/automation/run/stream`;
+- uses the same mutation guard and bounded run-request parser as the JSON occurrence endpoint;
+- streams real `brain` events from automation lifecycle + underlying Brain/tool/approval lifecycle;
+- streams one final `result` payload or a bounded `error` event;
+- request AbortSignal propagates into the automation/Brain execution and closes the SSE stream;
+- no polling loop and no background scheduler are introduced.
+
+Frontend consumption is intentionally deferred to D3B. The existence of this endpoint alone does not mark automation activity in the UI.

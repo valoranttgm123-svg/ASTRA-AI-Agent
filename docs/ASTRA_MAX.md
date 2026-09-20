@@ -1845,3 +1845,8 @@ Scheduled Permission Level 2/3 occurrences can now enter the existing ASTRA exec
 Level 2 requires explicit approval for the exact occurrence. Level 3 first enters the normal bounded Brain plan; when a real Level-3 tool step is identified, ASTRA uses the existing one-time scoped approval token. The server-generated Brain input includes the automation id and scheduled timestamp, so the existing approval hash is occurrence-specific.
 
 Automation execution sets `requirePlan=true`. If no bounded plan is available, scheduled Level 2/3 work fails closed instead of falling through to a generic provider executor. Any generated step above the automation's configured permission ceiling is blocked and its approval request is not exposed.
+## Phase 14D3A — live automation SSE backend
+
+A dedicated loopback SSE endpoint now streams real automation occurrence lifecycle together with the underlying Brain/tool/approval events. Disconnect/abort propagates into the same execution signal.
+
+This is backend-only. Command Center and the Automation control UI do not consume the stream until D3B, so no fake live status is introduced.
