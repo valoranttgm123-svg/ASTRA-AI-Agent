@@ -181,6 +181,7 @@ function defaultPermissionForStep(
       return 1;
     case "tool": {
       const toolFloor = knownToolPermission(toolId);
+      if (toolFloor > 0) return toolFloor;
       if (agent === "trading") return 4;
       if (
         agent === "github" ||
@@ -189,7 +190,7 @@ function defaultPermissionForStep(
       ) {
         return 3;
       }
-      return Math.max(2, toolFloor);
+      return 2;
     }
     case "approval":
       return 3;
@@ -342,7 +343,7 @@ export async function generateStrategistPlan({
     "Never lower a risky action's permission to make it easier to run.",
     "Dependencies may reference only earlier step ids.",
     tools && tools.length > 0
-      ? "ASTRA tool catalog:\\n" +
+      ? "ASTRA tool catalog:\n" +
         tools
           .slice(0, 60)
           .map(
@@ -358,15 +359,15 @@ export async function generateStrategistPlan({
               " | " +
               tool.description,
           )
-          .join("\\n")
+          .join("\n")
       : "ASTRA tool catalog: no executable tools were supplied.",
-    context ? `Bounded ASTRA context:\\n${context}` : "",
+    context ? `Bounded ASTRA context:\n${context}` : "",
   ]
     .filter(Boolean)
-    .join("\\n");
+    .join("\n");
 
   const result = await chatWithOllama({
-    input: `ASTRA_PLAN_REQUEST\\nGoal: ${cleanGoal}`,
+    input: `ASTRA_PLAN_REQUEST\nGoal: ${cleanGoal}`,
     agent: ASTRA_AGENT_MAP.chief_of_staff,
     context: plannerInstructions,
     policyText:
