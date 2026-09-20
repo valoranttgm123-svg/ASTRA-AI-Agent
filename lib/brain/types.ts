@@ -3,6 +3,7 @@ import type {
   AstraAgentKey,
   AstraProviderChoice,
 } from "@/lib/agent/types";
+import type { AstraMemorySourceType } from "@/lib/memory/contracts";
 
 export type AstraBrainProvider =
   | "routing_only"
@@ -15,6 +16,14 @@ export type AstraBrainEventType =
   | "request.received"
   | "router.selected"
   | "memory.loaded"
+  | "memory.search.started"
+  | "memory.source.queried"
+  | "memory.graph.matched"
+  | "memory.context.selected"
+  | "memory.search.completed"
+  | "memory.write.requested"
+  | "memory.write.completed"
+  | "memory.write.denied"
   | "skill.selected"
   | "policy.applied"
   | "provider.selected"
@@ -66,6 +75,7 @@ export type AstraBrainEnvelope = {
   events: AstraBrainEvent[];
   context?: {
     memoryEntries: number;
+    memorySources?: AstraMemorySourceType[];
     skills: string[];
   };
   permissions?: AstraBrainPermissionSnapshot;
