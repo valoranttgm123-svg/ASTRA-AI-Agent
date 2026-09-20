@@ -1,7 +1,29 @@
-import type { AgentRequest, AstraProviderChoice } from "@/lib/agent/types";
+import type {
+  AgentRequest,
+  AstraInputContext,
+  AstraInputModality,
+  AstraInputSource,
+  AstraInputTrigger,
+  AstraProviderChoice,
+} from "@/lib/agent/types";
 
 const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const PROVIDERS = new Set<AstraProviderChoice>(["auto", "ollama", "codex"]);
+const INPUT_SOURCES = new Set<AstraInputSource>(["text", "voice"]);
+const INPUT_TRIGGERS = new Set<AstraInputTrigger>([
+  "keyboard",
+  "microphone",
+  "gesture_open_palm",
+  "api",
+]);
+const INPUT_MODALITIES = new Set<AstraInputModality>([
+  "text",
+  "voice",
+  "gesture",
+  "camera",
+  "image",
+  "screen",
+]);
 const MAX_BODY_BYTES = 16_000;
 
 export class RequestError extends Error {
@@ -88,6 +110,87 @@ export async function readJson(request: Request): Promise<Record<string, unknown
   }
 }
 
+function parseInputContext(value: unknown): AstraInputContext | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new RequestError("Input context tidak valid.");
+  }
+
+  const record = value as Record<string, unknown>;
+  if (
+    typeof record.source !== "string" ||
+    !INPUT_SOURCES.has(record.source as AstraInputSource)
+  ) {
+    throw new RequestError("Input source tidak valid.");
+  }
+  if (
+    typeof record.trigger !== "string" ||
+    !INPUT_TRIGGERS.has(record.trigger as AstraInputTrigger)
+  ) {
+    throw new RequestError("Input trigger tidak valid.");
+  }
+  if (
+    !Array.isArray(record.modalities) ||
+    record.modalities.length < 1 ||
+    record.modalities.length > 6 ||
+    record.modalities.some(
+      (item) =>
+        typeof item !== "string" ||
+        !INPUT_MODALITIES.has(item as AstraInputModality),
+    )
+  ) {
+    throw new RequestError("Input modalities tidak valid.");
+  }
+
+  const consent = record.consent;
+  if (!consent || typeof consent !== "object" || Array.isArray(consent)) {
+    throw new RequestError("Input consent tidak valid.");
+  }
+  const consentRecord = consent as Record<string, unknown>;
+  for (const key of ["microphone", "camera", "image", "screen"] as const) {
+    if (typeof consentRecord[key] !== "boolean") {
+      throw new RequestError("Input consent tidak valid.");
+    }
+  }
+
+  if (record.visualContentProvided !== false) {
+    throw new RequestError(
+      "Phase 12 belum menerima payload visual. visualContentProvided harus false.",
+    );
+  }
+
+  const modalities = [
+    ...new Set(record.modalities as AstraInputModality[]),
+  ];
+
+  if (record.source === "text" && !modalities.includes("text")) {
+    throw new RequestError("Input text harus menyertakan modality text.");
+  }
+  if (record.source === "voice" && !modalities.includes("voice")) {
+    throw new RequestError("Input voice harus menyertakan modality voice.");
+  }
+  if (
+    (modalities.includes("image") || modalities.includes("screen")) &&
+    !consentRecord.image &&
+    !consentRecord.screen
+  ) {
+    throw new RequestError("Modality visual memerlukan consent eksplisit.");
+  }
+
+  return {
+    source: record.source as AstraInputSource,
+    trigger: record.trigger as AstraInputTrigger,
+    modalities,
+    consent: {
+      microphone: consentRecord.microphone as boolean,
+      camera: consentRecord.camera as boolean,
+      image: consentRecord.image as boolean,
+      screen: consentRecord.screen as boolean,
+    },
+    visualContentProvided: false,
+  };
+}
+
 export function parseAgentRequest(body: Record<string, unknown>): AgentRequest {
   if (typeof body.message !== "string" || !body.message.trim()) {
     throw new RequestError("message diperlukan.");
@@ -119,6 +222,7 @@ export function parseAgentRequest(body: Record<string, unknown>): AgentRequest {
     typeof body.approvalToken === "string"
       ? body.approvalToken.trim()
       : undefined;
+  const inputContext = parseInputContext(body.inputContext);
 
   return {
     message: body.message.trim(),
@@ -126,6 +230,7 @@ export function parseAgentRequest(body: Record<string, unknown>): AgentRequest {
     approved: Boolean(body.approved),
     ...(approvalToken ? { approvalToken } : {}),
     provider,
+    ...(inputContext ? { inputContext } : {}),
   };
 }
 
