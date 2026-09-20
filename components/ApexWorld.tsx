@@ -10,7 +10,7 @@
  * orb's tap cycle drives the whole web (standby → processing → speaking).
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ApexHeroOrb, { type OrbState } from "./ApexHeroOrb";
 import ReasoningWebJs from "./ReasoningWeb";
 import ShaderBackgroundJs from "./ShaderBackground";
@@ -18,10 +18,14 @@ import OrbStatusBar from "./OrbStatusBar";
 import { useAstraRuntime } from "./AstraRuntime";
 import {
   ASTRA_CAPABILITY_NODES,
-  ASTRA_REASONING_ROSTER,
   capabilityStateLabel,
+  type AstraCapabilityNodeKey,
   type AstraCapabilityState,
 } from "@/lib/agent/capabilities";
+import {
+  capabilityStateIsLive,
+  deriveCapabilityRuntimeMap,
+} from "@/lib/agent/capability-runtime";
 
 export type NodeSel = { name: string; key: string; color: string };
 
@@ -29,7 +33,17 @@ export type NodeSel = { name: string; key: string; color: string };
 const ReasoningWeb = ReasoningWebJs as unknown as React.ComponentType<{
   state?: string; trace?: unknown; mode?: string; coreless?: boolean;
   onSelect?: (n: NodeSel) => void; light?: boolean;
-  roster?: ReadonlyArray<readonly [string, string, string, number, number, boolean, number, number]>;
+  roster?: ReadonlyArray<readonly [
+    string,
+    string,
+    string,
+    number,
+    number,
+    boolean,
+    number,
+    number,
+    AstraCapabilityState,
+  ]>;
 }>;
 const ShaderBackground = ShaderBackgroundJs as unknown as React.ComponentType<{
   opacity?: number; voiceActive?: boolean; gold?: boolean;
@@ -243,6 +257,40 @@ export default function ApexWorld() {
   // orb tap cycle → the web's activity level (same states the app streams)
   const webState = orbState === "thinking" ? "processing" : orbState === "speaking" ? "speaking" : "standby";
 
+  const capabilityRuntime = useMemo(
+    () =>
+      deriveCapabilityRuntimeMap(
+        runtime.brainStatus,
+        runtime.brainEvents,
+      ),
+    [runtime.brainEvents, runtime.brainStatus],
+  );
+
+  const liveReasoningRoster = useMemo(
+    () =>
+      ASTRA_CAPABILITY_NODES.map((node) => {
+        const live = capabilityRuntime[node.key];
+        return [
+          node.key,
+          node.label,
+          node.layer,
+          node.visual.x,
+          node.visual.y,
+          capabilityStateIsLive(live.state),
+          node.visual.bend,
+          node.visual.radius,
+          live.state,
+        ] as const;
+      }),
+    [capabilityRuntime],
+  );
+
+  const currentPlan = runtime.lastResponse?.brain.plan;
+  const currentInput = runtime.lastResponse?.brain.context?.input;
+  const selectedRuntime = selected
+    ? capabilityRuntime[selected.key as AstraCapabilityNodeKey]
+    : undefined;
+
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", userSelect: "none" }}>
       {/* backdrop - the app's EXACT stack (Chat.jsx dark mode): base radial page
@@ -278,7 +326,7 @@ export default function ApexWorld() {
           through the equivalent list of real buttons below. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
         <ReasoningWeb
-          roster={ASTRA_REASONING_ROSTER}
+          roster={liveReasoningRoster}
           state={webState}
           trace={runtime.brainTrace}
           mode="full"
@@ -293,7 +341,9 @@ export default function ApexWorld() {
           {ROSTER.map((a) => (
             <li key={a.key}>
               <button type="button" onClick={() => openAgent({ key: a.key, name: a.name, color: a.color })}>
-                {a.name} - {INFO[a.key]?.role ?? "Specialist"}
+                {a.name} - {capabilityStateLabel(
+                  capabilityRuntime[a.key as AstraCapabilityNodeKey].state,
+                )} - {INFO[a.key]?.role ?? "Specialist"}
               </button>
             </li>
           ))}
