@@ -1839,6 +1839,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           (toolRuntime.get("computer.app.launch")?.availability ?? "NOT_CONFIGURED") +
           ". Computer Agent is OFF by default, accepts no arbitrary command string, and app launch is restricted to a fixed allowlist.",
       },
+      multimodal: {
+        enabled: true,
+        available: true,
+        state: "READY",
+        detail:
+          "Text input envelope=READY, voice transcript metadata=READY, gesture/camera control metadata=READY (local control only). Camera pixels, image payloads, and screen payloads are NOT_CONFIGURED and are never inferred from metadata.",
+      },
       tools: {
         enabled: true,
         available:
