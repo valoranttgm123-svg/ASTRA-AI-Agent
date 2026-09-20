@@ -10,12 +10,12 @@
 
 Current `main` checkpoint:
 
-- latest completed implementation: **Phase 15B — untrusted retrieved-context boundary**;
-- latest implementation PR: **#97**;
-- latest merge commit: `972dd2feb2659eb8dde9eccfcdb928c9acbccef4`;
-- PR #97 CI: **SUCCESS**;
-- post-merge `main` CI: **SUCCESS**;
-- next implementable repository task: **Phase 15C — Provider + MCP failure isolation**;
+- latest completed implementation: **Phase 15E — secret/error/telemetry hardening**;
+- latest completed implementation PR: **#103**;
+- latest completed implementation merge: `5ee3f69e934712c19ca6b2733a9311a5fc1c0633`;
+- PR #103 CI: **SUCCESS**;
+- current branch gate: **Phase 15F — final security regression/report**;
+- next after P15F merge: **MEM-X when local Sonor is available; otherwise Phase 16 performance instrumentation/preparation**;
 - Phase 14 target-PC validation: **still required**;
 - real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**.
 
@@ -101,7 +101,7 @@ Follow `docs/SONOR_CODEX_MISSION.md`.
 
 1. **P15F — Security regression report**
 2. MEM-X real Sonor validation when local access exists
-6. Phase 16 performance
+3. Phase 16 performance
 7. Phase 17 full-system validation
 8. Phase 18 Release Candidate
 9. Phase 19 Windows ready-to-use
