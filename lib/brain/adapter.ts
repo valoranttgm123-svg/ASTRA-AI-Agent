@@ -1754,6 +1754,31 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           (toolRuntime.get("drive.search")?.availability ?? "NOT_CONFIGURED") +
           ". Read capabilities are Level 1. Account/cloud mutations remain Level 3 external actions with scoped approval.",
       },
+      creative: {
+        enabled: true,
+        available:
+          toolRuntime.get("design.image.generate")?.availability === "READY" ||
+          toolRuntime.get("design.image.edit")?.availability === "READY" ||
+          toolRuntime.get("social.publish")?.availability === "READY" ||
+          toolRuntime.get("social.schedule")?.availability === "READY",
+        state:
+          toolRuntime.get("design.image.generate")?.availability === "READY" ||
+          toolRuntime.get("design.image.edit")?.availability === "READY" ||
+          toolRuntime.get("social.publish")?.availability === "READY" ||
+          toolRuntime.get("social.schedule")?.availability === "READY"
+            ? "READY"
+            : "NOT_CONFIGURED",
+        detail:
+          "Design generate=" +
+          (toolRuntime.get("design.image.generate")?.availability ?? "NOT_CONFIGURED") +
+          ", edit=" +
+          (toolRuntime.get("design.image.edit")?.availability ?? "NOT_CONFIGURED") +
+          ", social publish=" +
+          (toolRuntime.get("social.publish")?.availability ?? "NOT_CONFIGURED") +
+          ", schedule=" +
+          (toolRuntime.get("social.schedule")?.availability ?? "NOT_CONFIGURED") +
+          ". Social drafting/Design briefing are reasoning skills; generation/edit/publish/schedule require a real provider and Level-3 approval.",
+      },
       tools: {
         enabled: true,
         available:
