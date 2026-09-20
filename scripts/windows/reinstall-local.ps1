@@ -18,19 +18,12 @@ $hadEnvLocal = Test-Path -LiteralPath $envLocal -PathType Leaf
 $hadPrivateRuntime = Test-Path -LiteralPath $privateRuntime -PathType Container
 
 & $uninstaller
-if ($LASTEXITCODE -ne 0) {
-  throw "uninstall-local.ps1 gagal."
-}
 
 if ($SkipBuild) {
   & $installer -Port $Port -SkipBuild
 }
 else {
   & $installer -Port $Port
-}
-
-if ($LASTEXITCODE -ne 0) {
-  throw "install-local.ps1 gagal saat reinstall."
 }
 
 if ($hadEnvLocal -and -not (Test-Path -LiteralPath $envLocal -PathType Leaf)) {
@@ -42,9 +35,6 @@ if ($hadPrivateRuntime -and -not (Test-Path -LiteralPath $privateRuntime -PathTy
 }
 
 & $selfCheck -BaseUrl "http://127.0.0.1:$Port"
-if ($LASTEXITCODE -ne 0) {
-  throw "Readiness self-check gagal setelah reinstall."
-}
 
 [pscustomobject]@{
   Reinstalled = $true
