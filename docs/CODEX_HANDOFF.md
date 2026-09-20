@@ -1551,3 +1551,23 @@ Next after green CI/merge:
 
 - if target-PC access is available: run P16B/P16C measurements;
 - if not: continue repository-side Phase 17 preparation that does not require inventing measurements, while leaving Phase 16 open.
+
+---
+
+## Repository cleanup audit — stale PR #51
+
+Audit:
+
+`docs/PR51_TELEMETRY_AUDIT.md`
+
+Finding:
+
+- old branch is 621 commits behind current `main`;
+- NDJSON + `AsyncLocalStorage` telemetry architecture is superseded by current SSE + explicit `onEvent`;
+- Runtime incremental telemetry, bounded history and Humanoid Brain activity are present and expanded;
+- current architecture additionally includes cancellation, approvals, Automation telemetry, provider/MCP hardening and redaction;
+- no unique unsuperseded code/test was identified.
+
+Decision:
+
+**Do not merge or cherry-pick PR #51. Close it as superseded after this audit reaches `main`.**
