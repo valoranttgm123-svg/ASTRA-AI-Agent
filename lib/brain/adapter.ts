@@ -44,6 +44,7 @@ import {
   consumeLevel3Approval,
   createLevel3Approval,
 } from "./approvals";
+import { resolveExecutionPermission } from "./execution-permissions";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -1246,8 +1247,29 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       );
     }
 
-    let approvedPermissionLevel: 0 | 1 | 2 | 3 | 4 =
-      context.policy.requireApproval ? (task.approved ? 2 : 1) : 2;
+    if (
+      task.approvalToken &&
+      options?.permissionCeiling !== undefined &&
+      options.permissionCeiling < 3
+    ) {
+      return blocked(
+        "Scoped Level-3 approval is outside this execution permission ceiling.",
+        "A scoped approval token cannot override the caller's hard permission ceiling.",
+      );
+    }
+
+    const permissionResolution = resolveExecutionPermission({
+      requireApproval: context.policy.requireApproval,
+      approved: task.approved === true,
+      requirePlan: options?.requirePlan === true,
+      permissionCeiling: options?.permissionCeiling,
+      hasApprovalToken: Boolean(task.approvalToken),
+    });
+    const unattendedReadOnly =
+      permissionResolution.unattendedReadOnly;
+    let approvedPermissionLevel =
+      permissionResolution.approvedPermissionLevel;
+
     let approvedStepIds: string[] = [];
     let usedScopedApproval = false;
 
@@ -1276,7 +1298,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
 
       context.plan = grant.plan;
-      approvedPermissionLevel = 2;
+      approvedPermissionLevel = Math.min(
+        2,
+        options?.permissionCeiling ?? 2,
+      ) as 0 | 1 | 2 | 3 | 4;
       approvedStepIds = [grant.request.stepId];
       usedScopedApproval = true;
 
@@ -1296,7 +1321,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
 
     if (
       context.policy.requireApproval &&
-      approvedPermissionLevel < 2
+      approvedPermissionLevel < 2 &&
+      !unattendedReadOnly
     ) {
       return blocked(
         "ASTRA siap menjalankan tugas ini, tetapi eksekusi lokal membutuhkan approval eksplisit. Gunakan EXECUTE TASK untuk menyetujui Level-2 local execution.",

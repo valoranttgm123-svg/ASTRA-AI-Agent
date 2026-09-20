@@ -77,3 +77,8 @@ export {
   executeApprovedAutomationOccurrence,
 } from "./approval";
 export { parseAutomationRunRequest } from "./http";
+
+export {
+  createReadOnlyAutomationExecutor,
+  executeReadOnlyAutomationWithBrain,
+} from "./read-only";
