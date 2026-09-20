@@ -85,7 +85,7 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 
 ## Phase 18 — Release Candidate
 
-- [x] P18A — repository RC gate automation implemented — current PR
+- [x] P18A — repository RC gate automation implemented — PR #111
 - [ ] P18B — repository gate recorded on release-candidate main
 - [ ] npm test
 - [ ] npm run typecheck
