@@ -61,7 +61,7 @@ Phase 16 result: **IN PROGRESS — instrumentation only; no target-PC measuremen
 
 ## Phase 17 — Full-system validation
 
-- [x] P17A — safe chat-mode preflight evidence runner implemented — current PR
+- [x] P17A — safe chat-mode preflight evidence runner implemented — PR #106
 - [ ] P17B — target-runtime A–D preflight evidence captured
 - [ ] P17C — approved real execution for scenarios requiring writes/integrations
 - [ ] P17D — real emergency STOP scenario
