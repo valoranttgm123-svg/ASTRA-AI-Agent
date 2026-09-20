@@ -168,7 +168,14 @@ function isPublicIpv6(address: string) {
   if ((first & 0xffc0) === 0xfe80) return false; // link-local fe80::/10
   if ((first & 0xffc0) === 0xfec0) return false; // deprecated site-local
   if ((first & 0xff00) === 0xff00) return false; // multicast
-  if (first === 0x2001 && groups[1] === 0x0db8) return false; // docs
+
+  // ASTRA public browsing accepts native global-unicast IPv6 only. Tunnel/
+  // translation ranges can encode another address and are blocked instead of
+  // trying to recursively trust their embedded endpoint.
+  if ((first & 0xe000) !== 0x2000) return false; // outside 2000::/3
+  if (first === 0x2001 && groups[1] === 0x0db8) return false; // documentation
+  if (first === 0x2001 && groups[1] === 0x0000) return false; // Teredo 2001:0000::/32
+  if (first === 0x2002) return false; // 6to4 2002::/16
 
   const mapped =
     groups.slice(0, 5).every((group) => group === 0) &&
