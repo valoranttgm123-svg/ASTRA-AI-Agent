@@ -761,3 +761,22 @@ bounded plan
 Level-3 resume sends the same occurrence-specific Brain input plus the existing approval token. Because the existing token is bound to the input hash and stored plan, it cannot be reused for a different automation id/time/goal input.
 
 No new permanent approval store is introduced. Level 4 remains unavailable to automation.
+## Automation live stream
+
+Phase 14D3A mirrors the existing Brain SSE model for approved automation occurrences:
+
+```text
+trusted local POST
+      ↓
+/api/automation/run/stream
+      ↓
+executeApprovedAutomationOccurrence()
+      ├─ automation.* events
+      └─ Brain / plan / tool / approval events
+      ↓
+SSE brain events
+      ↓
+final result | error
+```
+
+The request AbortSignal is the cancellation boundary. No independent scheduler process is started by this endpoint.
