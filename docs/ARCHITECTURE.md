@@ -184,3 +184,34 @@ Brain
 ```
 
 It never recursively scans the workspace. Relative and absolute entries are accepted only when their final real path stays inside the registered workspace. Sensitive credential/key/env paths and unsupported/binary extensions are skipped. Content remains read-only and provenance-backed.
+
+
+## Strategist / Planner
+
+Phase 4A adds real local model-backed planning without automatic execution.
+
+```text
+User goal
+   ↓
+Project + bounded Memory context
+   ↓
+shouldGeneratePlan()
+   ↓
+local Ollama Strategist request
+   ↓
+strict JSON parser
+   ↓
+permission floors
+   ↓
+createBoundedPlan()
+   ↓
+AstraPlan in Brain envelope
+   ↓
+plan.created event
+```
+
+The model output is never trusted as executable state. `createBoundedPlan()` remains the authoritative safety boundary for step count, retry, timeout, dependency and permission bounds.
+
+Phase 4A emits only `plan.created` because no plan step has executed yet. `plan.step.started/progress/completed/failed` are reserved for Phase 5 when a real bounded executor/orchestrator exists.
+
+Planner failure is non-fatal: ASTRA may continue the normal provider response without a plan rather than fabricating one.
