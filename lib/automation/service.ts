@@ -1,4 +1,5 @@
 import type { AstraBrainEvent } from "@/lib/brain/types";
+import { safeErrorDetail } from "@/lib/security/redaction";
 import type {
   AstraAutomationLifecycleEvent,
 } from "./queue";
@@ -224,9 +225,12 @@ export class AstraAutomationService {
           (error instanceof Error && error.name === "AbortError");
         this.lastDetail = cancelled
           ? "Automation service tick cancelled by global STOP."
-          : error instanceof Error
-            ? "Automation service tick failed: " + error.message
-            : "Automation service tick failed.";
+          : "Automation service tick failed: " +
+            safeErrorDetail(
+              error,
+              "operation failed",
+              700,
+            );
         return null;
       } finally {
         this.activeController = null;
