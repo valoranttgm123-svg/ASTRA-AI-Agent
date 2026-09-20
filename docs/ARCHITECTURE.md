@@ -799,3 +799,19 @@ Ops node / Command Center
 ```
 
 There is no automation-specific event bus. The additional `automationStreaming` boolean exists only so UI controls can identify that the shared active request is an automation occurrence.
+## Automation control surface
+
+Phase 14D3B2 adds only a local UI control plane:
+
+```text
+Automation panel
+    ├─ GET /api/automation
+    ├─ POST /api/automation
+    └─ runAutomationOccurrence()
+             ↓
+       shared Runtime SSE
+             ↓
+     Brain events / Ops node
+```
+
+Definitions are reviewed in PAUSED state before enablement. Level-2/3 work never becomes unattended because the panel merely exposes the exact-occurrence approval path already enforced server-side.
