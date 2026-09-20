@@ -463,6 +463,7 @@ function envelopeContext(context: ExecutionContext) {
   return {
     context: {
       memoryEntries: context.memory.entries.length,
+      memorySources: [...new Set(context.memory.records.map((record) => record.provenance.sourceType))],
       skills: context.skills.skills.map((skill) => skill.id),
     },
     permissions: context.policy,

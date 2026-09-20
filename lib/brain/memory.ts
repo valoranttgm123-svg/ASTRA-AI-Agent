@@ -1,11 +1,16 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  clampMemoryScore,
+  type AstraMemoryRecord,
+} from "@/lib/memory/contracts";
 
 export type AstraMemoryEntry = {
   id: string;
   text: string;
   tags?: string[];
   updatedAt?: string;
+  project?: string;
 };
 
 export type AstraMemoryContext = {
@@ -13,6 +18,7 @@ export type AstraMemoryContext = {
   available: boolean;
   source: string;
   entries: AstraMemoryEntry[];
+  records: AstraMemoryRecord[];
   text: string;
   detail: string;
 };
@@ -45,7 +51,7 @@ function tokenize(value: string) {
 }
 
 function scoreEntry(inputTokens: Set<string>, entry: AstraMemoryEntry) {
-  const haystack = new Set(tokenize(`${entry.text} ${(entry.tags ?? []).join(" ")}`));
+  const haystack = new Set(tokenize(`${entry.text} ${(entry.tags ?? []).join(" ")} ${entry.project ?? ""}`));
   let score = 0;
   for (const token of inputTokens) {
     if (haystack.has(token)) score += 1;
@@ -73,16 +79,46 @@ function normalizeEntries(value: unknown): AstraMemoryEntry[] {
       : undefined;
     const updatedAt =
       typeof record.updatedAt === "string" ? record.updatedAt : undefined;
+    const project =
+      typeof record.project === "string" && record.project.trim()
+        ? record.project.trim().slice(0, 120)
+        : undefined;
 
     entries.push({
       id,
       text: text.slice(0, 4000),
       tags,
       updatedAt,
+      project,
     });
   });
 
   return entries;
+}
+
+function toRecord(
+  entry: AstraMemoryEntry,
+  score: number,
+  inputTokenCount: number,
+): AstraMemoryRecord {
+  const relevance =
+    inputTokenCount > 0 ? clampMemoryScore(score / inputTokenCount) : 0;
+
+  return {
+    id: entry.id,
+    content: entry.text,
+    tags: entry.tags,
+    relevance,
+    confidence: 1,
+    provenance: {
+      source: "astra-local-memory",
+      sourceType: "local",
+      project: entry.project,
+      timestamp: entry.updatedAt,
+      privacy: "private_local",
+      reference: `local:${entry.id}`,
+    },
+  };
 }
 
 export async function getMemoryContext(input: string): Promise<AstraMemoryContext> {
@@ -95,6 +131,7 @@ export async function getMemoryContext(input: string): Promise<AstraMemoryContex
       available: false,
       source,
       entries: [],
+      records: [],
       text: "",
       detail: "Local memory retrieval is disabled by ASTRA_MEMORY_ENABLED.",
     };
@@ -118,17 +155,25 @@ export async function getMemoryContext(input: string): Promise<AstraMemoryContex
 
     const relevant = ranked
       .filter((item) => item.score > 0)
-      .slice(0, limit)
-      .map((item) => item.entry);
+      .slice(0, limit);
 
-    const selected = relevant.length > 0 ? relevant : entries.slice(-Math.min(2, limit));
+    const selectedRanked =
+      relevant.length > 0
+        ? relevant
+        : ranked.slice(-Math.min(2, limit)).reverse();
+
     const lines: string[] = [];
+    const selectedEntries: AstraMemoryEntry[] = [];
+    const selectedRecords: AstraMemoryRecord[] = [];
     let used = 0;
 
-    for (const entry of selected) {
+    for (const item of selectedRanked) {
+      const entry = item.entry;
       const line = `- [${entry.id}] ${entry.text.replace(/\s+/g, " ").trim()}`;
       if (used + line.length > maxChars) break;
       lines.push(line);
+      selectedEntries.push(entry);
+      selectedRecords.push(toRecord(entry, item.score, inputTokens.size));
       used += line.length;
     }
 
@@ -136,7 +181,8 @@ export async function getMemoryContext(input: string): Promise<AstraMemoryContex
       enabled: true,
       available: true,
       source,
-      entries: selected.slice(0, lines.length),
+      entries: selectedEntries,
+      records: selectedRecords,
       text: lines.length > 0 ? `Relevant local ASTRA memory:\n${lines.join("\n")}` : "",
       detail:
         entries.length === 0
@@ -155,6 +201,7 @@ export async function getMemoryContext(input: string): Promise<AstraMemoryContex
         available: true,
         source,
         entries: [],
+        records: [],
         text: "",
         detail:
           "Local memory is ready; no memory file exists yet. Create .astra/memory.json when durable private context is needed.",
@@ -166,6 +213,7 @@ export async function getMemoryContext(input: string): Promise<AstraMemoryContex
       available: false,
       source,
       entries: [],
+      records: [],
       text: "",
       detail:
         error instanceof Error

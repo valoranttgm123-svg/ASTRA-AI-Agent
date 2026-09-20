@@ -20,6 +20,8 @@ import {
   visualNodeForAgent,
 } from "../lib/agent/capabilities";
 import type { AstraBrainEvent } from "../lib/brain/types";
+import { searchMemorySources } from "../lib/memory/manager";
+import type { AstraMemorySource } from "../lib/memory/contracts";
 
 let root = "";
 let fixture: Server;
@@ -32,8 +34,8 @@ before(async () => {
   await writeFile(
     path.join(root, "memory.json"),
     JSON.stringify([
-      { id: "one", text: "ASTRA local provider decision", tags: ["astra"] },
-      { id: "two", text: "Ollama remains private and bounded", tags: ["ollama"] },
+      { id: "one", text: "ASTRA local provider decision", tags: ["astra"], project: "ASTRA", updatedAt: "2026-09-20T00:00:00Z" },
+      { id: "two", text: "Ollama remains private and bounded", tags: ["ollama"], project: "ASTRA", updatedAt: "2026-09-20T01:00:00Z" },
     ]),
   );
 
@@ -168,11 +170,19 @@ test("request parser validates size, shape, mode, and provider", async () => {
   );
 });
 
-test("memory retrieval is local and bounded", async () => {
+test("memory retrieval is local, bounded, and carries provenance", async () => {
   const context = await getMemoryContext("Ollama ASTRA");
   assert.equal(context.entries.length, 1);
+  assert.equal(context.records.length, 1);
   assert.ok(context.text.length <= 80);
   assert.match(context.text, /ASTRA|Ollama/);
+  assert.equal(context.records[0].provenance.sourceType, "local");
+  assert.equal(context.records[0].provenance.source, "astra-local-memory");
+  assert.equal(context.records[0].provenance.project, "ASTRA");
+  assert.equal(context.records[0].provenance.privacy, "private_local");
+  assert.match(context.records[0].provenance.reference, /^local:/);
+  assert.ok(context.records[0].relevance >= 0 && context.records[0].relevance <= 1);
+  assert.equal(context.records[0].confidence, 1);
 });
 
 test("permission policy defaults to approval and denies side effects", () => {
@@ -293,4 +303,133 @@ test("every execution agent maps to a registered visual capability node", () => 
   assert.equal(visualNodeForAgent("computer"), "ops");
   assert.equal(visualNodeForAgent("communication"), "email");
   assert.equal(visualNodeForAgent("files"), "drive");
+});
+
+
+test("Brain envelope reports retrieved memory source types", async () => {
+  const result = await astraBrain.chat("ASTRA provider", { provider: "ollama" });
+  assert.deepEqual(result.brain.context?.memorySources, ["local"]);
+});
+
+
+test("multi-source memory manager enforces project isolation, dedupe, ranking, and bounds", async () => {
+  const local: AstraMemorySource = {
+    id: "local-fixture",
+    type: "local",
+    async search() {
+      return {
+        source: "local-fixture",
+        sourceType: "local",
+        available: true,
+        detail: "ok",
+        records: [
+          {
+            id: "shared",
+            content: "ASTRA decision from local memory",
+            relevance: 0.7,
+            confidence: 1,
+            provenance: {
+              source: "local-fixture",
+              sourceType: "local",
+              project: "ASTRA",
+              privacy: "private_local",
+              reference: "decision:shared",
+            },
+          },
+          {
+            id: "other-project",
+            content: "ALURKA only context",
+            relevance: 0.99,
+            confidence: 1,
+            provenance: {
+              source: "local-fixture",
+              sourceType: "local",
+              project: "ALURKA",
+              privacy: "private_local",
+              reference: "decision:alurka",
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const graph: AstraMemorySource = {
+    id: "graph-fixture",
+    type: "graphify",
+    async search() {
+      return {
+        source: "graph-fixture",
+        sourceType: "graphify",
+        available: true,
+        detail: "ok",
+        records: [
+          {
+            id: "shared-graph",
+            content: "ASTRA decision from graph",
+            relevance: 0.9,
+            confidence: 0.8,
+            provenance: {
+              source: "graph-fixture",
+              sourceType: "graphify",
+              project: "ASTRA",
+              privacy: "project_local",
+              reference: "decision:shared",
+            },
+          },
+          {
+            id: "second",
+            content: "ASTRA second graph context",
+            relevance: 0.8,
+            confidence: 0.8,
+            provenance: {
+              source: "graph-fixture",
+              sourceType: "graphify",
+              project: "ASTRA",
+              privacy: "project_local",
+              reference: "decision:second",
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const result = await searchMemorySources(
+    { input: "ASTRA", project: "ASTRA", limit: 2, maxChars: 200 },
+    [local, graph],
+  );
+
+  assert.equal(result.records.length, 2);
+  assert.equal(result.records[0].provenance.reference, "decision:shared");
+  assert.equal(result.records[0].provenance.sourceType, "graphify");
+  assert.equal(result.records[1].provenance.reference, "decision:second");
+  assert.ok(result.records.every((record) => record.provenance.project !== "ALURKA"));
+});
+
+test("multi-source memory manager degrades around failed sources and supports cancellation", async () => {
+  const failing: AstraMemorySource = {
+    id: "broken-source",
+    type: "obsidian",
+    async search() {
+      throw new Error("fixture failure");
+    },
+  };
+  const result = await searchMemorySources(
+    { input: "ASTRA", limit: 3, maxChars: 200 },
+    [failing],
+  );
+  assert.equal(result.records.length, 0);
+  assert.equal(result.sources[0].available, false);
+  assert.doesNotMatch(result.sources[0].detail, /password|token/i);
+
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(
+    searchMemorySources(
+      { input: "ASTRA", limit: 3, maxChars: 200, signal: controller.signal },
+      [failing],
+    ),
+    { name: "AbortError" },
+  );
 });
