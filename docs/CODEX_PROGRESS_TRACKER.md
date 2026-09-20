@@ -77,8 +77,8 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 
 ## Repository cleanup before RC
 
-- [ ] Compare stale PR #51 to current main
-- [ ] Port only genuinely unique unsuperseded behavior/tests
+- [x] Compare stale PR #51 to current main — `docs/PR51_TELEMETRY_AUDIT.md`
+- [x] Port only genuinely unique unsuperseded behavior/tests — none identified; no port required
 - [ ] Close PR #51 as superseded if nothing useful remains
 - [ ] verify no abandoned release-blocking branch is required
 - [ ] verify no secret/private runtime file is tracked
