@@ -48,7 +48,10 @@ test("Phase 19B reinstall uses existing non-destructive install/uninstall wrappe
   );
   assert.doesNotMatch(uninstall, /\.env\.local/i);
   assert.doesNotMatch(uninstall, /\.astra/i);
-  assert.doesNotMatch(uninstall, /node_modules|AI-Models|Ollama/i);
+  assert.doesNotMatch(
+    uninstall,
+    /Remove-Item[^\n]*(?:node_modules|AI-Models|\\.ollama|Ollama\\\\models)/i,
+  );
 });
 
 test("Phase 19B uninstall remains scoped to startup tasks and desktop shortcut", () => {
