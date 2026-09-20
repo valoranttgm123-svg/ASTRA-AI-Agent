@@ -1,5 +1,20 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — ASTRA MAX Phase 0–1 implementation checkpoint
+
+Phase 0 and Phase 1 are implemented on `astra/astra-max-production` and validated by CI.
+
+Completed:
+- baseline locked from stable `main` `15ed870f...` with recoverable pre-MAX backup;
+- canonical 18-node capability registry added at `lib/agent/capabilities.ts`;
+- Brain visual-node routing now uses the canonical registry;
+- Command Center roster and overview use the same registry;
+- unimplemented/unconfigured skills/integrations show `NOT_CONFIGURED` instead of misleading ONLINE status;
+- registry invariants are covered by automated tests;
+- build, tests, typecheck, lint and dependency audit passed.
+
+Next automatic task: **Phase 2 — Memory Intelligence foundation**. Add provider-neutral provenance/source contracts while preserving bounded local-memory retrieval. Live Graphify/Obsidian integration should follow those contracts and must remain local/read-only by default until explicitly configured.
+
 ## 2026-09-20 — JARVIS-Class continuation approved
 
 The ASTRA MAX mission now continues beyond the core release through **Phase 21–30 JARVIS-Class Expansion** in `docs/ASTRA_MAX.md`.
