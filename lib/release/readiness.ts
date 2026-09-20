@@ -12,6 +12,14 @@ export type ReadinessCheck = {
   data?: Record<string, unknown>;
 };
 
+export type BrainReadinessSnapshot = {
+  brain: ReadinessCheck;
+  ollama: ReadinessCheck;
+  permissions: ReadinessCheck;
+  capabilities: Record<string, ReadinessState>;
+  features: Record<string, ReadinessState>;
+};
+
 function isRecord(
   value: unknown,
 ): value is Record<string, unknown> {
@@ -51,12 +59,22 @@ export function featureState(
 
 export function extractBrainReadiness(
   payload: unknown,
-) {
+): BrainReadinessSnapshot {
   if (!isRecord(payload)) {
     return {
       brain: {
-        state: "ERROR" as const,
+        state: "ERROR",
         detail: "Brain status payload is malformed.",
+      },
+      ollama: {
+        state: "UNKNOWN",
+        detail:
+          "Ollama readiness cannot be derived from a malformed Brain status payload.",
+      },
+      permissions: {
+        state: "UNKNOWN",
+        detail:
+          "Permission readiness cannot be derived from a malformed Brain status payload.",
       },
       capabilities: {},
       features: {},
