@@ -73,6 +73,14 @@ const EXPLICIT_PLAN_WORDS = [
   "milestone",
   "kampanye",
   "campaign",
+  "schedule",
+  "scheduled",
+  "jadwal",
+  "jadwalkan",
+  "remind",
+  "reminder",
+  "pengingat",
+  "setiap",
 ];
 
 function hasWord(text: string, word: string) {
