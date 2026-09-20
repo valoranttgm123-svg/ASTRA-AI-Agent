@@ -1,7 +1,7 @@
 import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
 import { visualNodeForAgent } from "@/lib/agent/capabilities";
-import type { AstraAgentKey } from "@/lib/agent/types";
+import type { AstraAgentKey, AstraApprovalRequest } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
@@ -30,6 +30,7 @@ import {
 } from "./policy";
 import { getSkillContext, type AstraSkillContext } from "./skills";
 import { executeBrainPlan } from "./plan-executor";
+import { consumeLevel3Approval, createLevel3Approval } from "./approvals";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -891,7 +892,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
   }
 
   async execute(
-    task: { input: string; approved?: boolean },
+    task: { input: string; approved?: boolean; approvalToken?: string },
     options?: AstraBrainRunOptions,
   ): Promise<AstraBrainChatResult> {
     const response = await this.chat(task.input, options);
@@ -1153,6 +1154,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       message: string,
       detail: string,
       requiresApproval = false,
+      approvalRequest?: AstraApprovalRequest,
     ): AstraBrainChatResult => {
       emitLiveBlocked(selected, detail, options);
       return {
@@ -1162,6 +1164,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         state: "blocked",
         message,
         requiresApproval,
+        approvalRequest,
         brain: {
           provider: "routing_only",
           execution: "blocked",
@@ -1174,15 +1177,144 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       };
     };
 
-    if (context.policy.requireApproval && !task.approved) {
+    let approvedPermissionLevel: 0 | 1 | 2 | 3 | 4 =
+      context.policy.requireApproval ? (task.approved ? 2 : 1) : 2;
+
+    if (task.approvalToken) {
+      const grant = consumeLevel3Approval({
+        token: task.approvalToken,
+        input,
+      });
+
+      if (!grant) {
+        return blocked(
+          "Approval Level-3 tidak valid, sudah dipakai, atau sudah kedaluwarsa. Jalankan kembali task untuk membuat approval request baru.",
+          "Scoped Level-3 approval token validation failed.",
+          true,
+        );
+      }
+
+      if (
+        grant.plan.projectId &&
+        context.project.match?.project.id !== grant.plan.projectId
+      ) {
+        return blocked(
+          "Approval Level-3 tidak lagi cocok dengan project yang aktif.",
+          "Scoped approval project no longer matches the resolved Project Registry context.",
+        );
+      }
+
+      context.plan = grant.plan;
+      approvedPermissionLevel = grant.level;
+
+      emitLiveEvent(options, {
+        type: "approval.granted",
+        agent: "chief_of_staff",
+        visualNode: "chief_of_staff",
+        label: "Level-3 approval granted",
+        detail:
+          "One-time approval accepted for " +
+          grant.request.toolId +
+          " on plan " +
+          grant.request.planId +
+          ".",
+      });
+    }
+
+    if (
+      context.policy.requireApproval &&
+      approvedPermissionLevel < 2
+    ) {
       return blocked(
-        "ASTRA siap menjalankan tugas ini, tetapi eksekusi membutuhkan approval eksplisit. Gunakan EXECUTE TASK untuk menyetujui eksekusi.",
-        "Execution mode requested without explicit user approval.",
+        "ASTRA siap menjalankan tugas ini, tetapi eksekusi lokal membutuhkan approval eksplisit. Gunakan EXECUTE TASK untuk menyetujui Level-2 local execution.",
+        "Execution mode requested without explicit safe-local approval.",
         true,
       );
     }
 
     if (context.plan) {
+      const nextHigherPermissionStep = context.plan.steps.find(
+        (step) =>
+          step.status === "pending" &&
+          step.permissionLevel > approvedPermissionLevel,
+      );
+
+      if (nextHigherPermissionStep) {
+        if (nextHigherPermissionStep.permissionLevel >= 4) {
+          return blocked(
+            "Plan ini membutuhkan izin Level-4/high-impact. ASTRA belum mengizinkan approval Level-4 melalui UI normal.",
+            "High-impact Level-4 step requires a future stronger authorization path.",
+            true,
+          );
+        }
+
+        if (
+          nextHigherPermissionStep.permissionLevel === 3 &&
+          nextHigherPermissionStep.toolId
+        ) {
+          const definition = context.tools.find(
+            (tool) => tool.id === nextHigherPermissionStep.toolId,
+          );
+
+          if (!definition || definition.availability !== "READY") {
+            return blocked(
+              "Action eksternal membutuhkan tool yang belum READY: " +
+                nextHigherPermissionStep.toolId +
+                ".",
+              "Scoped Level-3 approval was not issued because the required tool is not READY.",
+            );
+          }
+
+          if (
+            definition.sideEffect === "external_write" &&
+            !context.policy.allowExternalActions
+          ) {
+            return blocked(
+              "Tool " +
+                definition.id +
+                " membutuhkan ASTRA_ALLOW_EXTERNAL_ACTIONS=true sebelum approval dapat diberikan.",
+              "External-action policy is disabled, so no Level-3 approval challenge was issued.",
+            );
+          }
+
+          const approvalRequest = createLevel3Approval({
+            input,
+            plan: context.plan,
+            step: nextHigherPermissionStep,
+          });
+
+          emitLiveEvent(options, {
+            type: "approval.requested",
+            agent: nextHigherPermissionStep.agent ?? "chief_of_staff",
+            visualNode: visualNodeForAgent(
+              nextHigherPermissionStep.agent ?? "chief_of_staff",
+            ),
+            label: "Level-3 approval requested",
+            detail:
+              "Approval required for " +
+              approvalRequest.toolId +
+              " before any plan step executes.",
+          });
+
+          return blocked(
+            "ASTRA membutuhkan approval Level-3 untuk action eksternal: " +
+              nextHigherPermissionStep.title +
+              ". Periksa scope lalu tekan APPROVE LEVEL 3.",
+            "Bounded plan preflight stopped before execution and issued a one-time scoped approval challenge.",
+            true,
+            approvalRequest,
+          );
+        }
+
+        return blocked(
+          "Plan membutuhkan permission Level-" +
+            nextHigherPermissionStep.permissionLevel +
+            " yang belum disetujui.",
+          "Plan preflight stopped before executing a higher-permission step.",
+          true,
+        );
+      }
+
       const hasUnstructuredAction = context.plan.steps.some(
         (step) =>
           step.kind === "tool" &&
@@ -1204,8 +1336,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         baseContext: context.localContext,
         policy: context.policy,
         providerChoice: preferredProvider,
-        approvedPermissionLevel:
-          context.policy.requireApproval && !task.approved ? 1 : 2,
+        approvedPermissionLevel,
         signal: options?.signal,
         onEvent: (event) => {
           const live = emitLiveEvent(options, planExecutionEventFields(event));
