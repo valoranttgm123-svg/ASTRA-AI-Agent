@@ -1246,6 +1246,17 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       );
     }
 
+    if (
+      task.approvalToken &&
+      options?.permissionCeiling !== undefined &&
+      options.permissionCeiling < 3
+    ) {
+      return blocked(
+        "Scoped Level-3 approval is outside this execution permission ceiling.",
+        "A scoped approval token cannot override the caller's hard permission ceiling.",
+      );
+    }
+
     const unattendedReadOnly =
       options?.requirePlan === true &&
       options.permissionCeiling !== undefined &&
