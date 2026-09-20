@@ -4384,3 +4384,19 @@ test("Phase 14 cancellation is persisted and propagates through scheduler", asyn
   assert.equal(stored.lastRun?.status, "cancelled");
   assert.equal(stored.activeRun, undefined);
 });
+
+
+test("Phase 14 Brain status reports automation OFF truthfully by default", async () => {
+  delete process.env.ASTRA_AUTOMATION_ENABLED;
+  const status = await astraBrain.status();
+  assert.equal(status.features?.automation.enabled, false);
+  assert.equal(status.features?.automation.available, false);
+  assert.equal(
+    status.features?.automation.state,
+    "NOT_CONFIGURED",
+  );
+  assert.match(
+    status.features?.automation.detail ?? "",
+    /OFF by default/i,
+  );
+});
