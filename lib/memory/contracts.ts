@@ -45,6 +45,42 @@ export type AstraMemorySourceResult = {
   records: AstraMemoryRecord[];
 };
 
+
+export type AstraMemoryLifecycleEvent =
+  | {
+      type: "search.started";
+      sourceCount: number;
+      project?: string;
+    }
+  | {
+      type: "source.queried";
+      source: string;
+      sourceType: AstraMemorySourceType;
+      available: boolean;
+      recordCount: number;
+      detail: string;
+    }
+  | {
+      type: "graph.matched";
+      source: string;
+      recordCount: number;
+    }
+  | {
+      type: "context.selected";
+      recordCount: number;
+      sourceTypes: AstraMemorySourceType[];
+    }
+  | {
+      type: "search.completed";
+      selectedCount: number;
+      availableSources: number;
+      unavailableSources: number;
+    };
+
+export type AstraMemoryLifecycleListener = (
+  event: AstraMemoryLifecycleEvent,
+) => void;
+
 export interface AstraMemorySource {
   readonly id: string;
   readonly type: AstraMemorySourceType;
