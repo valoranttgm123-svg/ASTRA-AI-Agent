@@ -472,3 +472,18 @@ The final completion status is one of:
 - `JARVIS-CLASS BLOCKED`
 
 The “JARVIS-Class” label describes the practical assistant experience target, not fictional superintelligence or impossible movie capabilities.
+
+
+---
+
+## Implementation checkpoint — 2026-09-20 before next Codex session
+
+Merged to `main`:
+- ✅ Phase 0 baseline lock
+- ✅ Phase 1 canonical 18-node capability registry
+- ✅ Phase 2 Memory Intelligence **foundation** (provenance + multi-source contracts/manager); live Graphify/Obsidian/Sonor still pending
+- ✅ Phase 3 Project Registry **foundation** (explicit registry + project detection); scoped project file/context loading still pending
+- ✅ Phase 4 Planner **safety foundation** (bounds/contracts only); Strategist/model planner and execution still pending
+- ✅ Phase 6 Tool Registry **metadata foundation** completed early; real handlers/MCP execution still pending
+
+The next Codex session should not rewrite these foundations. It should connect real providers/adapters to them and advance the remaining roadmap with truthful telemetry, permission gates, cancellation and verification.

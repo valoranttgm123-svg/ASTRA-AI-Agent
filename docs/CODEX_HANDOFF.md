@@ -1,5 +1,53 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — pre-Codex-limit ASTRA MAX foundation checkpoint
+
+Stable `main` now includes the implementation checkpoints below. Do not rebuild them.
+
+Merged checkpoints:
+- PR #57 — Phase 0/1 baseline + canonical truthful 18-node capability registry.
+- PR #58 — Phase 2 Memory Intelligence foundation: provenance/source contracts + bounded multi-source manager.
+- PR #59 — Phase 3 Project Registry foundation: explicit local registry + project resolution + `project.selected` Brain context/event.
+- PR #60 — Phase 4 Planner safety foundation: bounded steps/retries/timeouts/dependencies/permission contracts; **no autonomous execution**.
+- PR #61 — Phase 6 Tool Registry metadata foundation: provider-neutral, permission-aware, **non-executing** tool definitions.
+
+Current stable main before this documentation checkpoint:
+`968ecebae6166bcfbae1fa5f7e9e0f0e337b0ea6`
+
+What is genuinely working now:
+- 18 Command Center nodes have one canonical capability registry and truthful default states;
+- unimplemented integrations show `NOT_CONFIGURED` instead of fake ONLINE;
+- local memory retrieval preserves provenance/project/privacy/relevance/confidence;
+- multi-source memory manager can rank, dedupe, isolate projects, bound context, survive failed sources and cancel;
+- explicitly registered projects can be resolved by id/name/alias/recent activity without scanning arbitrary folders;
+- Brain envelope can report selected project and memory source types;
+- planner data is safety-bounded before future execution;
+- tool metadata cannot claim unsafe permission levels or READY status without a provider.
+
+Not live yet — do not claim otherwise:
+- Graphify/Obsidian/Sonor adapters;
+- scoped loading of project docs/workspaces into Brain context;
+- model-generated Strategist plans;
+- multi-step plan executor;
+- real multi-agent orchestration beyond current routing;
+- executable Tool Registry handlers;
+- MCP;
+- real browser/research tools;
+- Gmail/Calendar/Drive/CRM connectors;
+- Windows Computer Agent;
+- autonomous/background execution.
+
+Next Codex work, in order:
+1. Finish Phase 2 live memory-source adapters for Graphify + Obsidian (Sonor optional) using `AstraMemorySource`; preserve local/read-only defaults and provenance.
+2. Emit real `memory.search.started/source.queried/context.selected/search.completed` events around actual retrieval.
+3. Finish Phase 3 by loading only scoped registered project context through approved Files/Drive paths; project identification alone is not file access.
+4. Implement Phase 4 real Strategist/Planner generation through a permitted provider, normalized by `createBoundedPlan`.
+5. Implement Phase 5 Chief orchestration using real plan steps and truthful agent lifecycle.
+6. Connect Phase 6 tool handlers/MCP behind the existing registry, permission levels, approval UI, cancellation and verification.
+7. Continue the remaining ASTRA MAX and JARVIS-Class roadmap in `docs/ASTRA_MAX.md`.
+
+Every merged foundation above passed production build, unit/integration tests, typecheck, lint and dependency audit in ASTRA CI.
+
 ## 2026-09-20 — ASTRA MAX Phase 2 memory foundation checkpoint
 
 The provider-neutral Memory Intelligence foundation is implemented and validated on `astra/astra-max-memory-foundation`.
