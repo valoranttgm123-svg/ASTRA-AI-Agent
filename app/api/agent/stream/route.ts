@@ -5,6 +5,7 @@ import {
   parseAgentRequest,
   readJson,
 } from "@/lib/brain/http";
+import { safeErrorDetail } from "@/lib/security/redaction";
 import type {
   AstraBrainChatResult,
   AstraBrainEvent,
@@ -82,10 +83,11 @@ export async function POST(request: Request) {
         } catch (error) {
           if (!request.signal.aborted) {
             send("error", {
-              message:
-                error instanceof Error
-                  ? error.message
-                  : "ASTRA Brain streaming failed.",
+              message: safeErrorDetail(
+                error,
+                "ASTRA Brain streaming failed.",
+                700,
+              ),
             });
           }
         } finally {

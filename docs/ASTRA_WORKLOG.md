@@ -162,11 +162,21 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: shared public error/status/telemetry redaction boundary merged; fake-secret regression coverage passes.
 - next: **P15F final security regression matrix/report**.
-## In-flight checkpoint — Phase 15F
+## Phase 15F — final security regression/report
 
-- PR: **#104**;
-- branch: `astra/phase15f-final-security-report`;
-- scope: final matrix closure + hardening report + roadmap/handoff truth;
-- completion rule: Phase 15 becomes repository-complete only after this PR is green and merged;
-- local gates remain target-PC Automation and real Sonor validation;
-- next implementable work if local access is unavailable: **Phase 16 performance instrumentation/preparation**.
+- PR: **#104**
+- merge commit: `d5e0b27e35584aa0ccd9ffb69f16e82134ac0eb2`
+- CI: **SUCCESS**
+- result: Phase 15 repository hardening complete; final matrix/report merged.
+- truthful status: `PHASE 15 REPOSITORY HARDENING COMPLETE / CI VERIFIED / LOCAL RELEASE GATES REMAIN`
+- next implementable repository work while MEM-X is externally blocked: **Phase 16 performance instrumentation/preparation**.
+
+## In-flight checkpoint — Phase 16A
+
+- PR: **#105**;
+- branch: `astra/phase16a-performance-measurement-harness`;
+- scope: loopback-only runtime timing harness + deterministic statistics + SSE timing parser;
+- no target-PC/browser performance value has been invented or recorded;
+- generated results go to gitignored `.astra/performance/`;
+- completion rule: repository instrumentation counts complete only after CI is green and the PR is merged;
+- target-PC runtime/browser measurements remain Phase 16 local gates.
