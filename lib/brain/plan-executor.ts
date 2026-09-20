@@ -239,6 +239,93 @@ async function inspectMemory({
   };
 }
 
+async function executeResearchStep({
+  step,
+  goal,
+  policy,
+  approvedPermissionLevel,
+  signal,
+  onToolEvent,
+}: {
+  step: AstraPlanStep;
+  goal: string;
+  policy: AstraBrainPermissionSnapshot;
+  approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
+  signal: AbortSignal;
+  onToolEvent?: (event: AstraToolLifecycleEvent) => void;
+}): Promise<AstraPlanStepExecutionOutcome> {
+  const runtime = await createDefaultToolRuntime(signal);
+  const definition = runtime.get("research.web");
+
+  if (!definition || definition.availability !== "READY") {
+    return {
+      status: "failed",
+      provider: definition?.provider,
+      detail:
+        "Real web research is not configured. Configure a READY research transport (for example local SearXNG via ASTRA_SEARXNG_URL) before this step can complete.",
+    };
+  }
+
+  const query = [step.title, goal]
+    .filter(Boolean)
+    .join(" — ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 500);
+
+  const result = await runtime.execute(
+    "research.web",
+    {
+      query,
+      searchLimit: 8,
+      fetchLimit: 3,
+    },
+    {
+      approvedPermissionLevel,
+      policy: {
+        allowShell: policy.allowShell,
+        allowFileWrite: policy.allowFileWrite,
+        allowExternalActions: policy.allowExternalActions,
+      },
+      signal,
+      onEvent: onToolEvent,
+    },
+  );
+
+  let output = "";
+  if (result.output !== undefined) {
+    try {
+      output = JSON.stringify(result.output).slice(0, 12_000);
+    } catch {
+      output = "";
+    }
+  }
+
+  if (result.status === "completed" && result.verified) {
+    return {
+      status: "completed",
+      provider: result.provider || definition.provider,
+      detail: result.detail,
+      output,
+    };
+  }
+
+  if (result.status === "blocked") {
+    return {
+      status: "waiting_approval",
+      provider: result.provider || definition.provider,
+      detail: result.detail,
+    };
+  }
+
+  return {
+    status: "failed",
+    provider: result.provider || definition.provider,
+    detail: result.detail,
+    output,
+  };
+}
+
 async function executeStructuredTool({
   step,
   project,
@@ -561,11 +648,14 @@ export async function executeBrainPlan(
         }
 
         case "research":
-          return {
-            status: "failed",
-            detail:
-              "No real research/browser tool is configured in ASTRA yet. Phase 6/7 must provide one before research steps can complete.",
-          };
+          return executeResearchStep({
+            step,
+            goal: stepContext.goal,
+            policy: options.policy,
+            approvedPermissionLevel: options.approvedPermissionLevel,
+            signal: stepContext.signal,
+            onToolEvent: options.onToolEvent,
+          });
 
         case "tool": {
           const structured = await executeStructuredTool({
