@@ -13,12 +13,14 @@ import { guardRequest, parseAgentRequest, readJson } from "../lib/brain/http";
 import { getMemoryContext } from "../lib/brain/memory";
 import { chatWithOllama, getOllamaStatus } from "../lib/brain/ollama";
 import { getPermissionPolicy } from "../lib/brain/policy";
+import { getSkillContext } from "../lib/brain/skills";
 import { ASTRA_AGENT_MAP } from "../lib/agent/roster";
 import {
   ASTRA_CAPABILITY_MAP,
   ASTRA_CAPABILITY_NODES,
   ASTRA_REASONING_ROSTER,
   visualNodeForAgent,
+  visualNodeForSkill,
 } from "../lib/agent/capabilities";
 import type { AstraBrainEvent } from "../lib/brain/types";
 import { searchMemorySources } from "../lib/memory/manager";
@@ -2688,4 +2690,323 @@ test("planner keeps research/browser tools at read-only Level 1", () => {
 
   assert.equal(steps[0].permissionLevel, 1);
   assert.equal(steps[1].permissionLevel, 1);
+});
+
+
+test("Phase 8 finance tool calculates deterministic profit margin markup and break-even metrics", async () => {
+  const events: string[] = [];
+  const result = await astraNativeToolRuntime.execute(
+    "business.finance.metrics",
+    {
+      revenue: 1000,
+      cogs: 600,
+      fixedCost: 200,
+      unitsSold: 100,
+      unitVariableCost: 6,
+      source: "fixture finance",
+    },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+      onEvent: (event) => events.push(event.type),
+    },
+  );
+
+  assert.equal(result.status, "completed");
+  assert.equal(result.verified, true);
+  assert.equal(result.provider, "native-business-math");
+
+  const output = result.output as {
+    source: string;
+    metrics: Record<string, number | null>;
+  };
+  assert.equal(output.source, "fixture finance");
+  assert.equal(output.metrics.totalCost, 800);
+  assert.equal(output.metrics.grossProfit, 400);
+  assert.equal(output.metrics.grossMarginPct, 40);
+  assert.equal(output.metrics.markupPct, 66.666667);
+  assert.equal(output.metrics.netProfit, 200);
+  assert.equal(output.metrics.netMarginPct, 20);
+  assert.equal(output.metrics.averageSellingPrice, 10);
+  assert.equal(output.metrics.contributionPerUnit, 4);
+  assert.equal(output.metrics.breakEvenUnits, 50);
+  assert.equal(output.metrics.breakEvenUnitsCeil, 50);
+  assert.deepEqual(events, ["tool.started", "tool.completed"]);
+});
+
+test("Phase 8 finance tool derives revenue/COGS from unit data and rejects missing revenue evidence", async () => {
+  const derived = await astraNativeToolRuntime.execute(
+    "business.finance.metrics",
+    {
+      unitsSold: 20,
+      unitPrice: 15,
+      unitVariableCost: 9,
+    },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(derived.status, "completed");
+  const output = derived.output as {
+    inputs: { revenue: number; cogs: number };
+    metrics: { grossProfit: number; grossMarginPct: number };
+  };
+  assert.equal(output.inputs.revenue, 300);
+  assert.equal(output.inputs.cogs, 180);
+  assert.equal(output.metrics.grossProfit, 120);
+  assert.equal(output.metrics.grossMarginPct, 40);
+
+  const missing = await astraNativeToolRuntime.execute(
+    "business.finance.metrics",
+    { fixedCost: 100 },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(missing.status, "failed");
+  assert.equal(missing.verified, false);
+  assert.match(missing.detail, /require revenue/i);
+});
+
+test("Phase 8 analytics tool summarizes bounded numeric records deterministically", async () => {
+  const result = await astraNativeToolRuntime.execute(
+    "analytics.summary",
+    {
+      source: "fixture POS",
+      records: [
+        { day: "Mon", sales: 100, orders: 4 },
+        { day: "Tue", sales: 120, orders: 5 },
+        { day: "Wed", sales: 90, orders: 3 },
+      ],
+    },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+
+  assert.equal(result.status, "completed");
+  assert.equal(result.verified, true);
+  assert.equal(result.provider, "native-analytics");
+
+  const output = result.output as {
+    source: string;
+    recordCount: number;
+    summaries: Record<string, Record<string, number | null>>;
+  };
+  assert.equal(output.source, "fixture POS");
+  assert.equal(output.recordCount, 3);
+  assert.equal(output.summaries.sales.count, 3);
+  assert.equal(output.summaries.sales.sum, 310);
+  assert.equal(output.summaries.sales.mean, 103.333333);
+  assert.equal(output.summaries.sales.min, 90);
+  assert.equal(output.summaries.sales.max, 120);
+  assert.equal(output.summaries.sales.median, 100);
+  assert.equal(output.summaries.sales.first, 100);
+  assert.equal(output.summaries.sales.last, 90);
+  assert.equal(output.summaries.sales.delta, -10);
+  assert.equal(output.summaries.sales.deltaPct, -10);
+  assert.equal(output.summaries.orders.sum, 12);
+});
+
+test("Phase 8 analytics rejects records without finite numeric evidence", async () => {
+  const result = await astraNativeToolRuntime.execute(
+    "analytics.summary",
+    {
+      records: [
+        { label: "A" },
+        { label: "B" },
+      ],
+    },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(result.status, "failed");
+  assert.equal(result.verified, false);
+  assert.match(result.detail, /numeric field/i);
+});
+
+test("Phase 8 business skills select only the relevant specialist plus the base safety skill", async () => {
+  const finance = await getSkillContext(
+    "business",
+    "hitung margin dan markup untuk harga jual ini",
+  );
+  assert.deepEqual(
+    finance.skills.map((skill) => skill.id),
+    ["business-analysis", "finance-analysis"],
+  );
+
+  const marketing = await getSkillContext(
+    "business",
+    "buat kampanye promosi ALURKA",
+  );
+  assert.deepEqual(
+    marketing.skills.map((skill) => skill.id),
+    ["business-analysis", "marketing-strategy"],
+  );
+
+  const editor = await getSkillContext(
+    "business",
+    "proofread dan revisi tulisan ini",
+  );
+  assert.deepEqual(
+    editor.skills.map((skill) => skill.id),
+    ["business-analysis", "editor-quality"],
+  );
+
+  const generic = await getSkillContext(
+    "business",
+    "jelaskan kondisi bisnis ini",
+  );
+  assert.deepEqual(
+    generic.skills.map((skill) => skill.id),
+    ["business-analysis"],
+  );
+});
+
+test("Phase 8 specialist intents route to Business without hijacking ordinary calendar/email requests", () => {
+  assert.equal(
+    selectAgent("hitung margin laba produk"),
+    "business",
+  );
+  assert.equal(
+    selectAgent("buat kampanye promosi ALURKA"),
+    "business",
+  );
+  assert.equal(
+    selectAgent("proofread email penawaran ini"),
+    "business",
+  );
+  assert.equal(
+    selectAgent("cek KPI dan trend penjualan"),
+    "business",
+  );
+  assert.equal(
+    selectAgent("cek jadwal meeting besok"),
+    "communication",
+  );
+});
+
+test("Phase 8 specialist skill IDs map to their truthful visual nodes", () => {
+  assert.equal(
+    visualNodeForSkill("finance-analysis", "business"),
+    "finance",
+  );
+  assert.equal(
+    visualNodeForSkill("sales-support", "business"),
+    "sales",
+  );
+  assert.equal(
+    visualNodeForSkill("marketing-strategy", "business"),
+    "marketing",
+  );
+  assert.equal(
+    visualNodeForSkill("ops-workflow", "business"),
+    "ops",
+  );
+  assert.equal(
+    visualNodeForSkill("editor-quality", "business"),
+    "editor",
+  );
+  assert.equal(
+    visualNodeForSkill("analytics-interpretation", "business"),
+    "analytics",
+  );
+});
+
+test("Phase 8 capability nodes are implemented and configuration-free while external integrations remain separate", () => {
+  for (const key of [
+    "finance",
+    "editor",
+    "sales",
+    "marketing",
+    "ops",
+    "analytics",
+  ] as const) {
+    const node = ASTRA_CAPABILITY_MAP[key];
+    assert.equal(node.implementation, "implemented", key);
+    assert.equal(node.defaultState, "READY", key);
+    assert.equal(node.requiresConfiguration, false, key);
+  }
+
+  assert.equal(
+    ASTRA_CAPABILITY_MAP.crm.defaultState,
+    "NOT_CONFIGURED",
+  );
+  assert.equal(
+    ASTRA_CAPABILITY_MAP.email.defaultState,
+    "NOT_CONFIGURED",
+  );
+});
+
+test("Phase 8 deterministic business tools remain Level 1 and quantitative requests trigger planning", () => {
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "finance",
+          title: "Calculate margin",
+          kind: "tool",
+          agent: "business",
+          permissionLevel: 0,
+          toolId: "business.finance.metrics",
+          toolInput: {
+            revenue: 1000,
+            cogs: 600,
+          },
+        },
+        {
+          id: "analytics",
+          title: "Summarize sales",
+          kind: "tool",
+          agent: "business",
+          permissionLevel: 0,
+          toolId: "analytics.summary",
+          toolInput: {
+            records: [{ sales: 100 }, { sales: 120 }],
+          },
+          dependsOn: ["finance"],
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].permissionLevel, 1);
+  assert.equal(steps[1].permissionLevel, 1);
+  assert.equal(
+    shouldGeneratePlan(
+      "hitung margin omzet 1000000 modal 600000",
+    ),
+    true,
+  );
+  assert.equal(
+    shouldGeneratePlan(
+      "cek KPI sales 100, 120, 90",
+    ),
+    true,
+  );
 });
