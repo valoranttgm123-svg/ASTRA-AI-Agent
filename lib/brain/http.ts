@@ -115,14 +115,16 @@ export function parseAgentRequest(body: Record<string, unknown>): AgentRequest {
     throw new RequestError("Provider tidak valid.");
   }
 
+  const approvalToken =
+    typeof body.approvalToken === "string"
+      ? body.approvalToken.trim()
+      : undefined;
+
   return {
     message: body.message.trim(),
     mode: body.mode === "execute" ? "execute" : "chat",
     approved: Boolean(body.approved),
-    approvalToken:
-      typeof body.approvalToken === "string"
-        ? body.approvalToken.trim()
-        : undefined,
+    ...(approvalToken ? { approvalToken } : {}),
     provider,
   };
 }
