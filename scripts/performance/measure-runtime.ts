@@ -13,6 +13,7 @@ import {
   parseSseBlock,
 } from "../../lib/performance/sse";
 import { safeErrorDetail } from "../../lib/security/redaction";
+import { normalizeLoopbackBase } from "../../lib/performance/loopback";
 
 type Options = {
   baseUrl: string;
@@ -125,31 +126,6 @@ function parseArgs(argv: readonly string[]): Options {
   }
 
   return options;
-}
-
-function normalizeLoopbackBase(raw: string) {
-  const url = new URL(raw);
-  const allowedHosts = new Set([
-    "127.0.0.1",
-    "localhost",
-    "[::1]",
-    "::1",
-  ]);
-
-  if (
-    !["http:", "https:"].includes(url.protocol) ||
-    !allowedHosts.has(url.hostname)
-  ) {
-    throw new Error(
-      "Performance harness accepts only loopback ASTRA URLs.",
-    );
-  }
-
-  url.username = "";
-  url.password = "";
-  url.search = "";
-  url.hash = "";
-  return url.toString().replace(/\/$/, "");
 }
 
 function currentCommit() {
