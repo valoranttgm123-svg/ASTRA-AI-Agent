@@ -142,6 +142,7 @@ export type AstraBrainStatus = {
     creative: AstraBrainFeatureStatus;
     computer: AstraBrainFeatureStatus;
     multimodal: AstraBrainFeatureStatus;
+    automation: AstraBrainFeatureStatus;
     tools: AstraBrainFeatureStatus;
     cloud: AstraBrainFeatureStatus;
   };
