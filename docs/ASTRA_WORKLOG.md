@@ -126,3 +126,12 @@ Every merged feature/security slice must append:
 - exact next task.
 
 Never mark local/physical verification PASS from repository inspection alone.
+
+## In-flight checkpoint — Phase 15C1
+
+- PR: **#99**
+- branch: `astra/phase15c1-mcp-failure-isolation`
+- scope: MCP provider failure isolation and runtime validation;
+- completion rule: only count as repository-complete after PR CI is green and PR #99 is merged;
+- next slice after merge: **P15C2 provider outage/malformed-response matrix**.
+

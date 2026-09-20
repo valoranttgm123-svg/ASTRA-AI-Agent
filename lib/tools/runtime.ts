@@ -56,6 +56,10 @@ export async function createToolRuntime(options?: {
   creativeTransports?: readonly AstraCreativeTransport[];
   computerTransport?: AstraComputerTransport;
   signal?: AbortSignal;
+  onMcpDiscoveryError?: (failure: {
+    serverId: string;
+    detail: string;
+  }) => void;
 }): Promise<AstraExecutableToolRegistry> {
   let definitions: AstraToolDefinition[] = [
     ...NATIVE_TOOL_DEFINITIONS,
@@ -161,13 +165,51 @@ export async function createToolRuntime(options?: {
     }
   }
 
+  const existingToolIds = new Set(
+    definitions.map((definition) => definition.id.toLowerCase()),
+  );
+
   for (const transport of options?.mcpTransports ?? []) {
-    const registrations = await discoverMcpToolRegistrations(
-      transport,
-      options?.signal,
-    );
+    options?.signal?.throwIfAborted();
+
+    let registrations;
+    try {
+      registrations = await discoverMcpToolRegistrations(
+        transport,
+        options?.signal,
+      );
+    } catch (error) {
+      options?.signal?.throwIfAborted();
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
+        throw error;
+      }
+
+      options?.onMcpDiscoveryError?.({
+        serverId: transport.serverId,
+        detail:
+          error instanceof Error
+            ? error.message.slice(0, 500)
+            : "MCP discovery failed.",
+      });
+      continue;
+    }
 
     for (const registration of registrations) {
+      const id = registration.definition.id.toLowerCase();
+      if (existingToolIds.has(id)) {
+        options?.onMcpDiscoveryError?.({
+          serverId: transport.serverId,
+          detail:
+            "Duplicate MCP tool id was ignored: " +
+            registration.definition.id,
+        });
+        continue;
+      }
+
+      existingToolIds.add(id);
       definitions.push(registration.definition);
       handlers[registration.definition.id] = registration.handler;
     }
