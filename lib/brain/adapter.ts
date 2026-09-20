@@ -12,7 +12,7 @@ import type {
   AstraInputContext,
 } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
-import { safeErrorDetail } from "@/lib/security/redaction";
+import { safeErrorDetail, safePublicDetail } from "@/lib/security/redaction";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
 import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
@@ -450,6 +450,15 @@ function emitLiveEvent(
   liveEventSequence += 1;
   const live: AstraBrainEvent = {
     ...event,
+    ...(event.detail
+      ? {
+          detail: safePublicDetail(
+            event.detail,
+            event.label,
+            1000,
+          ),
+        }
+      : {}),
     id: `live-${at}-${liveEventSequence}-${event.type}`,
     at,
   };
