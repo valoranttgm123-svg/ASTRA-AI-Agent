@@ -228,3 +228,54 @@ test("Phase 14D1 automation telemetry drives Ops truthfully", () => {
   assert.equal(runtime.ops.state, "READY");
   assert.equal(runtime.ops.detail, "Ops ready");
 });
+test("Phase 14D1 concurrent definition mutations are serialized", async () => {
+  await withStore(async () => {
+    await Promise.all([
+      upsertAutomationDefinition(
+        {
+          id: "parallel-a",
+          title: "Parallel A",
+          goal: "Read-only task A.",
+          schedule: {
+            kind: "once",
+            runAt: "2026-09-21T08:00:00.000Z",
+          },
+          requiredPermissionLevel: 1,
+          maxRuntimeMs: 60_000,
+        },
+        new Date("2026-09-20T13:00:00.000Z"),
+      ),
+      upsertAutomationDefinition(
+        {
+          id: "parallel-b",
+          title: "Parallel B",
+          goal: "Read-only task B.",
+          schedule: {
+            kind: "once",
+            runAt: "2026-09-21T09:00:00.000Z",
+          },
+          requiredPermissionLevel: 1,
+          maxRuntimeMs: 60_000,
+        },
+        new Date("2026-09-20T13:00:01.000Z"),
+      ),
+    ]);
+
+    const third = await upsertAutomationDefinition(
+      {
+        id: "parallel-c",
+        title: "Parallel C",
+        goal: "Read-only task C.",
+        schedule: {
+          kind: "once",
+          runAt: "2026-09-21T10:00:00.000Z",
+        },
+        requiredPermissionLevel: 1,
+        maxRuntimeMs: 60_000,
+      },
+      new Date("2026-09-20T13:00:02.000Z"),
+    );
+
+    assert.equal(third.count, 3);
+  });
+});
