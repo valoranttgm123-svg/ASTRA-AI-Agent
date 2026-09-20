@@ -788,3 +788,19 @@ Implemented on `astra/phase14c-automation-queue-contracts`:
 - regression tests cover queue separation, ordering and bounds.
 
 This still does **not** execute scheduled jobs. The next slice is Phase 14C2: cancellable runner with injected Brain/Planner execution, durable occurrence claiming, real lifecycle emission and global STOP propagation.
+---
+
+## Phase 14C2 implementation checkpoint — cancellable read-only runner
+
+Implemented on `astra/phase14c2-readonly-automation-runner`:
+
+- manual scheduler tick over the validated private automation store;
+- only Permission Level 0/1 jobs can execute unattended;
+- Level 2/3 remain waiting for approval and are never passed to the executor;
+- occurrence is durably claimed before execution to prevent duplicate execution in the normal single-process runtime;
+- serial execution only;
+- per-job timeout and global AbortSignal/STOP propagation;
+- truthful lifecycle events around due/claim/start/completion/failure/cancellation;
+- regression tests for duplicate prevention, approval separation and STOP cancellation.
+
+Still not included: periodic background loop, UI/API controls, approval-resume path for Level 2/3, or Windows startup scheduling.
