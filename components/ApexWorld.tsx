@@ -399,6 +399,7 @@ export default function ApexWorld() {
               ["CODEX", runtime.brainStatus.features.codex],
               ["INT", runtime.brainStatus.features.integrations],
               ["CREATIVE", runtime.brainStatus.features.creative],
+              ["PC", runtime.brainStatus.features.computer],
               ["TOOLS", runtime.brainStatus.features.tools],
               ["CLOUD", runtime.brainStatus.features.cloud],
             ] as const).map(([label, feature]) => (
