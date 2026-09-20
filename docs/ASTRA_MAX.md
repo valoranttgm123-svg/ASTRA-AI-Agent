@@ -1877,3 +1877,17 @@ The background Automation service now streams real lifecycle/status to the same 
 The Automation panel reports the actual service state and only exposes START/STOP/RUN SAFE TICK when the service env opt-in permits it. A final end-to-end test covers store → queue → service → hard-ceiling Brain executor → durable claim/telemetry.
 
 Phase 14 code is implementation-complete after CI. Because the service is OFF by default, final production status remains `TARGET-PC VALIDATION REQUIRED` until `scripts/windows/validate-automation.ps1` is actually run successfully on the target PC. See `docs/AUTOMATION_VALIDATION.md`.
+## Codex continuation entrypoint after Phase 14
+
+The operational implementation handoff for Phase 15 through the core release is:
+
+- `docs/CODEX_NEXT_MISSION.md`
+- `docs/SECURITY_VALIDATION.md`
+
+These files refine, but do not replace, the Phase 15–30 requirements in this document.
+
+Current post-Phase-14 status is:
+
+`IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
+
+Codex must not claim production-complete Automation until the target-PC validation in `docs/AUTOMATION_VALIDATION.md` has actually passed.
