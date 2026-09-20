@@ -6,6 +6,7 @@ export type AstraSkill = {
   id: string;
   agents: AstraAgentKey[];
   instructions: string;
+  triggers?: string[];
   source: "builtin" | "local";
 };
 
@@ -71,7 +72,55 @@ const BUILTIN_SKILLS: AstraSkill[] = [
     id: "business-analysis",
     agents: ["business"],
     instructions:
-      "Distinguish analysis/recommendation from actions that mutate business systems or customer data.",
+      "Distinguish supplied facts from assumptions. Analysis, planning, drafting, and calculations do not imply any external system was changed. Never invent POS, customer, campaign, supplier, or financial data that was not supplied or retrieved.",
+    source: "builtin",
+  },
+  {
+    id: "finance-analysis",
+    agents: ["business"],
+    triggers: ["finance","financial","keuangan","margin","markup","laba","profit","biaya","cost","budget","anggaran","harga jual","break even","bep"],
+    instructions:
+      "Act as the Finance specialist. Prefer business.finance.metrics for arithmetic when structured values are available. State which values are supplied versus assumed. Separate gross profit, net profit, margin, markup, cash flow, and break-even concepts. Do not claim accounting records were verified unless a real data source supplied them.",
+    source: "builtin",
+  },
+  {
+    id: "sales-support",
+    agents: ["business"],
+    triggers: ["sales","penjualan","lead","prospek","quotation","quote","penawaran","follow up","follow-up","pipeline","closing"],
+    instructions:
+      "Act as the Sales specialist for analysis and drafting. Use only supplied/retrieved customer or pipeline context. Draft quotations and follow-ups clearly, but never claim a message was sent, a lead was updated, or a CRM stage changed unless a real approved integration reports success.",
+    source: "builtin",
+  },
+  {
+    id: "marketing-strategy",
+    agents: ["business"],
+    triggers: ["marketing","kampanye","campaign","promosi","promotion","positioning","branding","brand","iklan","advertising"],
+    instructions:
+      "Act as the Marketing specialist. Build positioning, offer, audience, channel, campaign, and measurement plans from known context. Distinguish ideas from researched facts. Do not claim ads, posts, campaigns, or budgets were published or changed without a real approved integration.",
+    source: "builtin",
+  },
+  {
+    id: "ops-workflow",
+    agents: ["business"],
+    triggers: ["ops","operasional","operations","workflow","checklist","supplier","vendor","stok","stock","inventory","proses","process"],
+    instructions:
+      "Act as the Ops specialist. Turn goals into clear operational workflows, owners, dependencies, checks, and failure handling. Reasoning/checklists are read-only. Delegate actual desktop, file, supplier, database, or external actions to registered tools and their permission gates.",
+    source: "builtin",
+  },
+  {
+    id: "editor-quality",
+    agents: ["business"],
+    triggers: ["editor","proofread","proofreading","rewrite","tulis ulang","revisi","revision","tone","copywriting","rapikan tulisan","perbaiki tulisan"],
+    instructions:
+      "Act as the Editor specialist. Improve clarity, grammar, structure, tone, consistency, and factual caution while preserving the intended meaning. Editing produces a draft only; never claim a document, email, or public post was published or sent.",
+    source: "builtin",
+  },
+  {
+    id: "analytics-interpretation",
+    agents: ["business"],
+    triggers: ["analytics","analitik","kpi","metric","metrics","metrik","trend","tren","anomali","anomaly","data penjualan","ringkasan data","dashboard"],
+    instructions:
+      "Act as the Analytics specialist. Prefer analytics.summary for bounded structured numeric records. Keep source/provenance labels, distinguish descriptive statistics from causal explanations, and state when a trend or anomaly is only an observation rather than a verified cause.",
     source: "builtin",
   },
   {
@@ -134,10 +183,19 @@ function normalizeLocalSkills(value: unknown): AstraSkill[] {
         ? record.id.trim()
         : `local-skill-${index + 1}`;
 
+    const triggers = Array.isArray(record.triggers)
+      ? record.triggers
+          .filter((trigger): trigger is string => typeof trigger === "string")
+          .map((trigger) => trigger.trim().toLowerCase())
+          .filter(Boolean)
+          .slice(0, 40)
+      : undefined;
+
     skills.push({
       id,
       agents,
       instructions: instructions.slice(0, 3000),
+      triggers: triggers && triggers.length > 0 ? triggers : undefined,
       source: "local",
     });
   });
@@ -145,7 +203,26 @@ function normalizeLocalSkills(value: unknown): AstraSkill[] {
   return skills;
 }
 
-export async function getSkillContext(agent: AstraAgentKey): Promise<AstraSkillContext> {
+function hasTrigger(input: string, trigger: string) {
+  const text = input.toLowerCase();
+  const escaped = trigger.replace(/[.*+?^${}()|[\]\\]/g, "\\export async function getSkillContext(agent: AstraAgentKey): Promise<AstraSkillContext> {");
+  return new RegExp(
+    "(?:^|[^a-z0-9])" + escaped + "(?:$|[^a-z0-9])",
+    "i",
+  ).test(text);
+}
+
+function skillMatchesInput(skill: AstraSkill, input: string) {
+  if (!skill.triggers || skill.triggers.length === 0) return true;
+  const clean = input.trim();
+  if (!clean) return false;
+  return skill.triggers.some((trigger) => hasTrigger(clean, trigger));
+}
+
+export async function getSkillContext(
+  agent: AstraAgentKey,
+  input = "",
+): Promise<AstraSkillContext> {
   const enabled = envFlag("ASTRA_SKILLS_ENABLED", true);
 
   if (!enabled) {
@@ -158,13 +235,19 @@ export async function getSkillContext(agent: AstraAgentKey): Promise<AstraSkillC
     };
   }
 
-  const skills = BUILTIN_SKILLS.filter((skill) => skill.agents.includes(agent));
+  const skills = BUILTIN_SKILLS.filter(
+    (skill) =>
+      skill.agents.includes(agent) &&
+      skillMatchesInput(skill, input),
+  );
   const source = skillsPath();
 
   try {
     const raw = await readFile(source, "utf8");
-    const local = normalizeLocalSkills(JSON.parse(raw) as unknown).filter((skill) =>
-      skill.agents.includes(agent),
+    const local = normalizeLocalSkills(JSON.parse(raw) as unknown).filter(
+      (skill) =>
+        skill.agents.includes(agent) &&
+        skillMatchesInput(skill, input),
     );
     skills.push(...local);
   } catch (error) {
