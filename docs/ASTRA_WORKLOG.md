@@ -164,6 +164,7 @@ Never mark local/physical verification PASS from repository inspection alone.
 - next: **P15F final security regression matrix/report**.
 ## In-flight checkpoint — Phase 15F
 
+- PR: **#104**;
 - branch: `astra/phase15f-final-security-report`;
 - scope: final matrix closure + hardening report + roadmap/handoff truth;
 - completion rule: Phase 15 becomes repository-complete only after this PR is green and merged;
