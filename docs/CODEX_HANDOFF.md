@@ -1,5 +1,33 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 10 Design + Social checkpoint
+
+Implemented on `astra/phase10-design-social`:
+
+- truthful Social drafting skill for captions, content calendars, hooks, reels/video scripts and CTA preparation;
+- truthful Design briefing skill for composition, hierarchy, dimensions, copy, assets and acceptance criteria;
+- skill lifecycle maps to Social / Design visual nodes;
+- provider-neutral `AstraCreativeTransport`;
+- canonical Level-3 tools:
+  - `design.image.generate`
+  - `design.image.edit`
+  - `social.publish`
+  - `social.schedule`
+- default creative tools remain `NOT_CONFIGURED`;
+- only capabilities explicitly reported by a real provider become `READY`;
+- creative/provider success requires `verified=true`;
+- generation/edit/publish/schedule remain Level-3 external actions behind scoped approval;
+- Social drafting remains an implemented local/model skill and does not claim publishing;
+- Design node is partial/NOT_CONFIGURED until an actual image provider is connected;
+- live Brain/Command Center creative status added;
+- regression coverage for skill selection, node mapping, provider readiness, Level-3 gates, policy blocking and verification truth.
+
+Important truth:
+No image-generation or social-network provider is claimed connected by default. A draft/brief is not a generated asset, and a prepared social post is not a published post.
+
+Next milestone:
+**Phase 11 — controlled Computer Agent** with an OFF-by-default execution transport, allowlisted Windows operations, permission gates, cancellation and global STOP.
+
 ## 2026-09-20 — Phase 9 communication/cloud integration contracts
 
 Implemented on `astra/phase9-communication-cloud-integrations`:
