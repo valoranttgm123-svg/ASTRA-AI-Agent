@@ -1,5 +1,42 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 11 controlled Computer Agent checkpoint
+
+Implemented on `astra/phase11-controlled-computer-agent`:
+
+- controlled Windows Computer Agent transport;
+- OFF by default unless `ASTRA_COMPUTER_ENABLED=true`;
+- non-Windows runtime reports OFFLINE rather than READY;
+- canonical tools:
+  - `computer.process.list` — Level 1 read-only;
+  - `computer.app.launch` — Level 2 local action;
+- app launch requires the existing `allowShell` policy gate;
+- app launch accepts only fixed app IDs:
+  - notepad
+  - calculator
+  - paint
+  - explorer
+- no arbitrary executable path;
+- no arbitrary PowerShell/cmd string;
+- no generic shell tool introduced;
+- process listing uses bounded `tasklist.exe /FO CSV /NH` and caps returned rows;
+- launch success is verified from the OS child-process `spawn` event, not merely an initial PID field;
+- Tool Runtime cancellation/AbortSignal propagates into Computer transport;
+- Brain exposes Computer Agent readiness and Command Center shows a PC feature chip;
+- planner permission floors keep process-list read at Level 1 and app launch at Level 2;
+- tests cover OFF-by-default state, selective capability exposure, Level-1/Level-2 gates, allowShell policy, and cancellation.
+
+Global STOP semantics:
+- STOP/Abort cancels work that is still in flight;
+- once an allowlisted app has already been successfully spawned and the tool completed, STOP does not retroactively close that user application;
+- ASTRA does not claim rollback for a completed launch.
+
+Important truth:
+The target Windows PC has not yet been physically validated in this GitHub CI environment. CI validates contracts/fixtures and non-Windows OFFLINE behavior. Real target-PC validation remains required before declaring desktop execution production-validated.
+
+Next milestone:
+**Phase 12 — Voice + Multimodal unification**: audit and unify the already-existing text/mic/gesture/camera foundations, add truthful input-source context, and keep image/screen capabilities NOT_CONFIGURED until real providers/consent paths exist.
+
 ## 2026-09-20 — Phase 10 Design + Social checkpoint
 
 Implemented on `astra/phase10-design-social`:
