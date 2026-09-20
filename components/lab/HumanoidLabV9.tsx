@@ -665,8 +665,16 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
 
   useEffect(() => {
     const event = tracking.gestureEvent;
-    if (!gesturesEnabled || !event || gestureHandledIdRef.current === event.id) return;
+    if (!event) return;
 
+    // Consume events while gesture actions are disabled so an old gesture
+    // cannot fire immediately when GESTURES is turned back on.
+    if (!gesturesEnabled) {
+      gestureHandledIdRef.current = event.id;
+      return;
+    }
+
+    if (gestureHandledIdRef.current === event.id) return;
     gestureHandledIdRef.current = event.id;
 
     if (event.gesture === "pinch") {
@@ -679,12 +687,16 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     }
 
     if (event.gesture === "open_palm") {
-      setLastGestureAction("OPEN PALM → LISTENING");
-      if (runtime.micSupported && !runtime.micActive) {
-        runtime.beginListening();
-      } else if (!runtime.micSupported) {
-        runtime.setAvatarState("listening");
+      if (!runtime.micSupported) {
+        setLastGestureAction("OPEN PALM → MIC N/A");
+        return;
       }
+      if (runtime.micActive) {
+        setLastGestureAction("OPEN PALM → ALREADY LISTENING");
+        return;
+      }
+      setLastGestureAction("OPEN PALM → LISTENING");
+      runtime.beginListening();
       return;
     }
 
@@ -696,7 +708,10 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     effects,
     gesturesEnabled,
     reducedMotion,
-    runtime,
+    runtime.beginListening,
+    runtime.micActive,
+    runtime.micSupported,
+    runtime.stopInteraction,
     tracking.gestureEvent,
   ]);
 
@@ -1162,7 +1177,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Gesture stable: {tracking.gesture.toUpperCase().replace("_", " ")}</div>
           <div>Gesture action: {lastGestureAction}</div>
           <div>Gesture mapping: PINCH → replay / OPEN PALM → mic / FIST → stop</div>
-          <div>Gesture debounce: 3 stable frames + release + 900 ms cooldown</div>
+          <div>Gesture debounce: 3 stable frames + mandatory neutral release + 900 ms cooldown</div>
           <div>Pinch ratio: {tracking.pinchRatio === null ? "..." : tracking.pinchRatio.toFixed(2)}</div>
           <div>Extended fingers: {tracking.extendedFingers ?? "..."}</div>
           <div>Tracking FPS: {tracking.trackingFps ?? "..."}</div>
