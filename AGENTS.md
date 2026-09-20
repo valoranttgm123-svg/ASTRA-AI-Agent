@@ -5,11 +5,14 @@ This repository is the working source of truth for the ASTRA AI Agent project.
 Before changing ASTRA, read these files in order:
 
 1. `docs/CODEX_HANDOFF.md` — current architecture, active state, constraints, next work.
-2. `docs/ASTRA_MAX.md` — approved production roadmap from current Brain V1/V15 state through ready-to-use final release.\n3. `docs/SONOR_BRIDGE.md` — existing local Sonor/Graphify/Obsidian workflow graph and ASTRA bridge contract. Continue its phases sequentially unless genuinely blocked by an external user action.
-3. `docs/ASTRA_CONVERSATION_HISTORY.md` — conversation-derived project history and user decisions.
-4. `docs/HUMANOID_BUILD_LOG.md` — detailed Humanoid implementation history.
-5. `docs/ASTRA_BRAIN_V1.md` — approved Brain architecture direction.
-6. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+2. `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class production roadmap.
+3. `docs/SONOR_CODEX_MISSION.md` — authoritative instructions for preserving the existing local Sonor and integrating it with ASTRA. **Do not rebuild Sonor.**
+4. `docs/SONOR_BRIDGE.md` — current ASTRA-side Sonor bridge contract and implementation state.
+5. `docs/SONOR_UI_INTEGRATION.md` — approved ASTRA UI treatment for Sonor knowledge/workflow context.
+6. `docs/ASTRA_CONVERSATION_HISTORY.md` — conversation-derived project history and user decisions.
+7. `docs/HUMANOID_BUILD_LOG.md` — detailed Humanoid implementation history.
+8. `docs/ASTRA_BRAIN_V1.md` — approved Brain architecture direction.
+9. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
 
 ## Project intent
 

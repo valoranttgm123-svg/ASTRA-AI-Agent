@@ -1,5 +1,25 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Sonor preservation + ASTRA UI roadmap approved
+
+Authoritative Sonor continuation documents:
+- `docs/SONOR_CODEX_MISSION.md` — preserve the existing local Sonor, audit it, back up its safe source to a private `SONOR-Workflow` repository, reuse its Graphify/Obsidian/data pipelines, expose only a minimal ASTRA compatibility API if needed, and verify the real runtime before enabling ASTRA.
+- `docs/SONOR_UI_INTEGRATION.md` — ASTRA remains the everyday UI; Sonor is the advanced knowledge/workflow workspace. ASTRA should show focused Sonor-derived project context, provenance, source states and a bounded relationship subgraph, with an explicit **Open Sonor Workspace** action for the full graph.
+
+Critical rule for future Codex sessions:
+**Do not recreate, re-platform, or redesign Sonor from scratch. Codex built the current Sonor on the user's PC; locate and inspect that exact existing project first, then continue it.**
+
+When local PC access is available, the next Sonor-specific work is:
+1. locate the exact source/process serving `127.0.0.1:55127`;
+2. create a recoverable backup;
+3. audit source vs private/generated/runtime data;
+4. preserve the safe engine source in a private GitHub repo named preferably `SONOR-Workflow`;
+5. document architecture/handoff inside that repo;
+6. inspect and reuse existing Sonor APIs/data paths;
+7. add only the smallest read-only ASTRA compatibility endpoint if necessary;
+8. validate real ALURKA/ASTRA/Graphify/Obsidian queries;
+9. configure ASTRA's existing SonorBridge only after the real endpoint passes validation.
+
 ## 2026-09-20 — scoped registered project context checkpoint
 
 Phase 3 project context now has a real read-only loading path:
