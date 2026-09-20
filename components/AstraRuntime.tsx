@@ -77,11 +77,17 @@ type AstraRuntimeValue = {
     options?: {
       mode?: "chat" | "execute";
       approved?: boolean;
+      approvalToken?: string;
       provider?: AstraProviderChoice;
     },
   ) => Promise<AstraBrainChatResult>;
   execute: (
     message: string,
+    provider?: AstraProviderChoice,
+  ) => Promise<AstraBrainChatResult>;
+  approve: (
+    message: string,
+    approvalToken: string,
     provider?: AstraProviderChoice,
   ) => Promise<AstraBrainChatResult>;
   beginListening: () => void;
@@ -298,6 +304,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     options?: {
       mode?: "chat" | "execute";
       approved?: boolean;
+      approvalToken?: string;
       provider?: AstraProviderChoice;
     },
   ) => {
@@ -369,6 +376,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
           message: value,
           mode: options?.mode ?? "chat",
           approved: Boolean(options?.approved),
+          approvalToken: options?.approvalToken,
           provider: options?.provider ?? "auto",
         }),
         signal: controller.signal,
@@ -540,6 +548,21 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const execute = useCallback(
     (message: string, provider: AstraProviderChoice = "auto") =>
       send(message, { mode: "execute", approved: true, provider }),
+    [send],
+  );
+
+  const approve = useCallback(
+    (
+      message: string,
+      approvalToken: string,
+      provider: AstraProviderChoice = "auto",
+    ) =>
+      send(message, {
+        mode: "execute",
+        approved: true,
+        approvalToken,
+        provider,
+      }),
     [send],
   );
 
@@ -718,6 +741,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainStreaming,
       send,
       execute,
+      approve,
       beginListening,
       endListening,
       stopInteraction,
@@ -743,6 +767,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainStreaming,
       send,
       execute,
+      approve,
       beginListening,
       endListening,
       stopInteraction,
