@@ -88,6 +88,12 @@ export function redactSensitiveText(
   return text;
 }
 
+export function safePublicUrl(value: string) {
+  const clean = value.trim();
+  if (!clean) return "";
+  return redactUrl(clean);
+}
+
 export function safeErrorDetail(
   error: unknown,
   fallback = "ASTRA operation failed.",
