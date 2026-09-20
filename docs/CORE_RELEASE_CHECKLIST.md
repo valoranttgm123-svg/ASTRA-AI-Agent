@@ -2,6 +2,18 @@
 
 ## Phase 18 — Release Candidate
 
+### Repository gate automation
+
+Run locally:
+
+```powershell
+npm run release:repo-gate
+```
+
+GitHub CI executes the same required categories as independent visible steps and additionally enforces PR/push range `git diff --check`.
+
+Repository-gate tooling status: **IMPLEMENTED ON GREEN MERGE / RC NOT YET DECLARED**
+
 ### Repository gate
 
 - [ ] `npm test`
@@ -14,14 +26,14 @@
 ### Program gate
 
 - [ ] Phase 14 target-PC Automation validation
-- [ ] Phase 15 security validation matrix
+- [x] Phase 15 security validation matrix
 - [ ] Real Sonor state validated/reported
 - [ ] Phase 16 performance baseline
 - [ ] Phase 17 full-system validation
-- [ ] stale PR #51 reconciled
+- [x] stale PR #51 reconciled
 - [ ] no release-blocking browser console errors
-- [ ] no known secret/private runtime data committed
-- [ ] README / install docs reflect current architecture
+- [x] no known secret/private runtime data committed — current tree audit clean
+- [x] README / install docs reflect current architecture
 
 RC status: **PENDING**
 
