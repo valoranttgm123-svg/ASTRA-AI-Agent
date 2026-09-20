@@ -19,7 +19,7 @@ import { chatWithOllama } from "./ollama";
 import { permissionPolicyPrompt } from "./policy";
 import { getUnifiedMemoryContext } from "./unified-memory";
 import type { AstraBrainPermissionSnapshot } from "./types";
-import type { AstraToolLifecycleEvent } from "@/lib/tools/contracts";
+import type { AstraExecutableToolRegistry, AstraToolLifecycleEvent } from "@/lib/tools/contracts";
 import { astraNativeToolRuntime, createDefaultToolRuntime } from "@/lib/tools/runtime";
 
 type BrainPlanExecutorOptions = {
@@ -30,6 +30,7 @@ type BrainPlanExecutorOptions = {
   providerChoice: AstraProviderChoice;
   approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
   approvedStepIds?: readonly string[];
+  toolRuntime?: AstraExecutableToolRegistry;
   signal?: AbortSignal;
   onEvent?: (event: AstraPlanExecutionEvent) => void;
   onToolEvent?: (event: AstraToolLifecycleEvent) => void;
@@ -112,6 +113,7 @@ async function inspectWithNativeProjectTool({
   approvedPermissionLevel,
   signal,
   onToolEvent,
+  runtime,
 }: {
   step: AstraPlanStep;
   project?: AstraProjectRecord;
@@ -246,6 +248,7 @@ async function executeResearchStep({
   approvedPermissionLevel,
   signal,
   onToolEvent,
+  runtime,
 }: {
   step: AstraPlanStep;
   goal: string;
@@ -253,9 +256,10 @@ async function executeResearchStep({
   approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
   signal: AbortSignal;
   onToolEvent?: (event: AstraToolLifecycleEvent) => void;
+  runtime?: AstraExecutableToolRegistry;
 }): Promise<AstraPlanStepExecutionOutcome> {
-  const runtime = await createDefaultToolRuntime(signal);
-  const definition = runtime.get("research.web");
+  const effectiveRuntime = runtime ?? await createDefaultToolRuntime(signal);
+  const definition = effectiveRuntime.get("research.web");
 
   if (!definition || definition.availability !== "READY") {
     return {
@@ -273,7 +277,7 @@ async function executeResearchStep({
     .trim()
     .slice(0, 500);
 
-  const result = await runtime.execute(
+  const result = await effectiveRuntime.execute(
     "research.web",
     {
       query,
@@ -340,11 +344,12 @@ async function executeStructuredTool({
   approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
   signal: AbortSignal;
   onToolEvent?: (event: AstraToolLifecycleEvent) => void;
+  runtime?: AstraExecutableToolRegistry;
 }): Promise<AstraPlanStepExecutionOutcome | null> {
   if (!step.toolId) return null;
 
-  const runtime = await createDefaultToolRuntime(signal);
-  const definition = runtime.get(step.toolId);
+  const effectiveRuntime = runtime ?? await createDefaultToolRuntime(signal);
+  const definition = effectiveRuntime.get(step.toolId);
   if (!definition) {
     return {
       status: "failed",
@@ -376,7 +381,7 @@ async function executeStructuredTool({
     input.projectId = project.id;
   }
 
-  const result = await runtime.execute(step.toolId, input, {
+  const result = await effectiveRuntime.execute(step.toolId, input, {
     approvedPermissionLevel,
     policy: {
       allowShell: policy.allowShell,
@@ -626,6 +631,7 @@ export async function executeBrainPlan(
             approvedPermissionLevel: options.approvedPermissionLevel,
             signal: stepContext.signal,
             onToolEvent: options.onToolEvent,
+            runtime: options.toolRuntime,
           });
           if (native) return native;
 
@@ -665,6 +671,7 @@ export async function executeBrainPlan(
             approvedPermissionLevel: options.approvedPermissionLevel,
             signal: stepContext.signal,
             onToolEvent: options.onToolEvent,
+            runtime: options.toolRuntime,
           });
           if (structured) return structured;
 
