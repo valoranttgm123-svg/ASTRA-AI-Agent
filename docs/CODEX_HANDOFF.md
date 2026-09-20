@@ -1,5 +1,28 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Sonor workflow graph bridge checkpoint
+
+The user already has a Codex-built Sonor workflow/project graph running locally at `http://127.0.0.1:55127/#graph`.
+
+Do not rebuild Graphify or Obsidian inside ASTRA. Sonor is the existing aggregation layer for Graphify relations, Obsidian-linked notes, projects/files, and Codex + ChatGPT context.
+
+Implemented on the ASTRA side:
+- `lib/memory/sonor.ts` — strict loopback-only Sonor `AstraMemorySource`;
+- `lib/brain/unified-memory.ts` — local memory + Sonor through the existing Memory Manager;
+- Brain context now consumes unified memory;
+- `.env.example` includes disabled-by-default Sonor settings;
+- `docs/SONOR_BRIDGE.md` defines the ASTRA-compatible provenance contract;
+- tests cover loopback safety, response validation, manager integration, and Brain context consuming Sonor/Graphify records.
+
+Important limitation: the actual Sonor source/API is local to the user's PC and is not present in the connected GitHub repositories. The real endpoint path/schema still needs inspection on that PC. Do not claim the user's Sonor runtime is connected until that production-PC check succeeds.
+
+Next local task when Codex access is available:
+1. inspect Sonor source/network layer at port 55127;
+2. locate an existing server-side graph/search API, or add a small read-only ASTRA compatibility endpoint;
+3. configure `ASTRA_SONOR_SEARCH_PATH`;
+4. run ASTRA + Sonor end-to-end using a real ALURKA/ASTRA project query;
+5. verify provenance, project isolation, cancellation, bounds, and real memory lifecycle events.
+
 ## 2026-09-20 — pre-Codex-limit ASTRA MAX foundation checkpoint
 
 Stable `main` now includes the implementation checkpoints below. Do not rebuild them.
