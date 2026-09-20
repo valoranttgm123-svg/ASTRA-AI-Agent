@@ -23,6 +23,10 @@ import {
   visualNodeForSkill,
 } from "../lib/agent/capabilities";
 import type { AstraBrainEvent } from "../lib/brain/types";
+import {
+  capabilityStateIsLive,
+  deriveCapabilityRuntimeMap,
+} from "../lib/agent/capability-runtime";
 import { searchMemorySources } from "../lib/memory/manager";
 import type { AstraMemorySource } from "../lib/memory/contracts";
 import {
@@ -3965,4 +3969,138 @@ test("Phase 12 status reports truthful multimodal readiness", async () => {
     status.features?.multimodal.detail ?? "",
     /image payloads.*NOT_CONFIGURED/i,
   );
+});
+
+
+test("Phase 13 Brain status publishes a truthful snapshot for all 18 Command Center nodes", async () => {
+  const status = await astraBrain.status();
+  assert.ok(status.capabilities);
+
+  const keys = ASTRA_CAPABILITY_NODES.map((node) => node.key);
+  for (const key of keys) {
+    const runtime = status.capabilities?.[key];
+    assert.ok(runtime, key);
+    assert.ok(
+      [
+        "READY",
+        "ACTIVE",
+        "WAITING_APPROVAL",
+        "BLOCKED",
+        "OFFLINE",
+        "NOT_CONFIGURED",
+        "ERROR",
+      ].includes(runtime.state),
+      key + ":" + runtime.state,
+    );
+    assert.ok(runtime.detail.length > 0, key);
+  }
+
+  assert.equal(status.capabilities?.engineering?.state, "NOT_CONFIGURED");
+  assert.equal(status.capabilities?.crm?.state, "NOT_CONFIGURED");
+  assert.equal(status.capabilities?.calendar?.state, "NOT_CONFIGURED");
+  assert.equal(status.capabilities?.email?.state, "NOT_CONFIGURED");
+});
+
+test("Phase 13 live lifecycle overlays transient node states then returns to server base", () => {
+  const status = {
+    ready: true,
+    provider: "routing_only" as const,
+    mode: "routing_only" as const,
+    detail: "fixture",
+    capabilities: {
+      chief_of_staff: { state: "READY" as const, detail: "core ready" },
+      developer: { state: "READY" as const, detail: "codex ready" },
+      email: { state: "NOT_CONFIGURED" as const, detail: "email missing" },
+    },
+  };
+
+  const started: AstraBrainEvent = {
+    id: "phase13-start",
+    type: "agent.started",
+    at: 1,
+    agent: "developer",
+    visualNode: "developer",
+    label: "Agent started",
+    detail: "Developer running",
+  };
+  const waiting: AstraBrainEvent = {
+    id: "phase13-approval",
+    type: "approval.requested",
+    at: 2,
+    agent: "communication",
+    visualNode: "email",
+    label: "Approval requested",
+    detail: "Email send requires approval",
+  };
+
+  const live = deriveCapabilityRuntimeMap(status, [started, waiting]);
+  assert.equal(live.developer.state, "ACTIVE");
+  assert.equal(live.email.state, "WAITING_APPROVAL");
+  assert.equal(capabilityStateIsLive(live.developer.state), true);
+  assert.equal(capabilityStateIsLive(live.email.state), true);
+
+  const failed: AstraBrainEvent = {
+    id: "phase13-fail",
+    type: "tool.failed",
+    at: 3,
+    agent: "communication",
+    visualNode: "email",
+    label: "Tool failed",
+    detail: "Provider failure",
+  };
+  const error = deriveCapabilityRuntimeMap(status, [
+    started,
+    waiting,
+    failed,
+  ]);
+  assert.equal(error.email.state, "ERROR");
+  assert.equal(capabilityStateIsLive(error.email.state), false);
+
+  const ready: AstraBrainEvent = {
+    id: "phase13-ready",
+    type: "response.ready",
+    at: 4,
+    agent: "chief_of_staff",
+    visualNode: "chief_of_staff",
+    label: "Response ready",
+  };
+  const reset = deriveCapabilityRuntimeMap(status, [
+    started,
+    waiting,
+    failed,
+    ready,
+  ]);
+  assert.equal(reset.developer.state, "READY");
+  assert.equal(reset.email.state, "NOT_CONFIGURED");
+  assert.equal(reset.chief_of_staff.state, "READY");
+});
+
+test("Phase 13 provider-unavailable event alone does not fabricate node failure", () => {
+  const status = {
+    ready: true,
+    provider: "routing_only" as const,
+    mode: "routing_only" as const,
+    detail: "fixture",
+    capabilities: {
+      researcher: {
+        state: "NOT_CONFIGURED" as const,
+        detail: "search provider missing",
+      },
+    },
+  };
+
+  const result = deriveCapabilityRuntimeMap(status, [
+    {
+      id: "phase13-provider-off",
+      type: "provider.unavailable",
+      at: 1,
+      agent: "researcher",
+      visualNode: "researcher",
+      label: "Provider unavailable",
+      detail: "fallback may continue",
+    },
+  ]);
+
+  assert.equal(result.researcher.state, "NOT_CONFIGURED");
+  assert.equal(result.researcher.detail, "search provider missing");
 });
