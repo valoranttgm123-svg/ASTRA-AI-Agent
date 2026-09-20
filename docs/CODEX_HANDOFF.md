@@ -1513,3 +1513,41 @@ Next:
 
 - run MEM-X when target-PC/Sonor access exists;
 - otherwise continue Phase 16 repository-side performance instrumentation/preparation without inventing measurements.
+
+---
+
+## Handoff update — Phase 16A performance measurement harness
+
+Implemented on `astra/phase16a-performance-measurement-harness`:
+
+- `lib/performance/statistics.ts`
+  - deterministic min/max/mean/P50/P95;
+- `lib/performance/sse.ts`
+  - ASTRA SSE block parsing for timing-only instrumentation;
+- `lib/performance/loopback.ts`
+  - loopback-only measurement boundary;
+- `scripts/performance/measure-runtime.ts`
+  - read-only Brain/Automation status timing;
+  - optional explicit Ollama ASTRA SSE timing;
+  - environment snapshot without hostname/user identity;
+  - output to gitignored `.astra/performance/`;
+- `npm run perf:runtime`;
+- performance helpers/scripts added to lint;
+- Brain streaming SSE error path now uses the shared public error redaction boundary.
+
+Automated coverage:
+
+- `tests/performance-statistics.test.ts`;
+- `tests/performance-sse.test.ts`;
+- `tests/performance-loopback.test.ts`.
+
+Important truth boundary:
+
+**No target-PC benchmark number is claimed by this slice.**
+
+Phase 16 remains incomplete until the harness/browser diagnostics are run on the actual target environment and `docs/PERFORMANCE_BASELINE.md` is filled from real evidence.
+
+Next after green CI/merge:
+
+- if target-PC access is available: run P16B/P16C measurements;
+- if not: continue repository-side Phase 17 preparation that does not require inventing measurements, while leaving Phase 16 open.
