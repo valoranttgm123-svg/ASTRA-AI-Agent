@@ -1152,3 +1152,19 @@ Next exact task:
 **Phase 14E — explicit opt-in local automation service.**
 
 Implement an in-process/local-service timer that is OFF by default, executes only Permission Level 0/1 through the bounded runner, uses the real ASTRA Brain/Planner/Tool Runtime under a hard read-only permission ceiling, exposes truthful service health/status, supports server-side global STOP, prevents overlapping ticks, preserves durable at-most-once claims, and never executes Level 2/3 unattended. Then perform CI and target-PC activation validation before Phase 14 is marked complete.
+## Handoff update — Phase 14E1 read-only Brain ceiling
+
+Added:
+
+- internal `permissionCeiling` Brain run option;
+- tested permission resolver;
+- hard-ceiling enforcement before plan execution;
+- scoped-token/ceiling conflict block;
+- `lib/automation/read-only.ts`;
+- read-only automation regression tests.
+
+Next exact task:
+
+**Phase 14E2 — explicit opt-in in-process automation service.**
+
+Keep the service OFF by default. Reuse the existing ASTRA local server process, prevent overlapping ticks, execute only Level 0/1 with `createReadOnlyAutomationExecutor()`, expose service status and server-side STOP, and auto-start only when `ASTRA_AUTOMATION_SERVICE_ENABLED=true`.
