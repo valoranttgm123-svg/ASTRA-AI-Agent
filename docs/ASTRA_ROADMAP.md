@@ -505,3 +505,23 @@ Implemented on `astra/phase5-bounded-agent-orchestrator`:
 - agent-aware permission floors for GitHub/Communication/Business/Trading actions.
 
 Phase 5 is **partially implemented**, not fully complete. Full completion requires the executable Tool Registry/MCP and real Research/browser capability from the next roadmap work.
+
+
+---
+
+## Phase 6A implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase6a-executable-tool-runtime`:
+
+- executable Tool Registry with permission/policy gates before handlers;
+- timeout, cancellation and bounded input/output;
+- verified completion requirement;
+- real tool lifecycle telemetry;
+- native `project.context.search` read-only tool;
+- native plan inspection routed through Tool Runtime;
+- transport-injected MCP contract using the same runtime;
+- tests for native project isolation, policy/permission blocking, false-completion rejection, MCP fixture execution and Command Center tool telemetry.
+
+Production MCP remains **NOT CONFIGURED** until a real server/transport is explicitly connected and verified.
+
+Next major milestone: Phase 7 Files + GitHub production workflow through this runtime, then real Research/browser tooling to finish Phase 5 delegation coverage.

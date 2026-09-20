@@ -48,3 +48,58 @@ export type AstraToolRegistry = {
   get(id: string): AstraToolDefinition | undefined;
   has(id: string): boolean;
 };
+
+
+export type AstraToolExecutionPolicy = {
+  allowShell: boolean;
+  allowFileWrite: boolean;
+  allowExternalActions: boolean;
+};
+
+export type AstraToolExecutionStatus =
+  | "completed"
+  | "blocked"
+  | "failed";
+
+export type AstraToolExecutionResult = {
+  status: AstraToolExecutionStatus;
+  detail: string;
+  verified: boolean;
+  output?: unknown;
+  provider?: string;
+};
+
+export type AstraToolHandler = (
+  input: unknown,
+  context: {
+    definition: AstraToolDefinition;
+    signal: AbortSignal;
+  },
+) => Promise<AstraToolExecutionResult>;
+
+export type AstraToolLifecycleEventType =
+  | "tool.started"
+  | "tool.completed"
+  | "tool.failed";
+
+export type AstraToolLifecycleEvent = {
+  type: AstraToolLifecycleEventType;
+  toolId: string;
+  toolName: string;
+  category: AstraToolCategory;
+  provider?: string;
+  detail: string;
+};
+
+export type AstraExecutableToolRegistry = AstraToolRegistry & {
+  execute(
+    id: string,
+    input: unknown,
+    options: {
+      approvedPermissionLevel: AstraPermissionLevel;
+      policy: AstraToolExecutionPolicy;
+      signal?: AbortSignal;
+      onEvent?: (event: AstraToolLifecycleEvent) => void;
+    },
+  ): Promise<AstraToolExecutionResult>;
+};

@@ -251,3 +251,40 @@ A normal explicit execute approval authorizes only the safe-local path used by t
 ### Codex verification mode
 
 Codex now supports a dedicated read-only verification request. It must run allowed inspection/verification commands and return the same explicit `ASTRA_EXECUTION_STATUS` marker used for evidence-sensitive execution. A textual opinion without that marker does not pass a verification step.
+
+
+## Executable Tool Runtime
+
+Phase 6A adds one shared runtime for native and future MCP tools:
+
+```text
+Brain / bounded plan
+       ↓
+Tool Registry metadata
+       ↓
+permission level gate
+       ↓
+ASTRA policy gate
+       ↓
+timeout / cancellation / bounded I/O
+       ↓
+real handler
+       ↓
+verified result required
+       ↓
+tool.started / tool.completed / tool.failed
+       ↓
+Command Center
+```
+
+A handler may not create a successful tool event merely by returning prose. `status=completed` is accepted only with `verified=true`.
+
+### Native project context tool
+
+`project.context.search` is the first native READY tool. It is Level 1/read-only and delegates to the existing scoped project-context loader. It cannot recursively scan the workspace or bypass registered-file/sensitive-path boundaries.
+
+### MCP boundary
+
+`lib/tools/mcp.ts` defines an injected transport interface. ASTRA does not auto-connect unknown MCP servers and does not mark MCP tools READY without an explicit transport instance. Discovered MCP definitions and calls still pass through the same Tool Registry permission/policy/verification executor.
+
+The current repository includes fixture-backed MCP contract tests, **not a configured production MCP server**.

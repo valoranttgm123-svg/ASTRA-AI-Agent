@@ -19,6 +19,8 @@ import { chatWithOllama } from "./ollama";
 import { permissionPolicyPrompt } from "./policy";
 import { getUnifiedMemoryContext } from "./unified-memory";
 import type { AstraBrainPermissionSnapshot } from "./types";
+import type { AstraToolLifecycleEvent } from "@/lib/tools/contracts";
+import { astraNativeToolRuntime } from "@/lib/tools/runtime";
 
 type BrainPlanExecutorOptions = {
   plan: AstraPlan;
@@ -29,6 +31,7 @@ type BrainPlanExecutorOptions = {
   approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
   signal?: AbortSignal;
   onEvent?: (event: AstraPlanExecutionEvent) => void;
+  onToolEvent?: (event: AstraToolLifecycleEvent) => void;
 };
 
 function cleanOutput(value: string | undefined) {
@@ -98,6 +101,61 @@ async function reasonWithLocalModel({
     provider: "ollama",
     detail: "Reasoning step completed with local Ollama.",
     output: result.message,
+  };
+}
+
+async function inspectWithNativeProjectTool({
+  step,
+  project,
+  policy,
+  approvedPermissionLevel,
+  signal,
+  onToolEvent,
+}: {
+  step: AstraPlanStep;
+  project?: AstraProjectRecord;
+  policy: AstraBrainPermissionSnapshot;
+  approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
+  signal: AbortSignal;
+  onToolEvent?: (event: AstraToolLifecycleEvent) => void;
+}): Promise<AstraPlanStepExecutionOutcome | null> {
+  if (!project) return null;
+
+  const result = await astraNativeToolRuntime.execute(
+    "project.context.search",
+    {
+      projectId: project.id,
+      query: step.title,
+      limit: 6,
+    },
+    {
+      approvedPermissionLevel,
+      policy: {
+        allowShell: policy.allowShell,
+        allowFileWrite: policy.allowFileWrite,
+        allowExternalActions: policy.allowExternalActions,
+      },
+      signal,
+      onEvent: onToolEvent,
+    },
+  );
+
+  if (result.status !== "completed" || result.verified !== true) {
+    return null;
+  }
+
+  let output = "";
+  try {
+    output = JSON.stringify(result.output).slice(0, 6000);
+  } catch {
+    output = result.detail;
+  }
+
+  return {
+    status: "completed",
+    provider: result.provider || "native-project-context",
+    detail: result.detail,
+    output,
   };
 }
 
@@ -377,6 +435,16 @@ export async function executeBrainPlan(
           });
 
         case "inspect": {
+          const native = await inspectWithNativeProjectTool({
+            step,
+            project: options.project,
+            policy: options.policy,
+            approvedPermissionLevel: options.approvedPermissionLevel,
+            signal: stepContext.signal,
+            onToolEvent: options.onToolEvent,
+          });
+          if (native) return native;
+
           if (options.providerChoice !== "ollama") {
             const codex = await inspectWithCodex({
               step,
@@ -387,6 +455,7 @@ export async function executeBrainPlan(
             });
             if (codex) return codex;
           }
+
           return inspectMemory({
             step,
             project: options.project,

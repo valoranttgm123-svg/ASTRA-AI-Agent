@@ -6,6 +6,8 @@ import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
 import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
+import type { AstraToolLifecycleEvent } from "@/lib/tools/contracts";
+import { astraNativeToolRuntime } from "@/lib/tools/runtime";
 import { generateStrategistPlan, shouldGeneratePlan } from "@/lib/planner/generator";
 import {
   chatWithCodex,
@@ -744,6 +746,76 @@ function planExecutionEventFields(
   };
 }
 
+function toolLifecycleEventFields(
+  event: AstraToolLifecycleEvent,
+): Omit<AstraBrainEvent, "id" | "at"> {
+  let agent: AstraAgentKey = "chief_of_staff";
+  let visualNode = "chief_of_staff";
+
+  switch (event.category) {
+    case "filesystem":
+    case "drive":
+      agent = "files";
+      visualNode = "drive";
+      break;
+    case "github":
+      agent = "github";
+      visualNode = "developer";
+      break;
+    case "research":
+    case "browser":
+      agent = "researcher";
+      visualNode = "researcher";
+      break;
+    case "shell":
+    case "computer":
+      agent = "computer";
+      visualNode = "ops";
+      break;
+    case "email":
+      agent = "communication";
+      visualNode = "email";
+      break;
+    case "calendar":
+      agent = "communication";
+      visualNode = "calendar";
+      break;
+    case "crm":
+      agent = "business";
+      visualNode = "crm";
+      break;
+    case "analytics":
+      agent = "business";
+      visualNode = "analytics";
+      break;
+    case "design":
+      agent = "chief_of_staff";
+      visualNode = "design";
+      break;
+    case "database":
+      agent = "business";
+      visualNode = "ops";
+      break;
+    case "mcp":
+      agent = "chief_of_staff";
+      visualNode = "ops";
+      break;
+  }
+
+  return {
+    type: event.type,
+    agent,
+    visualNode,
+    label:
+      event.type === "tool.started"
+        ? event.toolName + " started"
+        : event.type === "tool.completed"
+          ? event.toolName + " completed"
+          : event.toolName + " failed",
+    detail: event.detail,
+  };
+}
+
 function providerFromPlanEvents(events: AstraBrainEvent[]): AstraBrainProvider {
   if (events.some((event) => event.provider === "codex")) return "codex";
   if (events.some((event) => event.provider === "hermes")) return "hermes";
@@ -1125,6 +1197,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           const live = emitLiveEvent(options, planExecutionEventFields(event));
           planEvents.push(live);
         },
+        onToolEvent: (event) => {
+          const live = emitLiveEvent(options, toolLifecycleEventFields(event));
+          planEvents.push(live);
+        },
       });
 
       context.plan = result.plan;
@@ -1411,9 +1487,20 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       tools: {
         enabled: true,
         available:
+          astraNativeToolRuntime
+            .list()
+            .some((tool) => tool.availability === "READY") ||
           hermes.available ||
           (codex.available && codex.sandbox !== "read-only"),
-        detail: `${toolsPolicyDetail(policy)} Codex sandbox: ${codex.sandbox}. Tool execution is delegated to permitted Hermes/Codex capabilities; ASTRA does not invent tool activity when no provider reports it.`,
+        detail:
+          astraNativeToolRuntime
+            .list()
+            .filter((tool) => tool.availability === "READY").length +
+          " native tool(s) READY. " +
+          toolsPolicyDetail(policy) +
+          " Codex sandbox: " +
+          codex.sandbox +
+          ". MCP transport is not configured by the native runtime unless a real transport is explicitly injected.",
       },
       cloud: {
         enabled: cloud.enabled,

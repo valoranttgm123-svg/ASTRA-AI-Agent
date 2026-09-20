@@ -1,5 +1,51 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 6A executable Tool Runtime checkpoint
+
+This branch converts the existing Tool Registry from metadata-only into a real permission-gated execution runtime.
+
+Implemented:
+- `lib/tools/executor.ts` — shared executable Tool Registry with:
+  - availability checks;
+  - approved permission-level gate before handler invocation;
+  - ASTRA policy gate;
+  - timeout;
+  - cancellation;
+  - bounded input/output;
+  - real `tool.started/tool.completed/tool.failed` lifecycle;
+  - completed results are rejected unless the handler returns `verified: true`;
+  - side-effecting tools must support cancellation;
+- `lib/tools/native.ts` — first real native tool: `project.context.search`;
+  - READ / Level 1 only;
+  - reuses the scoped Project Registry loader;
+  - reads only explicitly registered docs/importantFiles;
+  - keeps workspace containment, realpath, sensitive-file and no-directory-scan protections;
+- `lib/tools/runtime.ts` — native + optional MCP registrations share one executor/policy boundary;
+- `lib/tools/mcp.ts` — transport-injected MCP adapter contract:
+  - does not discover or connect to arbitrary servers automatically;
+  - MCP tools exist only when a real transport is explicitly injected;
+  - provider success still passes through ASTRA permission/verification/runtime boundaries;
+- bounded plan inspection now attempts the native project-context tool and streams real tool lifecycle into Brain/Command Center;
+- Brain status reports native READY tool count and explicitly says MCP is not configured unless a transport is injected.
+
+Verified by tests:
+- native tool returns only registered ALURKA project context and never reads unlisted/outside/.env fixture data;
+- permission and policy blocking occur before handler invocation;
+- unverified completion claims are converted to failure;
+- MCP fixture discovery/call executes through the exact same runtime;
+- real Brain bounded-plan project inspection emits `tool.started` and `tool.completed` on the Drive visual node.
+
+Truthful limitation:
+**No production MCP transport/server is connected by this checkpoint.** Do not report MCP READY in the user's runtime. The fixture proves the adapter/runtime contract only.
+
+Next roadmap work:
+1. merge Phase 6A after CI;
+2. Phase 7 — Files + GitHub production flow using executable Tool Registry;
+3. add real Research/browser tooling to finish remaining Phase 5 coverage;
+4. then expand communication/cloud tools under Level 3 approvals.
+
+Sonor is not modified by this milestone.
+
 ## 2026-09-20 — Phase 5A bounded Chief orchestrator checkpoint
 
 This branch adds real bounded plan execution on top of the validated Phase 4 Strategist plan.
