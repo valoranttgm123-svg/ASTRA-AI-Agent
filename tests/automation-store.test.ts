@@ -92,6 +92,7 @@ test("Phase 14B private store starts empty and round-trips validated jobs", asyn
 
 test("Phase 14B malformed store fails closed with zero runnable definitions", async () => {
   await withPrivateStore(async (source) => {
+    await saveAutomationStore([fixture()]);
     await writeFile(source, "{ not-json", {
       encoding: "utf8",
       flag: "w",
