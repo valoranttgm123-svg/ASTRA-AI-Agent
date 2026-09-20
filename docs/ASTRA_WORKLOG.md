@@ -99,11 +99,8 @@ Follow `docs/SONOR_CODEX_MISSION.md`.
 
 ## Next exact repository work
 
-1. **P15C — Provider + MCP failure isolation**
-2. P15D — Cancellation / timeout / network matrix
-3. P15E — Secret / error / telemetry leakage
-4. P15F — Security regression report
-5. MEM-X real Sonor validation when local access exists
+1. **P15F — Security regression report**
+2. MEM-X real Sonor validation when local access exists
 6. Phase 16 performance
 7. Phase 17 full-system validation
 8. Phase 18 Release Candidate
@@ -158,4 +155,11 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: Phase 15D complete; Codex owned child cleanup and Automation/Command Center STOP settlement are verified.
 - next: **P15E Secret / error / telemetry leakage hardening**.
+## In-flight checkpoint — Phase 15E
 
+- branch: `astra/phase15e-secret-error-redaction`;
+- scope: shared secret/error/status/telemetry redaction boundary;
+- notable finding: multiple provider/tool/Automation/Codex paths still exposed raw `error.message` or stderr before this slice;
+- private runtime ignore rules were re-verified in `.gitignore`;
+- completion rule: P15E counts complete only after CI is green and the PR is merged;
+- next after merge: **P15F final security regression matrix/report**.
