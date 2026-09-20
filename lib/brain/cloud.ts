@@ -2,6 +2,7 @@ import type { AstraAgent } from "@/lib/agent/types";
 import type { AstraBrainPermissionSnapshot } from "./types";
 import { isRecordPayload, isStructuredProviderPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
+import { safeErrorDetail } from "@/lib/security/redaction";
 
 const DEFAULT_TIMEOUT_MS = 60000;
 const DEFAULT_STATUS_TIMEOUT_MS = 2500;
