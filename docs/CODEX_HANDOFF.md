@@ -1257,3 +1257,34 @@ Exact priority:
 Open PR #51 is obsolete-era telemetry work and is 461 commits behind current `main`. Do not merge it wholesale. Compare for any genuinely unique unsuperseded behavior/tests, port only those pieces if needed, then close it as superseded.
 
 Do not restart or redesign the completed Phase 14 architecture.
+
+---
+
+## Handoff update — Phase 15A project path/filesystem hardening
+
+Implemented on `astra/phase15a-path-hardening`:
+
+- writable project paths now use `lstat()` before the existing `realpath()` verification;
+- an existing writable symlink is rejected fail-closed;
+- a dangling symlink can no longer be mistaken for a safe non-existing file target;
+- non-`ENOENT` `lstat` failures fail closed;
+- existing traversal, absolute-outside, sensitive-path, extension and parent-realpath boundaries remain intact;
+- new `tests/security-paths.test.ts` covers:
+  - valid workspace/file resolution;
+  - valid non-existing write target inside a real parent;
+  - `../` traversal;
+  - absolute outside paths;
+  - sensitive paths/extensions;
+  - read symlink escape;
+  - writable symlinked-parent escape;
+  - existing and dangling writable symlinks.
+
+Security finding fixed:
+
+A dangling writable symlink previously caused `realpath()` to throw and the catch path treated it like a safe new file. Phase 15A now distinguishes true `ENOENT` from an existing symlink and rejects the symlink.
+
+Next repository task after green CI/merge:
+
+**Phase 15B — Untrusted retrieved-context / prompt-injection boundary.**
+
+Phase 14 target-PC validation remains an external/local gate and is not claimed complete.
