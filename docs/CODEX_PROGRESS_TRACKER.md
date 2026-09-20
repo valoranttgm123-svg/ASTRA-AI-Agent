@@ -26,7 +26,7 @@ Current truthful status:
   - [x] P15D1 — provider/Strategist/Memory/browser/Tool Runtime cancellation+timeout — PR #101
   - [x] P15D2 — Codex child process + Automation/Command Center STOP settlement — PR #102
 - [x] P15E — secret / error / telemetry leakage hardening — PR #103
-- [x] P15F — security regression matrix + report — current PR
+- [x] P15F — security regression matrix + report — PR #104
 
 Phase 15 result: **REPOSITORY COMPLETE ON GREEN MERGE / LOCAL RELEASE GATES REMAIN**
 
