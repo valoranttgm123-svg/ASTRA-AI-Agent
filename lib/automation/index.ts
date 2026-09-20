@@ -82,3 +82,22 @@ export {
   createReadOnlyAutomationExecutor,
   executeReadOnlyAutomationWithBrain,
 } from "./read-only";
+
+export type {
+  AstraAutomationServiceStatus,
+  AstraAutomationServiceSummary,
+  AstraAutomationServiceTick,
+} from "./service";
+export {
+  ASTRA_AUTOMATION_SERVICE_DEFAULT_POLL_MS,
+  ASTRA_AUTOMATION_SERVICE_MAX_POLL_MS,
+  ASTRA_AUTOMATION_SERVICE_MIN_POLL_MS,
+  AstraAutomationService,
+  getAutomationService,
+  getAutomationServiceConfig,
+  getAutomationServiceStatus,
+  runAutomationServiceTickNow,
+  startAutomationServiceIfEnabled,
+  stopAutomationService,
+  stopAutomationServiceActiveTick,
+} from "./service";
