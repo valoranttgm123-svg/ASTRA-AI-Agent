@@ -727,3 +727,30 @@ Implemented on `astra/phase13-command-center-max`:
 - regression coverage for snapshot completeness and lifecycle truth.
 
 Next: Phase 14 safe Automation under the same permission/approval/cancellation/verification model.
+---
+
+## Phase 14A implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase14a-automation-safety-foundation`:
+
+- deterministic local automation contracts for one-time and interval schedules;
+- one-time jobs are run-at-most-once based on persisted run metadata supplied by the caller;
+- recurring intervals have a 60-minute minimum and 30-day maximum;
+- scheduled definitions have a bounded 30-minute maximum runtime;
+- unattended execution ceiling is Permission Level 1 (read-only);
+- Level 2 and Level 3 scheduled work stops at `WAITING_APPROVAL` until the current run receives the required approval;
+- Level 4 high-impact work cannot be registered as scheduled automation;
+- paused/disabled jobs never become runnable;
+- regression tests lock due-time and permission behavior;
+- CI lint coverage includes `lib/automation`.
+
+Phase 14 is **not complete** yet. This checkpoint intentionally does not add a background worker, durable automation store, UI, or Windows startup task.
+
+Next implementation slice:
+
+1. Phase 14B — durable local automation store under private `.astra/` data;
+2. bounded scheduler/queue worker with one global cancellation path;
+3. Brain/Command Center lifecycle events for queued/running/waiting-approval/completed/failed automation runs;
+4. per-run approval binding through the existing approval model;
+5. loopback-only CRUD/status API and minimal UI;
+6. real local validation before Phase 14 can be marked complete.
