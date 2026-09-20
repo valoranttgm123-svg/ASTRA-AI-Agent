@@ -25,7 +25,7 @@ Current truthful status:
 - [x] P15D — cancellation / timeout / network failure matrix
   - [x] P15D1 — provider/Strategist/Memory/browser/Tool Runtime cancellation+timeout — PR #101
   - [x] P15D2 — Codex child process + Automation/Command Center STOP settlement — PR #102
-- [x] P15E — secret / error / telemetry leakage hardening — PR pending
+- [x] P15E — secret / error / telemetry leakage hardening — PR #103
 - [ ] P15F — security regression matrix + report
 
 Phase 15 result: **IN PROGRESS — P15A–P15E complete on green merge; next P15F**
