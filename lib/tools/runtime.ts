@@ -31,6 +31,10 @@ import {
   createIntegrationToolRegistrations,
   INTEGRATION_TOOL_DEFINITIONS,
 } from "./integrations";
+import {
+  AUTOMATION_TOOL_DEFINITIONS,
+  createAutomationToolRegistrations,
+} from "@/lib/automation/tools";
 
 export function createNativeToolRuntime(): AstraExecutableToolRegistry {
   return createExecutableToolRegistry(
@@ -40,6 +44,7 @@ export function createNativeToolRuntime(): AstraExecutableToolRegistry {
       ...INTEGRATION_TOOL_DEFINITIONS,
       ...CREATIVE_TOOL_DEFINITIONS,
       ...COMPUTER_TOOL_DEFINITIONS,
+      ...AUTOMATION_TOOL_DEFINITIONS,
     ],
     {
       ...NATIVE_TOOL_HANDLERS,
@@ -63,6 +68,7 @@ export async function createToolRuntime(options?: {
     ...INTEGRATION_TOOL_DEFINITIONS,
     ...CREATIVE_TOOL_DEFINITIONS,
     ...COMPUTER_TOOL_DEFINITIONS,
+    ...AUTOMATION_TOOL_DEFINITIONS,
   ];
   const handlers: Record<string, AstraToolHandler> = {
     ...NATIVE_TOOL_HANDLERS,
@@ -157,6 +163,20 @@ export async function createToolRuntime(options?: {
     definitions.push(...computer.definitions);
 
     for (const [id, handler] of Object.entries(computer.handlers)) {
+      handlers[id] = handler;
+    }
+  }
+
+  {
+    const automation = await createAutomationToolRegistrations();
+    const automationIds = new Set(
+      automation.definitions.map((definition) => definition.id),
+    );
+    definitions = definitions.filter(
+      (definition) => !automationIds.has(definition.id),
+    );
+    definitions.push(...automation.definitions);
+    for (const [id, handler] of Object.entries(automation.handlers)) {
       handlers[id] = handler;
     }
   }
