@@ -467,11 +467,7 @@ export default function ApexWorld() {
           onClose={() => setSelected(null)}
           statusOverride={
             selected.key === "researcher"
-              ? runtime.brainStatus?.features?.research
-                ? runtime.brainStatus.features.research.available
-                  ? "READY"
-                  : "NOT_CONFIGURED"
-                : undefined
+              ? runtime.brainStatus?.features?.research?.state
               : undefined
           }
           statusDetail={
