@@ -1437,3 +1437,30 @@ P15D is **not complete** yet.
 Next exact task after green CI/merge:
 
 **Phase 15D2 — Codex child-process timeout/cancellation/cleanup plus Automation/Command Center STOP settlement verification.**
+
+---
+
+## Handoff update — Phase 15D2 Codex STOP + runtime settlement
+
+PR: **#102**
+
+Implemented/verified:
+
+- real Codex spawn path tested with deterministic Node fixture;
+- malformed JSONL cannot become a successful Codex turn;
+- non-zero Codex child exit fails truthfully;
+- Codex timeout kills the owned child process;
+- global STOP aborts Codex and kills the owned child process;
+- Automation runner STOP emits `automation.started` then `automation.cancelled`;
+- `automation.completed` is forbidden after STOP in the regression test;
+- Command Center maps `automation.cancelled` to Ops `BLOCKED`, so Ops cannot remain `ACTIVE`;
+- a later real `response.ready` may reset transient terminal state to the truthful base snapshot.
+
+Phase 15D completion after green CI/merge:
+
+- D1 provider/Planner/Memory/browser/Tool Runtime cancellation + timeout: complete;
+- D2 Codex child + Automation/Command Center STOP settlement: complete.
+
+Next exact task:
+
+**Phase 15E — Secret / error / telemetry leakage hardening.**
