@@ -16,10 +16,7 @@ import {
   getCodexStatus,
 } from "./codex";
 import { chatWithOllama } from "./ollama";
-import {
-  permissionPolicyPrompt,
-  type getPermissionPolicy,
-} from "./policy";
+import { permissionPolicyPrompt } from "./policy";
 import { getUnifiedMemoryContext } from "./unified-memory";
 import type { AstraBrainPermissionSnapshot } from "./types";
 
