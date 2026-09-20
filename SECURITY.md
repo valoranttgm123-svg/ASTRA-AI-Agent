@@ -140,3 +140,11 @@ This is defense-in-depth. Secret-bearing values must still never be deliberately
 Scoped approval tokens are allowed only in the explicit approval payload needed to complete that exact approval flow. They must not be copied into ordinary event detail/status text.
 
 Provider status may expose a useful endpoint label, but embedded URL credentials or sensitive query values must be redacted.
+## Phase 15 hardening status
+
+The final repository hardening evidence is recorded in:
+
+- `docs/SECURITY_VALIDATION.md`
+- `docs/SECURITY_HARDENING_REPORT.md`
+
+After the Phase 15F PR passes CI and merges, repository security/failure hardening is complete for the tested scope. This does not mark target-PC Automation validation, real Sonor/Graphify/Obsidian validation, or target-hardware performance testing as complete.
