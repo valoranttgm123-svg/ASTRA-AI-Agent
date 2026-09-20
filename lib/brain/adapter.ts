@@ -718,7 +718,12 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     emitLiveStart(selected, options);
-    const context = await buildExecutionContext(\n      input,\n      selected,\n      options?.signal,\n      (event) => emitLiveMemoryLifecycle(event, options),\n    );
+    const context = await buildExecutionContext(
+      input,
+      selected,
+      options?.signal,
+      (event) => emitLiveMemoryLifecycle(event, options),
+    );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
     const preferredProvider = options?.provider ?? "auto";
@@ -920,7 +925,12 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     emitLiveStart(selected, options);
-    const context = await buildExecutionContext(\n      input,\n      selected,\n      options?.signal,\n      (event) => emitLiveMemoryLifecycle(event, options),\n    );
+    const context = await buildExecutionContext(
+      input,
+      selected,
+      options?.signal,
+      (event) => emitLiveMemoryLifecycle(event, options),
+    );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
     const preferredProvider = options?.provider ?? "auto";
