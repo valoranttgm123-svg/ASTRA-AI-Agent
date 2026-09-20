@@ -1,4 +1,5 @@
 import type { AstraAgent } from "@/lib/agent/types";
+import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434";
 const DEFAULT_CHAT_TIMEOUT_MS = 60000;
@@ -238,6 +239,7 @@ export async function chatWithOllama({
     "This Ollama fallback has no external tools attached yet.",
     "Do not claim that files, GitHub, email, browser, shell, or other external actions were completed.",
     "If the user asks for an action requiring a tool, explain that the local model can reason about it but execution needs Hermes/Codex/tools.",
+    UNTRUSTED_RETRIEVED_CONTEXT_POLICY,
     policyText || "",
     context || "",
   ]
