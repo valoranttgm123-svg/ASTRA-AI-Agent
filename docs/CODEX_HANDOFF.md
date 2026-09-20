@@ -1222,3 +1222,38 @@ Do not call target-PC validation complete unless those local commands were actua
 `IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
 
 After the target-PC validation passes, Phase 14 is complete and the next roadmap task is **Phase 15 — Security/failure hardening**.
+---
+
+## Handoff update — post-Phase 14 Codex execution mission
+
+Current verified `main` baseline:
+
+- Phase 14 final merge: PR #92;
+- merge commit: `de4fbefe6f9a23792a542a74d4d0ca1aef1aa208`;
+- `main` CI after merge: SUCCESS;
+- Automation implementation complete;
+- target-PC Automation validation still required.
+
+The next Codex session must begin from:
+
+`docs/CODEX_NEXT_MISSION.md`
+
+Phase 15 tracking matrix:
+
+`docs/SECURITY_VALIDATION.md`
+
+Exact priority:
+
+1. target-PC Automation validation when local PC access is available;
+2. Phase 15A–15F security/failure hardening;
+3. real Sonor/Graphify/Obsidian validation from `docs/SONOR_CODEX_MISSION.md`;
+4. Phase 16 performance;
+5. Phase 17 full-system validation;
+6. Phase 18 RC;
+7. Phase 19 Windows ready-to-use release;
+8. Phase 20 core release gate;
+9. continue Phase 21–30 JARVIS-Class roadmap.
+
+Open PR #51 is obsolete-era telemetry work and is 461 commits behind current `main`. Do not merge it wholesale. Compare for any genuinely unique unsuperseded behavior/tests, port only those pieces if needed, then close it as superseded.
+
+Do not restart or redesign the completed Phase 14 architecture.
