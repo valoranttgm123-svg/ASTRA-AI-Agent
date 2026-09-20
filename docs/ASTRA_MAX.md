@@ -1826,3 +1826,8 @@ This still does not create a background worker or execute scheduled tasks. Runti
 The automation layer now has a pure, non-executing queue planner. It selects only due Permission Level 0/1 work for unattended readiness, keeps Level 2/3 occurrences in a separate approval queue, bounds unattended runnable work to four jobs per tick, and defines truthful lifecycle event contracts for the future runner.
 
 No lifecycle events are emitted yet because no scheduled task is actually executed in this slice.
+## Phase 14C2 — cancellable read-only automation runner
+
+A real runner tick now exists for validated scheduled Permission Level 0/1 work. It durably claims each occurrence before invoking the injected executor, runs jobs serially, enforces each job's runtime bound, propagates global STOP, and emits lifecycle events only around real work.
+
+Permission Level 2/3 scheduled occurrences still stop at the approval boundary and are not executable by this runner. There is still no always-on background loop in this slice.
