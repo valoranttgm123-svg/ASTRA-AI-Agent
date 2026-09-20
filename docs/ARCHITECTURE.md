@@ -157,3 +157,30 @@ Graphify / Obsidian / Projects / Chats
 ASTRA uses `lib/memory/sonor.ts` and `lib/brain/unified-memory.ts`. Sonor is disabled by default and restricted to loopback. The real local Sonor endpoint must implement or adapt to the provenance-aware contract documented in `docs/SONOR_BRIDGE.md`.
 
 Do not use the Sonor visual graph DOM as the primary data interface if a server-side data source is available.
+
+
+## Scoped project context
+
+A resolved Project Registry entry is metadata until ASTRA explicitly loads registered context.
+
+The read-only loader in `lib/projects/context.ts` is intentionally narrow:
+
+```text
+Project Registry match
+      ↓
+registered workspace
+      ↓
+docs / importantFiles only
+      ↓
+containment + realpath + sensitive-file checks
+      ↓
+bounded text read
+      ↓
+AstraMemorySource(sourceType=project)
+      ↓
+Memory Manager
+      ↓
+Brain
+```
+
+It never recursively scans the workspace. Relative and absolute entries are accepted only when their final real path stays inside the registered workspace. Sensitive credential/key/env paths and unsupported/binary extensions are skipped. Content remains read-only and provenance-backed.
