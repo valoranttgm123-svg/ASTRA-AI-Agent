@@ -103,7 +103,7 @@ export const ASTRA_CAPABILITY_NODES: readonly AstraCapabilityNode[] = [
     capabilities: ["roadmaps", "prioritization", "dependency planning"],
     examples: ["Build a roadmap", "What should we do next?"],
     permissionLevel: 1,
-    implementation: "planned",
+    implementation: "partial",
     defaultState: "NOT_CONFIGURED",
     requiresConfiguration: true,
     color: CYAN,
