@@ -1183,14 +1183,17 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     }
 
     if (context.plan) {
-      const maxPermission = Math.max(
-        ...context.plan.steps.map((step) => step.permissionLevel),
+      const hasUnstructuredAction = context.plan.steps.some(
+        (step) =>
+          step.kind === "tool" &&
+          step.permissionLevel > 1 &&
+          !step.toolId,
       );
 
-      if (preferredProvider === "ollama" && maxPermission > 1) {
+      if (preferredProvider === "ollama" && hasUnstructuredAction) {
         return blocked(
-          "Plan ini memiliki langkah aksi nyata. Ollama hanya dapat menjalankan reasoning/read-only; gunakan Auto atau Codex untuk langkah aksi.",
-          "Explicit Ollama mode cannot execute plan steps above permission level 1.",
+          "Plan ini memiliki action yang belum terikat ke tool ASTRA nyata. Ollama boleh merencanakan dan menggunakan registered Tool Runtime, tetapi tidak boleh mengeksekusi action prose tanpa toolId.",
+          "Explicit Ollama mode cannot execute an unstructured side-effecting plan step.",
         );
       }
 
