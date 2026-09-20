@@ -1,7 +1,12 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { AstraOrbState, AstraProviderChoice } from "@/lib/agent/types";
+import type {
+  AstraInputContext,
+  AstraInputTrigger,
+  AstraOrbState,
+  AstraProviderChoice,
+} from "@/lib/agent/types";
 import type { AstraAvatarState } from "@/lib/avatar/types";
 import type {
   AstraBrainChatResult,
@@ -79,6 +84,7 @@ type AstraRuntimeValue = {
       approved?: boolean;
       approvalToken?: string;
       provider?: AstraProviderChoice;
+      inputContext?: AstraInputContext;
     },
   ) => Promise<AstraBrainChatResult>;
   execute: (
@@ -90,12 +96,45 @@ type AstraRuntimeValue = {
     approvalToken: string,
     provider?: AstraProviderChoice,
   ) => Promise<AstraBrainChatResult>;
-  beginListening: () => void;
+  beginListening: (trigger?: AstraInputTrigger) => void;
   endListening: () => void;
   stopInteraction: () => void;
   setAvatarState: (state: AstraAvatarState) => void;
   setVoiceEnabled: (enabled: boolean) => void;
 };
+
+function textInputContext(): AstraInputContext {
+  return {
+    source: "text",
+    trigger: "keyboard",
+    modalities: ["text"],
+    consent: {
+      microphone: false,
+      camera: false,
+      image: false,
+      screen: false,
+    },
+    visualContentProvided: false,
+  };
+}
+
+function voiceInputContext(trigger: AstraInputTrigger): AstraInputContext {
+  const gestureTriggered = trigger === "gesture_open_palm";
+  return {
+    source: "voice",
+    trigger,
+    modalities: gestureTriggered
+      ? ["voice", "gesture", "camera"]
+      : ["voice"],
+    consent: {
+      microphone: true,
+      camera: gestureTriggered,
+      image: false,
+      screen: false,
+    },
+    visualContentProvided: false,
+  };
+}
 
 const AstraRuntimeContext = createContext<AstraRuntimeValue | null>(null);
 
@@ -155,7 +194,10 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const requestControllerRef = useRef<AbortController | null>(null);
   const speechSequenceRef = useRef(0);
   const brainTraceSequenceRef = useRef(0);
-  const sendRef = useRef<(message: string) => Promise<AstraBrainChatResult>>(async () => {
+  const sendRef = useRef<(
+    message: string,
+    inputContext?: AstraInputContext,
+  ) => Promise<AstraBrainChatResult>>(async () => {
     throw new Error("ASTRA runtime is not ready.");
   });
 
@@ -306,6 +348,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       approved?: boolean;
       approvalToken?: string;
       provider?: AstraProviderChoice;
+      inputContext?: AstraInputContext;
     },
   ) => {
     const value = message.trim();
@@ -378,6 +421,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
           approved: Boolean(options?.approved),
           approvalToken: options?.approvalToken,
           provider: options?.provider ?? "auto",
+          inputContext: options?.inputContext ?? textInputContext(),
         }),
         signal: controller.signal,
       });
@@ -567,10 +611,11 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   );
 
   useEffect(() => {
-    sendRef.current = (message: string) => send(message);
+    sendRef.current = (message: string, inputContext?: AstraInputContext) =>
+      send(message, { inputContext });
   }, [send]);
 
-  const beginListening = useCallback(() => {
+  const beginListening = useCallback((trigger: AstraInputTrigger = "microphone") => {
     const Recognition = getSpeechRecognitionConstructor();
     if (!Recognition) {
       setMicSupported(false);
@@ -635,7 +680,10 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         } catch {
           // Recognition may already have ended after a final result.
         }
-        void sendRef.current(finalText).catch((error) => {
+        void sendRef.current(
+          finalText,
+          voiceInputContext(trigger),
+        ).catch((error) => {
           if (error instanceof DOMException && error.name === "AbortError") return;
           setMicError(error instanceof Error ? error.message : "ASTRA request failed.");
         });
