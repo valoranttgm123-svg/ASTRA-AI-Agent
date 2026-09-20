@@ -342,8 +342,14 @@ function emitLiveMemoryLifecycle(
     "unused",
     Date.now(),
   );
-  const { id: _id, at: _at, ...rest } = brainEvent;
-  return emitLiveEvent(options, rest);
+  return emitLiveEvent(options, {
+    type: brainEvent.type,
+    agent: brainEvent.agent,
+    visualNode: brainEvent.visualNode,
+    provider: brainEvent.provider,
+    label: brainEvent.label,
+    detail: brainEvent.detail,
+  });
 }
 
 function emitLiveStart(
