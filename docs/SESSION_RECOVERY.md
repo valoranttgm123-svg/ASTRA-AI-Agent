@@ -94,8 +94,9 @@ Never resume by weakening these:
 
 At creation of this protocol:
 
-- P15A: merged/CI verified;
-- P15B: merged/CI verified;
-- next: **P15C Provider + MCP failure isolation**;
+- P15A–P15E: merged/CI verified;
+- current branch gate: **P15F final security regression/report**;
+- after P15F merge: Phase 15 repository hardening complete;
 - Phase 14 local validation: pending;
-- Sonor real validation: pending local access.
+- Sonor real validation: pending local access;
+- next implementable repository work when local access is unavailable: **Phase 16 performance instrumentation/preparation**.
