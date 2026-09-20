@@ -153,3 +153,37 @@ export function parseAutomationMutation(
 
   throw new Error("Automation action is invalid.");
 }
+const AUTOMATION_PROVIDERS = new Set(["auto", "ollama", "codex"]);
+
+export function parseAutomationRunRequest(
+  body: Record<string, unknown>,
+): import("./approval").AstraAutomationOccurrenceRequest {
+  const automationId = string(body.automationId, "automationId", 120);
+  const scheduledFor = string(body.scheduledFor, "scheduledFor", 80);
+
+  if (body.approved !== undefined && typeof body.approved !== "boolean") {
+    throw new Error("approved must be boolean.");
+  }
+
+  let approvalToken: string | undefined;
+  if (body.approvalToken !== undefined) {
+    approvalToken = string(body.approvalToken, "approvalToken", 160);
+    if (approvalToken.length < 8) {
+      throw new Error("approvalToken is invalid.");
+    }
+  }
+
+  const provider =
+    body.provider === undefined ? "auto" : String(body.provider);
+  if (!AUTOMATION_PROVIDERS.has(provider)) {
+    throw new Error("provider is invalid.");
+  }
+
+  return {
+    automationId,
+    scheduledFor,
+    approved: body.approved === true,
+    ...(approvalToken ? { approvalToken } : {}),
+    provider: provider as "auto" | "ollama" | "codex",
+  };
+}
