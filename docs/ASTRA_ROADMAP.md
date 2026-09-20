@@ -688,3 +688,24 @@ Implemented on `astra/phase11-controlled-computer-agent`:
 - regression tests for configuration, permission, policy, selective capability and cancellation.
 
 Next: Phase 12 Voice + Multimodal unification. Real target-PC desktop validation remains a separate required validation step.
+
+
+---
+
+## Phase 12 implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase12-multimodal-input-envelope`:
+
+- unified trusted input provenance envelope;
+- text vs voice source tracking;
+- keyboard/microphone/gesture-open-palm/API trigger tracking;
+- bounded modality/consent metadata;
+- gesture-triggered mic sessions identified truthfully;
+- no camera/image/screen pixels transmitted;
+- image/screen payload claims rejected while unconfigured;
+- provider context receives no-visual-inference boundary;
+- Brain response envelope preserves input provenance;
+- multimodal runtime status + Command Center MM chip;
+- regression coverage for parser, consent, envelope and status.
+
+Next milestone: inspect current `main` roadmap after merge and continue the next unfinished ASTRA MAX capability without duplicating existing foundations.
