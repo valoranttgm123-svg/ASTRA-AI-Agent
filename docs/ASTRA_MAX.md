@@ -1014,6 +1014,29 @@ Expected: active work cancels cleanly.
 
 ## Phase 18 — Release Candidate
 
+### Phase 18A — repository RC gate automation
+
+Local repository gate:
+
+```powershell
+npm run release:repo-gate
+```
+
+Required repository checks:
+
+- tests;
+- typecheck;
+- lint;
+- production build;
+- high-severity dependency audit;
+- `git diff --check`.
+
+GitHub CI also runs PR/push-range diff checks with full checkout history.
+
+Passing this gate does not satisfy target-PC Automation, MEM-X, performance, full-system or Windows readiness requirements.
+
+
+
 Create an ASTRA MAX release candidate only after:
 
 - `npm test`
