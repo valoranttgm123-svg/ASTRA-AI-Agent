@@ -135,13 +135,32 @@ export class SearXngResearchTransport
       };
     }
 
-    return {
-      configured: true,
-      available: true,
-      provider: this.provider,
-      detail:
-        "Local SearXNG search endpoint is configured. Runtime availability is verified on each search call.",
-    };
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => controller.abort(
+        new DOMException("SearXNG health check timed out.", "AbortError"),
+      ),
+      2500,
+    );
+
+    try {
+      const health = await this.search({
+        query: "astra health check",
+        limit: 1,
+        signal: controller.signal,
+      });
+
+      return {
+        configured: true,
+        available: health.ok,
+        provider: this.provider,
+        detail: health.ok
+          ? "Local SearXNG search endpoint responded successfully."
+          : health.detail,
+      };
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   async search(input: {
@@ -313,6 +332,7 @@ function researchQuery(input: Record<string, unknown>) {
 
 export async function createResearchToolRegistrations(
   transport: AstraResearchTransport,
+  pageFetcher: typeof fetchPublicWebPage = fetchPublicWebPage,
 ): Promise<{
   definitions: AstraToolDefinition[];
   handlers: Record<string, AstraToolHandler>;
@@ -504,7 +524,7 @@ export async function createResearchToolRegistrations(
       context.signal.throwIfAborted();
 
       try {
-        const page = await fetchPublicWebPage({
+        const page = await pageFetcher({
           url: item.url,
           maxChars: 7_000,
           signal: context.signal,
