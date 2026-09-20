@@ -804,3 +804,22 @@ Implemented on `astra/phase14c2-readonly-automation-runner`:
 - regression tests for duplicate prevention, approval separation and STOP cancellation.
 
 Still not included: periodic background loop, UI/API controls, approval-resume path for Level 2/3, or Windows startup scheduling.
+---
+
+## Phase 14D1 implementation checkpoint — loopback management API + telemetry contract
+
+Implemented on `astra/phase14d1-automation-api-telemetry`:
+
+- loopback-only `/api/automation` endpoint using the existing ASTRA host/origin/cross-site guards;
+- mutation requests require the existing `x-astra-client: 1` + JSON boundary;
+- safe create/update/pause/enable/disable/delete of automation definitions;
+- new definitions default to `paused` unless explicitly enabled;
+- server owns `createdAt`, `updatedAt`, and preserves durable `lastRunAt` on edits;
+- Permission Level 4 is rejected before persistence;
+- process-local store mutations and runner occurrence claims are serialized to avoid lost updates;
+- automation lifecycle types are now valid Brain event types;
+- automation lifecycle can be converted to real Brain telemetry targeting the existing Ops node;
+- Command Center runtime mapping handles automation ACTIVE / WAITING_APPROVAL / ERROR / BLOCKED / completion reset states;
+- regression tests cover parser bounds, management, persistence preservation, concurrent mutation serialization, and Ops telemetry.
+
+Phase 14 is still incomplete. The API manages definitions only; it does not expose an always-on scheduler and it does not authorize Level 2/3 execution.

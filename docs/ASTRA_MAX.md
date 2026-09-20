@@ -1831,3 +1831,10 @@ No lifecycle events are emitted yet because no scheduled task is actually execut
 A real runner tick now exists for validated scheduled Permission Level 0/1 work. It durably claims each occurrence before invoking the injected executor, runs jobs serially, enforces each job's runtime bound, propagates global STOP, and emits lifecycle events only around real work.
 
 Permission Level 2/3 scheduled occurrences still stop at the approval boundary and are not executable by this runner. There is still no always-on background loop in this slice.
+## Phase 14D1 — loopback automation management and telemetry
+
+ASTRA now has a loopback-only automation definition API under the same request security boundary as the Brain API. Local clients can list definitions and queue state, create/update definitions, change enabled/paused/disabled state, and delete definitions. Mutations are bounded and Level 4 remains unschedulable.
+
+Automation lifecycle event types are also integrated into the Brain/Command Center contract. When a future runtime emits a real automation event, the Ops node can truthfully show ACTIVE, WAITING_APPROVAL, ERROR/BLOCKED, and return to its base state on completion.
+
+This slice does not grant Level 2/3 execution approval and does not start an always-on scheduler.
