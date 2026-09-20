@@ -201,6 +201,40 @@ export function automationStoreReadiness(
   };
 }
 
+export function classifyWindowsStartupTasks(
+  states: Record<string, string>,
+): ReadinessCheck {
+  const required = ["ASTRA-Agent", "ASTRA-Ollama"];
+  const missing = required.filter(
+    (name) =>
+      states[name] === undefined ||
+      states[name] === "MISSING",
+  );
+  const disabled = required.filter(
+    (name) =>
+      (states[name] ?? "").toLowerCase() ===
+      "disabled",
+  );
+
+  return {
+    state:
+      missing.length > 0
+        ? "NOT_CONFIGURED"
+        : disabled.length > 0
+          ? "OFFLINE"
+          : "READY",
+    detail:
+      missing.length > 0
+        ? "One or more ASTRA startup tasks are not installed."
+        : disabled.length > 0
+          ? "One or more ASTRA startup tasks are disabled."
+          : "ASTRA startup scheduled tasks are installed.",
+    data: {
+      tasks: states,
+    },
+  };
+}
+
 export function automationServiceReadiness(
   payload: unknown,
 ): ReadinessCheck {
