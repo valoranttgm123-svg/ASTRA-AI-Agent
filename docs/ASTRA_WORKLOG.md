@@ -10,12 +10,12 @@
 
 Current `main` checkpoint:
 
-- latest completed implementation: **Phase 15E — secret/error/telemetry hardening**;
-- latest completed implementation PR: **#103**;
-- latest completed implementation merge: `5ee3f69e934712c19ca6b2733a9311a5fc1c0633`;
-- PR #103 CI: **SUCCESS**;
-- current branch gate: **Phase 15F — final security regression/report**;
-- next after P15F merge: **MEM-X when local Sonor is available; otherwise Phase 16 performance instrumentation/preparation**;
+- Phase 15 repository hardening: **merged / CI verified**;
+- Phase 16A performance instrumentation: **merged / CI verified**;
+- Phase 17A safe validation preflight: **merged / CI verified**;
+- repository cleanup before RC: **complete**;
+- current branch gate: **Phase 19A — read-only readiness self-check tooling**;
+- Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
 - real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**.
 
@@ -207,3 +207,16 @@ Never mark local/physical verification PASS from repository inspection alone.
 - historical branches remain intentionally as non-blocking snapshots;
 - cleanup evidence: `docs/REPOSITORY_CLEANUP.md`;
 - next repository-side work may prepare release/readiness tooling, but Phase 16/17 cannot be marked PASS without target-runtime evidence.
+
+## In-flight checkpoint — Phase 19A
+
+- branch: `astra/phase19a-readonly-self-check`;
+- scope: read-only running-ASTRA readiness evidence + Windows startup-task presence;
+- command: `npm run release:self-check`;
+- wrapper: `scripts/windows/self-check.ps1`;
+- output: gitignored `.astra/readiness/`;
+- no `.env` secret values are read or persisted;
+- no service/configuration is changed;
+- Sonor remains UNKNOWN pending MEM-X;
+- release verdict remains `NOT_EVALUATED`;
+- completion rule: P19A repository tooling counts complete only after CI is green and PR is merged.
