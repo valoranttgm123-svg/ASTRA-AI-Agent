@@ -4,6 +4,7 @@ const DEFAULT_HERMES_URL = "http://127.0.0.1:8642";
 const DEFAULT_HERMES_MODEL = "hermes-agent";
 const DEFAULT_CHAT_TIMEOUT_MS = 45000;
 const DEFAULT_STATUS_TIMEOUT_MS = 1200;
+const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 
 export type HermesStatus = {
   enabled: boolean;
@@ -30,6 +31,18 @@ function envFlag(name: string, fallback: boolean) {
 function normalizeRoot(value?: string) {
   const raw = (value?.trim() || DEFAULT_HERMES_URL).replace(/\/+$/, "");
   return raw.endsWith("/v1") ? raw.slice(0, -3) : raw;
+}
+
+function assertLocalRoot(rootUrl: string) {
+  let url: URL;
+  try {
+    url = new URL(rootUrl);
+  } catch {
+    throw new Error("Hermes URL tidak valid.");
+  }
+  if (url.protocol !== "http:" || !LOCAL_HOSTS.has(url.hostname)) {
+    throw new Error("Hermes harus memakai endpoint HTTP loopback lokal.");
+  }
 }
 
 function parseTimeout(value: string | undefined, fallback: number) {
@@ -64,13 +77,18 @@ function hermesHeaders(apiKey: string, json = false) {
 async function withTimeout<T>(
   timeoutMs: number,
   run: (signal: AbortSignal) => Promise<T>,
+  externalSignal?: AbortSignal,
 ): Promise<T> {
   const controller = new AbortController();
+  const abort = () => controller.abort(externalSignal?.reason);
+  if (externalSignal?.aborted) abort();
+  else externalSignal?.addEventListener("abort", abort, { once: true });
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await run(controller.signal);
   } finally {
     clearTimeout(timer);
+    externalSignal?.removeEventListener("abort", abort);
   }
 }
 
@@ -89,6 +107,7 @@ export async function getHermesStatus(): Promise<HermesStatus> {
   }
 
   try {
+    assertLocalRoot(config.rootUrl);
     const response = await withTimeout(config.statusTimeoutMs, (signal) =>
       fetch(`${config.rootUrl}/v1/capabilities`, {
         method: "GET",
@@ -136,16 +155,19 @@ export async function chatWithHermes({
   agent,
   context,
   policyText,
+  signal,
 }: {
   input: string;
   agent: AstraAgent;
   context?: string;
   policyText?: string;
+  signal?: AbortSignal;
 }) {
   const config = getHermesConfig();
   if (!config.enabled) {
     throw new Error("Hermes adapter is disabled.");
   }
+  assertLocalRoot(config.rootUrl);
 
   const system = [
     "You are ASTRA, a local-first personal AI agent.",
@@ -161,12 +183,12 @@ export async function chatWithHermes({
     .filter(Boolean)
     .join("\n");
 
-  const response = await withTimeout(config.chatTimeoutMs, (signal) =>
+  const response = await withTimeout(config.chatTimeoutMs, (requestSignal) =>
     fetch(`${config.rootUrl}/v1/chat/completions`, {
       method: "POST",
       headers: hermesHeaders(config.apiKey, true),
       cache: "no-store",
-      signal,
+      signal: requestSignal,
       body: JSON.stringify({
         model: config.model,
         stream: false,
@@ -175,13 +197,11 @@ export async function chatWithHermes({
           { role: "user", content: input },
         ],
       }),
-    }),
+    }), signal,
   );
 
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    const suffix = body ? ` — ${body.slice(0, 240)}` : "";
-    throw new Error(`Hermes chat failed (HTTP ${response.status})${suffix}`);
+    throw new Error(`Hermes chat failed (HTTP ${response.status}).`);
   }
 
   const payload = (await response.json()) as HermesChatCompletion;

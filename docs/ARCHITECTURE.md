@@ -73,9 +73,11 @@ Automatic local model fallback. It is a reasoning/chat path and must not claim e
 
 Engineering/GitHub specialist using the local authenticated Codex CLI.
 
-Default sandbox is read-only. Workspace writes are only permitted when:
-- `ASTRA_CODEX_SANDBOX=workspace-write`; and
-- `ASTRA_ALLOW_FILE_WRITE=true`.
+Default sandbox is read-only. Workspace writes are permitted only when file
+write is enabled and a writable Codex sandbox is configured. Managed installs
+that reject `workspace-write` may use `danger-full-access` only with the
+additional `ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS=true` opt-in and shell
+permission. Danger mode has no OS-enforced workspace boundary.
 
 ### Optional cloud
 

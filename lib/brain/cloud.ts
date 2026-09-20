@@ -54,13 +54,18 @@ function config(policy?: AstraBrainPermissionSnapshot) {
 async function withTimeout<T>(
   timeoutMs: number,
   run: (signal: AbortSignal) => Promise<T>,
+  externalSignal?: AbortSignal,
 ): Promise<T> {
   const controller = new AbortController();
+  const abort = () => controller.abort(externalSignal?.reason);
+  if (externalSignal?.aborted) abort();
+  else externalSignal?.addEventListener("abort", abort, { once: true });
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await run(controller.signal);
   } finally {
     clearTimeout(timer);
+    externalSignal?.removeEventListener("abort", abort);
   }
 }
 
@@ -146,12 +151,14 @@ export async function chatWithCloud({
   context,
   policyText,
   policy,
+  signal,
 }: {
   input: string;
   agent: AstraAgent;
   context?: string;
   policyText?: string;
   policy: AstraBrainPermissionSnapshot;
+  signal?: AbortSignal;
 }) {
   const value = config(policy);
 
@@ -162,7 +169,7 @@ export async function chatWithCloud({
     throw new Error("Cloud provider configuration is incomplete.");
   }
 
-  const response = await withTimeout(value.timeoutMs, (signal) =>
+  const response = await withTimeout(value.timeoutMs, (requestSignal) =>
     fetch(`${value.rootUrl}/chat/completions`, {
       method: "POST",
       headers: {
@@ -191,15 +198,13 @@ export async function chatWithCloud({
           { role: "user", content: input },
         ],
       }),
-      signal,
+      signal: requestSignal,
     }),
+    signal,
   );
 
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    throw new Error(
-      `Cloud chat failed (HTTP ${response.status})${body ? ` — ${body.slice(0, 240)}` : ""}`,
-    );
+    throw new Error(`Cloud chat failed (HTTP ${response.status}).`);
   }
 
   const payload = (await response.json()) as CloudChatCompletion;

@@ -3,6 +3,8 @@ import type { AstraAgent } from "@/lib/agent/types";
 const DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434";
 const DEFAULT_CHAT_TIMEOUT_MS = 60000;
 const DEFAULT_STATUS_TIMEOUT_MS = 1200;
+const DEFAULT_MAX_TOKENS = 1024;
+const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 
 export type OllamaStatus = {
   enabled: boolean;
@@ -43,6 +45,25 @@ function parseTimeout(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed >= 250 ? parsed : fallback;
 }
 
+function parsePositiveInt(value: string | undefined, fallback: number, max: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0
+    ? Math.min(max, Math.floor(parsed))
+    : fallback;
+}
+
+function assertLocalRoot(rootUrl: string) {
+  let url: URL;
+  try {
+    url = new URL(rootUrl);
+  } catch {
+    throw new Error("Ollama URL tidak valid.");
+  }
+  if (url.protocol !== "http:" || !LOCAL_HOSTS.has(url.hostname)) {
+    throw new Error("Ollama harus memakai endpoint HTTP loopback lokal.");
+  }
+}
+
 export function getOllamaConfig() {
   return {
     enabled: envFlag("ASTRA_OLLAMA_ENABLED", true),
@@ -56,29 +77,45 @@ export function getOllamaConfig() {
       process.env.ASTRA_OLLAMA_STATUS_TIMEOUT_MS,
       DEFAULT_STATUS_TIMEOUT_MS,
     ),
+    thinking: envFlag("ASTRA_OLLAMA_THINKING", false),
+    maxTokens: parsePositiveInt(
+      process.env.ASTRA_OLLAMA_MAX_TOKENS,
+      DEFAULT_MAX_TOKENS,
+      8192,
+    ),
   };
 }
 
 async function withTimeout<T>(
   timeoutMs: number,
   run: (signal: AbortSignal) => Promise<T>,
+  externalSignal?: AbortSignal,
 ): Promise<T> {
   const controller = new AbortController();
+  const abort = () => controller.abort(externalSignal?.reason);
+  if (externalSignal?.aborted) abort();
+  else externalSignal?.addEventListener("abort", abort, { once: true });
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await run(controller.signal);
   } finally {
     clearTimeout(timer);
+    externalSignal?.removeEventListener("abort", abort);
   }
 }
 
-async function listInstalledModels(rootUrl: string, timeoutMs: number) {
+async function listInstalledModels(
+  rootUrl: string,
+  timeoutMs: number,
+  externalSignal?: AbortSignal,
+) {
+  assertLocalRoot(rootUrl);
   const response = await withTimeout(timeoutMs, (signal) =>
     fetch(`${rootUrl}/api/tags`, {
       method: "GET",
       cache: "no-store",
       signal,
-    }),
+    }), externalSignal,
   );
 
   if (!response.ok) {
@@ -93,13 +130,7 @@ async function listInstalledModels(rootUrl: string, timeoutMs: number) {
 
 function chooseModel(preferred: string, installed: string[]) {
   if (preferred) {
-    const exact = installed.find((name) => name === preferred);
-    if (exact) return exact;
-
-    const byBase = installed.find(
-      (name) => name.split(":")[0] === preferred.split(":")[0],
-    );
-    if (byBase) return byBase;
+    return installed.find((name) => name === preferred) ?? null;
   }
 
   return installed[0] ?? null;
@@ -171,11 +202,13 @@ export async function chatWithOllama({
   agent,
   context,
   policyText,
+  signal,
 }: {
   input: string;
   agent: AstraAgent;
   context?: string;
   policyText?: string;
+  signal?: AbortSignal;
 }) {
   const config = getOllamaConfig();
 
@@ -186,13 +219,14 @@ export async function chatWithOllama({
   const installedModels = await listInstalledModels(
     config.rootUrl,
     Math.max(config.statusTimeoutMs, 2000),
+    signal,
   );
   const model = chooseModel(config.preferredModel, installedModels);
 
   if (!model) {
-    throw new Error(
-      "Ollama is running but has no installed model. Run ollama pull <model>.",
-    );
+    throw new Error(config.preferredModel
+      ? `Model Ollama ${config.preferredModel} tidak terpasang.`
+      : "Ollama is running but has no installed model. Run ollama pull <model>.");
   }
 
   const system = [
@@ -219,18 +253,18 @@ export async function chatWithOllama({
       body: JSON.stringify({
         model,
         stream: false,
+        think: config.thinking,
+        options: { num_predict: config.maxTokens },
         messages: [
           { role: "system", content: system },
           { role: "user", content: input },
         ],
       }),
-    }),
+    }), signal,
   );
 
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    const suffix = body ? ` — ${body.slice(0, 240)}` : "";
-    throw new Error(`Ollama chat failed (HTTP ${response.status})${suffix}`);
+    throw new Error(`Ollama chat failed (HTTP ${response.status}).`);
   }
 
   const payload = (await response.json()) as OllamaChatResponse;

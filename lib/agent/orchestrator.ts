@@ -16,7 +16,7 @@ const RULES: Array<{ agent: AstraAgentKey; words: string[] }> = [
 export function selectAgent(message: string): AstraAgentKey {
   const text = message.toLowerCase();
   for (const rule of RULES) {
-    if (rule.words.some((word) => text.includes(word))) return rule.agent;
+    if (rule.words.some((word) => new RegExp(`(?:^|[^a-z0-9])${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:$|[^a-z0-9])`, "i").test(text))) return rule.agent;
   }
   return "chief_of_staff";
 }

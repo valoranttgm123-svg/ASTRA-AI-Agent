@@ -1,4 +1,8 @@
-import type { AgentResponse, AstraAgentKey } from "@/lib/agent/types";
+import type {
+  AgentResponse,
+  AstraAgentKey,
+  AstraProviderChoice,
+} from "@/lib/agent/types";
 
 export type AstraBrainProvider =
   | "routing_only"
@@ -33,6 +37,8 @@ export type AstraBrainEvent = {
 
 export type AstraBrainRunOptions = {
   onEvent?: (event: AstraBrainEvent) => void;
+  provider?: AstraProviderChoice;
+  signal?: AbortSignal;
 };
 
 export type AstraBrainPermissionSnapshot = {

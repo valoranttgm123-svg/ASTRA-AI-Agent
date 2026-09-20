@@ -349,7 +349,7 @@ Properties:
 - uses the existing local Codex/ChatGPT authentication;
 - does not require an OpenAI API key in ASTRA;
 - defaults to read-only;
-- workspace writes are possible only when both `ASTRA_CODEX_SANDBOX=workspace-write` and `ASTRA_ALLOW_FILE_WRITE=true`;
+- workspace writes require `ASTRA_ALLOW_FILE_WRITE=true` and a writable Codex sandbox; managed installs that require `danger-full-access` also need the separate danger opt-in and shell permission;
 - ASTRA watches the JSONL stream for the final `agent_message` / `turn.completed`;
 - private ASTRA memory is excluded from Codex by default and requires `ASTRA_CODEX_INCLUDE_MEMORY=true`.
 
@@ -465,16 +465,34 @@ API request envelope:
 {
   "message": "fix the failing build",
   "mode": "execute",
-  "approved": true
+  "approved": true,
+  "provider": "codex"
 }
 ```
 
+Provider values are `auto`, `ollama`, and `codex`. An explicit provider is
+never silently replaced with another provider. Ollama is chat/reasoning-only;
+real execution uses a permitted Codex or Hermes path.
+
 The approval flag is not enough by itself. Server-side permission policy remains the hard boundary.
 
-For local repo/file execution, the effective Codex sandbox must be `workspace-write`. The repository includes a helper:
+If a managed Codex installation rejects `workspace-write`, ASTRA can use
+`danger-full-access` only through the additional local opt-in
+`ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS=true`. This removes the OS-enforced
+workspace boundary and therefore remains off in the committed defaults.
+
+For local repo/file execution, the effective Codex sandbox must be writable. The repository includes a helper for the safer `workspace-write` mode:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\enable-local-execution.ps1
+```
+
+On managed installations that explicitly reject `workspace-write`, use the
+additional `-DangerFullAccess` switch only after accepting that the OS workspace
+boundary is removed:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\enable-local-execution.ps1 -DangerFullAccess
 ```
 
 The helper updates only local `.env.local` and enables:
@@ -510,7 +528,7 @@ Local workspace routes:
 
 ```text
 developer / github / files / computer
-  -> Codex CLI workspace-write
+  -> Codex CLI writable sandbox selected by local policy
   -> verify actual completion
   -> return executed result
 ```
@@ -605,4 +623,3 @@ The same runtime event bus continues to feed:
 Provider-level lifecycle can now be live because ASTRA itself knows when it selects/starts/completes/fails a provider attempt. Tool-level lifecycle is still not synthesized. If Hermes/Codex later exposes reliable incremental tool events, those can extend the existing `AstraBrainEvent` contract without changing the transport.
 
 The non-streaming `POST /api/agent` route remains available for compatibility and diagnostics.
-

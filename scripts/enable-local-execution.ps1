@@ -1,5 +1,6 @@
 param(
-  [switch]$Disable
+  [switch]$Disable,
+  [switch]$DangerFullAccess
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,6 +43,7 @@ function Set-DotEnvValue {
 
 if ($Disable) {
   Set-DotEnvValue "ASTRA_CODEX_SANDBOX" "read-only"
+  Set-DotEnvValue "ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS" "false"
   Set-DotEnvValue "ASTRA_ALLOW_FILE_WRITE" "false"
   Set-DotEnvValue "ASTRA_ALLOW_SHELL" "false"
 
@@ -59,7 +61,8 @@ if (-not $codex) {
 
 Set-DotEnvValue "ASTRA_CODEX_ENABLED" "true"
 Set-DotEnvValue "ASTRA_CODEX_WORKDIR" $repoRoot
-Set-DotEnvValue "ASTRA_CODEX_SANDBOX" "workspace-write"
+Set-DotEnvValue "ASTRA_CODEX_SANDBOX" $(if ($DangerFullAccess) { "danger-full-access" } else { "workspace-write" })
+Set-DotEnvValue "ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS" $(if ($DangerFullAccess) { "true" } else { "false" })
 
 # Local execution permissions.
 Set-DotEnvValue "ASTRA_REQUIRE_APPROVAL" "true"
@@ -73,6 +76,7 @@ Set-DotEnvValue "ASTRA_ALLOW_PAID_CLOUD" "false"
 Write-Host ""
 Write-Host "ASTRA local execution enabled." -ForegroundColor Cyan
 Write-Host "Workspace: $repoRoot"
+Write-Host "Sandbox: $(if ($DangerFullAccess) { 'danger-full-access (no OS workspace boundary)' } else { 'workspace-write' })"
 Write-Host "Policy: file-write=ON, shell=ON, approval=REQUIRED, external-actions=OFF, paid-cloud=OFF"
 Write-Host ""
 Write-Host "Restart ASTRA:" -ForegroundColor Cyan

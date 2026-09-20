@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import type { AstraProviderChoice } from "@/lib/agent/types";
 import { useAstraRuntime } from "./AstraRuntime";
 
 export default function AstraConsole() {
@@ -23,6 +24,7 @@ export default function AstraConsole() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [provider, setProvider] = useState<AstraProviderChoice>("auto");
 
   const runtimeBusy = busy || orbState === "thinking";
 
@@ -35,7 +37,7 @@ export default function AstraConsole() {
     setError(null);
     setMessage("");
     try {
-      await send(value);
+      await send(value, { provider });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "ASTRA request failed");
@@ -52,7 +54,7 @@ export default function AstraConsole() {
     setError(null);
     setMessage("");
     try {
-      await execute(value);
+      await execute(value, provider);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "ASTRA execution failed");
@@ -111,6 +113,17 @@ export default function AstraConsole() {
           maxLength={4000}
           autoComplete="off"
         />
+
+        <select
+          value={provider}
+          onChange={(event) => setProvider(event.target.value as AstraProviderChoice)}
+          aria-label="Provider AI"
+          title="Auto memilih rute terbaik; Ollama lokal untuk chat privat; Codex untuk tugas engineering"
+        >
+          <option value="auto">AUTO</option>
+          <option value="ollama">OLLAMA</option>
+          <option value="codex">CHATGPT / CODEX</option>
+        </select>
 
         <button
           type="button"

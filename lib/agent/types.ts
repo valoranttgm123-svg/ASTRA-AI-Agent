@@ -1,5 +1,7 @@
 export type AstraOrbState = "idle" | "thinking" | "speaking";
 
+export type AstraProviderChoice = "auto" | "ollama" | "codex";
+
 export type AstraAgentKey =
   | "chief_of_staff"
   | "memory"
@@ -23,6 +25,7 @@ export type AgentRequest = {
   message: string;
   mode?: "chat" | "execute";
   approved?: boolean;
+  provider?: AstraProviderChoice;
 };
 
 export type AgentResponse = {

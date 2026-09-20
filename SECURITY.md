@@ -43,9 +43,28 @@ Default policy:
 
 Read-only reasoning and inspection are the safe default.
 
+## Local API boundary
+
+ASTRA binds its supported production launcher to `127.0.0.1`. The agent routes
+reject non-loopback hosts, cross-origin requests, unsupported content types, and
+oversized bodies. The browser sends a dedicated ASTRA client header for POST
+requests. Request cancellation is forwarded to Ollama, Hermes, cloud fetches,
+and the owned Codex CLI child process.
+
+Do not place ASTRA behind a public reverse proxy or disable these guards.
+
 ### Codex
 
-Codex uses a read-only sandbox unless file-write permission is explicitly enabled. ASTRA does not store the user's Codex auth in the repository.
+Codex uses a read-only sandbox unless file-write permission is explicitly enabled. ASTRA does not store the user's Codex auth in the repository. Selecting `CHATGPT / CODEX` explicitly never causes a silent fallback to another provider.
+
+Managed Codex installations may reject `workspace-write` and permit only
+`read-only` or `danger-full-access`. Danger mode is never automatic: it requires
+`ASTRA_CODEX_SANDBOX=danger-full-access`,
+`ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS=true`, file-write permission, shell
+permission, and a per-request `EXECUTE TASK` approval. In that mode the OS no
+longer enforces the workspace boundary, so prompts are not a substitute for
+reviewing high-impact actions. External actions and paid cloud remain separate
+policy gates.
 
 ### Hermes / MCP
 

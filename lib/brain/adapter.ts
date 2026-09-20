@@ -544,6 +544,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     input: string,
     options?: AstraBrainRunOptions,
   ): Promise<AstraBrainChatResult> {
+    options?.signal?.throwIfAborted();
     const selected = selectAgent(input);
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
@@ -551,8 +552,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const context = await buildExecutionContext(input, selected);
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
+    const preferredProvider = options?.provider ?? "auto";
 
-    if (isEngineeringRoute(selected)) {
+    if (preferredProvider === "codex" || (preferredProvider === "auto" && isEngineeringRoute(selected))) {
       emitLiveProviderStart(selected, "codex", options);
       try {
         const codexContext = [
@@ -567,6 +569,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           context: codexContext,
           policyText: context.policyText,
           policy: context.policy,
+          signal: options?.signal,
         });
         emitLiveProviderComplete(selected, "codex", options);
 
@@ -588,79 +591,88 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
+        options?.signal?.throwIfAborted();
         const detail = `Codex: ${error instanceof Error ? error.message : "unavailable"}`;
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "codex", detail, options);
       }
     }
 
-    emitLiveProviderStart(selected, "hermes", options);
-    try {
-      const result = await chatWithHermes({
-        input,
-        agent,
-        context: context.localContext,
-        policyText: context.policyText,
-      });
-      emitLiveProviderComplete(selected, "hermes", options);
+    if (preferredProvider === "auto") {
+      emitLiveProviderStart(selected, "hermes", options);
+      try {
+        const result = await chatWithHermes({
+          input,
+          agent,
+          context: context.localContext,
+          policyText: context.policyText,
+          signal: options?.signal,
+        });
+        emitLiveProviderComplete(selected, "hermes", options);
 
-      return {
-        ok: true,
-        agent: selected,
-        agentName: agent.name,
-        state: "completed",
-        message: result.message,
-        requiresApproval: false,
-        brain: {
-          provider: "hermes",
-          execution: "executed",
-          requestedMode: "chat",
-          route,
-          visualNodes: route.map(visualNode),
-          events: providerEvents(selected, "hermes", context),
-          ...envelopeContext(context),
-        },
-      };
-    } catch (error) {
-      const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
-      failures.push(detail);
-      emitLiveProviderUnavailable(selected, "hermes", detail, options);
+        return {
+          ok: true,
+          agent: selected,
+          agentName: agent.name,
+          state: "completed",
+          message: result.message,
+          requiresApproval: false,
+          brain: {
+            provider: "hermes",
+            execution: "executed",
+            requestedMode: "chat",
+            route,
+            visualNodes: route.map(visualNode),
+            events: providerEvents(selected, "hermes", context),
+            ...envelopeContext(context),
+          },
+        };
+      } catch (error) {
+        options?.signal?.throwIfAborted();
+        const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitLiveProviderUnavailable(selected, "hermes", detail, options);
+      }
     }
 
-    emitLiveProviderStart(selected, "ollama", options);
-    try {
-      const result = await chatWithOllama({
-        input,
-        agent,
-        context: context.localContext,
-        policyText: context.policyText,
-      });
-      emitLiveProviderComplete(selected, "ollama", options);
+    if (preferredProvider !== "codex") {
+      emitLiveProviderStart(selected, "ollama", options);
+      try {
+        const result = await chatWithOllama({
+          input,
+          agent,
+          context: context.localContext,
+          policyText: context.policyText,
+          signal: options?.signal,
+        });
+        emitLiveProviderComplete(selected, "ollama", options);
 
-      return {
-        ok: true,
-        agent: selected,
-        agentName: agent.name,
-        state: "completed",
-        message: result.message,
-        requiresApproval: false,
-        brain: {
-          provider: "ollama",
-          execution: "executed",
-          requestedMode: "chat",
-          route,
-          visualNodes: route.map(visualNode),
-          events: providerEvents(selected, "ollama", context),
-          ...envelopeContext(context),
-        },
-      };
-    } catch (error) {
-      const detail = `Ollama: ${error instanceof Error ? error.message : "unavailable"}`;
-      failures.push(detail);
-      emitLiveProviderUnavailable(selected, "ollama", detail, options);
+        return {
+          ok: true,
+          agent: selected,
+          agentName: agent.name,
+          state: "completed",
+          message: result.message,
+          requiresApproval: false,
+          brain: {
+            provider: "ollama",
+            execution: "executed",
+            requestedMode: "chat",
+            route,
+            visualNodes: route.map(visualNode),
+            events: providerEvents(selected, "ollama", context),
+            ...envelopeContext(context),
+          },
+        };
+      } catch (error) {
+        options?.signal?.throwIfAborted();
+        const detail = `Ollama: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitLiveProviderUnavailable(selected, "ollama", detail, options);
+      }
     }
 
-    if (context.policy.allowPaidCloud) {
+    if (preferredProvider === "auto" && context.policy.allowPaidCloud) {
       emitLiveProviderStart(selected, "cloud", options);
       try {
         const cloudContext = [
@@ -676,6 +688,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           context: cloudContext,
           policyText: context.policyText,
           policy: context.policy,
+          signal: options?.signal,
         });
         emitLiveProviderComplete(selected, "cloud", options);
 
@@ -697,12 +710,14 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           },
         };
       } catch (error) {
+        options?.signal?.throwIfAborted();
         const detail = `Cloud: ${error instanceof Error ? error.message : "unavailable"}`;
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "cloud", detail, options);
       }
     }
 
+    options?.signal?.throwIfAborted();
     const fallback = await this.fallback.chat(input);
     emitLiveBlocked(
       selected,
@@ -730,6 +745,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     task: { input: string; approved?: boolean },
     options?: AstraBrainRunOptions,
   ): Promise<AstraBrainChatResult> {
+    options?.signal?.throwIfAborted();
     const input = task.input.trim();
     const selected = selectAgent(input);
     const agent = ASTRA_AGENT_MAP[selected];
@@ -738,6 +754,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const context = await buildExecutionContext(input, selected);
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
+    const preferredProvider = options?.provider ?? "auto";
 
     const blocked = (
       message: string,
@@ -772,7 +789,14 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       );
     }
 
-    if (isLocalExecutionRoute(selected)) {
+    if (preferredProvider === "ollama") {
+      return blocked(
+        "Ollama dipilih untuk chat lokal, tetapi tidak diberi alat eksekusi. Pilih Codex atau Auto untuk menjalankan perubahan nyata.",
+        "Explicit Ollama mode is reasoning-only and cannot execute side effects.",
+      );
+    }
+
+    if (preferredProvider === "codex" || isLocalExecutionRoute(selected)) {
       const codexStatus = await getCodexStatus(context.policy);
 
       if (!codexStatus.available) {
@@ -783,9 +807,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           codexStatus.detail,
           options,
         );
-      } else if (codexStatus.sandbox !== "workspace-write") {
+      } else if (codexStatus.sandbox === "read-only") {
         return blocked(
-          "Codex tersedia, tetapi ASTRA masih dalam mode read-only. Aktifkan ASTRA_ALLOW_FILE_WRITE=true dan ASTRA_CODEX_SANDBOX=workspace-write di .env.local, lalu restart ASTRA.",
+          "Codex tersedia, tetapi ASTRA masih dalam mode read-only. Aktifkan izin tulis dan sandbox yang didukung mesin di .env.local, lalu restart ASTRA.",
           "Codex execution is blocked because its effective sandbox is read-only.",
         );
       } else if (selected === "computer" && !context.policy.allowShell) {
@@ -810,7 +834,19 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             policyText: context.policyText,
             policy: context.policy,
             executionRequested: true,
+            signal: options?.signal,
           });
+
+          if (result.executionStatus !== "completed") {
+            const detail =
+              result.executionStatus === "blocked"
+                ? "Codex reported that execution was blocked."
+                : result.executionStatus === "failed"
+                  ? "Codex reported that execution failed."
+                  : "Codex did not provide a verified execution completion marker.";
+            emitLiveProviderUnavailable(selected, "codex", detail, options);
+            return blocked(result.message || detail, detail);
+          }
           emitLiveProviderComplete(selected, "codex", options);
 
           return {
@@ -831,6 +867,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             },
           };
         } catch (error) {
+          options?.signal?.throwIfAborted();
           const detail = `Codex: ${error instanceof Error ? error.message : "execution failed"}`;
           failures.push(detail);
           emitLiveProviderUnavailable(selected, "codex", detail, options);
@@ -838,8 +875,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
     }
 
-    emitLiveProviderStart(selected, "hermes", options);
-    try {
+    if (preferredProvider === "auto") {
+      emitLiveProviderStart(selected, "hermes", options);
+      try {
       const result = await chatWithHermes({
         input,
         agent,
@@ -848,6 +886,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           context.policyText,
           "EXECUTION MODE: perform the requested task with real Hermes tools when available and permitted. Do not merely describe an action. Do not claim completion unless the tool actually completed it.",
         ].join("\n"),
+        signal: options?.signal,
       });
       emitLiveProviderComplete(selected, "hermes", options);
 
@@ -868,10 +907,12 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           ...envelopeContext(context),
         },
       };
-    } catch (error) {
-      const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
-      failures.push(detail);
-      emitLiveProviderUnavailable(selected, "hermes", detail, options);
+      } catch (error) {
+        options?.signal?.throwIfAborted();
+        const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+        failures.push(detail);
+        emitLiveProviderUnavailable(selected, "hermes", detail, options);
+      }
     }
 
     return blocked(
@@ -926,7 +967,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         enabled: true,
         available:
           hermes.available ||
-          (codex.available && codex.sandbox === "workspace-write"),
+          (codex.available && codex.sandbox !== "read-only"),
         detail: `${toolsPolicyDetail(policy)} Codex sandbox: ${codex.sandbox}. Tool execution is delegated to permitted Hermes/Codex capabilities; ASTRA does not invent tool activity when no provider reports it.`,
       },
       cloud: {

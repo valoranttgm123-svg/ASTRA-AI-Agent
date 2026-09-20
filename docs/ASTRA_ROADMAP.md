@@ -165,7 +165,36 @@ V13 preserves:
 
 ---
 
-## Next major stage
+## Brain V1 completion — implemented 2026-09-19
+
+The repository now implements the complete B1–B8 foundation. Runtime provider availability is reported honestly: a configured local Ollama, reviewed Hermes gateway, or authenticated Codex CLI is still required for model inference.
+
+Completed in this stage:
+- cancellable SSE lifecycle stream with live provider telemetry;
+- explicit `AUTO`, `OLLAMA`, and `CHATGPT / CODEX` provider controls;
+- bounded opt-in local memory and route-specific skills;
+- server-side permission policy plus per-request execution approval;
+- Codex engineering adapter using `codex exec --json`, an existing ChatGPT login, and read-only default;
+- Command Center node states and timelines derived from real events;
+- Humanoid `LISTENING → THINKING → SPEAKING → IDLE` lifecycle tied to the same runtime;
+- loopback/origin/content-type/body limits, cancellation propagation, local-provider URL guards, and child-process cleanup;
+- automated tests, typecheck, lint, dependency audit and production build in CI.
+
+Deferred by product decision:
+- Sonor Workflow/Graphify/Obsidian memory bridge. It will be connected after this ASTRA foundation is stable, without replacing local safety boundaries;
+- paid cloud providers. They remain out of V1 and OFF by default.
+
+Verified local deployment on 2026-09-19:
+- Ollama `0.34.2` and `qwen3.5:4b` are installed; model storage is on `D:\AI-Models\Ollama`;
+- short local chat completed through the production browser UI; Ollama tool execution remains intentionally unavailable;
+- Codex CLI `0.155.0` completed a read-only project query and a per-request approved file write whose exact content was verified; the temporary proof file was removed afterward;
+- hidden user-logon tasks `ASTRA-Agent` and `ASTRA-Ollama` start the loopback services, and the desktop shortcut opens `http://127.0.0.1:3017`;
+- browser console validation has zero errors. The remaining Three.js deprecation warning is upstream/non-blocking;
+- physical microphone capture was not automated and remains a device/browser-permission check, not a claimed release proof.
+
+---
+
+## Implemented major stage
 
 # ASTRA Brain V1
 
@@ -267,42 +296,42 @@ No node may appear active unless a real event supports that state.
 
 ## Planned Brain + Command Center sequence
 
-### B1 — Brain adapter
+### B1 — Brain adapter ✅
 - define Brain interfaces and event types;
 - keep existing UI working against adapter;
 - no provider lock-in.
 
-### B2 — Hermes orchestration
+### B2 — Hermes orchestration ✅
 - connect Hermes behind adapter;
 - basic task routing;
 - cancellation and error propagation.
 
-### B3 — Ollama local provider
+### B3 — Ollama local provider ✅
 - local/free default model;
 - provider health/status;
-- user-selectable model.
+- exact configured model plus explicit UI provider selection.
 
-### B4 — Codex engineering specialist
+### B4 — Codex engineering specialist ✅ adapter and read-only live verification
 - engineering routing;
 - repo/code tasks;
 - explicit specialist events.
 
-### B5 — Memory layer
+### B5 — Memory layer ✅ local project memory; Sonor bridge deferred
 - project memory;
 - task context;
 - retrieval events visible in Command Center.
 
-### B6 — Tool/MCP execution
-- real tool started/completed/error events;
-- permissions and failure handling.
+### B6 — Tool/execution policy ✅ real Codex/Hermes delegation and approval gates
+- real provider lifecycle events; tool events are shown only when a provider exposes trustworthy telemetry;
+- server-side permissions, approval, cancellation, and failure handling.
 
-### B7 — Command Center live event map
+### B7 — Command Center live event map ✅
 - node state driven by Brain events;
 - running pipeline;
 - task detail panel;
 - agent/tool timelines.
 
-### B8 — Humanoid + Brain unified state
+### B8 — Humanoid + Brain unified state ✅
 - listening/thinking/speaking derived from runtime/Brain lifecycle;
 - agent detail stays in Command Center;
 - Humanoid remains the high-level presence layer.
@@ -338,7 +367,8 @@ No node may appear active unless a real event supports that state.
 ✅ V12.1    Final shockwave
 ✅ V12.1.x  Shockwave SFX
 ✅ V13      Gesture Control
-🔄 Brain V1
-⏳ Command Center event integration
-⏳ Brain-driven Humanoid/Command Center unification
+✅ Brain V1 foundation (B1–B8)
+✅ Command Center real-event integration
+✅ Brain-driven Humanoid/Command Center unification
+⏳ Sonor workflow/memory bridge (next project stage)
 ```

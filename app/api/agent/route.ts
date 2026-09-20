@@ -1,45 +1,35 @@
-import { NextResponse } from "next/server";
 import { astraBrain } from "@/lib/brain/adapter";
-import type { AgentRequest } from "@/lib/agent/types";
+import {
+  errorResponse,
+  guardRequest,
+  parseAgentRequest,
+  readJson,
+} from "@/lib/brain/http";
 
-export async function GET() {
-  const status = await astraBrain.status();
-  return NextResponse.json(status);
+export async function GET(request: Request) {
+  try {
+    guardRequest(request);
+    return Response.json(await astraBrain.status());
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Partial<AgentRequest>;
-    const message = body.message?.trim();
-
-    if (!message) {
-      return NextResponse.json(
-        { ok: false, error: "message is required" },
-        { status: 400 },
-      );
-    }
-
-    if (message.length > 4000) {
-      return NextResponse.json(
-        { ok: false, error: "message is too long" },
-        { status: 413 },
-      );
-    }
-
-    const mode = body.mode === "execute" ? "execute" : "chat";
+    guardRequest(request, true);
+    const body = parseAgentRequest(await readJson(request));
+    const options = { provider: body.provider, signal: request.signal };
     const result =
-      mode === "execute"
-        ? await astraBrain.execute({
-            input: message,
-            approved: Boolean(body.approved),
-          })
-        : await astraBrain.chat(message);
+      body.mode === "execute"
+        ? await astraBrain.execute(
+            { input: body.message, approved: body.approved },
+            options,
+          )
+        : await astraBrain.chat(body.message, options);
 
-    return NextResponse.json(result);
-  } catch {
-    return NextResponse.json(
-      { ok: false, error: "invalid request" },
-      { status: 400 },
-    );
+    return Response.json(result);
+  } catch (error) {
+    return errorResponse(error);
   }
 }

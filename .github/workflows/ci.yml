@@ -28,3 +28,15 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Unit and integration tests
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Brain lint
+        run: npm run lint
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high

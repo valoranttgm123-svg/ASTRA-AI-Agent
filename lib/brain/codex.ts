@@ -12,7 +12,7 @@ export type CodexStatus = {
   available: boolean;
   endpoint: string;
   model: string | null;
-  sandbox: "read-only" | "workspace-write";
+  sandbox: "read-only" | "workspace-write" | "danger-full-access";
   detail: string;
 };
 
@@ -33,10 +33,16 @@ export function codexMayReceiveMemory() {
 
 function getCodexConfig(policy?: AstraBrainPermissionSnapshot) {
   const requestedSandbox = process.env.ASTRA_CODEX_SANDBOX?.trim();
-  const sandbox: "read-only" | "workspace-write" =
-    requestedSandbox === "workspace-write" && policy?.allowFileWrite
-      ? "workspace-write"
-      : "read-only";
+  const dangerOptIn = envFlag("ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS", false);
+  const sandbox: "read-only" | "workspace-write" | "danger-full-access" =
+    requestedSandbox === "danger-full-access" &&
+    dangerOptIn &&
+    policy?.allowFileWrite &&
+    policy.allowShell
+      ? "danger-full-access"
+      : requestedSandbox === "workspace-write" && policy?.allowFileWrite
+        ? "workspace-write"
+        : "read-only";
 
   return {
     enabled: envFlag("ASTRA_CODEX_ENABLED", true),
@@ -170,6 +176,7 @@ export async function chatWithCodex({
   policyText,
   policy,
   executionRequested = false,
+  signal,
 }: {
   input: string;
   agent: AstraAgent;
@@ -177,9 +184,11 @@ export async function chatWithCodex({
   policyText?: string;
   policy: AstraBrainPermissionSnapshot;
   executionRequested?: boolean;
+  signal?: AbortSignal;
 }) {
   const config = getCodexConfig(policy);
   if (!config.enabled) throw new Error("Codex specialist is disabled.");
+  const writableSandbox = config.sandbox !== "read-only";
 
   const prompt = [
     "You are ASTRA's Codex engineering specialist.",
@@ -189,12 +198,14 @@ export async function chatWithCodex({
     policyText || "",
     context || "",
     "Operate only inside the configured workspace.",
-    config.sandbox === "read-only"
+    !writableSandbox
       ? "This turn is read-only: inspect, reason, diagnose, and propose patches, but do not modify files."
-      : "Workspace writes are enabled by ASTRA policy. Keep changes minimal and verify them.",
+      : config.sandbox === "danger-full-access"
+        ? "Danger-full-access was explicitly enabled by local ASTRA configuration. Stay inside the configured workspace, keep changes minimal, and never perform external actions unless the ASTRA policy explicitly permits them."
+        : "Workspace writes are enabled by ASTRA policy. Keep changes minimal and verify them.",
     executionRequested
-      ? config.sandbox === "workspace-write"
-        ? "EXECUTION MODE: perform the requested task now inside the configured workspace. Do not merely describe a patch. Make the permitted changes, run relevant verification commands, and report what actually completed."
+      ? writableSandbox
+        ? "EXECUTION MODE: perform the requested task now inside the configured workspace. Do not merely describe a patch. Make the permitted changes, run relevant verification commands, and report what actually completed. End the final response with exactly one marker line: ASTRA_EXECUTION_STATUS: completed only if the requested change and verification actually succeeded; otherwise use ASTRA_EXECUTION_STATUS: blocked or ASTRA_EXECUTION_STATUS: failed."
         : "EXECUTION MODE was requested, but the Codex sandbox is read-only. Do not claim files were changed."
       : "CHAT MODE: inspect or reason as requested; do not make changes unless execution mode is explicitly requested.",
     "Do not use paid APIs or external side effects unless the ASTRA policy explicitly allows them.",
@@ -211,11 +222,14 @@ export async function chatWithCodex({
     "--json",
     "--ephemeral",
     "--skip-git-repo-check",
-    "--sandbox",
-    config.sandbox,
     "--cd",
     config.workdir,
   ];
+  if (executionRequested && config.sandbox === "workspace-write") {
+    args.push("--approve-for-me");
+  } else {
+    args.push("--sandbox", config.sandbox);
+  }
   if (config.model) args.push("--model", config.model);
   args.push(prompt);
 
@@ -238,6 +252,7 @@ export async function chatWithCodex({
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
       try {
         if (!child.killed) child.kill();
       } catch {
@@ -252,6 +267,10 @@ export async function chatWithCodex({
         reject(new Error("Codex completed without a final agent message."));
       }
     };
+
+    const timer = setTimeout(() => {
+      finish(new Error("Codex specialist timed out."));
+    }, config.timeoutMs);
 
     const consumeLine = (line: string) => {
       const trimmed = line.trim();
@@ -276,9 +295,12 @@ export async function chatWithCodex({
       }
     };
 
-    const timer = setTimeout(() => {
-      finish(new Error("Codex specialist timed out."));
-    }, config.timeoutMs);
+    const abort = () => finish(new DOMException("ASTRA request cancelled.", "AbortError"));
+    if (signal?.aborted) {
+      abort();
+      return;
+    }
+    signal?.addEventListener("abort", abort, { once: true });
 
     child.stdout.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf8");
@@ -315,10 +337,23 @@ export async function chatWithCodex({
     });
   });
 
+  const executionMatch = message.match(
+    /(?:^|\n)ASTRA_EXECUTION_STATUS:\s*(completed|blocked|failed)\s*$/i,
+  );
+  const executionStatus = executionMatch?.[1]?.toLowerCase() as
+    | "completed"
+    | "blocked"
+    | "failed"
+    | undefined;
+  const cleanMessage = executionMatch
+    ? message.slice(0, executionMatch.index).trim()
+    : message;
+
   return {
-    message,
+    message: cleanMessage,
     endpoint: `local-cli:${commandLabel(config.command)}`,
     model: config.model || null,
     sandbox: config.sandbox,
+    executionStatus,
   };
 }

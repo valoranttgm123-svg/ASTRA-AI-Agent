@@ -5,28 +5,32 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start --hostname 127.0.0.1",
+    "lint": "eslint lib/brain app/api/agent components/AstraConsole.tsx components/AstraRuntime.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts"
   },
   "dependencies": {
-    "next": "15.3.8",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "lucide-react": "^0.511.0",
-    "three": "^0.184.0",
+    "@mediapipe/tasks-vision": "1.0.1",
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
-    "@mediapipe/tasks-vision": "1.0.1"
+    "lucide-react": "^0.511.0",
+    "next": "15.5.25",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.184.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.184.1",
     "eslint": "^9",
-    "eslint-config-next": "15.3.3"
-  }
+    "eslint-config-next": "15.5.25",
+    "tsx": "^4.23.13",
+    "typescript": "^5"
+  },
+  "overrides": { "postcss": "^8.5.23" }
 }

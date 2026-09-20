@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { AstraOrbState } from "@/lib/agent/types";
+import type { AstraOrbState, AstraProviderChoice } from "@/lib/agent/types";
 import type { AstraAvatarState } from "@/lib/avatar/types";
 import type {
   AstraBrainChatResult,
@@ -74,9 +74,16 @@ type AstraRuntimeValue = {
   brainStreaming: boolean;
   send: (
     message: string,
-    options?: { mode?: "chat" | "execute"; approved?: boolean },
+    options?: {
+      mode?: "chat" | "execute";
+      approved?: boolean;
+      provider?: AstraProviderChoice;
+    },
   ) => Promise<AstraBrainChatResult>;
-  execute: (message: string) => Promise<AstraBrainChatResult>;
+  execute: (
+    message: string,
+    provider?: AstraProviderChoice,
+  ) => Promise<AstraBrainChatResult>;
   beginListening: () => void;
   endListening: () => void;
   stopInteraction: () => void;
@@ -288,7 +295,11 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
   const send = useCallback(async (
     message: string,
-    options?: { mode?: "chat" | "execute"; approved?: boolean },
+    options?: {
+      mode?: "chat" | "execute";
+      approved?: boolean;
+      provider?: AstraProviderChoice;
+    },
   ) => {
     const value = message.trim();
     if (!value) throw new Error("ASTRA message is empty.");
@@ -352,11 +363,13 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         headers: {
           "content-type": "application/json",
           accept: "text/event-stream",
+          "x-astra-client": "1",
         },
         body: JSON.stringify({
           message: value,
           mode: options?.mode ?? "chat",
           approved: Boolean(options?.approved),
+          provider: options?.provider ?? "auto",
         }),
         signal: controller.signal,
       });
@@ -525,7 +538,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   }, [cancelSpeech, clearResetTimer, invalidateRecognition, settleIdle, speak]);
 
   const execute = useCallback(
-    (message: string) => send(message, { mode: "execute", approved: true }),
+    (message: string, provider: AstraProviderChoice = "auto") =>
+      send(message, { mode: "execute", approved: true, provider }),
     [send],
   );
 

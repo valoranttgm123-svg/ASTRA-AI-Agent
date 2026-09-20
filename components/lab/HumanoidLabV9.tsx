@@ -885,7 +885,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         }}
       >
         <div style={{ color: "#69edff", fontSize: 8.5, letterSpacing: ".17em" }}>
-          BRAIN LINK // {runtime.brainStreaming ? "LIVE" : "READY"} // {(runtime.brainProvider ?? "standby").toUpperCase()}
+          {`BRAIN LINK // ${runtime.brainStreaming ? "LIVE" : "READY"} // ${(runtime.brainProvider ?? "standby").toUpperCase()}`}
         </div>
         <div style={{ marginTop: 4, color: "rgba(229,250,255,.72)", fontSize: 9 }}>
           {latestBrainEvent?.label ?? "No Brain event yet"}

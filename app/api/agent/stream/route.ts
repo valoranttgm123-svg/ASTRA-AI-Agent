@@ -1,5 +1,10 @@
 import { astraBrain } from "@/lib/brain/adapter";
-import type { AgentRequest } from "@/lib/agent/types";
+import {
+  errorResponse,
+  guardRequest,
+  parseAgentRequest,
+  readJson,
+} from "@/lib/brain/http";
 import type {
   AstraBrainChatResult,
   AstraBrainEvent,
@@ -13,45 +18,22 @@ function encodeSse(
   event: "brain" | "result" | "error",
   payload: AstraBrainEvent | AstraBrainChatResult | { message: string },
 ) {
-  return encoder.encode(
-    `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`,
-  );
+  return encoder.encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
 }
 
 export async function POST(request: Request) {
-  let body: Partial<AgentRequest>;
-
+  let body;
   try {
-    body = (await request.json()) as Partial<AgentRequest>;
-  } catch {
-    return Response.json(
-      { ok: false, error: "invalid request" },
-      { status: 400 },
-    );
+    guardRequest(request, true);
+    body = parseAgentRequest(await readJson(request));
+  } catch (error) {
+    return errorResponse(error);
   }
 
-  const message = body.message?.trim();
-  if (!message) {
-    return Response.json(
-      { ok: false, error: "message is required" },
-      { status: 400 },
-    );
-  }
-
-  if (message.length > 4000) {
-    return Response.json(
-      { ok: false, error: "message is too long" },
-      { status: 413 },
-    );
-  }
-
-  const mode = body.mode === "execute" ? "execute" : "chat";
   const encoder = new TextEncoder();
-
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       let closed = false;
-
       const send = (
         event: "brain" | "result" | "error",
         payload: AstraBrainEvent | AstraBrainChatResult | { message: string },
@@ -63,40 +45,35 @@ export async function POST(request: Request) {
           closed = true;
         }
       };
-
       const close = () => {
         if (closed) return;
         closed = true;
         try {
           controller.close();
         } catch {
-          // Client may already have closed the stream.
+          // The browser may already have closed the stream.
         }
       };
-
       const abort = () => close();
       request.signal.addEventListener("abort", abort, { once: true });
 
       const options: AstraBrainRunOptions = {
+        provider: body.provider,
+        signal: request.signal,
         onEvent: (event) => send("brain", event),
       };
 
       void (async () => {
         try {
           const result =
-            mode === "execute"
+            body.mode === "execute"
               ? await astraBrain.execute(
-                  {
-                    input: message,
-                    approved: Boolean(body.approved),
-                  },
+                  { input: body.message, approved: body.approved },
                   options,
                 )
-              : await astraBrain.chat(message, options);
+              : await astraBrain.chat(body.message, options);
 
-          if (!request.signal.aborted) {
-            send("result", result);
-          }
+          if (!request.signal.aborted) send("result", result);
         } catch (error) {
           if (!request.signal.aborted) {
             send("error", {

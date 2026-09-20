@@ -35,6 +35,23 @@ npm run build
 npm start
 ```
 
+On Windows, the production installer builds ASTRA, installs hidden user-logon
+tasks for ASTRA and Ollama, creates an `ASTRA.url` desktop shortcut, and verifies
+both loopback services:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\install-local.ps1
+```
+
+The command console has three explicit provider modes:
+
+- `AUTO` uses ASTRA routing (Codex first for engineering, otherwise local paths);
+- `OLLAMA` forces the configured local model and never silently changes models;
+- `CHATGPT / CODEX` forces the authenticated local Codex CLI.
+
+`SEND` is chat/read-only reasoning. `EXECUTE TASK` is a per-request approval and
+still cannot exceed the server-side permission policy.
+
 ## Configuration
 
 Copy `.env.example` to `.env.local` and fill only the provider/integrations you choose.
@@ -84,6 +101,10 @@ real Brain events
 ```
 
 Private local context belongs in `.astra/`, which is gitignored. See `.env.example` and `docs/ASTRA_BRAIN_V1.md` for provider and safety configuration.
+
+The agent API is loopback-only, enforces same-origin requests, caps request
+bodies, and propagates browser cancellation to active provider work. This local
+security boundary is intentional; do not expose the port publicly.
 
 ## Repository safety
 
