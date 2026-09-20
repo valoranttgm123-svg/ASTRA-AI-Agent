@@ -948,3 +948,23 @@ Phase 14 implementation is complete when this branch passes CI. Production compl
 Required status until that physical/local validation is actually run:
 
 `IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
+---
+
+## Post-Phase 14 execution directive
+
+Phase 14 Automation implementation is merged and CI-verified at `de4fbefe6f9a23792a542a74d4d0ca1aef1aa208`.
+
+Current truthful status:
+
+`IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
+
+Detailed next-session execution order is now maintained in:
+
+- `docs/CODEX_NEXT_MISSION.md`
+- `docs/SECURITY_VALIDATION.md`
+
+The next implementation phase is **Phase 15 — Security/failure hardening**.
+
+Before the Phase 20 core release gate, Codex must also complete the real Sonor/Graphify/Obsidian validation described in `docs/SONOR_CODEX_MISSION.md`. Existing Sonor must be preserved, not rebuilt.
+
+Phase 16–20 must follow the exit gates in `docs/CODEX_NEXT_MISSION.md`. After Phase 20 stabilizes, continue Phase 21–30 automatically unless a genuine external/user action blocks progress.
