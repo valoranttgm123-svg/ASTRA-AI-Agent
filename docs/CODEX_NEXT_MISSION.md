@@ -22,6 +22,26 @@ External-only blockers must be recorded but must not stop unrelated repository w
 
 ---
 
+## Current repository checkpoint
+
+Repository-complete and CI-verified:
+
+- P15A — Project path / filesystem hardening — PR #96;
+- P15B — Untrusted retrieved-context / prompt-injection boundary — PR #97.
+
+Current next implementable repository task:
+
+**P15C — Provider + MCP failure isolation.**
+
+Durable history/recovery:
+
+- `docs/ASTRA_WORKLOG.md`
+- `docs/SESSION_RECOVERY.md`
+
+If this document's older task wording conflicts with the actual tracker/worklog, use current `main` + worklog/tracker as truth.
+
+---
+
 ## Current verified baseline
 
 Current core milestone:
