@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { once } from "node:events";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
@@ -68,6 +69,47 @@ before(async () => {
     path.join(alurkaWorkspace, ".env"),
     "SECRET_FIXTURE_VALUE=never-read",
   );
+  await writeFile(
+    path.join(alurkaWorkspace, ".gitignore"),
+    ".env\n",
+  );
+  await writeFile(
+    path.join(alurkaWorkspace, "package.json"),
+    JSON.stringify(
+      {
+        name: "alurka-fixture",
+        private: true,
+        scripts: {
+          test: 'node -e "process.exit(0)"',
+          typecheck: 'node -e "process.exit(0)"',
+          lint: 'node -e "process.exit(0)"',
+          build: 'node -e "process.exit(0)"',
+        },
+      },
+      null,
+      2,
+    ),
+  );
+
+  execFileSync("git", ["init"], { cwd: alurkaWorkspace, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "astra-fixture@example.test"], {
+    cwd: alurkaWorkspace,
+    stdio: "ignore",
+  });
+  execFileSync("git", ["config", "user.name", "ASTRA Fixture"], {
+    cwd: alurkaWorkspace,
+    stdio: "ignore",
+  });
+  execFileSync(
+    "git",
+    ["add", "--", "registered.md", "package.json", ".gitignore"],
+    { cwd: alurkaWorkspace, stdio: "ignore" },
+  );
+  execFileSync("git", ["commit", "-m", "fixture baseline"], {
+    cwd: alurkaWorkspace,
+    stdio: "ignore",
+  });
+
   await writeFile(
     path.join(root, "outside.md"),
     "OUTSIDE WORKSPACE MUST NOT ENTER ASTRA CONTEXT",
@@ -1526,4 +1568,187 @@ test("Brain streams real native tool lifecycle during bounded project inspection
   assert.ok(started);
   assert.ok(completed);
   assert.match(started.label, /Project Context Search/);
+});
+
+
+test("Phase 7 scoped file and local Git workflow is end-to-end verified", async () => {
+  const read = await astraNativeToolRuntime.execute(
+    "project.file.read",
+    { projectId: "alurka", path: "registered.md" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+
+  assert.equal(read.status, "completed");
+  assert.equal(read.verified, true);
+  const readOutput = read.output as {
+    content: string;
+    sha256: string;
+    path: string;
+  };
+  assert.equal(readOutput.path, "registered.md");
+  assert.match(readOutput.content, /registered context/);
+
+  const blockedSecret = await astraNativeToolRuntime.execute(
+    "project.file.read",
+    { projectId: "alurka", path: ".env" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(blockedSecret.status, "failed");
+
+  const staleWrite = await astraNativeToolRuntime.execute(
+    "project.file.write",
+    {
+      projectId: "alurka",
+      path: "registered.md",
+      content: "should not overwrite",
+      expectedSha256: "0".repeat(64),
+    },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(staleWrite.status, "blocked");
+
+  const newContent =
+    "ALURKA workflow registered context\nPhase 7 verified file update";
+  const write = await astraNativeToolRuntime.execute(
+    "project.file.write",
+    {
+      projectId: "alurka",
+      path: "registered.md",
+      content: newContent,
+      expectedSha256: readOutput.sha256,
+    },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(write.status, "completed");
+  assert.equal(write.verified, true);
+
+  const diff = await astraNativeToolRuntime.execute(
+    "project.git.diff-file",
+    { projectId: "alurka", path: "registered.md" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(diff.status, "completed");
+  assert.match(JSON.stringify(diff.output), /Phase 7 verified file update/);
+
+  const branchResult = await astraNativeToolRuntime.execute(
+    "project.git.create-branch",
+    { projectId: "alurka", branch: "astra/phase7-fixture" },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(branchResult.status, "completed");
+  assert.equal(branchResult.verified, true);
+
+  const stage = await astraNativeToolRuntime.execute(
+    "project.git.stage-files",
+    { projectId: "alurka", paths: ["registered.md"] },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(stage.status, "completed");
+  assert.equal(stage.verified, true);
+
+  const verify = await astraNativeToolRuntime.execute(
+    "project.verify.npm-script",
+    { projectId: "alurka", script: "test" },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: true,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(verify.status, "completed");
+  assert.equal(verify.verified, true);
+
+  const commit = await astraNativeToolRuntime.execute(
+    "project.git.commit",
+    { projectId: "alurka", message: "test: verify ASTRA scoped git flow" },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(commit.status, "completed");
+  assert.equal(commit.verified, true);
+  const commitOutput = commit.output as { commit: string; files: string[] };
+  assert.match(commitOutput.commit, /^[0-9a-f]{40}$/);
+  assert.deepEqual(commitOutput.files, ["registered.md"]);
+
+  const status = await astraNativeToolRuntime.execute(
+    "project.git.status",
+    { projectId: "alurka" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(status.status, "completed");
+  assert.equal(status.verified, true);
+
+  assert.equal(
+    astraNativeToolRuntime.get("github.push")?.availability,
+    "NOT_CONFIGURED",
+  );
+  assert.equal(
+    astraNativeToolRuntime.get("github.pull-request.open")?.availability,
+    "NOT_CONFIGURED",
+  );
 });
