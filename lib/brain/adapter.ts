@@ -3,6 +3,7 @@ import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
 import { visualNodeForAgent } from "@/lib/agent/capabilities";
 import type { AstraAgentKey } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
+import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import {
   chatWithCodex,
   codexMayReceiveMemory,
@@ -36,6 +37,7 @@ import type {
 
 type ExecutionContext = {
   memory: AstraMemoryContext;
+  memoryLifecycle: AstraMemoryLifecycleEvent[];
   skills: AstraSkillContext;
   project: Awaited<ReturnType<typeof resolveProjectContext>>;
   policy: AstraBrainPermissionSnapshot;
@@ -69,16 +71,22 @@ async function buildExecutionContext(
   input: string,
   selected: AstraAgentKey,
   signal?: AbortSignal,
+  onMemoryEvent?: (event: AstraMemoryLifecycleEvent) => void,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
   const project = await resolveProjectContext(input);
   signal?.throwIfAborted();
 
+  const memoryLifecycle: AstraMemoryLifecycleEvent[] = [];
   const [memory, skills] = await Promise.all([
     getUnifiedMemoryContext(
       input,
       project.match?.project.name,
       signal,
+      (event) => {
+        memoryLifecycle.push(event);
+        onMemoryEvent?.(event);
+      },
     ),
     getSkillContext(selected),
   ]);
@@ -88,6 +96,7 @@ async function buildExecutionContext(
 
   return {
     memory,
+    memoryLifecycle,
     skills,
     project,
     policy,
@@ -150,6 +159,17 @@ function contextEvents(
     offset += 1;
   }
 
+  for (const memoryEvent of context.memoryLifecycle) {
+    events.push(
+      memoryLifecycleBrainEvent(
+        memoryEvent,
+        `${now}-memory-lifecycle-${offset}`,
+        now + offset,
+      ),
+    );
+    offset += 1;
+  }
+
   if (context.memory.entries.length > 0) {
     events.push({
       id: `${now}-memory`,
@@ -188,6 +208,99 @@ function contextEvents(
   return events;
 }
 
+function memoryLifecycleBrainEvent(
+  event: AstraMemoryLifecycleEvent,
+  id: string,
+  at: number,
+): AstraBrainEvent {
+  switch (event.type) {
+    case "search.started":
+      return {
+        id,
+        type: "memory.search.started",
+        at,
+        agent: "memory",
+        visualNode: "memory",
+        label: "Memory search started",
+        detail:
+          "Querying " +
+          event.sourceCount +
+          " memory source" +
+          (event.sourceCount === 1 ? "" : "s") +
+          (event.project ? " for " + event.project + "." : "."),
+      };
+    case "source.queried":
+      return {
+        id,
+        type: "memory.source.queried",
+        at,
+        agent: "memory",
+        visualNode: "memory",
+        label: "Memory source queried",
+        detail:
+          event.source +
+          " (" +
+          event.sourceType +
+          ") " +
+          (event.available ? "returned " + event.recordCount + " record" + (event.recordCount === 1 ? "" : "s") : "is unavailable") +
+          ".",
+      };
+    case "graph.matched":
+      return {
+        id,
+        type: "memory.graph.matched",
+        at,
+        agent: "memory",
+        visualNode: "memory",
+        label: "Knowledge graph matched",
+        detail:
+          event.source +
+          " returned " +
+          event.recordCount +
+          " graph-backed record" +
+          (event.recordCount === 1 ? "." : "s."),
+      };
+    case "context.selected":
+      return {
+        id,
+        type: "memory.context.selected",
+        at,
+        agent: "memory",
+        visualNode: "memory",
+        label: "Memory context selected",
+        detail:
+          "Selected " +
+          event.recordCount +
+          " bounded record" +
+          (event.recordCount === 1 ? "" : "s") +
+          (event.sourceTypes.length > 0
+            ? " from " + event.sourceTypes.join(", ") + "."
+            : "."),
+      };
+    case "search.completed":
+      return {
+        id,
+        type: "memory.search.completed",
+        at,
+        agent: "memory",
+        visualNode: "memory",
+        label: "Memory search completed",
+        detail:
+          "Selected " +
+          event.selectedCount +
+          " record" +
+          (event.selectedCount === 1 ? "" : "s") +
+          "; " +
+          event.availableSources +
+          " source" +
+          (event.availableSources === 1 ? "" : "s") +
+          " available, " +
+          event.unavailableSources +
+          " unavailable.",
+      };
+  }
+}
+
 function providerLabel(provider: AstraBrainProvider) {
   switch (provider) {
     case "hermes":
@@ -218,6 +331,19 @@ function emitLiveEvent(
   };
   options?.onEvent?.(live);
   return live;
+}
+
+function emitLiveMemoryLifecycle(
+  event: AstraMemoryLifecycleEvent,
+  options?: AstraBrainRunOptions,
+) {
+  const brainEvent = memoryLifecycleBrainEvent(
+    event,
+    "unused",
+    Date.now(),
+  );
+  const { id: _id, at: _at, ...rest } = brainEvent;
+  return emitLiveEvent(options, rest);
 }
 
 function emitLiveStart(
@@ -586,7 +712,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     emitLiveStart(selected, options);
-    const context = await buildExecutionContext(input, selected, options?.signal);
+    const context = await buildExecutionContext(\n      input,\n      selected,\n      options?.signal,\n      (event) => emitLiveMemoryLifecycle(event, options),\n    );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
     const preferredProvider = options?.provider ?? "auto";
@@ -788,7 +914,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     emitLiveStart(selected, options);
-    const context = await buildExecutionContext(input, selected, options?.signal);
+    const context = await buildExecutionContext(\n      input,\n      selected,\n      options?.signal,\n      (event) => emitLiveMemoryLifecycle(event, options),\n    );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
     const preferredProvider = options?.provider ?? "auto";
