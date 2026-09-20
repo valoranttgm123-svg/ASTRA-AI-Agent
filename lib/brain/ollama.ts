@@ -1,7 +1,7 @@
 import type { AstraAgent } from "@/lib/agent/types";
 import { isRecordPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
-import { safeErrorDetail } from "@/lib/security/redaction";
+import { safeErrorDetail, safePublicUrl } from "@/lib/security/redaction";
 
 const DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434";
 const DEFAULT_CHAT_TIMEOUT_MS = 60000;
@@ -153,7 +153,7 @@ function chooseModel(preferred: string, installed: string[]) {
 
 export async function getOllamaStatus(): Promise<OllamaStatus> {
   const config = getOllamaConfig();
-  const endpoint = config.rootUrl;
+  const endpoint = safePublicUrl(config.rootUrl);
 
   if (!config.enabled) {
     return {
@@ -306,7 +306,7 @@ export async function chatWithOllama({
 
   return {
     message,
-    endpoint: config.rootUrl,
+    endpoint: safePublicUrl(config.rootUrl),
     model,
   };
 }
