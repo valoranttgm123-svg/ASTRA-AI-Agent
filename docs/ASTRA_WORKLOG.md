@@ -208,16 +208,10 @@ Never mark local/physical verification PASS from repository inspection alone.
 - cleanup evidence: `docs/REPOSITORY_CLEANUP.md`;
 - next repository-side work may prepare release/readiness tooling, but Phase 16/17 cannot be marked PASS without target-runtime evidence.
 
-## In-flight checkpoint — Phase 19A
+## Phase 19A — read-only readiness self-check
 
-- PR: **#109**;
-- branch: `astra/phase19a-readonly-self-check`;
-- scope: read-only running-ASTRA readiness evidence + Windows startup-task presence;
-- command: `npm run release:self-check`;
-- wrapper: `scripts/windows/self-check.ps1`;
-- output: gitignored `.astra/readiness/`;
-- no `.env` secret values are read or persisted;
-- no service/configuration is changed;
-- Sonor remains UNKNOWN pending MEM-X;
-- release verdict remains `NOT_EVALUATED`;
-- completion rule: P19A repository tooling counts complete only after CI is green and PR is merged.
+- PR: **#109**
+- merge commit: `a398bfffc385e825d298fd52605c7b0392fc7287`
+- CI: **SUCCESS**
+- result: read-only runtime readiness self-check + Windows wrapper merged.
+- truth boundary: target-PC readiness remains unverified until the self-check and remaining local gates are actually executed.
