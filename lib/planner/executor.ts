@@ -125,6 +125,7 @@ export async function executeBoundedPlan(
   options: {
     executeStep: AstraPlanStepExecutor;
     approvedPermissionLevel?: AstraPermissionLevel;
+    approvedStepIds?: readonly string[];
     signal?: AbortSignal;
     onEvent?: (event: AstraPlanExecutionEvent) => void;
   },
@@ -132,6 +133,7 @@ export async function executeBoundedPlan(
   let plan = withPlanStatus(initialPlan, "running");
   const outputs: Record<string, string> = {};
   const approvedPermissionLevel = options.approvedPermissionLevel ?? 1;
+  const approvedStepIds = new Set(options.approvedStepIds ?? []);
 
   while (true) {
     if (options.signal?.aborted) {
@@ -214,7 +216,13 @@ export async function executeBoundedPlan(
 
     const step = runnable[0];
 
-    if (step.permissionLevel > approvedPermissionLevel) {
+    const scopedStepApproval =
+      step.permissionLevel === 3 && approvedStepIds.has(step.id);
+
+    if (
+      step.permissionLevel > approvedPermissionLevel &&
+      !scopedStepApproval
+    ) {
       plan = updatePlanStepStatus(plan, step.id, "waiting_approval");
       emit(options.onEvent, {
         type: "plan.step.progress",
@@ -227,6 +235,10 @@ export async function executeBoundedPlan(
           step.permissionLevel +
           "; current approval level is " +
           approvedPermissionLevel +
+          (approvedStepIds.size > 0
+            ? " with scoped approval for " +
+              [...approvedStepIds].join(", ")
+            : "") +
           ".",
       });
       return {
