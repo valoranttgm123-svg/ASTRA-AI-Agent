@@ -1699,6 +1699,30 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           (toolRuntime.get("browser.fetch")?.availability ?? "OFFLINE") +
           ". Full source-backed search requires a READY research transport; explicit public-URL fetch remains separately available when browser.fetch is READY.",
       },
+      business: {
+        enabled: true,
+        available:
+          (hermes.available || ollama.available || (cloud.enabled && cloud.available)) &&
+          toolRuntime.get("business.finance.metrics")?.availability === "READY" &&
+          toolRuntime.get("analytics.summary")?.availability === "READY",
+        state:
+          hermes.available || ollama.available || (cloud.enabled && cloud.available)
+            ? toolRuntime.get("business.finance.metrics")?.availability === "READY" &&
+              toolRuntime.get("analytics.summary")?.availability === "READY"
+              ? "READY"
+              : "ERROR"
+            : "OFFLINE",
+        detail:
+          "Business specialist reasoning=" +
+          (hermes.available || ollama.available || (cloud.enabled && cloud.available)
+            ? "READY"
+            : "OFFLINE") +
+          ", finance=" +
+          (toolRuntime.get("business.finance.metrics")?.availability ?? "OFFLINE") +
+          ", analytics=" +
+          (toolRuntime.get("analytics.summary")?.availability ?? "OFFLINE") +
+          ". Sales/Marketing/Ops/Editor are analysis/drafting skills only; external CRM/send/publish actions remain separate integrations.",
+      },
       tools: {
         enabled: true,
         available:
