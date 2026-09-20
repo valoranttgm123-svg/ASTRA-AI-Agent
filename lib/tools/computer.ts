@@ -256,19 +256,57 @@ export class WindowsComputerTransport
         detached: true,
         stdio: "ignore",
       });
+
+      const started = await new Promise<number>((resolve, reject) => {
+        let settled = false;
+
+        const finish = (error?: Error) => {
+          if (settled) return;
+          settled = true;
+          signal.removeEventListener("abort", onAbort);
+          child.removeListener("spawn", onSpawn);
+          child.removeListener("error", onError);
+
+          if (error) reject(error);
+          else if (typeof child.pid === "number" && child.pid > 0) {
+            resolve(child.pid);
+          } else {
+            reject(
+              new Error(
+                "Windows did not return a verifiable process id.",
+              ),
+            );
+          }
+        };
+
+        const onSpawn = () => finish();
+        const onError = (error: Error) => finish(error);
+        const onAbort = () => {
+          child.kill();
+          finish(
+            signal.reason instanceof Error
+              ? signal.reason
+              : new DOMException(
+                  "Computer launch cancelled.",
+                  "AbortError",
+                ),
+          );
+        };
+
+        child.once("spawn", onSpawn);
+        child.once("error", onError);
+
+        if (signal.aborted) onAbort();
+        else signal.addEventListener("abort", onAbort, { once: true });
+      });
+
       child.unref();
 
       return {
         ok: true,
-        verified: typeof child.pid === "number" && child.pid > 0,
-        detail:
-          typeof child.pid === "number" && child.pid > 0
-            ? "Launched allowlisted app " + appId + "."
-            : "Windows did not return a verifiable process id.",
-        output:
-          typeof child.pid === "number" && child.pid > 0
-            ? { appId, pid: child.pid }
-            : { appId },
+        verified: true,
+        detail: "Launched allowlisted app " + appId + ".",
+        output: { appId, pid: started },
       };
     }
 
