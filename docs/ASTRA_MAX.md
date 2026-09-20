@@ -1850,3 +1850,8 @@ Automation execution sets `requirePlan=true`. If no bounded plan is available, s
 A dedicated loopback SSE endpoint now streams real automation occurrence lifecycle together with the underlying Brain/tool/approval events. Disconnect/abort propagates into the same execution signal.
 
 This is backend-only. Command Center and the Automation control UI do not consume the stream until D3B, so no fake live status is introduced.
+## Phase 14D3B1 — shared Runtime stream consumption
+
+The browser Runtime now consumes live automation SSE through the same interaction controller and event state used by ordinary ASTRA Brain requests. Automation events enter the existing `brainEvents` and `brainTrace`, allowing the existing Ops capability mapping to reflect real scheduled work.
+
+Global STOP and newer user interactions abort the same active request controller. The Automation UI is still deferred to D3B2.
