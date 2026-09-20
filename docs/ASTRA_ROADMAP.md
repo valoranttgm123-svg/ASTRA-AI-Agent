@@ -905,3 +905,25 @@ Implemented on `astra/phase14e1-readonly-brain-ceiling`:
 - regression tests lock the permission resolver and executor contract.
 
 This slice creates no timer. Phase 14E2 adds the explicit opt-in local service over this read-only executor.
+---
+
+## Phase 14E2 implementation checkpoint — opt-in local automation service
+
+Implemented on `astra/phase14e2-optin-automation-service`:
+
+- in-process `AstraAutomationService` reuses the existing ASTRA-Agent server process;
+- background service is OFF by default and requires `ASTRA_AUTOMATION_SERVICE_ENABLED=true`;
+- production poll interval defaults to 60 seconds and is bounded to 15–300 seconds;
+- only the Phase 14E1 read-only Brain executor is used for unattended work;
+- service ticks are single-flight: overlapping tick requests coalesce rather than duplicate execution;
+- durable occurrence claims remain authoritative, preserving at-most-once execution per scheduled occurrence;
+- server-side active tick AbortController supports global STOP;
+- service records bounded truthful lifecycle history and exposes subscriptions for the next UI telemetry slice;
+- loopback `/api/automation/service` reports status and supports start/stop/stop-active/manual-tick controls;
+- root Next instrumentation auto-starts only when the explicit env opt-in is true;
+- `scripts/windows/enable-automation.ps1` provides explicit enable/disable + ASTRA-Agent restart;
+- Windows installer now verifies the automation service status endpoint;
+- repeated automation lifecycle events have unique Brain event ids;
+- tests cover default-OFF behavior, poll bounds, single-flight ticks, server-side STOP, timer start/stop, and lifecycle ids.
+
+Phase 14E3 connects service telemetry/global STOP to the existing browser Runtime and completes final Phase 14 validation.

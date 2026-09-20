@@ -29,7 +29,9 @@ export function automationEventToBrainEvent(
       ":" +
       event.type +
       ":" +
-      event.scheduledFor,
+      event.scheduledFor +
+      ":" +
+      event.at,
     type: event.type,
     at,
     agent: "business",

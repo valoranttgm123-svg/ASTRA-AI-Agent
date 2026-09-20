@@ -1865,3 +1865,8 @@ The panel does not start a background worker. The next Phase 14 slice is the exp
 ASTRA Brain now supports a trusted internal permission ceiling that is not part of the public agent request contract. The automation read-only executor invokes Brain with local Ollama, `requirePlan=true`, and a hard Level 0/1 ceiling before any plan step is executed.
 
 This allows the upcoming local scheduler service to run bounded read-only work without weakening the existing manual Level-2/3 approval model. Scoped Level-3 approval tokens cannot override a lower ceiling.
+## Phase 14E2 — explicit opt-in local automation service
+
+ASTRA now has a single-flight local automation timer inside the existing ASTRA-Agent process. It is OFF by default and auto-starts only when `ASTRA_AUTOMATION_SERVICE_ENABLED=true`. Unattended execution is delegated exclusively to the hard-ceiling Level 0/1 Brain executor from Phase 14E1.
+
+The service exposes loopback health/control, a server-side active-tick STOP path, bounded recent lifecycle history, and Windows enable/disable tooling. Level 2/3 remain outside this unattended service and continue through exact-occurrence approval; Level 4 remains unavailable.

@@ -1168,3 +1168,29 @@ Next exact task:
 **Phase 14E2 — explicit opt-in in-process automation service.**
 
 Keep the service OFF by default. Reuse the existing ASTRA local server process, prevent overlapping ticks, execute only Level 0/1 with `createReadOnlyAutomationExecutor()`, expose service status and server-side STOP, and auto-start only when `ASTRA_AUTOMATION_SERVICE_ENABLED=true`.
+## Handoff update — Phase 14E2 opt-in local service
+
+Added:
+
+- `lib/automation/service.ts`;
+- `instrumentation.ts` opt-in startup;
+- `app/api/automation/service/route.ts`;
+- `.env.example` automation service settings;
+- `scripts/windows/enable-automation.ps1`;
+- installer service-status verification;
+- service lifecycle/STOP/single-flight tests.
+
+Safety state:
+
+- service default: OFF;
+- unattended ceiling: Level 0/1;
+- Level 2/3: per-occurrence approval only;
+- Level 4: unavailable;
+- duplicate occurrence protection: durable claim;
+- active tick STOP: server-side AbortController.
+
+Next exact task:
+
+**Phase 14E3 — service telemetry + global STOP integration + final Phase 14 verification.**
+
+Stream real service lifecycle events to the existing `AstraRuntime`/Command Center when the UI is connected, make global STOP abort both browser-streamed work and the server service tick, display truthful service state in the Automation panel, then run the full CI gate and document target-PC activation steps/results.

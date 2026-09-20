@@ -49,6 +49,7 @@ $shortcutContent = "[InternetShortcut]`r`nURL=http://127.0.0.1:$Port/`r`n"
 Start-Sleep -Seconds 3
 $astraStatus = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$Port/" -TimeoutSec 10
 $ollamaStatus = Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/version' -TimeoutSec 10
+$automationStatus = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/automation/service" -TimeoutSec 10
 
 [pscustomobject]@{
   AstraUrl = "http://127.0.0.1:$Port/"
@@ -56,4 +57,7 @@ $ollamaStatus = Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/version' -Tim
   OllamaVersion = $ollamaStatus.version
   DesktopShortcut = $shortcutPath
   StartupTasks = 'ASTRA-Agent, ASTRA-Ollama'
+  AutomationEnabled = $automationStatus.service.enabled
+  AutomationRunning = $automationStatus.service.running
+  AutomationDetail = $automationStatus.service.lastDetail
 }
