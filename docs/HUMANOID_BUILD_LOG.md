@@ -825,3 +825,42 @@ Verification required:
 - execute a blocked task and confirm agent.blocked arrives live;
 - confirm no duplicate live/final events in the runtime event list.
 
+## Stage 7.0.1 — Gesture Safety Bugfix
+
+Scope:
+- fixes bugs found in the V13 gesture subsystem while preserving the current V15 Brain Telemetry build.
+
+Bugs found:
+- a different gesture could trigger without the hand returning to a neutral/no-gesture state;
+- an early first gesture could be blocked by the initial 900 ms cooldown and then never fire until release;
+- a gesture event produced while GESTURES was OFF could remain pending and execute immediately after GESTURES was turned back ON;
+- OPEN PALM on browsers without Speech Recognition forced the avatar into a fake LISTENING state even though no microphone recognition was active.
+
+Fixes:
+- added an explicit gesture armed/release gate;
+- any non-neutral gesture consumes the armed gate after a real trigger;
+- two stable neutral frames re-arm gesture execution;
+- direct PINCH -> FIST or OPEN PALM -> PINCH transitions update the diagnostic label but do not execute a second action until neutral release;
+- first gesture cooldown now starts from negative infinity so the first valid gesture can execute immediately;
+- gesture events are consumed while GESTURES is OFF;
+- re-enabling GESTURES cannot replay a stale event;
+- unsupported microphone path now reports OPEN PALM -> MIC N/A and does not enter LISTENING;
+- OPEN PALM while mic is already active reports ALREADY LISTENING and does not restart recognition;
+- gesture effect dependencies were narrowed to the runtime functions/state actually used.
+
+Preserved:
+- V15 SSE Brain Telemetry and EXECUTE flow;
+- FIST real stopInteraction cancellation;
+- index-finger head tracking;
+- V12 shockwave and TEST SFX;
+- GPU particle renderer and two-pass rendering.
+
+Verification:
+- production CI build;
+- PINCH once, move directly into FIST without neutral: FIST must not execute;
+- return hand to neutral for two frames, then FIST: FIST may execute;
+- turn GESTURES OFF while holding a gesture, release/re-enable: no stale action fires;
+- on unsupported Speech Recognition browsers, OPEN PALM must not leave ASTRA stuck in LISTENING;
+- confirm first gesture after camera activation can trigger normally;
+- confirm V15 Brain SSE UI still builds.
+
