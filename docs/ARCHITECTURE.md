@@ -737,3 +737,27 @@ Command Center runtime overlay
 ```
 
 No telemetry is fabricated merely because a definition exists. Only emitted runtime events may change the Ops node transient state.
+## Scheduled approval-resume
+
+Phase 14D2 intentionally reuses the existing Brain execution/approval pipeline:
+
+```text
+due Level 2/3 occurrence
+        ↓
+explicit local occurrence approval
+        ↓
+durable occurrence claim
+        ↓
+server-generated occurrence-specific Brain input
+        ↓
+Brain execute(requirePlan=true)
+        ↓
+bounded plan
+   ├─ within ceiling → execute
+   ├─ Level 3 tool → existing scoped Level-3 approval
+   └─ above automation ceiling → BLOCKED
+```
+
+Level-3 resume sends the same occurrence-specific Brain input plus the existing approval token. Because the existing token is bound to the input hash and stored plan, it cannot be reused for a different automation id/time/goal input.
+
+No new permanent approval store is introduced. Level 4 remains unavailable to automation.
