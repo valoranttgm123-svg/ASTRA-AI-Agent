@@ -14,7 +14,8 @@ Current `main` checkpoint:
 - Phase 16A performance instrumentation: **merged / CI verified**;
 - Phase 17A safe validation preflight: **merged / CI verified**;
 - repository cleanup before RC: **complete**;
-- current branch gate: **Phase 19A — read-only readiness self-check tooling**;
+- Phase 19A read-only readiness self-check: **merged / CI verified**;
+- current branch gate: **Phase 19B — safe update/reinstall tooling**;
 - Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
 - real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**.
@@ -215,3 +216,15 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: read-only runtime readiness self-check + Windows wrapper merged.
 - truth boundary: target-PC readiness remains unverified until the self-check and remaining local gates are actually executed.
+
+## In-flight checkpoint — Phase 19B
+
+- branch: `astra/phase19b-update-reinstall-tooling`;
+- scope: Windows fast-forward-only updater + non-destructive reinstall/repair wrapper;
+- update rejects tracked local changes and branch mismatch;
+- updater never runs `git reset` or `git clean`;
+- pre-existing `.env.local` and `.astra/` presence is checked after update/reinstall;
+- project files and Ollama models are not deleted by reinstall;
+- self-check runs after successful update/reinstall;
+- static regression tests lock destructive-command/private-path invariants;
+- target-PC update/reinstall behavior remains unverified until actually executed.
