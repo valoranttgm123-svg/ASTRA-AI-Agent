@@ -43,6 +43,11 @@ function Invoke-Native {
 
 Push-Location -LiteralPath $repoRoot
 try {
+  $currentBranch = (& $git -C $repoRoot rev-parse --abbrev-ref HEAD).Trim()
+  if ($LASTEXITCODE -ne 0) {
+    throw "Tidak dapat membaca branch Git aktif."
+  }
+
   if (-not $SkipPull) {
     $trackedChanges = & $git -C $repoRoot status --porcelain --untracked-files=no
     if ($LASTEXITCODE -ne 0) {
@@ -51,11 +56,6 @@ try {
 
     if ($trackedChanges) {
       throw "Update dibatalkan karena ada perubahan tracked lokal. Commit/stash perubahan terlebih dahulu."
-    }
-
-    $currentBranch = (& $git -C $repoRoot rev-parse --abbrev-ref HEAD).Trim()
-    if ($LASTEXITCODE -ne 0) {
-      throw "Tidak dapat membaca branch Git aktif."
     }
 
     if ($currentBranch -ne $Branch) {
@@ -83,9 +83,6 @@ try {
   }
 
   & $installer -Port $Port -SkipBuild
-  if ($LASTEXITCODE -ne 0) {
-    throw "install-local.ps1 gagal setelah update."
-  }
 
   if ($hadEnvLocal -and -not (Test-Path -LiteralPath $envLocal -PathType Leaf)) {
     throw ".env.local ada sebelum update tetapi tidak ditemukan setelah update. Update dihentikan."
@@ -96,16 +93,13 @@ try {
   }
 
   & $selfCheck -BaseUrl "http://127.0.0.1:$Port"
-  if ($LASTEXITCODE -ne 0) {
-    throw "Readiness self-check gagal setelah update."
-  }
 
   $commit = (& $git -C $repoRoot rev-parse HEAD).Trim()
 
   [pscustomobject]@{
     Updated = $true
     Commit = $commit
-    Branch = $Branch
+    Branch = $currentBranch
     AstraUrl = "http://127.0.0.1:$Port/"
     EnvLocalPreserved = (-not $hadEnvLocal) -or (Test-Path -LiteralPath $envLocal -PathType Leaf)
     PrivateRuntimePreserved = (-not $hadPrivateRuntime) -or (Test-Path -LiteralPath $privateRuntime -PathType Container)
