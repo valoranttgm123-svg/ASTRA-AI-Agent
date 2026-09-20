@@ -146,7 +146,11 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "calendar.event.update" ||
     toolId === "email.draft.create" ||
     toolId === "email.send" ||
-    toolId === "drive.upload"
+    toolId === "drive.upload" ||
+    toolId === "design.image.generate" ||
+    toolId === "design.image.edit" ||
+    toolId === "social.publish" ||
+    toolId === "social.schedule"
   ) {
     return 3;
   }
