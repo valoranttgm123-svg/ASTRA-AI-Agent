@@ -119,7 +119,12 @@ function safeApproval(
 function runStatus(result: AstraAutomationRunResult) {
   if (result.requiresApproval) return "waiting_approval" as const;
   if (result.state === "completed") return "completed" as const;
-  if (result.state === "blocked") return "blocked" as const;
+  if (
+    result.state === "blocked" ||
+    result.state === "needs_provider"
+  ) {
+    return "blocked" as const;
+  }
   return "error" as const;
 }
 
