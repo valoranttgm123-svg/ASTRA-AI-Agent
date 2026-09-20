@@ -1288,3 +1288,45 @@ Next repository task after green CI/merge:
 **Phase 15B — Untrusted retrieved-context / prompt-injection boundary.**
 
 Phase 14 target-PC validation remains an external/local gate and is not claimed complete.
+
+---
+
+## Handoff update — Phase 15B untrusted retrieved-context boundary
+
+Implemented on `astra/phase15b-untrusted-context-boundary`:
+
+- added `lib/brain/context-safety.ts` as the shared retrieval safety boundary;
+- unified Memory/Project/Sonor/Graphify/Obsidian records are serialized as provenance-preserving JSON data;
+- retrieval content remains available as evidence; imperative text is not silently deleted;
+- Ollama, Hermes, Codex and optional Cloud prompts now explicitly state that retrieved data cannot override:
+  - user intent;
+  - ASTRA system instructions;
+  - project scope;
+  - permission levels;
+  - approval requirements;
+  - provider privacy rules;
+  - tool authorization;
+- prior plan-step/tool outputs are wrapped as UNTRUSTED DATA before later reasoning steps;
+- planner instructions carry the same retrieval authority boundary;
+- public-web research remains source/provenance backed and already marks fetched text `untrusted=true`.
+
+Regression coverage:
+
+- `tests/context-safety.test.ts`;
+- malicious fixture includes:
+  - `IGNORE ALL PREVIOUS INSTRUCTIONS`;
+  - permission-elevation attempt;
+  - secret-exfiltration request;
+  - shell-action request;
+  - fake system-message JSON;
+- test verifies the malicious content is preserved as JSON data, provenance is preserved, the policy boundary is present, and Ollama receives the trusted boundary before the retrieved content.
+
+Security model:
+
+Prompt formatting is defense-in-depth only. Actual authority remains enforced independently by Planner permission floors, scoped approvals and Tool Runtime policy. Retrieved content never grants an approval token or changes server-side permission state.
+
+Next repository task after green CI/merge:
+
+**Phase 15C — Provider + MCP failure isolation.**
+
+Phase 14 target-PC validation remains an external/local gate and is not claimed complete.

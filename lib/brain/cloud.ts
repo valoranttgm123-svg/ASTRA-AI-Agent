@@ -1,5 +1,6 @@
 import type { AstraAgent } from "@/lib/agent/types";
 import type { AstraBrainPermissionSnapshot } from "./types";
+import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_TIMEOUT_MS = 60000;
 const DEFAULT_STATUS_TIMEOUT_MS = 2500;
@@ -188,6 +189,7 @@ export async function chatWithCloud({
               `Routed specialist: ${agent.name}.`,
               `Role: ${agent.role}.`,
               `Capabilities: ${agent.capabilities.join(", ")}.`,
+              UNTRUSTED_RETRIEVED_CONTEXT_POLICY,
               policyText || "",
               context || "",
               "Do not claim external actions happened unless a real tool completed them.",

@@ -5,6 +5,7 @@ import { searchMemorySources } from "@/lib/memory/manager";
 import { sonorMemorySource } from "@/lib/memory/sonor";
 import type { AstraProjectRecord } from "@/lib/projects/contracts";
 import { createProjectContextMemorySource } from "@/lib/projects/context";
+import { formatUntrustedRetrievedContext } from "./context-safety";
 
 function parsePositiveInt(
   value: string | undefined,
@@ -70,26 +71,9 @@ export async function getUnifiedMemoryContext(
   );
 
   const records = aggregate.records;
-  const entries = records.map(recordToEntry);
-  const lines: string[] = [];
-  let used = 0;
-
-  for (const record of records) {
-    const prefix =
-      "[" +
-      record.provenance.sourceType +
-      ":" +
-      record.provenance.reference +
-      "]";
-    const line =
-      "- " +
-      prefix +
-      " " +
-      record.content.replace(/\s+/g, " ").trim();
-    if (used + line.length > maxChars) break;
-    lines.push(line);
-    used += line.length;
-  }
+  const formatted = formatUntrustedRetrievedContext(records, maxChars);
+  const selectedRecords = records.slice(0, formatted.recordCount);
+  const entries = selectedRecords.map(recordToEntry);
 
   const enabled =
     local.enabled ||
@@ -100,12 +84,9 @@ export async function getUnifiedMemoryContext(
     enabled,
     available: aggregate.sources.some((source) => source.available),
     source: "astra-memory-manager",
-    entries: entries.slice(0, lines.length),
-    records: records.slice(0, lines.length),
-    text:
-      lines.length > 0
-        ? "Relevant ASTRA memory context:\n" + lines.join("\n")
-        : "",
+    entries,
+    records: selectedRecords,
+    text: formatted.text,
     detail: aggregate.detail,
   };
 }
