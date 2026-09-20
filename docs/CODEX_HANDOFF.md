@@ -1464,3 +1464,31 @@ Phase 15D completion after green CI/merge:
 Next exact task:
 
 **Phase 15E — Secret / error / telemetry leakage hardening.**
+---
+
+## Handoff update — Phase 15E secret/error/telemetry hardening
+
+Implemented on `astra/phase15e-secret-error-redaction`:
+
+- added shared `lib/security/redaction.ts`;
+- redacts Authorization/Bearer credentials, API/access/refresh/approval tokens, password/secret key-value pairs, common OpenAI/GitHub token patterns, JWT-like tokens, URL credentials/sensitive query parameters, and user-home paths;
+- bounds public error/detail strings;
+- Tool Runtime scrubs thrown handler errors and provider-supplied failure details before result/telemetry exposure;
+- Codex status/child stderr/JSONL error details are scrubbed before public exceptions;
+- Brain provider fallback errors are scrubbed before Runtime/Command Center telemetry;
+- every live Brain event detail goes through the public redaction boundary;
+- Automation occurrence/service/API/SSE error surfaces are scrubbed;
+- Ollama/Hermes/Cloud status errors and public endpoint URLs are scrubbed;
+- `lib/security` is included in lint;
+- `.gitignore` already protects `.env*` except the template, private `.astra/`, secret/credential directories, key/cert files, and local DBs.
+
+Regression coverage:
+
+- `tests/security-redaction.test.ts`;
+- `tests/codex-process.test.ts` includes fake secret-bearing Codex stderr.
+
+P15E completion requires green CI and merge.
+
+Next exact task after merge:
+
+**Phase 15F — final security regression matrix/report and close remaining implementable PENDING REVIEW rows.**
