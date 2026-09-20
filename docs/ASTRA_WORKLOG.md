@@ -217,15 +217,10 @@ Never mark local/physical verification PASS from repository inspection alone.
 - result: read-only runtime readiness self-check + Windows wrapper merged.
 - truth boundary: target-PC readiness remains unverified until the self-check and remaining local gates are actually executed.
 
-## In-flight checkpoint — Phase 19B
+## Phase 19B — safe update/reinstall tooling
 
-- PR: **#110**;
-- branch: `astra/phase19b-update-reinstall-tooling`;
-- scope: Windows fast-forward-only updater + non-destructive reinstall/repair wrapper;
-- update rejects tracked local changes and branch mismatch;
-- updater never runs `git reset` or `git clean`;
-- pre-existing `.env.local` and `.astra/` presence is checked after update/reinstall;
-- project files and Ollama models are not deleted by reinstall;
-- self-check runs after successful update/reinstall;
-- static regression tests lock destructive-command/private-path invariants;
-- target-PC update/reinstall behavior remains unverified until actually executed.
+- PR: **#110**
+- merge commit: `e1a697f8b0c53f77f5bbc27890b882237c5c9aca`
+- CI: **SUCCESS**
+- result: fast-forward-only updater, non-destructive reinstall/repair wrapper, Windows release operations guide and safety regression tests merged.
+- truth boundary: target-PC update/reinstall behavior remains unverified until actually executed.
