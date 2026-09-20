@@ -1,7 +1,7 @@
 import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
 import { visualNodeForAgent } from "@/lib/agent/capabilities";
-import type { AstraAgentKey } from "@/lib/agent/types";
+import type { AstraAgentKey, AstraApprovalRequest } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
@@ -30,6 +30,11 @@ import {
 } from "./policy";
 import { getSkillContext, type AstraSkillContext } from "./skills";
 import { executeBrainPlan } from "./plan-executor";
+import {
+  assessPlanApproval,
+  consumeLevel3Approval,
+  createLevel3Approval,
+} from "./approvals";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -81,6 +86,7 @@ async function buildExecutionContext(
   selected: AstraAgentKey,
   signal?: AbortSignal,
   onMemoryEvent?: (event: AstraMemoryLifecycleEvent) => void,
+  skipPlanning = false,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
   const project = await resolveProjectContext(input);
@@ -106,15 +112,18 @@ async function buildExecutionContext(
   let plan: AstraPlan | undefined;
   let plannerDetail: string | undefined;
   let tools: readonly AstraToolDefinition[] = astraNativeToolRuntime.list();
+  const planningRequested = shouldGeneratePlan(input);
 
-  if (shouldGeneratePlan(input)) {
+  if (planningRequested || skipPlanning) {
     try {
       const runtime = await createDefaultToolRuntime(signal);
       tools = runtime.list();
     } catch {
       tools = astraNativeToolRuntime.list();
     }
+  }
 
+  if (planningRequested && !skipPlanning) {
     try {
       const generated = await generateStrategistPlan({
         goal: input,
@@ -891,7 +900,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
   }
 
   async execute(
-    task: { input: string; approved?: boolean },
+    task: { input: string; approved?: boolean; approvalToken?: string },
     options?: AstraBrainRunOptions,
   ): Promise<AstraBrainChatResult> {
     const response = await this.chat(task.input, options);
@@ -1130,7 +1139,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
   }
 
   async execute(
-    task: { input: string; approved?: boolean },
+    task: { input: string; approved?: boolean; approvalToken?: string },
     options?: AstraBrainRunOptions,
   ): Promise<AstraBrainChatResult> {
     options?.signal?.throwIfAborted();
@@ -1144,6 +1153,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       selected,
       options?.signal,
       (event) => emitLiveMemoryLifecycle(event, options),
+      Boolean(task.approvalToken),
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
@@ -1153,6 +1163,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       message: string,
       detail: string,
       requiresApproval = false,
+      approvalRequest?: AstraApprovalRequest,
     ): AstraBrainChatResult => {
       emitLiveBlocked(selected, detail, options);
       return {
@@ -1162,6 +1173,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         state: "blocked",
         message,
         requiresApproval,
+        approvalRequest,
         brain: {
           provider: "routing_only",
           execution: "blocked",
@@ -1174,15 +1186,122 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       };
     };
 
-    if (context.policy.requireApproval && !task.approved) {
+    let approvedPermissionLevel: 0 | 1 | 2 | 3 | 4 =
+      context.policy.requireApproval ? (task.approved ? 2 : 1) : 2;
+    let approvedStepIds: string[] = [];
+    let usedScopedApproval = false;
+
+    if (task.approvalToken) {
+      const grant = consumeLevel3Approval({
+        token: task.approvalToken,
+        input,
+      });
+
+      if (!grant) {
+        return blocked(
+          "Approval Level-3 tidak valid, sudah dipakai, atau sudah kedaluwarsa. Jalankan kembali task untuk membuat approval request baru.",
+          "Scoped Level-3 approval token validation failed.",
+          true,
+        );
+      }
+
+      if (
+        grant.plan.projectId &&
+        context.project.match?.project.id !== grant.plan.projectId
+      ) {
+        return blocked(
+          "Approval Level-3 tidak lagi cocok dengan project yang aktif.",
+          "Scoped approval project no longer matches the resolved Project Registry context.",
+        );
+      }
+
+      context.plan = grant.plan;
+      approvedPermissionLevel = 2;
+      approvedStepIds = [grant.request.stepId];
+      usedScopedApproval = true;
+
+      emitLiveEvent(options, {
+        type: "approval.granted",
+        agent: "chief_of_staff",
+        visualNode: "chief_of_staff",
+        label: "Level-3 approval granted",
+        detail:
+          "One-time approval accepted for " +
+          grant.request.toolId +
+          " on plan " +
+          grant.request.planId +
+          ".",
+      });
+    }
+
+    if (
+      context.policy.requireApproval &&
+      approvedPermissionLevel < 2
+    ) {
       return blocked(
-        "ASTRA siap menjalankan tugas ini, tetapi eksekusi membutuhkan approval eksplisit. Gunakan EXECUTE TASK untuk menyetujui eksekusi.",
-        "Execution mode requested without explicit user approval.",
+        "ASTRA siap menjalankan tugas ini, tetapi eksekusi lokal membutuhkan approval eksplisit. Gunakan EXECUTE TASK untuk menyetujui Level-2 local execution.",
+        "Execution mode requested without explicit safe-local approval.",
         true,
       );
     }
 
     if (context.plan) {
+      const approvalPreflight = assessPlanApproval({
+        plan: context.plan,
+        approvedPermissionLevel,
+        tools: context.tools,
+        allowExternalActions: context.policy.allowExternalActions,
+        skipLevel3Preflight: usedScopedApproval,
+      });
+
+      if (approvalPreflight.kind === "level4") {
+        return blocked(
+          "Plan ini mengandung izin Level-4/high-impact pada step: " +
+            approvalPreflight.step.title +
+            ". ASTRA belum mengizinkan approval Level-4 melalui UI normal.",
+          approvalPreflight.detail,
+          true,
+        );
+      }
+
+      if (approvalPreflight.kind === "blocked") {
+        return blocked(
+          approvalPreflight.detail,
+          approvalPreflight.detail,
+          approvalPreflight.step.permissionLevel > 2,
+        );
+      }
+
+      if (approvalPreflight.kind === "level3") {
+        const approvalRequest = createLevel3Approval({
+          input,
+          plan: context.plan,
+          step: approvalPreflight.step,
+        });
+
+        emitLiveEvent(options, {
+          type: "approval.requested",
+          agent: approvalPreflight.step.agent ?? "chief_of_staff",
+          visualNode: visualNodeForAgent(
+            approvalPreflight.step.agent ?? "chief_of_staff",
+          ),
+          label: "Level-3 approval requested",
+          detail:
+            "Approval required for " +
+            approvalRequest.toolId +
+            " before any plan step executes.",
+        });
+
+        return blocked(
+          "ASTRA membutuhkan approval Level-3 untuk action eksternal: " +
+            approvalPreflight.step.title +
+            ". Periksa scope lalu tekan APPROVE LEVEL 3.",
+          "Bounded plan preflight stopped before execution and issued a one-time scoped approval challenge.",
+          true,
+          approvalRequest,
+        );
+      }
+
       const hasUnstructuredAction = context.plan.steps.some(
         (step) =>
           step.kind === "tool" &&
@@ -1204,8 +1323,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         baseContext: context.localContext,
         policy: context.policy,
         providerChoice: preferredProvider,
-        approvedPermissionLevel:
-          context.policy.requireApproval && !task.approved ? 1 : 2,
+        approvedPermissionLevel,
+        approvedStepIds,
         signal: options?.signal,
         onEvent: (event) => {
           const live = emitLiveEvent(options, planExecutionEventFields(event));
@@ -1278,6 +1397,63 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           ? " Blocked at " + result.blockedStepId + "."
           : "");
 
+      let followUpApprovalRequest: AstraApprovalRequest | undefined;
+
+      if (needsApproval && result.blockedStepId) {
+        const blockedStep = result.plan.steps.find(
+          (step) => step.id === result.blockedStepId,
+        );
+
+        if (
+          blockedStep?.permissionLevel === 3 &&
+          blockedStep.toolId
+        ) {
+          const definition = context.tools.find(
+            (tool) => tool.id === blockedStep.toolId,
+          );
+
+          if (
+            definition?.availability === "READY" &&
+            (definition.sideEffect !== "external_write" ||
+              context.policy.allowExternalActions)
+          ) {
+            const approvalPlan: AstraPlan = {
+              ...result.plan,
+              status: "planned",
+              steps: result.plan.steps.map((step) =>
+                step.id === blockedStep.id
+                  ? { ...step, status: "pending" as const }
+                  : step,
+              ),
+            };
+
+            followUpApprovalRequest = createLevel3Approval({
+              input,
+              plan: approvalPlan,
+              step: {
+                ...blockedStep,
+                status: "pending",
+              },
+            });
+
+            context.plan = approvalPlan;
+
+            emitLiveEvent(options, {
+              type: "approval.requested",
+              agent: blockedStep.agent ?? "chief_of_staff",
+              visualNode: visualNodeForAgent(
+                blockedStep.agent ?? "chief_of_staff",
+              ),
+              label: "Next Level-3 approval requested",
+              detail:
+                "A new one-time approval is required for " +
+                blockedStep.toolId +
+                ".",
+            });
+          }
+        }
+      }
+
       const blockedEvent = emitLiveEvent(options, {
         type: "agent.blocked",
         agent: selected,
@@ -1312,6 +1488,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         state: needsApproval ? "blocked" : "error",
         message: detail,
         requiresApproval: needsApproval,
+        approvalRequest: followUpApprovalRequest,
         brain: {
           provider,
           execution: "blocked",

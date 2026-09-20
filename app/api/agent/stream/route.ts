@@ -68,7 +68,11 @@ export async function POST(request: Request) {
           const result =
             body.mode === "execute"
               ? await astraBrain.execute(
-                  { input: body.message, approved: body.approved },
+                  {
+                    input: body.message,
+                    approved: body.approved,
+                    approvalToken: body.approvalToken,
+                  },
                   options,
                 )
               : await astraBrain.chat(body.message, options);
