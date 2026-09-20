@@ -205,7 +205,7 @@ function normalizeLocalSkills(value: unknown): AstraSkill[] {
 
 function hasTrigger(input: string, trigger: string) {
   const text = input.toLowerCase();
-  const escaped = trigger.replace(/[.*+?^${}()|[\]\\]/g, "\\export async function getSkillContext(agent: AstraAgentKey): Promise<AstraSkillContext> {");
+  const escaped = trigger.replace(/[.*+?^${}()|[\]\\]/g, "\\  const escaped = trigger.replace(/[.*+?^${}()|[\]\\]/g, "\\export async function getSkillContext(agent: AstraAgentKey): Promise<AstraSkillContext> {");");
   return new RegExp(
     "(?:^|[^a-z0-9])" + escaped + "(?:$|[^a-z0-9])",
     "i",
