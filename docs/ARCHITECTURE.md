@@ -815,3 +815,22 @@ Automation panel
 ```
 
 Definitions are reviewed in PAUSED state before enablement. Level-2/3 work never becomes unattended because the panel merely exposes the exact-occurrence approval path already enforced server-side.
+## Unattended read-only Brain boundary
+
+Phase 14E1 adds an internal-only execution ceiling:
+
+```text
+trusted automation runner
+        ↓
+Brain.execute(
+  requirePlan = true,
+  permissionCeiling = 0 | 1,
+  provider = ollama
+)
+        ↓
+bounded plan preflight
+        ├─ Level 0/1 → eligible
+        └─ Level 2+  → BLOCKED before execution
+```
+
+The public `/api/agent` parser does not expose `permissionCeiling`. Normal user execution remains on the existing explicit approval path.
