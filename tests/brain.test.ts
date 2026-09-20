@@ -811,6 +811,17 @@ test("planner exposes only dependency-satisfied pending steps", () => {
   assert.throws(() => updatePlanStepStatus(initial, "missing", "completed"));
 });
 
+test("Phase 15F planner parser fails closed on malformed JSON", () => {
+  assert.throws(
+    () => parsePlannerDraft("{not-json"),
+    /did not return a JSON object|invalid JSON/i,
+  );
+  assert.throws(
+    () => parsePlannerDraft(JSON.stringify({ steps: "not-an-array" })),
+    /steps array/i,
+  );
+});
+
 test("planner rejects empty goals and plans without valid steps", () => {
   assert.throws(() =>
     createBoundedPlan("", [{ title: "Inspect", kind: "inspect" }]),

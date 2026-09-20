@@ -1492,3 +1492,24 @@ P15E completion requires green CI and merge.
 Next exact task after merge:
 
 **Phase 15F — final security regression matrix/report and close remaining implementable PENDING REVIEW rows.**
+---
+
+## Handoff update — Phase 15F final security report
+
+- final matrix: `docs/SECURITY_VALIDATION.md`;
+- final report: `docs/SECURITY_HARDENING_REPORT.md`;
+- explicit malformed planner JSON regression added;
+- all repository-implementable Phase 15 rows have automated coverage;
+- no known fail-open path remains in the repository-tested Phase 15 scope;
+- target-PC Automation validation remains required;
+- real Sonor/Graphify/Obsidian MEM-X remains local-access required;
+- Level-3 UI proof remains a release gate.
+
+Truthful Phase 15 status after green CI/merge:
+
+`PHASE 15 REPOSITORY HARDENING COMPLETE / CI VERIFIED / LOCAL RELEASE GATES REMAIN`
+
+Next:
+
+- run MEM-X when target-PC/Sonor access exists;
+- otherwise continue Phase 16 repository-side performance instrumentation/preparation without inventing measurements.

@@ -24,14 +24,24 @@ External-only blockers must be recorded but must not stop unrelated repository w
 
 ## Current repository checkpoint
 
-Repository-complete and CI-verified:
+Repository-complete and CI-verified through:
 
 - P15A — Project path / filesystem hardening — PR #96;
-- P15B — Untrusted retrieved-context / prompt-injection boundary — PR #97.
+- P15B — Untrusted retrieved-context boundary — PR #97;
+- P15C — Provider + MCP failure isolation — PR #99/#100;
+- P15D — Cancellation / timeout / STOP settlement — PR #101/#102;
+- P15E — Secret / error / telemetry redaction — PR #103.
 
-Current next implementable repository task:
+Current branch gate:
 
-**P15C — Provider + MCP failure isolation.**
+**P15F — final security regression matrix/report.**
+
+After P15F is green and merged:
+
+- Phase 15 repository hardening is complete;
+- MEM-X remains required when real local Sonor access is available;
+- if MEM-X is externally blocked, continue Phase 16 repository-side performance instrumentation/preparation;
+- do not invent target-hardware benchmark values.
 
 Durable history/recovery:
 

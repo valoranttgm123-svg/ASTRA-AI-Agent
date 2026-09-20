@@ -10,12 +10,12 @@
 
 Current `main` checkpoint:
 
-- latest completed implementation: **Phase 15B — untrusted retrieved-context boundary**;
-- latest implementation PR: **#97**;
-- latest merge commit: `972dd2feb2659eb8dde9eccfcdb928c9acbccef4`;
-- PR #97 CI: **SUCCESS**;
-- post-merge `main` CI: **SUCCESS**;
-- next implementable repository task: **Phase 15C — Provider + MCP failure isolation**;
+- latest completed implementation: **Phase 15E — secret/error/telemetry hardening**;
+- latest completed implementation PR: **#103**;
+- latest completed implementation merge: `5ee3f69e934712c19ca6b2733a9311a5fc1c0633`;
+- PR #103 CI: **SUCCESS**;
+- current branch gate: **Phase 15F — final security regression/report**;
+- next after P15F merge: **MEM-X when local Sonor is available; otherwise Phase 16 performance instrumentation/preparation**;
 - Phase 14 target-PC validation: **still required**;
 - real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**.
 
@@ -101,7 +101,7 @@ Follow `docs/SONOR_CODEX_MISSION.md`.
 
 1. **P15F — Security regression report**
 2. MEM-X real Sonor validation when local access exists
-6. Phase 16 performance
+3. Phase 16 performance
 7. Phase 17 full-system validation
 8. Phase 18 Release Candidate
 9. Phase 19 Windows ready-to-use
@@ -155,12 +155,18 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: Phase 15D complete; Codex owned child cleanup and Automation/Command Center STOP settlement are verified.
 - next: **P15E Secret / error / telemetry leakage hardening**.
-## In-flight checkpoint — Phase 15E
+## Phase 15E — secret/error/telemetry hardening
 
-- PR: **#103**;
-- branch: `astra/phase15e-secret-error-redaction`;
-- scope: shared secret/error/status/telemetry redaction boundary;
-- notable finding: multiple provider/tool/Automation/Codex paths still exposed raw `error.message` or stderr before this slice;
-- private runtime ignore rules were re-verified in `.gitignore`;
-- completion rule: P15E counts complete only after CI is green and the PR is merged;
-- next after merge: **P15F final security regression matrix/report**.
+- PR: **#103**
+- merge commit: `5ee3f69e934712c19ca6b2733a9311a5fc1c0633`
+- CI: **SUCCESS**
+- result: shared public error/status/telemetry redaction boundary merged; fake-secret regression coverage passes.
+- next: **P15F final security regression matrix/report**.
+## In-flight checkpoint — Phase 15F
+
+- PR: **#104**;
+- branch: `astra/phase15f-final-security-report`;
+- scope: final matrix closure + hardening report + roadmap/handoff truth;
+- completion rule: Phase 15 becomes repository-complete only after this PR is green and merged;
+- local gates remain target-PC Automation and real Sonor validation;
+- next implementable work if local access is unavailable: **Phase 16 performance instrumentation/preparation**.
