@@ -121,6 +121,7 @@ export type AstraBrainStatus = {
     skills: AstraBrainFeatureStatus;
     codex: AstraBrainFeatureStatus;
     research: AstraBrainFeatureStatus;
+    business: AstraBrainFeatureStatus;
     tools: AstraBrainFeatureStatus;
     cloud: AstraBrainFeatureStatus;
   };

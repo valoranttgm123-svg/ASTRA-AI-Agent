@@ -1,5 +1,62 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 8 Business Skills checkpoint
+
+This branch turns six legacy business nodes into truthful ASTRA capabilities without adding fake external integrations.
+
+Implemented:
+- intent-selected Business specialist skills:
+  - Finance;
+  - Sales;
+  - Marketing;
+  - Ops;
+  - Editor;
+  - Analytics;
+- Business always loads a base truth/safety skill, then only the specialist skill(s) whose bounded trigger matches the current user input;
+- local skill JSON may optionally define bounded `triggers` while remaining agent-scoped;
+- `skill.selected` lifecycle points at the real specialist visual node instead of always lighting Ops;
+- business-specific router terms select the shared Business execution agent while ordinary calendar/email requests still route Communication;
+- `business.finance.metrics`:
+  - native Level-1 deterministic calculation;
+  - revenue or unit-derived revenue;
+  - COGS or unit-derived COGS;
+  - gross/net profit;
+  - gross/net margin;
+  - markup;
+  - average selling price;
+  - contribution per unit;
+  - break-even units;
+  - missing COGS is never silently treated as zero;
+  - omitted optional fixed/other/tax cost zero-assumptions are explicitly returned;
+- `analytics.summary`:
+  - native Level-1 deterministic structured-data tool;
+  - bounded records/fields;
+  - count/missing/sum/mean/min/max/median;
+  - first/last/delta/delta percent;
+  - provenance/source label retained;
+  - descriptive statistics do not claim causal explanation;
+- quantitative business prompts with numbers trigger planning so Strategist can select deterministic Finance/Analytics tools;
+- planner tool permission floor for both tools is Level 1;
+- Phase 8 nodes now have implemented contracts:
+  - Finance / Analytics use native tools plus explanation;
+  - Sales / Marketing / Ops / Editor provide analysis/drafting only;
+  - external CRM/send/publish/database actions remain separate approval-gated integrations;
+- Brain status exposes live Business readiness based on a real reasoning provider plus READY deterministic tools;
+- Command Center Phase 8 nodes use that runtime state instead of static optimism.
+
+Security/truth boundary:
+- no customer, POS, accounting, supplier, campaign, or pipeline data is invented;
+- a draft is not a sent message;
+- a campaign plan is not a published campaign;
+- an Ops checklist is not a desktop/system action;
+- Analytics statistics are not causal proof;
+- Finance arithmetic verifies calculations, not completeness/correctness of the supplied source data.
+
+Next milestone after merge:
+**Phase 9 — Communication / Cloud-file integrations**: CRM, Calendar, Email, Drive must remain NOT_CONFIGURED until real connected adapters exist; read operations and external writes must have separate permission contracts.
+
+Sonor remains untouched.
+
 ## 2026-09-20 — Phase 5B real Research / Browser checkpoint
 
 This branch closes the remaining bounded-orchestrator Researcher gap without modifying Sonor.

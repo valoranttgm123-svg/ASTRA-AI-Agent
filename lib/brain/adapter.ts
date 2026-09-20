@@ -1,6 +1,6 @@
 import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
-import { visualNodeForAgent } from "@/lib/agent/capabilities";
+import { visualNodeForAgent, visualNodeForSkill } from "@/lib/agent/capabilities";
 import type { AstraAgentKey, AstraApprovalRequest } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
@@ -103,7 +103,7 @@ async function buildExecutionContext(
         onMemoryEvent?.(event);
       },
     ),
-    getSkillContext(selected),
+    getSkillContext(selected, input),
   ]);
 
   const skillOnlyContext = skills.text;
@@ -261,12 +261,19 @@ function contextEvents(
   }
 
   if (context.skills.skills.length > 0) {
+    const specialist =
+      context.skills.skills.find(
+        (skill) =>
+          skill.id !== "business-analysis" &&
+          skill.id !== "chief-orchestration",
+      ) ?? context.skills.skills[0];
+
     events.push({
       id: `${now}-skills`,
       type: "skill.selected",
       at: now + offset,
       agent: selected,
-      visualNode: visualNodeForAgent(selected),
+      visualNode: visualNodeForSkill(specialist.id, selected),
       label: "Skills loaded",
       detail: context.skills.skills.map((skill) => skill.id).join(", "),
     });
@@ -1691,6 +1698,30 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           ", browser.fetch=" +
           (toolRuntime.get("browser.fetch")?.availability ?? "OFFLINE") +
           ". Full source-backed search requires a READY research transport; explicit public-URL fetch remains separately available when browser.fetch is READY.",
+      },
+      business: {
+        enabled: true,
+        available:
+          (hermes.available || ollama.available || (cloud.enabled && cloud.available)) &&
+          toolRuntime.get("business.finance.metrics")?.availability === "READY" &&
+          toolRuntime.get("analytics.summary")?.availability === "READY",
+        state:
+          hermes.available || ollama.available || (cloud.enabled && cloud.available)
+            ? toolRuntime.get("business.finance.metrics")?.availability === "READY" &&
+              toolRuntime.get("analytics.summary")?.availability === "READY"
+              ? "READY"
+              : "ERROR"
+            : "OFFLINE",
+        detail:
+          "Business specialist reasoning=" +
+          (hermes.available || ollama.available || (cloud.enabled && cloud.available)
+            ? "READY"
+            : "OFFLINE") +
+          ", finance=" +
+          (toolRuntime.get("business.finance.metrics")?.availability ?? "OFFLINE") +
+          ", analytics=" +
+          (toolRuntime.get("analytics.summary")?.availability ?? "OFFLINE") +
+          ". Sales/Marketing/Ops/Editor are analysis/drafting skills only; external CRM/send/publish actions remain separate integrations.",
       },
       tools: {
         enabled: true,

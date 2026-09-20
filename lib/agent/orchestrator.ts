@@ -2,6 +2,19 @@ import { ASTRA_AGENT_MAP } from "./roster";
 import type { AgentResponse, AstraAgentKey } from "./types";
 
 const RULES: Array<{ agent: AstraAgentKey; words: string[] }> = [
+  {
+    agent: "business",
+    words: [
+      "finance", "financial", "keuangan", "margin", "markup", "laba", "profit",
+      "biaya", "budget", "anggaran", "harga jual", "break even", "bep",
+      "sales", "penjualan", "lead", "prospek", "quotation", "penawaran",
+      "follow up", "follow-up", "pipeline", "closing",
+      "marketing", "kampanye", "campaign", "promosi", "positioning", "branding", "iklan",
+      "ops", "operasional", "operations", "workflow", "checklist", "supplier", "inventory",
+      "editor", "proofread", "proofreading", "rewrite", "tulis ulang", "revisi", "copywriting",
+      "analytics", "analitik", "kpi", "metric", "metrics", "metrik", "trend", "tren", "anomali",
+    ],
+  },
   { agent: "github", words: ["github", "repo", "repository", "branch", "commit", "pull request", "pr"] },
   { agent: "developer", words: ["code", "coding", "bug", "error", "debug", "build", "typescript", "javascript", "python"] },
   { agent: "researcher", words: ["research", "riset", "cari", "search", "compare", "bandingkan", "internet"] },
