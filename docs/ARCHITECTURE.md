@@ -367,3 +367,42 @@ The model is given the runtime tool catalog. A tool id is still revalidated by t
 Tool Runtime completion still requires `verified=true`.
 
 Phase 7B does not bypass approval. Current normal execute approval remains the safe-local Level-2 path, so Level-3 GitHub writes wait until the scoped Level-3 approval flow is implemented.
+
+
+## Scoped Level-3 approval
+
+Phase 7C separates ordinary safe-local execution from external-action authorization.
+
+```text
+validated plan
+   ↓
+preflight permission scan
+   ├─ Level 0–2 → normal safe-local approval path
+   ├─ Level 3 → READY/policy check → one-time challenge
+   └─ Level 4 → blocked
+                         ↓
+                 explicit UI approval
+                         ↓
+           input hash + token validation
+                         ↓
+             exact stored plan restored
+                         ↓
+         exact approved step ID only
+                         ↓
+              Tool Runtime executes
+```
+
+A Level-3 token:
+- expires after five minutes;
+- is process-local and single-use;
+- is bound to the exact user input and exact stored plan;
+- authorizes one exact Level-3 step only;
+- cannot authorize Level-4;
+- is not rendered to the user;
+- does not bypass Tool Runtime policy/provider availability.
+
+If a later step also needs Level 3, execution stops there and ASTRA creates a new challenge for that exact step.
+
+Approval requests expose only safe scope metadata. File contents, PR bodies, auth tokens and other secrets are not included in the visible approval scope.
+
+When a scoped token is submitted, ASTRA skips model replanning and restores the exact challenged plan before execution.
