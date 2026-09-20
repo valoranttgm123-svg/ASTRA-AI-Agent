@@ -1,6 +1,11 @@
 import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
-import { visualNodeForAgent, visualNodeForSkill } from "@/lib/agent/capabilities";
+import {
+  visualNodeForAgent,
+  visualNodeForSkill,
+  type AstraCapabilityNodeKey,
+  type AstraCapabilityState,
+} from "@/lib/agent/capabilities";
 import type {
   AstraAgentKey,
   AstraApprovalRequest,
@@ -1879,6 +1884,129 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       },
     };
 
+    const toolState = (id: string): AstraCapabilityState => {
+      const availability = toolRuntime.get(id)?.availability;
+      if (availability === "READY") return "READY";
+      if (availability === "OFFLINE") return "OFFLINE";
+      if (availability === "ERROR") return "ERROR";
+      return "NOT_CONFIGURED";
+    };
+    const reasoningReady =
+      hermes.available ||
+      ollama.available ||
+      (cloud.enabled && cloud.available);
+    const businessState: AstraCapabilityState = reasoningReady
+      ? "READY"
+      : "OFFLINE";
+    const businessDetail =
+      "Business reasoning=" +
+      (reasoningReady ? "READY" : "OFFLINE") +
+      "; deterministic finance=" +
+      toolState("business.finance.metrics") +
+      "; analytics=" +
+      toolState("analytics.summary") +
+      ".";
+    const integrationDetail = (id: string, label: string) =>
+      label + "=" + toolState(id) + ".";
+
+    const capabilities: Partial<
+      Record<
+        AstraCapabilityNodeKey,
+        { state: AstraCapabilityState; detail: string }
+      >
+    > = {
+      chief_of_staff: {
+        state: "READY",
+        detail:
+          "Core router, provider coordination, approval gates and final response routing are available.",
+      },
+      memory: {
+        state: memory.available
+          ? "READY"
+          : memory.enabled
+            ? "OFFLINE"
+            : "NOT_CONFIGURED",
+        detail: memory.detail,
+      },
+      strategist: {
+        state: ollama.available ? "READY" : "OFFLINE",
+        detail: ollama.available
+          ? "Strategist planner can use the configured local Ollama model."
+          : "Strategist planning requires the local Ollama planner provider.",
+      },
+      researcher: {
+        state: toolState("research.web"),
+        detail: features.research.detail,
+      },
+      finance: { state: businessState, detail: businessDetail },
+      editor: { state: businessState, detail: businessDetail },
+      sales: { state: businessState, detail: businessDetail },
+      marketing: { state: businessState, detail: businessDetail },
+      ops: { state: businessState, detail: businessDetail },
+      social_media: {
+        state: businessState,
+        detail:
+          businessDetail +
+          " Social drafting is reasoning-only; publishing remains a separate approved tool.",
+      },
+      engineering: {
+        state: "NOT_CONFIGURED",
+        detail:
+          "No separate Engineering specialist contract is registered yet. Developer/Codex remains a distinct node.",
+      },
+      design: {
+        state:
+          reasoningReady ||
+          toolState("design.image.generate") === "READY" ||
+          toolState("design.image.edit") === "READY"
+            ? "READY"
+            : "NOT_CONFIGURED",
+        detail:
+          "Design brief reasoning=" +
+          (reasoningReady ? "READY" : "OFFLINE") +
+          "; generate=" +
+          toolState("design.image.generate") +
+          "; edit=" +
+          toolState("design.image.edit") +
+          ".",
+      },
+      developer: {
+        state: codex.available
+          ? "READY"
+          : codex.enabled
+            ? "OFFLINE"
+            : "NOT_CONFIGURED",
+        detail: codex.detail,
+      },
+      analytics: { state: businessState, detail: businessDetail },
+      crm: {
+        state: toolState("crm.search"),
+        detail: integrationDetail("crm.search", "CRM search"),
+      },
+      calendar: {
+        state: toolState("calendar.list"),
+        detail: integrationDetail("calendar.list", "Calendar read"),
+      },
+      email: {
+        state: toolState("email.search"),
+        detail: integrationDetail("email.search", "Email search"),
+      },
+      drive: {
+        state:
+          toolState("project.file.read") === "READY"
+            ? "READY"
+            : toolState("drive.search"),
+        detail:
+          "Local registered-file read=" +
+          toolState("project.file.read") +
+          "; cloud Drive search=" +
+          toolState("drive.search") +
+          "; upload=" +
+          toolState("drive.upload") +
+          ".",
+      },
+    };
+
     if (hermes.available) {
       return {
         ready: true,
@@ -1890,6 +2018,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         detail:
           "ASTRA Brain is connected to Hermes. Ollama is the local fallback; Codex is available for engineering when configured.",
         permissions: policy,
+        capabilities,
         features,
       };
     }
@@ -1904,6 +2033,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         fallback: "routing_only",
         detail: `${hermes.detail} ASTRA is using local Ollama model ${ollama.model}.`,
         permissions: policy,
+        capabilities,
         features,
       };
     }
@@ -1917,6 +2047,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       fallback: "routing_only",
       detail: `${hermes.detail} ${ollama.detail} ASTRA is using routing-only fallback. Engineering requests can still use Codex when the local CLI is available.`,
       permissions: policy,
+      capabilities,
       features,
     };
   }

@@ -10,7 +10,7 @@
  * orb's tap cycle drives the whole web (standby → processing → speaking).
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ApexHeroOrb, { type OrbState } from "./ApexHeroOrb";
 import ReasoningWebJs from "./ReasoningWeb";
 import ShaderBackgroundJs from "./ShaderBackground";
@@ -18,10 +18,14 @@ import OrbStatusBar from "./OrbStatusBar";
 import { useAstraRuntime } from "./AstraRuntime";
 import {
   ASTRA_CAPABILITY_NODES,
-  ASTRA_REASONING_ROSTER,
   capabilityStateLabel,
+  type AstraCapabilityNodeKey,
   type AstraCapabilityState,
 } from "@/lib/agent/capabilities";
+import {
+  capabilityStateIsLive,
+  deriveCapabilityRuntimeMap,
+} from "@/lib/agent/capability-runtime";
 
 export type NodeSel = { name: string; key: string; color: string };
 
@@ -29,7 +33,17 @@ export type NodeSel = { name: string; key: string; color: string };
 const ReasoningWeb = ReasoningWebJs as unknown as React.ComponentType<{
   state?: string; trace?: unknown; mode?: string; coreless?: boolean;
   onSelect?: (n: NodeSel) => void; light?: boolean;
-  roster?: ReadonlyArray<readonly [string, string, string, number, number, boolean, number, number]>;
+  roster?: ReadonlyArray<readonly [
+    string,
+    string,
+    string,
+    number,
+    number,
+    boolean,
+    number,
+    number,
+    AstraCapabilityState,
+  ]>;
 }>;
 const ShaderBackground = ShaderBackgroundJs as unknown as React.ComponentType<{
   opacity?: number; voiceActive?: boolean; gold?: boolean;
@@ -243,6 +257,43 @@ export default function ApexWorld() {
   // orb tap cycle → the web's activity level (same states the app streams)
   const webState = orbState === "thinking" ? "processing" : orbState === "speaking" ? "speaking" : "standby";
 
+  const capabilityRuntime = useMemo(
+    () =>
+      deriveCapabilityRuntimeMap(
+        runtime.brainStatus,
+        runtime.brainEvents,
+      ),
+    [runtime.brainEvents, runtime.brainStatus],
+  );
+
+  const liveReasoningRoster = useMemo(
+    () =>
+      ASTRA_CAPABILITY_NODES.map((node) => {
+        const live = capabilityRuntime[node.key];
+        return [
+          node.key,
+          node.label,
+          node.layer,
+          node.visual.x,
+          node.visual.y,
+          capabilityStateIsLive(live.state),
+          node.visual.bend,
+          node.visual.radius,
+          live.state,
+        ] as const;
+      }),
+    [capabilityRuntime],
+  );
+
+  const currentPlan = runtime.lastResponse?.brain.plan;
+  const currentInput = runtime.lastResponse?.brain.context?.input;
+  const completedPlanSteps =
+    currentPlan?.steps.filter((step) => step.status === "completed").length ?? 0;
+  const approvalRequest = runtime.lastResponse?.approvalRequest;
+  const selectedRuntime = selected
+    ? capabilityRuntime[selected.key as AstraCapabilityNodeKey]
+    : undefined;
+
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", userSelect: "none" }}>
       {/* backdrop - the app's EXACT stack (Chat.jsx dark mode): base radial page
@@ -278,7 +329,7 @@ export default function ApexWorld() {
           through the equivalent list of real buttons below. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
         <ReasoningWeb
-          roster={ASTRA_REASONING_ROSTER}
+          roster={liveReasoningRoster}
           state={webState}
           trace={runtime.brainTrace}
           mode="full"
@@ -293,7 +344,9 @@ export default function ApexWorld() {
           {ROSTER.map((a) => (
             <li key={a.key}>
               <button type="button" onClick={() => openAgent({ key: a.key, name: a.name, color: a.color })}>
-                {a.name} - {INFO[a.key]?.role ?? "Specialist"}
+                {a.name} - {capabilityStateLabel(
+                  capabilityRuntime[a.key as AstraCapabilityNodeKey].state,
+                )} - {INFO[a.key]?.role ?? "Specialist"}
               </button>
             </li>
           ))}
@@ -414,16 +467,117 @@ export default function ApexWorld() {
                       : "rgba(215,244,250,.28)",
                 }}
               >
-                {label}:{feature.available ? "READY" : feature.enabled ? "WAIT" : "OFF"}
+                {label}:{feature.state ?? (feature.available ? "READY" : feature.enabled ? "WAIT" : "OFF")}
               </span>
             ))}
           </div>
         )}
+
+        {currentInput && (
+          <div
+            style={{
+              marginBottom: 8,
+              padding: "6px 7px",
+              border: "1px solid rgba(99,234,255,.10)",
+              borderRadius: 7,
+              background: "rgba(99,234,255,.025)",
+              color: "rgba(215,244,250,.48)",
+              fontSize: 7.8,
+              lineHeight: 1.45,
+            }}
+          >
+            INPUT · {currentInput.source.toUpperCase()} · {currentInput.trigger.replace(/_/g, " ").toUpperCase()}
+            <br />
+            MODALITY · {currentInput.modalities.join(" + ").toUpperCase()} · VISUAL PIXELS: NO
+          </div>
+        )}
+
+        {currentPlan && (
+          <div
+            style={{
+              marginBottom: 8,
+              padding: "7px 8px",
+              border: "1px solid rgba(215,162,255,.14)",
+              borderRadius: 8,
+              background: "rgba(215,162,255,.03)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
+              <span style={{ color: "#d7a2ff", letterSpacing: ".12em", fontSize: 8 }}>
+                PLAN
+              </span>
+              <span style={{ color: "rgba(235,252,255,.52)", fontSize: 8 }}>
+                {completedPlanSteps}/{currentPlan.steps.length} · {currentPlan.status.toUpperCase()}
+              </span>
+            </div>
+            <div style={{ display: "grid", gap: 3 }}>
+              {currentPlan.steps.slice(0, 5).map((step) => (
+                <div
+                  key={step.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "7px 1fr auto",
+                    gap: 5,
+                    alignItems: "start",
+                    fontSize: 7.7,
+                    lineHeight: 1.35,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: "50%",
+                      marginTop: 3,
+                      background:
+                        step.status === "completed"
+                          ? "#83ffbc"
+                          : step.status === "running"
+                            ? "#63eaff"
+                            : step.status === "waiting_approval"
+                              ? "#f5b942"
+                              : step.status === "failed"
+                                ? "#ff5f6d"
+                                : step.status === "cancelled"
+                                  ? "#ff9d66"
+                                  : "rgba(215,244,250,.28)",
+                    }}
+                  />
+                  <span style={{ color: "rgba(235,252,255,.62)" }}>{step.title}</span>
+                  <span style={{ color: "rgba(215,244,250,.34)" }}>{step.status.replace(/_/g, " ")}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {approvalRequest && (
+          <div
+            style={{
+              marginBottom: 8,
+              padding: "6px 7px",
+              border: "1px solid rgba(245,185,66,.24)",
+              borderRadius: 7,
+              background: "rgba(245,185,66,.05)",
+              color: "#f5b942",
+              fontSize: 8,
+              lineHeight: 1.45,
+            }}
+          >
+            WAITING APPROVAL · LEVEL {approvalRequest.level}
+            <br />
+            {approvalRequest.title} · {approvalRequest.toolId}
+          </div>
+        )}
+
+        <div style={{ marginBottom: 4, color: "rgba(215,244,250,.34)", fontSize: 7.6, letterSpacing: ".12em" }}>
+          LIVE TIMELINE
+        </div>
         <div style={{ display: "grid", gap: 5 }}>
           {runtime.brainEvents.length === 0 ? (
             <div style={{ color: "rgba(220,244,250,.38)" }}>No brain events yet.</div>
           ) : (
-            runtime.brainEvents.slice(-5).map((event) => (
+            runtime.brainEvents.slice(-8).map((event) => (
               <div
                 key={event.id}
                 style={{
@@ -440,17 +594,21 @@ export default function ApexWorld() {
                     borderRadius: "50%",
                     marginTop: 3,
                     background:
-                      event.type === "agent.blocked" || event.type === "provider.unavailable"
+                      event.type === "agent.blocked" || event.type === "plan.cancelled"
                         ? "#ff9d66"
-                        : event.type === "agent.completed" || event.type === "response.ready"
-                          ? "#83ffbc"
-                          : event.type === "provider.selected" || event.type === "skill.selected"
-                            ? "#d7a2ff"
-                            : event.type === "memory.loaded"
-                              ? "#6fffd4"
-                              : event.type === "policy.applied"
-                                ? "#9aaeb8"
-                                : "#63eaff",
+                        : event.type === "tool.failed" || event.type === "plan.step.failed"
+                          ? "#ff5f6d"
+                          : event.type === "approval.requested"
+                            ? "#f5b942"
+                            : event.type === "agent.completed" || event.type === "response.ready"
+                              ? "#83ffbc"
+                              : event.type === "provider.selected" || event.type === "skill.selected"
+                                ? "#d7a2ff"
+                                : event.type === "memory.loaded"
+                                  ? "#6fffd4"
+                                  : event.type === "policy.applied"
+                                    ? "#9aaeb8"
+                                    : "#63eaff",
                   }}
                 />
                 <span>
@@ -458,6 +616,9 @@ export default function ApexWorld() {
                     {event.label}
                   </strong>
                   {event.agent ? " · " + event.agent.replace(/_/g, " ") : ""}
+                  <span style={{ display: "block", marginTop: 1, color: "rgba(215,244,250,.31)", fontSize: 7.4 }}>
+                    {event.type}
+                  </span>
                 </span>
               </div>
             ))
@@ -469,28 +630,8 @@ export default function ApexWorld() {
         <AgentOverview
           sel={selected}
           onClose={() => setSelected(null)}
-          statusOverride={
-            selected.key === "researcher"
-              ? runtime.brainStatus?.features?.research?.state
-              : ["finance", "editor", "sales", "marketing", "ops", "analytics", "social_media"].includes(selected.key)
-                ? runtime.brainStatus?.features?.business?.state
-                : selected.key === "design"
-                  ? runtime.brainStatus?.features?.creative?.state
-                  : ["crm", "calendar", "email", "drive"].includes(selected.key)
-                    ? runtime.brainStatus?.features?.integrations?.state
-                    : undefined
-          }
-          statusDetail={
-            selected.key === "researcher"
-              ? runtime.brainStatus?.features?.research?.detail
-              : ["finance", "editor", "sales", "marketing", "ops", "analytics", "social_media"].includes(selected.key)
-                ? runtime.brainStatus?.features?.business?.detail
-                : selected.key === "design"
-                  ? runtime.brainStatus?.features?.creative?.detail
-                  : ["crm", "calendar", "email", "drive"].includes(selected.key)
-                    ? runtime.brainStatus?.features?.integrations?.detail
-                    : undefined
-          }
+          statusOverride={selectedRuntime?.state}
+          statusDetail={selectedRuntime?.detail}
         />
       )}
     </div>

@@ -1786,3 +1786,13 @@ The user must remain able to see and control what ASTRA can hear, see, remember,
 - Camera remains local to gesture tracking; no visual pixels enter Brain context.
 - Image/screen payloads remain NOT_CONFIGURED and are rejected by the request parser.
 - Brain responses expose the input envelope for observability.
+
+
+## Phase 13 checkpoint
+
+- **Phase 13 — Command Center MAX: IMPLEMENTED ON CURRENT FEATURE BRANCH.**
+- All 18 nodes receive a server-side runtime status snapshot.
+- SSE events overlay transient ACTIVE/WAITING_APPROVAL/BLOCKED/ERROR states.
+- ReasoningWeb no longer treats inherited static live flags as operational truth.
+- The Brain panel shows real input provenance, plan steps, approval state, and timeline.
+- Engineering remains NOT_CONFIGURED until its own capability contract exists.

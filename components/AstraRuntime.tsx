@@ -364,6 +364,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     requestControllerRef.current = controller;
 
     setMicError(null);
+    setLastResponse(null);
     setOrbState("thinking");
     setAvatarState("thinking");
     setSpeechLevel(0);
