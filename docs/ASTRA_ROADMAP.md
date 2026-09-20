@@ -772,3 +772,19 @@ Implemented on `astra/phase14b-automation-store`:
 - regression tests cover empty store, round-trip persistence, malformed data, duplicate IDs, Level 4 and disabled state.
 
 Phase 14 still does **not** execute background tasks. Next is Phase 14C: bounded scheduler worker/queue, global STOP integration, real runtime telemetry and per-run approval binding.
+---
+
+## Phase 14C1 implementation checkpoint — bounded queue planning
+
+Implemented on `astra/phase14c-automation-queue-contracts`:
+
+- pure queue planner over validated automation definitions;
+- unattended runnable work capped at four due jobs per tick;
+- Level 2/3 occurrences remain separated as `waitingApproval`;
+- queue planning does not accept or inherit approval tokens;
+- older due occurrences are ordered before newer ones;
+- future wake time is derived from the earliest non-due schedule;
+- lifecycle event contracts are defined without emitting fake runtime activity;
+- regression tests cover queue separation, ordering and bounds.
+
+This still does **not** execute scheduled jobs. The next slice is Phase 14C2: cancellable runner with injected Brain/Planner execution, durable occurrence claiming, real lifecycle emission and global STOP propagation.
