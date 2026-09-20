@@ -14,6 +14,7 @@ export type AstraToolCategory =
   | "analytics"
   | "database"
   | "design"
+  | "automation"
   | "mcp";
 
 export type AstraToolAvailability =
