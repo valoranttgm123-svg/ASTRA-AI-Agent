@@ -8,12 +8,13 @@ Before changing any code, read these files in this exact order:
 
 1. `docs/CODEX_NEXT_MISSION.md` — **current executable mission and task order**.
 2. `docs/CODEX_HANDOFF.md` — current implementation state, verified baseline and next task.
-3. `docs/SECURITY_VALIDATION.md` — Phase 15 hardening matrix.
-4. `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done.
-5. `docs/ASTRA_ROADMAP.md` — milestone history and current phase sequence.
-6. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
-7. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
-8. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+3. `docs/CODEX_PROGRESS_TRACKER.md` — persistent completion checklist; update after every merged slice.
+4. `docs/SECURITY_VALIDATION.md` — Phase 15 hardening matrix.
+5. `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done.
+6. `docs/ASTRA_ROADMAP.md` — milestone history and current phase sequence.
+7. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
+8. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
+9. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
 
 Read these only when the active task needs their historical/detail context:
 
