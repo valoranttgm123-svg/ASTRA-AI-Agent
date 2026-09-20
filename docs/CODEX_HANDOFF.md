@@ -1194,3 +1194,31 @@ Next exact task:
 **Phase 14E3 — service telemetry + global STOP integration + final Phase 14 verification.**
 
 Stream real service lifecycle events to the existing `AstraRuntime`/Command Center when the UI is connected, make global STOP abort both browser-streamed work and the server service tick, display truthful service state in the Automation panel, then run the full CI gate and document target-PC activation steps/results.
+## Handoff update — Phase 14E3 final Automation integration
+
+Implemented:
+
+- `app/api/automation/service/stream/route.ts`;
+- background service SSE status/lifecycle;
+- shared Runtime ingestion into `brainEvents` / `brainTrace`;
+- background Ops telemetry without foreground-agent hijack;
+- global browser + server-side Automation STOP;
+- truthful background service state and controls in the Automation panel;
+- `tests/automation-e2e.test.ts`;
+- `scripts/windows/validate-automation.ps1`;
+- `docs/AUTOMATION_VALIDATION.md`.
+
+Phase 14 implementation stop condition:
+
+1. branch CI passes build/tests/typecheck/lint/audit;
+2. merge to `main`;
+3. target PC explicitly opts in only if desired;
+4. run `scripts/windows/validate-automation.ps1`;
+5. optionally run `-RunSafeTick` for one real Level 0/1 validation;
+6. verify UI/STOP and due Level-2/3 approval behavior.
+
+Do not call target-PC validation complete unless those local commands were actually run. If CI is green but local activation has not occurred, report:
+
+`IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
+
+After the target-PC validation passes, Phase 14 is complete and the next roadmap task is **Phase 15 — Security/failure hardening**.
