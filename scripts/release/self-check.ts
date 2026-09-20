@@ -8,6 +8,7 @@ import { normalizeLoopbackBase } from "../../lib/performance/loopback";
 import {
   automationServiceReadiness,
   automationStoreReadiness,
+  classifyWindowsStartupTasks,
   extractBrainReadiness,
   type ReadinessCheck,
 } from "../../lib/release/readiness";
@@ -232,31 +233,7 @@ function windowsTaskCheck(): ReadinessCheck {
       ]),
     );
 
-    const missing = ["ASTRA-Agent", "ASTRA-Ollama"].filter(
-      (name) => states[name] === undefined || states[name] === "MISSING",
-    );
-    const disabled = ["ASTRA-Agent", "ASTRA-Ollama"].filter(
-      (name) =>
-        (states[name] ?? "").toLowerCase() === "disabled",
-    );
-
-    return {
-      state:
-        missing.length > 0
-          ? "NOT_CONFIGURED"
-          : disabled.length > 0
-            ? "OFFLINE"
-            : "READY",
-      detail:
-        missing.length > 0
-          ? "One or more ASTRA startup tasks are not installed."
-          : disabled.length > 0
-            ? "One or more ASTRA startup tasks are disabled."
-            : "ASTRA startup scheduled tasks are installed.",
-      data: {
-        tasks: states,
-      },
-    };
+    return classifyWindowsStartupTasks(states);
   } catch (error) {
     return {
       state: "ERROR",
