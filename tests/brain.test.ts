@@ -495,3 +495,15 @@ test("Project Registry normalization rejects duplicate IDs and bounds metadata",
   assert.equal(projects.length, 1);
   assert.equal(projects[0].id, "one");
 });
+
+
+test("Brain exposes truthful registered project selection and event", async () => {
+  const events: AstraBrainEvent[] = [];
+  const result = await astraBrain.chat("lanjutkan ALURKA", {
+    provider: "ollama",
+    onEvent: (event) => events.push(event),
+  });
+  assert.equal(result.brain.context?.project?.id, "alurka");
+  assert.equal(result.brain.context?.project?.name, "ALURKA");
+  assert.ok(events.some((event) => event.type === "project.selected"));
+});
