@@ -1746,3 +1746,13 @@ After Phase 30, ASTRA should practically behave as an always-available personal 
 - remains permission-bound.
 
 The user must remain able to see and control what ASTRA can hear, see, remember, monitor and execute.
+
+
+## Phase 9 checkpoint
+
+- **Phase 9 — Communication/cloud-file integration contracts: IMPLEMENTED ON CURRENT FEATURE BRANCH.**
+- CRM/Calendar/Email/Drive use a provider-neutral transport.
+- Read capabilities remain Level 1.
+- Account/cloud writes remain Level 3 and use the existing scoped approval path.
+- Default state remains `NOT_CONFIGURED` until a real authenticated provider reports exact capability readiness.
+- Provider success is accepted only when verification is explicit.
