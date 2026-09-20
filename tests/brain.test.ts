@@ -4400,3 +4400,130 @@ test("Phase 14 Brain status reports automation OFF truthfully by default", async
     /OFF by default/i,
   );
 });
+
+
+test("Phase 14 automation tools are truthful and local mutations stay Level 2", async () => {
+  delete process.env.ASTRA_AUTOMATION_ENABLED;
+  let runtime = await createToolRuntime();
+
+  assert.equal(
+    runtime.get("automation.list")?.availability,
+    "READY",
+  );
+  assert.equal(
+    runtime.get("automation.create")?.availability,
+    "NOT_CONFIGURED",
+  );
+
+  process.env.ASTRA_AUTOMATION_ENABLED = "true";
+  runtime = await createToolRuntime();
+  assert.equal(
+    runtime.get("automation.create")?.availability,
+    "READY",
+  );
+
+  const input = {
+    title: "Tool-created status",
+    prompt: "cek status ASTRA",
+    schedule: {
+      kind: "once",
+      at: "2026-09-21T10:00:00Z",
+    },
+  };
+
+  const low = await runtime.execute(
+    "automation.create",
+    input,
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(low.status, "blocked");
+
+  const policyBlocked = await runtime.execute(
+    "automation.create",
+    input,
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(policyBlocked.status, "blocked");
+
+  const created = await runtime.execute(
+    "automation.create",
+    input,
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(created.status, "completed");
+  assert.equal(created.verified, true);
+
+  const listed = await runtime.execute(
+    "automation.list",
+    {},
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(listed.status, "completed");
+  assert.equal(listed.verified, true);
+});
+
+test("Phase 14 planner recognizes scheduling intent and enforces automation permission floors", () => {
+  assert.equal(
+    shouldGeneratePlan("jadwalkan cek status ASTRA setiap 60 menit"),
+    true,
+  );
+  assert.equal(
+    shouldGeneratePlan("reminder cek project besok"),
+    true,
+  );
+
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "list",
+          title: "List automation",
+          kind: "tool",
+          agent: "chief_of_staff",
+          permissionLevel: 0,
+          toolId: "automation.list",
+        },
+        {
+          id: "create",
+          title: "Create automation",
+          kind: "tool",
+          agent: "chief_of_staff",
+          permissionLevel: 0,
+          toolId: "automation.create",
+          dependsOn: ["list"],
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].permissionLevel, 1);
+  assert.equal(steps[1].permissionLevel, 2);
+});
