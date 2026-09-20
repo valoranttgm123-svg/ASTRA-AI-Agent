@@ -17,7 +17,6 @@ import ShaderBackgroundJs from "./ShaderBackground";
 import OrbStatusBar from "./OrbStatusBar";
 import { useAstraRuntime } from "./AstraRuntime";
 import {
-  ASTRA_CAPABILITY_MAP,
   ASTRA_CAPABILITY_NODES,
   ASTRA_REASONING_ROSTER,
   capabilityStateLabel,
