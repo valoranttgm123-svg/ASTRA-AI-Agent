@@ -18,6 +18,9 @@ import type {
   AstraAutomationOccurrenceRequest,
   AstraAutomationOccurrenceResult,
 } from "@/lib/automation/approval";
+import type {
+  AstraAutomationServiceStatus,
+} from "@/lib/automation/service";
 
 type SpeechRecognitionAlternativeLike = {
   transcript: string;
@@ -82,6 +85,8 @@ type AstraRuntimeValue = {
   brainTrace: ReasoningTrace | null;
   brainStreaming: boolean;
   automationStreaming: boolean;
+  automationServiceStatus: AstraAutomationServiceStatus | null;
+  refreshAutomationServiceStatus: () => Promise<AstraAutomationServiceStatus | null>;
   runAutomationOccurrence: (
     request: AstraAutomationOccurrenceRequest,
   ) => Promise<AstraAutomationOccurrenceResult>;
@@ -195,6 +200,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [brainTrace, setBrainTrace] = useState<ReasoningTrace | null>(null);
   const [brainStreaming, setBrainStreaming] = useState(false);
   const [automationStreaming, setAutomationStreaming] = useState(false);
+  const [automationServiceStatus, setAutomationServiceStatus] =
+    useState<AstraAutomationServiceStatus | null>(null);
 
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -353,6 +360,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const appendRuntimeBrainEvent = useCallback((
     event: AstraBrainEvent,
     expectedRequestSequence?: number,
+    updateActiveAgent = true,
   ) => {
     if (
       expectedRequestSequence !== undefined &&
@@ -370,7 +378,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       setBrainProvider(event.provider);
     }
 
-    if (event.agent) {
+    if (updateActiveAgent && event.agent) {
       setActiveAgent(
         event.agent
           .split("_")
@@ -389,6 +397,91 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
         }],
       });
     }
+  }, []);
+
+  const refreshAutomationServiceStatus = useCallback(async () => {
+    try {
+      const response = await fetch("/api/automation/service", {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (!response.ok) return null;
+
+      const payload = (await response.json()) as {
+        service?: AstraAutomationServiceStatus;
+      };
+      const status = payload.service ?? null;
+      setAutomationServiceStatus(status);
+      return status;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    let disposed = false;
+    let source: EventSource | null = null;
+
+    void refreshAutomationServiceStatus().then((status) => {
+      if (disposed || !status?.enabled) return;
+
+      source = new EventSource("/api/automation/service/stream");
+
+      source.addEventListener("brain", (event) => {
+        if (disposed) return;
+        try {
+          appendRuntimeBrainEvent(
+            JSON.parse((event as MessageEvent<string>).data) as AstraBrainEvent,
+            undefined,
+            false,
+          );
+        } catch {
+          // Ignore malformed telemetry frames; service status remains truthful.
+        }
+      });
+
+      source.addEventListener("status", (event) => {
+        if (disposed) return;
+        try {
+          setAutomationServiceStatus(
+            JSON.parse(
+              (event as MessageEvent<string>).data,
+            ) as AstraAutomationServiceStatus,
+          );
+        } catch {
+          // Keep the last known service state.
+        }
+      });
+    });
+
+    return () => {
+      disposed = true;
+      source?.close();
+    };
+  }, [appendRuntimeBrainEvent, refreshAutomationServiceStatus]);
+
+  const stopAutomationServiceActive = useCallback(() => {
+    void fetch("/api/automation/service", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-astra-client": "1",
+      },
+      body: JSON.stringify({ action: "stop-active" }),
+    })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const payload = (await response.json()) as {
+          service?: AstraAutomationServiceStatus;
+        };
+        if (payload.service) {
+          setAutomationServiceStatus(payload.service);
+        }
+      })
+      .catch(() => {
+        // Local STOP remains effective for browser-owned work even if the
+        // service status call itself is unavailable.
+      });
   }, []);
 
   const send = useCallback(async (
@@ -949,6 +1042,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     requestSequenceRef.current += 1;
     requestControllerRef.current?.abort();
     requestControllerRef.current = null;
+    stopAutomationServiceActive();
 
     invalidateRecognition();
     cancelSpeech();
@@ -962,7 +1056,12 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setActiveAgent(null);
     setBrainStreaming(false);
     setAutomationStreaming(false);
-  }, [cancelSpeech, clearResetTimer, invalidateRecognition]);
+  }, [
+    cancelSpeech,
+    clearResetTimer,
+    invalidateRecognition,
+    stopAutomationServiceActive,
+  ]);
 
   const setVoiceEnabled = useCallback((enabled: boolean) => {
     setVoiceEnabledState(enabled);
@@ -991,6 +1090,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainTrace,
       brainStreaming,
       automationStreaming,
+      automationServiceStatus,
+      refreshAutomationServiceStatus,
       runAutomationOccurrence,
       send,
       execute,
@@ -1019,6 +1120,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainTrace,
       brainStreaming,
       automationStreaming,
+      automationServiceStatus,
+      refreshAutomationServiceStatus,
       runAutomationOccurrence,
       send,
       execute,
