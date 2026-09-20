@@ -1,5 +1,6 @@
 import type { AstraAgent } from "@/lib/agent/types";
 import type { AstraBrainPermissionSnapshot } from "./types";
+import { isRecordPayload, isStructuredProviderPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_TIMEOUT_MS = 60000;
@@ -13,11 +14,6 @@ export type CloudStatus = {
   detail: string;
 };
 
-type CloudChatCompletion = {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
   }>;
 };
 
@@ -123,14 +119,36 @@ export async function getCloudStatus(
       }),
     );
 
+    if (!response.ok) {
+      return {
+        enabled: true,
+        available: false,
+        endpoint,
+        model: value.model,
+        detail: `Cloud provider status returned HTTP ${response.status}.`,
+      };
+    }
+
+    const payload = await readBoundedProviderJson(
+      response,
+      "Cloud models",
+    );
+    if (!isStructuredProviderPayload(payload)) {
+      return {
+        enabled: true,
+        available: false,
+        endpoint,
+        model: value.model,
+        detail: "Cloud provider models returned a malformed payload.",
+      };
+    }
+
     return {
       enabled: true,
-      available: response.ok,
+      available: true,
       endpoint,
       model: value.model,
-      detail: response.ok
-        ? "Explicitly opted-in cloud provider is reachable."
-        : `Cloud provider status returned HTTP ${response.status}.`,
+      detail: "Explicitly opted-in cloud provider is reachable with a structured models response.",
     };
   } catch (error) {
     return {
@@ -209,8 +227,26 @@ export async function chatWithCloud({
     throw new Error(`Cloud chat failed (HTTP ${response.status}).`);
   }
 
-  const payload = (await response.json()) as CloudChatCompletion;
-  const message = payload.choices?.[0]?.message?.content?.trim();
+  const payload = await readBoundedProviderJson(
+    response,
+    "Cloud chat",
+  );
+  if (!isRecordPayload(payload)) {
+    throw new Error("Cloud provider returned a malformed chat payload.");
+  }
+
+  const choices = payload.choices;
+  const first =
+    Array.isArray(choices) && choices.length > 0
+      ? choices[0]
+      : undefined;
+  const rawMessage =
+    isRecordPayload(first) ? first.message : undefined;
+  const message =
+    isRecordPayload(rawMessage) &&
+    typeof rawMessage.content === "string"
+      ? rawMessage.content.trim()
+      : "";
   if (!message) throw new Error("Cloud provider returned an empty response.");
 
   return {
