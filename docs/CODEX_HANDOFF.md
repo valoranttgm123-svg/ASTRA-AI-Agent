@@ -1,5 +1,16 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — real Memory lifecycle telemetry checkpoint
+
+This branch adds real retrieval telemetry emitted by the Memory Manager itself:
+- `memory.search.started`
+- `memory.source.queried`
+- `memory.graph.matched`
+- `memory.context.selected`
+- `memory.search.completed`
+
+The events are generated from actual source queries/selections, streamed through Brain SSE during retrieval, and retained in the final Brain trace. Do not replace them with UI-only animation.
+
 ## 2026-09-20 — Sonor workflow graph bridge checkpoint
 
 The user already has a Codex-built Sonor workflow/project graph running locally at `http://127.0.0.1:55127/#graph`.

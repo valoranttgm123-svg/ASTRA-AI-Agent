@@ -1,6 +1,6 @@
 import type { AstraMemoryEntry, AstraMemoryContext } from "./memory";
 import { getMemoryContext } from "./memory";
-import type { AstraMemorySource } from "@/lib/memory/contracts";
+import type { AstraMemoryLifecycleListener, AstraMemorySource } from "@/lib/memory/contracts";
 import { searchMemorySources } from "@/lib/memory/manager";
 import { sonorMemorySource } from "@/lib/memory/sonor";
 
@@ -30,6 +30,7 @@ export async function getUnifiedMemoryContext(
   input: string,
   project?: string,
   signal?: AbortSignal,
+  onEvent?: AstraMemoryLifecycleListener,
 ): Promise<AstraMemoryContext> {
   const local = await getMemoryContext(input);
 
@@ -59,6 +60,7 @@ export async function getUnifiedMemoryContext(
       signal,
     },
     [localSource, sonorMemorySource],
+    onEvent,
   );
 
   const records = aggregate.records;

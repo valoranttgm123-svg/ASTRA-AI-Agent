@@ -806,3 +806,78 @@ test("Brain context can consume Sonor/Graphify through the unified memory manage
   assert.ok(result.brain.context?.memorySources?.includes("graphify"));
   assert.equal(result.state, "completed");
 });
+
+
+test("memory manager emits lifecycle from actual source queries and selection", async () => {
+  const lifecycle: string[] = [];
+  const graphSource: AstraMemorySource = {
+    id: "telemetry-graph",
+    type: "graphify",
+    async search() {
+      return {
+        source: "telemetry-graph",
+        sourceType: "graphify",
+        available: true,
+        detail: "fixture graph ready",
+        records: [
+          {
+            id: "telemetry-record",
+            content: "ASTRA graph telemetry context",
+            relevance: 0.9,
+            confidence: 0.9,
+            provenance: {
+              source: "telemetry-graph",
+              sourceType: "graphify",
+              project: "ASTRA",
+              privacy: "project_local",
+              reference: "telemetry:graph:1",
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const result = await searchMemorySources(
+    {
+      input: "ASTRA telemetry",
+      project: "ASTRA",
+      limit: 3,
+      maxChars: 1000,
+    },
+    [graphSource],
+    (event) => lifecycle.push(event.type),
+  );
+
+  assert.equal(result.records.length, 1);
+  assert.deepEqual(lifecycle, [
+    "search.started",
+    "source.queried",
+    "graph.matched",
+    "context.selected",
+    "search.completed",
+  ]);
+});
+
+test("Brain streams and retains real memory lifecycle telemetry", async () => {
+  const live: AstraBrainEvent[] = [];
+  const result = await astraBrain.chat("ASTRA provider", {
+    provider: "ollama",
+    onEvent: (event) => live.push(event),
+  });
+
+  for (const type of [
+    "memory.search.started",
+    "memory.source.queried",
+    "memory.context.selected",
+    "memory.search.completed",
+  ] as const) {
+    assert.ok(live.some((event) => event.type === type), type);
+    assert.ok(result.brain.events.some((event) => event.type === type), type);
+  }
+
+  const started = live.findIndex((event) => event.type === "memory.search.started");
+  const completed = live.findIndex((event) => event.type === "memory.search.completed");
+  assert.ok(started >= 0);
+  assert.ok(completed > started);
+});

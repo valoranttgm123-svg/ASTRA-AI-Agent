@@ -1,5 +1,6 @@
 import {
   clampMemoryScore,
+  type AstraMemoryLifecycleListener,
   type AstraMemoryQuery,
   type AstraMemoryRecord,
   type AstraMemorySource,
@@ -71,13 +72,42 @@ async function querySource(
 export async function searchMemorySources(
   query: AstraMemoryQuery,
   sources: readonly AstraMemorySource[],
+  onEvent?: AstraMemoryLifecycleListener,
 ): Promise<AstraMemoryAggregate> {
   checkCancelled(query.signal);
+  onEvent?.({
+    type: "search.started",
+    sourceCount: sources.length,
+    project: query.project,
+  });
 
   const boundedLimit = Math.max(1, Math.min(20, Math.floor(query.limit || 1)));
   const boundedChars = Math.max(1, Math.min(16000, Math.floor(query.maxChars || 1)));
   const results = await Promise.all(
-    sources.map((source) => querySource(source, query)),
+    sources.map(async (source) => {
+      const result = await querySource(source, query);
+      onEvent?.({
+        type: "source.queried",
+        source: result.source,
+        sourceType: result.sourceType,
+        available: result.available,
+        recordCount: result.records.length,
+        detail: result.detail,
+      });
+      const graphMatches = result.records.filter(
+        (record) =>
+          record.provenance.sourceType === "graphify" ||
+          record.provenance.sourceType === "sonor",
+      ).length;
+      if (graphMatches > 0) {
+        onEvent?.({
+          type: "graph.matched",
+          source: result.source,
+          recordCount: graphMatches,
+        });
+      }
+      return result;
+    }),
   );
 
   checkCancelled(query.signal);
@@ -122,6 +152,18 @@ export async function searchMemorySources(
 
   const availableSources = results.filter((result) => result.available).length;
   const failedSources = results.length - availableSources;
+
+  onEvent?.({
+    type: "context.selected",
+    recordCount: selected.length,
+    sourceTypes: [...new Set(selected.map((record) => record.provenance.sourceType))],
+  });
+  onEvent?.({
+    type: "search.completed",
+    selectedCount: selected.length,
+    availableSources,
+    unavailableSources: failedSources,
+  });
 
   return {
     records: selected,
