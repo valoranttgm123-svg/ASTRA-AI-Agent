@@ -46,6 +46,12 @@ import type { AstraMcpTransport } from "../lib/tools/mcp";
 import type { AstraGitHubTransport } from "../lib/tools/github";
 import { parsePlannerDraft, shouldGeneratePlan } from "../lib/planner/generator";
 import { executeBoundedPlan } from "../lib/planner/executor";
+import {
+  assessPlanApproval,
+  consumeLevel3Approval,
+  createLevel3Approval,
+} from "../lib/brain/approvals";
+import type { AstraToolDefinition } from "../lib/tools/contracts";
 
 let root = "";
 let alurkaWorkspace = "";
@@ -2046,4 +2052,295 @@ test("unavailable GitHub transport remains NOT_CONFIGURED and exposes no executa
 
   assert.equal(result.status, "blocked");
   assert.equal(calls, 0);
+});
+
+
+test("scoped Level-3 approval is single-use, input-bound, and exposes only safe scope", () => {
+  const plan = createBoundedPlan(
+    "Push the approved ALURKA branch",
+    [
+      {
+        id: "push",
+        title: "Push approved branch",
+        kind: "tool",
+        agent: "github",
+        permissionLevel: 3,
+        toolId: "github.push",
+        toolInput: {
+          projectId: "alurka",
+          branch: "astra/approval-fixture",
+          remote: "origin",
+          body: "SECRET BODY MUST NOT ENTER APPROVAL SCOPE",
+          content: "SECRET CONTENT MUST NOT ENTER APPROVAL SCOPE",
+        },
+      },
+    ],
+    {
+      id: "plan-approval-fixture",
+      projectId: "alurka",
+      createdAt: "2026-09-20T10:30:00.000Z",
+    },
+  );
+
+  const request = createLevel3Approval({
+    input: "push ALURKA branch",
+    plan,
+    step: plan.steps[0],
+  });
+
+  assert.equal(request.level, 3);
+  assert.equal(request.toolId, "github.push");
+  assert.equal(request.projectId, "alurka");
+  assert.deepEqual(request.scope, {
+    projectId: "alurka",
+    branch: "astra/approval-fixture",
+    remote: "origin",
+  });
+  assert.doesNotMatch(JSON.stringify(request.scope), /SECRET/);
+
+  assert.equal(
+    consumeLevel3Approval({
+      token: request.token,
+      input: "different request",
+    }),
+    null,
+  );
+
+  // A failed input-binding check also consumes the token.
+  assert.equal(
+    consumeLevel3Approval({
+      token: request.token,
+      input: "push ALURKA branch",
+    }),
+    null,
+  );
+
+  const second = createLevel3Approval({
+    input: "push ALURKA branch",
+    plan,
+    step: plan.steps[0],
+  });
+  const grant = consumeLevel3Approval({
+    token: second.token,
+    input: "push ALURKA branch",
+  });
+
+  assert.ok(grant);
+  assert.equal(grant.level, 3);
+  assert.equal(grant.request.stepId, "push");
+  assert.equal(grant.plan.id, "plan-approval-fixture");
+  assert.equal(
+    consumeLevel3Approval({
+      token: second.token,
+      input: "push ALURKA branch",
+    }),
+    null,
+  );
+});
+
+test("approval preflight requires READY external tools and rejects Level-4 before execution", () => {
+  const githubReady: AstraToolDefinition = {
+    id: "github.push",
+    name: "GitHub Push",
+    category: "github",
+    description: "fixture push",
+    permissionLevel: 3,
+    sideEffect: "external_write",
+    timeoutMs: 5000,
+    supportsCancellation: true,
+    provider: "fixture-github",
+    availability: "READY",
+  };
+
+  const plan = createBoundedPlan(
+    "Push fixture branch",
+    [
+      {
+        id: "inspect",
+        title: "Inspect",
+        kind: "reason",
+        permissionLevel: 0,
+      },
+      {
+        id: "push",
+        title: "Push",
+        kind: "tool",
+        agent: "github",
+        permissionLevel: 3,
+        toolId: "github.push",
+        toolInput: {
+          projectId: "alurka",
+          branch: "astra/approval-fixture",
+        },
+        dependsOn: ["inspect"],
+      },
+    ],
+    { projectId: "alurka" },
+  );
+
+  const challenge = assessPlanApproval({
+    plan,
+    approvedPermissionLevel: 2,
+    tools: [githubReady],
+    allowExternalActions: true,
+  });
+  assert.equal(challenge.kind, "level3");
+  if (challenge.kind === "level3") {
+    assert.equal(challenge.step.id, "push");
+  }
+
+  const policyBlocked = assessPlanApproval({
+    plan,
+    approvedPermissionLevel: 2,
+    tools: [githubReady],
+    allowExternalActions: false,
+  });
+  assert.equal(policyBlocked.kind, "blocked");
+
+  const unavailable = assessPlanApproval({
+    plan,
+    approvedPermissionLevel: 2,
+    tools: [{ ...githubReady, provider: undefined, availability: "NOT_CONFIGURED" }],
+    allowExternalActions: true,
+  });
+  assert.equal(unavailable.kind, "blocked");
+
+  const highImpactPlan = createBoundedPlan(
+    "High impact fixture",
+    [
+      ...plan.steps.map((step) => ({
+        id: step.id,
+        title: step.title,
+        kind: step.kind,
+        agent: step.agent,
+        permissionLevel: step.permissionLevel,
+        toolId: step.toolId,
+        toolInput: step.toolInput,
+        dependsOn: step.dependsOn,
+      })),
+      {
+        id: "danger",
+        title: "High impact action",
+        kind: "tool",
+        agent: "trading",
+        permissionLevel: 4,
+        toolId: "trading.live.execute",
+        dependsOn: ["push"],
+      },
+    ],
+    { projectId: "alurka" },
+  );
+
+  const highImpact = assessPlanApproval({
+    plan: highImpactPlan,
+    approvedPermissionLevel: 2,
+    tools: [githubReady],
+    allowExternalActions: true,
+  });
+  assert.equal(highImpact.kind, "level4");
+});
+
+test("one scoped Level-3 approval cannot authorize a second Level-3 step", async () => {
+  const plan = createBoundedPlan(
+    "Push then open PR",
+    [
+      {
+        id: "local",
+        title: "Local preparation",
+        kind: "reason",
+        permissionLevel: 0,
+      },
+      {
+        id: "push",
+        title: "Push branch",
+        kind: "tool",
+        agent: "github",
+        permissionLevel: 3,
+        toolId: "github.push",
+        dependsOn: ["local"],
+      },
+      {
+        id: "pr",
+        title: "Open pull request",
+        kind: "tool",
+        agent: "github",
+        permissionLevel: 3,
+        toolId: "github.pull-request.open",
+        dependsOn: ["push"],
+      },
+    ],
+  );
+
+  const calls: string[] = [];
+  const result = await executeBoundedPlan(plan, {
+    approvedPermissionLevel: 2,
+    approvedStepIds: ["push"],
+    executeStep: async (step) => {
+      calls.push(step.id);
+      return {
+        status: "completed",
+        provider: "fixture",
+        detail: "completed " + step.id,
+      };
+    },
+  });
+
+  assert.deepEqual(calls, ["local", "push"]);
+  assert.equal(result.outcome, "waiting_approval");
+  assert.equal(result.blockedStepId, "pr");
+  assert.equal(result.plan.steps[0].status, "completed");
+  assert.equal(result.plan.steps[1].status, "completed");
+  assert.equal(result.plan.steps[2].status, "waiting_approval");
+});
+
+test("scoped step approval never bypasses Level-4", async () => {
+  const plan = createBoundedPlan("Level-4 fixture", [
+    {
+      id: "danger",
+      title: "High impact action",
+      kind: "tool",
+      agent: "trading",
+      permissionLevel: 4,
+      toolId: "trading.live.execute",
+    },
+  ]);
+
+  let calls = 0;
+  const result = await executeBoundedPlan(plan, {
+    approvedPermissionLevel: 2,
+    approvedStepIds: ["danger"],
+    executeStep: async () => {
+      calls += 1;
+      return {
+        status: "completed",
+        detail: "must never run",
+      };
+    },
+  });
+
+  assert.equal(calls, 0);
+  assert.equal(result.outcome, "waiting_approval");
+  assert.equal(result.blockedStepId, "danger");
+});
+
+test("HTTP parser accepts bounded approval tokens and rejects malformed tokens", () => {
+  const parsed = parseAgentRequest({
+    message: "push approved branch",
+    mode: "execute",
+    approved: true,
+    approvalToken: "12345678-valid-token",
+    provider: "auto",
+  });
+
+  assert.equal(parsed.approvalToken, "12345678-valid-token");
+
+  assert.throws(
+    () =>
+      parseAgentRequest({
+        message: "push approved branch",
+        mode: "execute",
+        approvalToken: "short",
+      }),
+    /Approval token tidak valid/,
+  );
 });
