@@ -791,3 +791,18 @@ test("Sonor source plugs into the existing multi-source memory manager without s
   assert.equal(result.sources[0].sourceType, "sonor");
   assert.equal(result.sources[0].available, true);
 });
+
+
+test("Brain context can consume Sonor/Graphify through the unified memory manager", async () => {
+  process.env.ASTRA_SONOR_ENABLED = "true";
+  process.env.ASTRA_SONOR_URL = base;
+  process.env.ASTRA_SONOR_SEARCH_PATH = "/sonor/search";
+
+  const result = await astraBrain.chat("lanjutkan ALURKA workflow", {
+    provider: "ollama",
+  });
+
+  assert.equal(result.brain.context?.project?.id, "alurka");
+  assert.ok(result.brain.context?.memorySources?.includes("graphify"));
+  assert.equal(result.state, "completed");
+});
