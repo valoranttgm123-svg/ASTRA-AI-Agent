@@ -1,4 +1,7 @@
-import type { AstraProviderChoice } from "@/lib/agent/types";
+import type {
+  AstraInputContext,
+  AstraProviderChoice,
+} from "@/lib/agent/types";
 
 export type AstraAutomationSchedule =
   | {
@@ -98,6 +101,7 @@ export interface AstraAutomationRunner {
     prompt: string,
     options: {
       provider: AstraProviderChoice;
+      inputContext: AstraInputContext;
       signal?: AbortSignal;
     },
   ): Promise<AstraAutomationRunResult>;
@@ -108,6 +112,7 @@ export interface AstraAutomationRunner {
     },
     options: {
       provider: AstraProviderChoice;
+      inputContext: AstraInputContext;
       signal?: AbortSignal;
     },
   ): Promise<AstraAutomationRunResult>;
