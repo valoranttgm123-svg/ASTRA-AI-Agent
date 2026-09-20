@@ -637,6 +637,18 @@ Do not merge the old branch wholesale into current main.
 
 ---
 
+# Pre-created execution templates
+
+These files already exist on this branch and should be filled with measured/verified results rather than replaced with new formats:
+
+- `docs/PERFORMANCE_BASELINE.md` — Phase 16 measurements;
+- `docs/FULL_SYSTEM_VALIDATION.md` — Phase 17 scenarios;
+- `docs/CORE_RELEASE_CHECKLIST.md` — Phase 18–20 gates.
+
+Keep them factual. Do not mark PASS/READY from code inspection alone.
+
+---
+
 # Codex execution discipline
 
 For every subphase:
