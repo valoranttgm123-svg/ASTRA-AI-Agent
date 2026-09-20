@@ -363,7 +363,7 @@ export async function claimAutomationOccurrence({
     throw new Error("Invalid automation claim time.");
   }
 
-  return mutateAutomationStore((automations) => {
+  return mutateAutomationStore<AstraAutomationClaimResult>((automations) => {
     const index = automations.findIndex(
       (automation) =>
         automation.id.toLowerCase() === automationId.trim().toLowerCase(),
