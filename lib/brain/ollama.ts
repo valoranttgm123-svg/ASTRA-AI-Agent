@@ -17,8 +17,6 @@ export type OllamaStatus = {
   detail: string;
 };
 
-  done?: boolean;
-};
 
 function envFlag(name: string, fallback: boolean) {
   const value = process.env[name]?.trim().toLowerCase();
