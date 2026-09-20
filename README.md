@@ -4,13 +4,27 @@ ASTRA is a personal multi-agent AI project built on top of the open-source **APE
 
 ## Current status
 
-**ASTRA MAX Phase 14 Automation is implementation-complete and CI-verified.** The repository now includes the Brain/Planner/Tool Runtime foundations, Memory and Project Registry foundations, executable tools, provider routing, real Command Center telemetry, multimodal interaction, approval-gated scheduled workflows, a default-OFF local Automation service, global STOP, and end-to-end Automation safety coverage.
+ASTRA MAX repository work is CI-verified through:
 
-Current truthful release status:
+- Phase 15 security/failure hardening;
+- Phase 16A performance measurement instrumentation;
+- Phase 17A safe full-system preflight instrumentation;
+- pre-RC repository cleanup;
+- Phase 19A read-only readiness self-check tooling.
 
-`PHASE 14 IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
+Windows update/reinstall tooling is being completed in Phase 19B.
 
-The next implementation phase is **Phase 15 — Security/failure hardening**. The exact Codex execution order through the core release and JARVIS-Class continuation is maintained in `docs/CODEX_NEXT_MISSION.md`.
+Current truthful release state:
+
+`CORE IMPLEMENTATION ADVANCED / REPOSITORY CI VERIFIED / TARGET-PC RELEASE GATES REMAIN`
+
+Still requiring real target-runtime evidence:
+
+- Phase 14 Automation target-PC approval/STOP validation;
+- MEM-X real Sonor/Graphify/Obsidian validation;
+- Phase 16 target hardware/browser measurements;
+- Phase 17 real scenario execution;
+- Phase 19 target Windows install/update/reinstall verification.
 
 Hermes/Ollama/Codex/integrations are reported from real configuration/runtime state. Optional paid cloud remains disabled by default; unavailable integrations must remain `NOT_CONFIGURED` / unavailable rather than being presented as working.
 
@@ -54,6 +68,21 @@ both loopback services:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\windows\install-local.ps1
 ```
+
+Windows operations:
+
+```powershell
+# Read-only runtime readiness evidence
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\self-check.ps1
+
+# Fast-forward-only update + rebuild + restart + self-check
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\update-local.ps1
+
+# Non-destructive reinstall/repair of startup integration
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\reinstall-local.ps1
+```
+
+See `docs/WINDOWS_RELEASE.md` for the safety model and target-PC verification boundary.
 
 The command console has three explicit provider modes:
 
