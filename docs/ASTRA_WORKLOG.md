@@ -219,6 +219,7 @@ Never mark local/physical verification PASS from repository inspection alone.
 
 ## In-flight checkpoint — Phase 19B
 
+- PR: **#110**;
 - branch: `astra/phase19b-update-reinstall-tooling`;
 - scope: Windows fast-forward-only updater + non-destructive reinstall/repair wrapper;
 - update rejects tracked local changes and branch mismatch;
