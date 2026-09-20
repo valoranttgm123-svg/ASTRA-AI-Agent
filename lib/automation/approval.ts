@@ -347,9 +347,11 @@ export async function executeApprovedAutomationOccurrence({
       (error instanceof Error && error.name === "AbortError");
     const detail = cancelled
       ? "Automation occurrence cancelled by global STOP."
-      : error instanceof Error
-        ? error.message
-        : "Automation occurrence failed.";
+      : safeErrorDetail(
+          error,
+          "Automation occurrence failed.",
+          700,
+        );
 
     emit(
       lifecycle(
