@@ -981,6 +981,14 @@ Test provider outage, MCP outage, malformed outputs, malicious prompts/files, ca
 
 ASTRA must fail safely.
 
+### Phase 15 implementation status
+
+Repository hardening is complete through P15E and P15F is the final regression/report gate. After P15F passes CI and merges, report:
+
+`PHASE 15 REPOSITORY HARDENING COMPLETE / CI VERIFIED / LOCAL RELEASE GATES REMAIN`
+
+Local release gates still include target-PC Automation validation and real Sonor/Graphify/Obsidian MEM-X validation. Do not treat those as complete from repository CI alone.
+
 ## Phase 16 — Performance pass
 
 Measure and improve Humanoid FPS, memory retrieval latency, provider startup, Command Center update cost, browser console, and memory usage.
