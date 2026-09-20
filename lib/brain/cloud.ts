@@ -14,8 +14,6 @@ export type CloudStatus = {
   detail: string;
 };
 
-  }>;
-};
 
 function envFlag(name: string, fallback: boolean) {
   const value = process.env[name]?.trim().toLowerCase();
