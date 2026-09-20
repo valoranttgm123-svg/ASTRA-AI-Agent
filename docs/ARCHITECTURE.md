@@ -665,3 +665,21 @@ validated automation definitions
 ```
 
 Malformed storage fails closed and returns zero definitions. The default store is private local data and remains excluded from Git through the existing `.astra/` boundary. No background scheduler is started by the store module itself.
+## Automation queue planning
+
+Phase 14C1 adds a bounded selection layer between validated storage and the future executor:
+
+```text
+validated definitions
+      ↓
+deterministic due evaluation
+      ↓
+bounded queue plan
+  ├─ Level 0–1 → ready (max 4/tick)
+  ├─ Level 2–3 → waiting approval
+  └─ disabled/future → not queued
+      ↓
+future cancellable runner
+```
+
+The queue planner is intentionally pure and emits no runtime telemetry. Lifecycle event types are contracts only until a real runner performs work.

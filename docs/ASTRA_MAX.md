@@ -1821,3 +1821,8 @@ A second incremental slice adds fail-closed private persistence for validated au
 The default location is `.astra/automations.json`. Invalid or corrupted store data does not partially load: the automation store becomes unavailable with zero runnable definitions. Entry count and file size are bounded, duplicate IDs are rejected, and the existing Phase 14A permission/schedule validator remains authoritative.
 
 This still does not create a background worker or execute scheduled tasks. Runtime execution remains deferred to the next bounded/cancellable Phase 14 slice.
+## Phase 14C1 — bounded queue planning
+
+The automation layer now has a pure, non-executing queue planner. It selects only due Permission Level 0/1 work for unattended readiness, keeps Level 2/3 occurrences in a separate approval queue, bounds unattended runnable work to four jobs per tick, and defines truthful lifecycle event contracts for the future runner.
+
+No lifecycle events are emitted yet because no scheduled task is actually executed in this slice.

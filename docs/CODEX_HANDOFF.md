@@ -1031,3 +1031,19 @@ Next exact task:
 **Phase 14C — bounded scheduler worker + runtime integration.**
 
 The worker must load only validated definitions, execute at most one bounded occurrence per job window, propagate AbortSignal/global STOP, never bypass Planner/Tool Runtime, emit real automation lifecycle events, and pause Level 2/3 occurrences at the existing approval boundary. Do not introduce permanent approval or Level-4 scheduling.
+## Handoff update — Phase 14C1 bounded queue planner
+
+Added:
+
+- `lib/automation/queue.ts`;
+- `tests/automation-queue.test.ts`;
+- bounded unattended ready queue;
+- separate approval queue for Level 2/3;
+- deterministic ordering and next-wake calculation;
+- automation lifecycle event type contracts with no fake emission.
+
+Next exact task:
+
+**Phase 14C2 — real cancellable automation runner.**
+
+The runner must use validated store definitions and the queue planner, claim each occurrence durably before execution to avoid duplicate runs, invoke existing Brain/Planner/Tool Runtime through an injected boundary, propagate global AbortSignal/STOP, emit lifecycle events only around real work, and persist terminal occurrence state. Level 2/3 must resume only after the current occurrence receives valid scoped approval. Level 4 remains unavailable.
