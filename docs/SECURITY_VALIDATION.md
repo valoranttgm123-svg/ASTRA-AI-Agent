@@ -12,7 +12,7 @@
 | Absolute path outside workspace | No path returned/read/written | `tests/security-paths.test.ts` | Not required | PASS — AUTOMATED |
 | Symlink escape from workspace | No path returned/read/written | `tests/security-paths.test.ts` | Platform-specific symlink support | PASS — AUTOMATED |
 | Sensitive file path | Refused | `tests/security-paths.test.ts` | Not required | PASS — AUTOMATED |
-| Retrieved prompt injection | Treated as untrusted evidence; no privilege increase | REQUIRED Phase 15B | Optional live provider test | TODO |
+| Retrieved prompt injection | Treated as untrusted evidence; no privilege increase | `tests/context-safety.test.ts` + independent permission/tool-policy tests | Optional live provider test | PASS — AUTOMATED |
 | Ollama unavailable | Truthful OFFLINE/failure; no fake response | Existing + expand Phase 15C | Target PC outage proof | TODO |
 | Ollama malformed response | Fail safely | REQUIRED Phase 15C | Not required | TODO |
 | Hermes unavailable/malformed | Fail safely; no fake tool success | REQUIRED Phase 15C | Only if Hermes configured | TODO |
