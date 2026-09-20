@@ -157,6 +157,7 @@ Never mark local/physical verification PASS from repository inspection alone.
 - next: **P15E Secret / error / telemetry leakage hardening**.
 ## In-flight checkpoint — Phase 15E
 
+- PR: **#103**;
 - branch: `astra/phase15e-secret-error-redaction`;
 - scope: shared secret/error/status/telemetry redaction boundary;
 - notable finding: multiple provider/tool/Automation/Codex paths still exposed raw `error.message` or stderr before this slice;
