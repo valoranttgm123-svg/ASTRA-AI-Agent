@@ -3,6 +3,7 @@ import type {
   AstraInputContext,
 } from "@/lib/agent/types";
 import type { AstraBrain, AstraBrainChatResult, AstraBrainEvent } from "@/lib/brain/types";
+import { safeErrorDetail } from "@/lib/security/redaction";
 import type { AstraAutomationDefinition } from "./contracts";
 import type { AstraAutomationLifecycleEvent } from "./queue";
 import { getAutomationDueState } from "./scheduler";
@@ -347,9 +348,11 @@ export async function executeApprovedAutomationOccurrence({
       (error instanceof Error && error.name === "AbortError");
     const detail = cancelled
       ? "Automation occurrence cancelled by global STOP."
-      : error instanceof Error
-        ? error.message
-        : "Automation occurrence failed.";
+      : safeErrorDetail(
+          error,
+          "Automation occurrence failed.",
+          700,
+        );
 
     emit(
       lifecycle(

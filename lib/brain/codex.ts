@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import type { AstraAgent } from "@/lib/agent/types";
 import type { AstraBrainPermissionSnapshot } from "./types";
+import { safeErrorDetail, safePublicDetail } from "@/lib/security/redaction";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_TIMEOUT_MS = 180000;
@@ -105,7 +106,14 @@ async function versionProbe(command: string, timeoutMs: number) {
       if (code === 0) {
         resolve(stdout.trim() || stderr.trim() || "Codex CLI");
       } else {
-        reject(new Error(stderr.trim() || `Codex CLI exited with code ${code}.`));
+        reject(
+          new Error(
+            safePublicDetail(
+              stderr.trim(),
+              `Codex CLI exited with code ${code}.`,
+            ),
+          ),
+        );
       }
     });
   });
@@ -146,9 +154,12 @@ export async function getCodexStatus(
       model: config.model || null,
       sandbox: config.sandbox,
       detail:
-        error instanceof Error
-          ? `Codex CLI unavailable: ${error.message}`
-          : "Codex CLI unavailable.",
+        "Codex CLI unavailable: " +
+        safeErrorDetail(
+          error,
+          "unavailable",
+          500,
+        ),
     };
   }
 }
@@ -295,9 +306,24 @@ export async function chatWithCodex({
       if (event.type === "turn.completed") {
         finish();
       } else if (event.type === "turn.failed") {
-        finish(new Error(event.error?.message || "Codex turn failed."));
+        finish(
+          new Error(
+            safePublicDetail(
+              event.error?.message,
+              "Codex turn failed.",
+            ),
+          ),
+        );
       } else if (event.type === "error" && event.message) {
-        stderr += `\n${event.message}`;
+        stderr = (
+          stderr +
+          "\n" +
+          safePublicDetail(
+            event.message,
+            "Codex provider error.",
+            2000,
+          )
+        ).slice(-8000);
       }
     };
 
@@ -323,7 +349,14 @@ export async function chatWithCodex({
     });
 
     child.stderr.on("data", (chunk: Buffer) => {
-      stderr = (stderr + chunk.toString("utf8")).slice(-8000);
+      stderr = (
+        stderr +
+        safePublicDetail(
+          chunk.toString("utf8"),
+          "Codex CLI error.",
+          8000,
+        )
+      ).slice(-8000);
     });
 
     child.on("error", (error) => finish(error));
@@ -335,8 +368,10 @@ export async function chatWithCodex({
       } else {
         finish(
           new Error(
-            stderr.trim() ||
+            safePublicDetail(
+              stderr.trim(),
               `Codex CLI exited with code ${code ?? "unknown"} before completing.`,
+            ),
           ),
         );
       }

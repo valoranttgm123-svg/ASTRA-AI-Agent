@@ -7,6 +7,7 @@ import type {
   AstraToolLifecycleEvent,
 } from "./contracts";
 import { createToolRegistry } from "./registry";
+import { safeErrorDetail, safePublicDetail } from "@/lib/security/redaction";
 
 const MAX_INPUT_CHARS = 16_000;
 const MAX_OUTPUT_CHARS = 64_000;
@@ -171,6 +172,12 @@ function normalizeOutput(
 
   return {
     ...result,
+    detail: safePublicDetail(
+      result.detail,
+      result.status === "completed"
+        ? "Tool execution completed."
+        : "Tool execution failed.",
+    ),
     provider: result.provider || definition.provider,
   };
 }
@@ -304,9 +311,10 @@ export function createExecutableToolRegistry(
         const detail =
           name === "TimeoutError"
             ? "Tool execution timed out."
-            : error instanceof Error
-              ? error.message
-              : "Tool execution failed.";
+            : safeErrorDetail(
+                error,
+                "Tool execution failed.",
+              );
 
         const result = failed(definition, detail);
         emit(options.onEvent, {

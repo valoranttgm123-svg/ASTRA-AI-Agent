@@ -19,7 +19,7 @@
 | Explicit Codex unavailable | No silent Ollama fallback | existing Brain test + `tests/provider-hardening.test.ts` | Target PC Codex status | PASS — AUTOMATED / LOCAL REQUIRED FOR REAL CLI |
 | Codex malformed/failed child | Failed/blocked; child cleaned | `tests/codex-process.test.ts` exercises real spawn/JSONL/non-zero/timeout/STOP cleanup | Optional target PC | PASS — AUTOMATED / LOCAL REAL CLI OPTIONAL |
 | Optional cloud disabled | No cloud call | Existing policy coverage | Not required | PENDING REVIEW |
-| Cloud network/malformed response | Fail safely; no secret leakage | `tests/provider-hardening.test.ts`; leakage review continues P15E | Optional only if configured | PASS — FAILURE HANDLING / P15E REDACTION REMAINS |
+| Cloud network/malformed response | Fail safely; no secret leakage | `tests/provider-hardening.test.ts` + `tests/security-redaction.test.ts` | Optional only if configured | PASS — AUTOMATED |
 | MCP discovery outage | Native runtime remains usable where possible; MCP not READY | `tests/mcp-hardening.test.ts` | Only if MCP configured | PASS — AUTOMATED |
 | MCP malformed descriptor | Reject/skip malformed tool; no crash/fake READY | `tests/mcp-hardening.test.ts` | Not required | PASS — AUTOMATED |
 | MCP tool call failure | Failed + unverified | `tests/mcp-hardening.test.ts` + existing Tool Runtime tests | Optional | PASS — AUTOMATED |
@@ -36,9 +36,9 @@
 | Automation duplicate occurrence | At-most-once claim | Existing Phase 14 tests | Target PC validator | CI VERIFIED |
 | Automation background STOP | Server tick aborted | Existing Phase 14 tests | Target PC validator | CI VERIFIED / LOCAL REQUIRED |
 | Automation Level 2/3 unattended | Never runs unattended | Existing Phase 14 E2E | Target PC validator | CI VERIFIED / LOCAL REQUIRED |
-| Secret in provider error | Redacted/bounded before UI/telemetry | REQUIRED Phase 15E | Not required | TODO |
-| Approval token leakage | Token absent from ordinary timeline/status | REQUIRED Phase 15E | UI inspection optional | TODO |
-| API key/status leakage | Secret never returned | REQUIRED Phase 15E | Not required | TODO |
+| Secret in provider error | Redacted/bounded before UI/telemetry | `tests/security-redaction.test.ts` + `tests/codex-process.test.ts` | Not required | PASS — AUTOMATED |
+| Approval token leakage | Token absent/redacted from ordinary timeline/status; scoped approval payload remains intentional | shared live-event redaction + `tests/security-redaction.test.ts` | UI inspection optional | PASS — AUTOMATED |
+| API key/status leakage | Secret never returned | provider status URL redaction + `tests/security-redaction.test.ts` | Not required | PASS — AUTOMATED |
 | Sonor unavailable | ASTRA degrades to local/project memory | Existing architecture + MEM-X Test E | Real Sonor required | TODO |
 | Wrong-project memory contamination | Filtered/scoped to selected project | Existing manager logic + Phase 17A | Real ALURKA/Sonor validation | TODO |
 

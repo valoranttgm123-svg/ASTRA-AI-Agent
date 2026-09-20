@@ -86,6 +86,10 @@ before(async () => {
       '  console.error("fixture codex child failure");',
       '  process.exit(7);',
       '}',
+      'if (mode === "leak") {',
+      '  console.error("Authorization: Bearer fake_codex_secret_1234567890 api_key=sk-proj-FAKECODEXSECRET1234567890 approvalToken=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee https://example.test/?token=fake-codex-query C:\\\\Users\\\\alice\\\\ASTRA\\\\auth.json");',
+      '  process.exit(9);',
+      '}',
       'if (mode === "hang") {',
       '  setInterval(() => {}, 1000);',
       '} else {',
@@ -153,6 +157,27 @@ test("Phase 15D2 non-zero Codex child exit fails truthfully", async () => {
       policy: readOnlyPolicy,
     }),
     /fixture codex child failure|exited with code 7/i,
+  );
+});
+
+test("Phase 15E Codex stderr is redacted before error exposure", async () => {
+  process.env.ASTRA_FAKE_CODEX_MODE = "leak";
+
+  await assert.rejects(
+    chatWithCodex({
+      input: "inspect fixture",
+      agent: ASTRA_AGENT_MAP.developer,
+      policy: readOnlyPolicy,
+    }),
+    (error: Error) => {
+      assert.doesNotMatch(error.message, /fake_codex_secret/i);
+      assert.doesNotMatch(error.message, /FAKECODEXSECRET/i);
+      assert.doesNotMatch(error.message, /aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/i);
+      assert.doesNotMatch(error.message, /fake-codex-query/i);
+      assert.doesNotMatch(error.message, /Users\\\\alice/i);
+      assert.match(error.message, /redacted|local-path/i);
+      return true;
+    },
   );
 });
 

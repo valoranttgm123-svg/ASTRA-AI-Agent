@@ -12,6 +12,7 @@ import type {
   AstraInputContext,
 } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
+import { safeErrorDetail, safePublicDetail } from "@/lib/security/redaction";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
 import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
@@ -179,9 +180,12 @@ async function buildExecutionContext(
     } catch (error) {
       signal?.throwIfAborted();
       plannerDetail =
-        error instanceof Error
-          ? "Strategist planning unavailable: " + error.message
-          : "Strategist planning unavailable.";
+        "Strategist planning unavailable: " +
+        safeErrorDetail(
+          error,
+          "planner unavailable",
+          500,
+        );
     }
   }
 
@@ -446,6 +450,15 @@ function emitLiveEvent(
   liveEventSequence += 1;
   const live: AstraBrainEvent = {
     ...event,
+    ...(event.detail
+      ? {
+          detail: safePublicDetail(
+            event.detail,
+            event.label,
+            1000,
+          ),
+        }
+      : {}),
     id: `live-${at}-${liveEventSequence}-${event.type}`,
     at,
   };
@@ -1042,7 +1055,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         };
       } catch (error) {
         options?.signal?.throwIfAborted();
-        const detail = `Codex: ${error instanceof Error ? error.message : "unavailable"}`;
+        const detail = "Codex: " + safeErrorDetail(error, "unavailable", 700);
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "codex", detail, options);
       }
@@ -1079,7 +1092,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         };
       } catch (error) {
         options?.signal?.throwIfAborted();
-        const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+        const detail = "Hermes: " + safeErrorDetail(error, "unavailable", 700);
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "hermes", detail, options);
       }
@@ -1116,7 +1129,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         };
       } catch (error) {
         options?.signal?.throwIfAborted();
-        const detail = `Ollama: ${error instanceof Error ? error.message : "unavailable"}`;
+        const detail = "Ollama: " + safeErrorDetail(error, "unavailable", 700);
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "ollama", detail, options);
       }
@@ -1161,7 +1174,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         };
       } catch (error) {
         options?.signal?.throwIfAborted();
-        const detail = `Cloud: ${error instanceof Error ? error.message : "unavailable"}`;
+        const detail = "Cloud: " + safeErrorDetail(error, "unavailable", 700);
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "cloud", detail, options);
       }
@@ -1666,7 +1679,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           };
         } catch (error) {
           options?.signal?.throwIfAborted();
-          const detail = `Codex: ${error instanceof Error ? error.message : "execution failed"}`;
+          const detail = "Codex: " + safeErrorDetail(error, "execution failed", 700);
           failures.push(detail);
           emitLiveProviderUnavailable(selected, "codex", detail, options);
         }
@@ -1707,7 +1720,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       };
       } catch (error) {
         options?.signal?.throwIfAborted();
-        const detail = `Hermes: ${error instanceof Error ? error.message : "unavailable"}`;
+        const detail = "Hermes: " + safeErrorDetail(error, "unavailable", 700);
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "hermes", detail, options);
       }
