@@ -155,12 +155,10 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: Phase 15D complete; Codex owned child cleanup and Automation/Command Center STOP settlement are verified.
 - next: **P15E Secret / error / telemetry leakage hardening**.
-## In-flight checkpoint — Phase 15E
+## Phase 15E — secret/error/telemetry hardening
 
-- PR: **#103**;
-- branch: `astra/phase15e-secret-error-redaction`;
-- scope: shared secret/error/status/telemetry redaction boundary;
-- notable finding: multiple provider/tool/Automation/Codex paths still exposed raw `error.message` or stderr before this slice;
-- private runtime ignore rules were re-verified in `.gitignore`;
-- completion rule: P15E counts complete only after CI is green and the PR is merged;
-- next after merge: **P15F final security regression matrix/report**.
+- PR: **#103**
+- merge commit: `5ee3f69e934712c19ca6b2733a9311a5fc1c0633`
+- CI: **SUCCESS**
+- result: shared public error/status/telemetry redaction boundary merged; fake-secret regression coverage passes.
+- next: **P15F final security regression matrix/report**.
