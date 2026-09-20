@@ -161,8 +161,9 @@ test("Phase 15B injects the retrieval security rule into the Ollama system promp
       policyText: "ASTRA policy fixture: no external actions.",
     });
 
-    assert.ok(lastBody);
-    const messages = lastBody?.messages as
+    const captured = lastBody as Record<string, unknown> | undefined;
+    assert.ok(captured);
+    const messages = captured["messages"] as
       | Array<{ role?: string; content?: string }>
       | undefined;
     const system = messages?.find((message) => message.role === "system")?.content ?? "";
