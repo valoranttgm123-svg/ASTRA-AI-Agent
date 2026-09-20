@@ -52,6 +52,15 @@ const cloudPolicy: AstraBrainPermissionSnapshot = {
   allowPaidCloud: true,
 };
 
+async function closedLoopbackUrl() {
+  const probe = createServer();
+  probe.listen(0, "127.0.0.1");
+  await once(probe, "listening");
+  const port = (probe.address() as { port: number }).port;
+  await new Promise<void>((resolve) => probe.close(() => resolve()));
+  return `http://127.0.0.1:${port}`;
+}
+
 function writeMode(
   response: import("node:http").ServerResponse,
   mode: Mode,
@@ -396,6 +405,24 @@ test("Phase 15C2 incomplete Cloud configuration is unavailable before any chat c
     }),
     /incomplete/i,
   );
+});
+
+test("Phase 15C2 loopback connection refusal keeps Ollama Hermes and Cloud unavailable", async () => {
+  const unavailable = await closedLoopbackUrl();
+
+  process.env.ASTRA_OLLAMA_URL = unavailable;
+  process.env.ASTRA_HERMES_URL = unavailable;
+  process.env.ASTRA_CLOUD_URL = unavailable;
+
+  const [ollama, hermes, cloud] = await Promise.all([
+    getOllamaStatus(),
+    getHermesStatus(),
+    getCloudStatus(cloudPolicy),
+  ]);
+
+  assert.equal(ollama.available, false);
+  assert.equal(hermes.available, false);
+  assert.equal(cloud.available, false);
 });
 
 test("Phase 15C2 Codex status is truthful when executable is absent", async () => {
