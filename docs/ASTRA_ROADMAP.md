@@ -668,3 +668,23 @@ Implemented on `astra/phase10-design-social`:
 - regression coverage for routing, permission, policy and capability truth.
 
 Next: Phase 11 controlled Computer Agent, OFF by default.
+
+
+---
+
+## Phase 11 implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase11-controlled-computer-agent`:
+
+- OFF-by-default Windows Computer transport;
+- bounded process-list read;
+- fixed-allowlist application launch;
+- no arbitrary shell/path input;
+- Level-1 read vs Level-2 local-action permission floors;
+- allowShell gate for launches;
+- OS spawn-event verification;
+- shared AbortSignal/global STOP cancellation;
+- live Computer feature state;
+- regression tests for configuration, permission, policy, selective capability and cancellation.
+
+Next: Phase 12 Voice + Multimodal unification. Real target-PC desktop validation remains a separate required validation step.
