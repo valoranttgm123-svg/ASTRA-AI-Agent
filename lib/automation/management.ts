@@ -4,10 +4,7 @@ import type {
   AstraAutomationSchedule,
   AstraAutomationStatus,
 } from "./contracts";
-import {
-  loadAutomationStore,
-  saveAutomationStore,
-} from "./store";
+import { mutateAutomationStore } from "./store";
 import { validateAutomationDefinition } from "./scheduler";
 
 export type AstraAutomationUpsertInput = {
@@ -29,22 +26,12 @@ export type AstraAutomationMutationResult = {
 
 function normalizedId(value: string) {
   const id = value.trim();
-  if (
-    !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}$/.test(id)
-  ) {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}$/.test(id)) {
     throw new Error(
       "Automation id must use 1-120 letters, numbers, dot, underscore, or dash.",
     );
   }
   return id;
-}
-
-async function mutableStore() {
-  const store = await loadAutomationStore();
-  if (!store.enabled || !store.available) {
-    throw new Error(store.detail);
-  }
-  return store.automations;
 }
 
 export async function upsertAutomationDefinition(
@@ -55,38 +42,41 @@ export async function upsertAutomationDefinition(
     throw new Error("Invalid automation mutation time.");
   }
 
-  const automations = await mutableStore();
-  const id = normalizedId(input.id);
-  const index = automations.findIndex(
-    (candidate) => candidate.id.toLowerCase() === id.toLowerCase(),
-  );
-  const existing = index >= 0 ? automations[index] : undefined;
+  return mutateAutomationStore((automations) => {
+    const id = normalizedId(input.id);
+    const index = automations.findIndex(
+      (candidate) => candidate.id.toLowerCase() === id.toLowerCase(),
+    );
+    const existing = index >= 0 ? automations[index] : undefined;
 
-  const automation: AstraAutomationDefinition = {
-    id: existing?.id ?? id,
-    title: input.title.trim(),
-    goal: input.goal.trim(),
-    projectId: input.projectId?.trim() || undefined,
-    createdAt: existing?.createdAt ?? now.toISOString(),
-    updatedAt: now.toISOString(),
-    status: input.status ?? existing?.status ?? "paused",
-    schedule: input.schedule,
-    requiredPermissionLevel: input.requiredPermissionLevel,
-    maxRuntimeMs: input.maxRuntimeMs,
-    lastRunAt: existing?.lastRunAt,
-  };
+    const automation: AstraAutomationDefinition = {
+      id: existing?.id ?? id,
+      title: input.title.trim(),
+      goal: input.goal.trim(),
+      projectId: input.projectId?.trim() || undefined,
+      createdAt: existing?.createdAt ?? now.toISOString(),
+      updatedAt: now.toISOString(),
+      status: input.status ?? existing?.status ?? "paused",
+      schedule: input.schedule,
+      requiredPermissionLevel: input.requiredPermissionLevel,
+      maxRuntimeMs: input.maxRuntimeMs,
+      lastRunAt: existing?.lastRunAt,
+    };
 
-  validateAutomationDefinition(automation);
+    validateAutomationDefinition(automation);
 
-  const next = [...automations];
-  if (index >= 0) next[index] = automation;
-  else next.push(automation);
-  await saveAutomationStore(next);
+    const next = [...automations];
+    if (index >= 0) next[index] = automation;
+    else next.push(automation);
 
-  return {
-    automation,
-    count: next.length,
-  };
+    return {
+      automations: next,
+      result: {
+        automation,
+        count: next.length,
+      },
+    };
+  });
 }
 
 export async function setAutomationDefinitionStatus(
@@ -98,48 +88,54 @@ export async function setAutomationDefinitionStatus(
     throw new Error("Invalid automation mutation time.");
   }
 
-  const automations = await mutableStore();
-  const id = normalizedId(idInput);
-  const index = automations.findIndex(
-    (candidate) => candidate.id.toLowerCase() === id.toLowerCase(),
-  );
-  if (index < 0) {
-    throw new Error("Automation definition was not found.");
-  }
+  return mutateAutomationStore((automations) => {
+    const id = normalizedId(idInput);
+    const index = automations.findIndex(
+      (candidate) => candidate.id.toLowerCase() === id.toLowerCase(),
+    );
+    if (index < 0) {
+      throw new Error("Automation definition was not found.");
+    }
 
-  const automation: AstraAutomationDefinition = {
-    ...automations[index],
-    status,
-    updatedAt: now.toISOString(),
-  };
-  validateAutomationDefinition(automation);
+    const automation: AstraAutomationDefinition = {
+      ...automations[index],
+      status,
+      updatedAt: now.toISOString(),
+    };
+    validateAutomationDefinition(automation);
 
-  const next = [...automations];
-  next[index] = automation;
-  await saveAutomationStore(next);
+    const next = [...automations];
+    next[index] = automation;
 
-  return {
-    automation,
-    count: next.length,
-  };
+    return {
+      automations: next,
+      result: {
+        automation,
+        count: next.length,
+      },
+    };
+  });
 }
 
 export async function deleteAutomationDefinition(
   idInput: string,
 ): Promise<AstraAutomationMutationResult> {
-  const automations = await mutableStore();
-  const id = normalizedId(idInput);
-  const next = automations.filter(
-    (candidate) => candidate.id.toLowerCase() !== id.toLowerCase(),
-  );
+  return mutateAutomationStore((automations) => {
+    const id = normalizedId(idInput);
+    const next = automations.filter(
+      (candidate) => candidate.id.toLowerCase() !== id.toLowerCase(),
+    );
 
-  if (next.length === automations.length) {
-    throw new Error("Automation definition was not found.");
-  }
+    if (next.length === automations.length) {
+      throw new Error("Automation definition was not found.");
+    }
 
-  await saveAutomationStore(next);
-  return {
-    deleted: true,
-    count: next.length,
-  };
+    return {
+      automations: next,
+      result: {
+        deleted: true,
+        count: next.length,
+      },
+    };
+  });
 }
