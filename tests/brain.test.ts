@@ -3796,3 +3796,173 @@ test("Phase 11 planner floors Computer read at Level 1 and launch at Level 2", (
   assert.equal(steps[0].permissionLevel, 1);
   assert.equal(steps[1].permissionLevel, 2);
 });
+
+
+test("Phase 12 parses bounded text input metadata", () => {
+  const parsed = parseAgentRequest({
+    message: "halo ASTRA",
+    inputContext: {
+      source: "text",
+      trigger: "keyboard",
+      modalities: ["text"],
+      consent: {
+        microphone: false,
+        camera: false,
+        image: false,
+        screen: false,
+      },
+      visualContentProvided: false,
+    },
+  });
+
+  assert.equal(parsed.inputContext?.source, "text");
+  assert.equal(parsed.inputContext?.trigger, "keyboard");
+  assert.deepEqual(parsed.inputContext?.modalities, ["text"]);
+  assert.equal(parsed.inputContext?.visualContentProvided, false);
+});
+
+test("Phase 12 parses gesture-triggered voice metadata without visual payload", () => {
+  const parsed = parseAgentRequest({
+    message: "buka notepad",
+    inputContext: {
+      source: "voice",
+      trigger: "gesture_open_palm",
+      modalities: ["voice", "gesture", "camera"],
+      consent: {
+        microphone: true,
+        camera: true,
+        image: false,
+        screen: false,
+      },
+      visualContentProvided: false,
+    },
+  });
+
+  assert.equal(parsed.inputContext?.source, "voice");
+  assert.equal(parsed.inputContext?.trigger, "gesture_open_palm");
+  assert.equal(parsed.inputContext?.consent.microphone, true);
+  assert.equal(parsed.inputContext?.consent.camera, true);
+  assert.equal(parsed.inputContext?.visualContentProvided, false);
+});
+
+test("Phase 12 rejects visual payload claims and unconfigured image/screen modalities", () => {
+  assert.throws(
+    () =>
+      parseAgentRequest({
+        message: "lihat layar ini",
+        inputContext: {
+          source: "text",
+          trigger: "keyboard",
+          modalities: ["text"],
+          consent: {
+            microphone: false,
+            camera: false,
+            image: false,
+            screen: false,
+          },
+          visualContentProvided: true,
+        },
+      }),
+    /visualContentProvided/i,
+  );
+
+  assert.throws(
+    () =>
+      parseAgentRequest({
+        message: "analisis gambar",
+        inputContext: {
+          source: "text",
+          trigger: "keyboard",
+          modalities: ["text", "image"],
+          consent: {
+            microphone: false,
+            camera: false,
+            image: true,
+            screen: false,
+          },
+          visualContentProvided: false,
+        },
+      }),
+    /belum dikonfigurasi/i,
+  );
+});
+
+test("Phase 12 rejects inconsistent voice or gesture consent metadata", () => {
+  assert.throws(
+    () =>
+      parseAgentRequest({
+        message: "halo",
+        inputContext: {
+          source: "voice",
+          trigger: "microphone",
+          modalities: ["voice"],
+          consent: {
+            microphone: false,
+            camera: false,
+            image: false,
+            screen: false,
+          },
+          visualContentProvided: false,
+        },
+      }),
+    /consent mikrofon/i,
+  );
+
+  assert.throws(
+    () =>
+      parseAgentRequest({
+        message: "halo",
+        inputContext: {
+          source: "voice",
+          trigger: "gesture_open_palm",
+          modalities: ["voice", "gesture"],
+          consent: {
+            microphone: true,
+            camera: false,
+            image: false,
+            screen: false,
+          },
+          visualContentProvided: false,
+        },
+      }),
+    /gesture\/camera/i,
+  );
+});
+
+test("Phase 12 Brain envelope preserves trusted input metadata", async () => {
+  const inputContext = {
+    source: "text" as const,
+    trigger: "api" as const,
+    modalities: ["text"] as const,
+    consent: {
+      microphone: false,
+      camera: false,
+      image: false,
+      screen: false,
+    },
+    visualContentProvided: false as const,
+  };
+
+  const result = await astraBrain.chat("status ASTRA", {
+    provider: "ollama",
+    inputContext: {
+      ...inputContext,
+      modalities: [...inputContext.modalities],
+    },
+  });
+
+  assert.equal(result.brain.context?.input?.source, "text");
+  assert.equal(result.brain.context?.input?.trigger, "api");
+  assert.equal(result.brain.context?.input?.visualContentProvided, false);
+});
+
+test("Phase 12 status reports truthful multimodal readiness", async () => {
+  const status = await astraBrain.status();
+  assert.equal(status.features?.multimodal.enabled, true);
+  assert.equal(status.features?.multimodal.available, true);
+  assert.equal(status.features?.multimodal.state, "READY");
+  assert.match(
+    status.features?.multimodal.detail ?? "",
+    /image payloads.*NOT_CONFIGURED/i,
+  );
+});
