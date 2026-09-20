@@ -113,7 +113,6 @@ async function inspectWithNativeProjectTool({
   approvedPermissionLevel,
   signal,
   onToolEvent,
-  runtime,
 }: {
   step: AstraPlanStep;
   project?: AstraProjectRecord;
