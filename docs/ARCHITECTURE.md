@@ -288,3 +288,38 @@ A handler may not create a successful tool event merely by returning prose. `sta
 `lib/tools/mcp.ts` defines an injected transport interface. ASTRA does not auto-connect unknown MCP servers and does not mark MCP tools READY without an explicit transport instance. Discovered MCP definitions and calls still pass through the same Tool Registry permission/policy/verification executor.
 
 The current repository includes fixture-backed MCP contract tests, **not a configured production MCP server**.
+
+
+## Scoped Files and local Git workflow
+
+Phase 7A builds local project operations on the executable Tool Runtime:
+
+```text
+registered Project Registry workspace
+        ↓
+central path safety
+        ↓
+project.file.read
+        ↓
+SHA precondition
+        ↓
+project.file.write
+        ↓
+read-back verification
+        ↓
+git diff / branch / stage
+        ↓
+allowlisted npm verification
+        ↓
+local commit + new-HEAD verification
+```
+
+File operations never scan arbitrary directories. Existing-file replacement requires a hash obtained from a prior read, preventing silent overwrite of a file that changed in between.
+
+Local Git commands use fixed executables/argument patterns with `shell:false`, bounded output and cancellation. Staging accepts explicit safe file paths only; commit revalidates the complete staged set before running.
+
+External GitHub actions are deliberately separate:
+- `github.push` — Level 3, NOT_CONFIGURED;
+- `github.pull-request.open` — Level 3, NOT_CONFIGURED.
+
+A future authenticated GitHub transport must pass through the same Tool Runtime and approval boundary before those actions can become READY.
