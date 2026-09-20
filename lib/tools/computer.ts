@@ -329,26 +329,29 @@ export async function createComputerToolRegistrations(
   const status = await transport.status(signal);
   const supported = new Set(status.capabilities ?? []);
 
-  const baseAvailability: AstraToolAvailability = status.available
-    ? "READY"
-    : status.configured
-      ? "OFFLINE"
-      : "NOT_CONFIGURED";
+  const unavailableState: AstraToolAvailability = status.configured
+    ? "OFFLINE"
+    : "NOT_CONFIGURED";
 
-  const definitions = CATALOG.map((definition) =>
-    status.available &&
-    supported.has(definition.id as AstraComputerCapability)
-      ? {
-          ...definition,
-          provider: transport.provider,
-          availability: "READY" as const,
-        }
-      : {
-          ...definition,
-          provider: undefined,
-          availability: baseAvailability,
-        },
-  );
+  const definitions = CATALOG.map((definition) => {
+    const capability = definition.id as AstraComputerCapability;
+
+    if (status.available && supported.has(capability)) {
+      return {
+        ...definition,
+        provider: transport.provider,
+        availability: "READY" as const,
+      };
+    }
+
+    return {
+      ...definition,
+      provider: undefined,
+      availability: status.available
+        ? ("NOT_CONFIGURED" as const)
+        : unavailableState,
+    };
+  });
 
   const handlers: Record<string, AstraToolHandler> = {};
   if (!status.available) {
