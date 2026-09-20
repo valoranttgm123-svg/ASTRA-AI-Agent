@@ -1626,3 +1626,35 @@ Automated tests cover readiness classification and private output confinement.
 Truth boundary:
 
 **P19A provides tooling only. Phase 19 target-PC readiness remains unverified until the command is actually run on the target Windows system and the remaining install/reinstall/local gates are checked.**
+
+---
+
+## Handoff update — Phase 19B update/reinstall tooling
+
+Implemented on `astra/phase19b-update-reinstall-tooling`:
+
+- `scripts/windows/update-local.ps1`;
+- `scripts/windows/reinstall-local.ps1`;
+- `docs/WINDOWS_RELEASE.md`;
+- `tests/windows-release-scripts.test.ts`.
+
+Updater safety:
+
+- active tracked changes block pull;
+- active branch must match requested branch;
+- `git pull --ff-only` only;
+- no automatic reset/clean/discard;
+- no deletion of `.env.local` or `.astra/`;
+- no project/model deletion;
+- rebuild + re-register install + read-only self-check.
+
+Reinstall/repair:
+
+- reuses existing scoped uninstaller + installer;
+- removes startup registrations/desktop shortcut only;
+- preserves project/model/private runtime;
+- self-check runs after reinstall.
+
+Truth boundary:
+
+**P19B provides repository tooling only. The update/reinstall checklist remains unverified until run on the target Windows PC.**
