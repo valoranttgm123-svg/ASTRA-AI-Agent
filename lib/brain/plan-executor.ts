@@ -322,7 +322,6 @@ async function executeStructuredTool({
       status: "waiting_approval",
       provider: result.provider || definition.provider,
       detail: result.detail,
-      output,
     };
   }
 
