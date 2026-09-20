@@ -1658,3 +1658,29 @@ Reinstall/repair:
 Truth boundary:
 
 **P19B provides repository tooling only. The update/reinstall checklist remains unverified until run on the target Windows PC.**
+
+---
+
+## Handoff update — Phase 18A repository RC gate
+
+Implemented on `astra/phase18a-repository-rc-gate`:
+
+- `lib/release/repository-gate.ts`;
+- `scripts/release/repository-gate.ts`;
+- `npm run release:repo-gate`;
+- CI `fetch-depth: 0`;
+- PR/push-range `git diff --check`;
+- `tests/release-repository-gate.test.ts`.
+
+The local gate executes:
+
+1. `npm test`;
+2. `npm run typecheck`;
+3. `npm run lint`;
+4. `npm run build`;
+5. `npm audit --audit-level=high`;
+6. `git diff --check`.
+
+Truth boundary:
+
+**Passing the repository gate is necessary but not sufficient for an ASTRA Release Candidate. Target-PC Automation, real Sonor, performance, full-system and Windows evidence remain separate required gates.**
