@@ -44,6 +44,8 @@ export async function executeReadOnlyAutomationWithBrain(
     };
   }
 
+  const permissionCeiling =
+    automation.requiredPermissionLevel as 0 | 1;
   const input = automationOccurrenceBrainInput(
     automation,
     context.scheduledFor,
@@ -58,7 +60,7 @@ export async function executeReadOnlyAutomationWithBrain(
       provider: "ollama",
       inputContext: AUTOMATION_INPUT_CONTEXT,
       requirePlan: true,
-      permissionCeiling: automation.requiredPermissionLevel,
+      permissionCeiling,
       signal: context.signal,
     },
   );
