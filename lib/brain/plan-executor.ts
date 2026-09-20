@@ -631,7 +631,6 @@ export async function executeBrainPlan(
             approvedPermissionLevel: options.approvedPermissionLevel,
             signal: stepContext.signal,
             onToolEvent: options.onToolEvent,
-            runtime: options.toolRuntime,
           });
           if (native) return native;
 
