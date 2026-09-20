@@ -1271,6 +1271,7 @@ test("Brain bounded orchestrator executes a real reasoning-only plan step by ste
 });
 
 test("Brain bounded orchestrator fails truthfully when a real tool executor is unavailable", async () => {
+  process.env.ASTRA_ALLOW_FILE_WRITE = "true";
   const events: AstraBrainEvent[] = [];
   const result = await astraBrain.execute(
     {
