@@ -129,3 +129,14 @@ ASTRA must:
 - keep permission/approval enforcement in server-side Planner/Tool Runtime boundaries rather than relying on prompt-injection detection.
 
 ASTRA does not use destructive regex filtering as the security boundary. A retrieved document may legitimately contain imperative text; the content remains available as evidence while its authority stays zero unless a real ASTRA policy/tool path independently authorizes an action.
+## Public error and telemetry redaction
+
+ASTRA treats provider/tool/child-process error strings as potentially sensitive.
+
+Before errors/details reach public API responses, SSE, Runtime telemetry, Command Center, Automation service status, or ordinary tool results, ASTRA redacts common credential forms, approval/access tokens, URL credentials/sensitive query parameters, and user-home paths, then bounds the detail length.
+
+This is defense-in-depth. Secret-bearing values must still never be deliberately inserted into ordinary telemetry.
+
+Scoped approval tokens are allowed only in the explicit approval payload needed to complete that exact approval flow. They must not be copied into ordinary event detail/status text.
+
+Provider status may expose a useful endpoint label, but embedded URL credentials or sensitive query values must be redacted.
