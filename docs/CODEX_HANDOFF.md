@@ -1,5 +1,55 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 7C scoped Level-3 approval checkpoint
+
+This branch closes the core approval gap for external GitHub actions without touching Sonor.
+
+Implemented:
+- one-time process-local Level-3 approval challenges in `lib/brain/approvals.ts`;
+- cryptographically random token, 5-minute TTL, bounded pending registry;
+- challenge is bound to the exact user input hash + exact stored `AstraPlan`;
+- approval scope exposes only safe metadata (projectId/branch/remote/base/head/title/path/script/limit), never file contents, PR body, secrets or credentials;
+- tokens are single-use even when validation fails;
+- the second approval request reuses the stored plan and does not ask the planner/model to generate a new plan;
+- normal `approved=true` remains Level-2 safe-local only;
+- Level-3 external action requires an explicit scoped challenge;
+- Level-4 remains unavailable through the normal UI and is rejected before any plan step runs;
+- preflight occurs before plan execution so ASTRA does not perform local work and only later surprise the user with an external-action approval;
+- a Level-3 challenge is issued only when the requested tool is genuinely READY and external-action policy permits it;
+- Level-3 approval is exact-step, not blanket permission:
+  - approving `github.push` does not also approve `github.pull-request.open`;
+  - if another Level-3 step is reached, ASTRA issues a new one-time challenge;
+- executor accepts scoped step IDs only for Level-3 and never for Level-4;
+- API/SSE request parsing forwards bounded `approvalToken`;
+- Brain lifecycle includes `approval.requested` and `approval.granted`;
+- ASTRA Console shows an explicit amber Level-3 panel with safe scope + expiry and separate APPROVE LEVEL 3 / CANCEL actions;
+- approval tokens are never rendered in the UI;
+- voice input/new chat cancels the visible pending confirmation rather than auto-approving it.
+
+Regression coverage added for:
+- single-use token semantics;
+- message/input binding;
+- safe scope redaction;
+- READY/policy preflight checks;
+- Level-4 precedence;
+- exact-step Level-3 execution;
+- second Level-3 step requiring another approval;
+- malformed HTTP approval tokens.
+
+Important runtime truth:
+GitHub Level-3 actions still require `ASTRA_ALLOW_EXTERNAL_ACTIONS=true` and an authenticated READY GitHub transport. Approval does not make an unavailable provider available.
+
+Phase 7 core architecture is now complete enough for target-PC validation. Remaining Phase 7 production validation:
+1. on the target Windows PC confirm `gh auth status`;
+2. register the real ASTRA project workspace in Project Registry;
+3. exercise a safe real branch → scoped edit → verification → commit → Level-3 push → Level-3 PR → CI read;
+4. record the real result before declaring the target-PC workflow production validated.
+
+Next roadmap milestone after merge:
+**Real Research / Browser capability** to close the remaining Phase 5 delegation gap, while target-PC Phase 7 validation can be performed separately.
+
+Sonor remains untouched and delegated to the existing Codex/Sonor mission.
+
 ## 2026-09-20 — Phase 7B authenticated GitHub transport + tool-aware planner checkpoint
 
 This branch adds the provider/auth boundary required to finish the external half of the Files/GitHub production flow.
