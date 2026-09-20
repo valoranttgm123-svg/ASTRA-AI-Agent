@@ -1,4 +1,4 @@
-import { realpath, stat } from "node:fs/promises";
+import { lstat, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import type { AstraProjectRecord } from "./contracts";
 
@@ -172,6 +172,28 @@ export async function resolveWritableProjectFile(
   const parentRelative = relativeInside(workspace, parentReal);
   if (parentRelative === null) return null;
 
+  let lexicalInfo;
+  try {
+    lexicalInfo = await lstat(lexical.candidate);
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+
+    if (code !== "ENOENT") return null;
+
+    return {
+      workspace,
+      absolute: lexical.candidate,
+      relative: lexical.relative.replace(/\\/g, "/"),
+    };
+  }
+
+  // Writes fail closed for any existing symlink. In particular, a dangling
+  // symlink must never be mistaken for a safe "new file" target.
+  if (lexicalInfo.isSymbolicLink()) return null;
+
   try {
     const existing = await realpath(lexical.candidate);
     const existingRelative = relativeInside(workspace, existing);
@@ -188,10 +210,6 @@ export async function resolveWritableProjectFile(
       relative: existingRelative.replace(/\\/g, "/"),
     };
   } catch {
-    return {
-      workspace,
-      absolute: lexical.candidate,
-      relative: lexical.relative.replace(/\\/g, "/"),
-    };
+    return null;
   }
 }

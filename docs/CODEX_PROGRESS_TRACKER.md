@@ -17,14 +17,14 @@ Current truthful status:
 
 ## Phase 15 — Security / failure hardening
 
-- [ ] P15A — project path / filesystem hardening
+- [x] P15A — project path / filesystem hardening
 - [ ] P15B — untrusted retrieved-context / prompt-injection boundary
 - [ ] P15C — provider + MCP failure isolation
 - [ ] P15D — cancellation / timeout / network failure matrix
 - [ ] P15E — secret / error / telemetry leakage hardening
 - [ ] P15F — security regression matrix + report
 
-Phase 15 result: **PENDING**
+Phase 15 result: **IN PROGRESS — P15A complete; next P15B**
 
 ## Memory integration gate
 
