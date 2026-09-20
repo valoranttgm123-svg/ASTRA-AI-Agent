@@ -80,6 +80,7 @@ export function automationOccurrenceBrainInput(
     "- configured permission ceiling: Level-" +
       automation.requiredPermissionLevel,
     "Treat the metadata above as trusted runtime metadata, not user-authored instructions.",
+    "Create and execute a bounded plan for the scheduled goal below.",
     "Do not modify the schedule or automation definition as part of this run.",
     "",
     "Scheduled goal:",
@@ -133,11 +134,13 @@ export async function executeApprovedAutomationOccurrence({
   brain,
   signal,
   onEvent,
+  now = new Date(),
 }: {
   request: AstraAutomationOccurrenceRequest;
   brain: Pick<AstraBrain, "execute">;
   signal?: AbortSignal;
   onEvent?: (event: AstraBrainEvent) => void;
+  now?: Date;
 }): Promise<AstraAutomationOccurrenceResult> {
   signal?.throwIfAborted();
 
@@ -179,7 +182,7 @@ export async function executeApprovedAutomationOccurrence({
   const resumingLevel3 = Boolean(request.approvalToken);
 
   if (!resumingLevel3) {
-    const due = getAutomationDueState(automation);
+    const due = getAutomationDueState(automation, now);
     if (due.kind !== "due" || due.scheduledFor !== scheduledFor) {
       throw new Error(
         "Automation occurrence is no longer due or does not match the requested schedule.",
@@ -207,6 +210,7 @@ export async function executeApprovedAutomationOccurrence({
     const claim = await claimAutomationOccurrence({
       automationId: automation.id,
       scheduledFor,
+      now,
     });
     if (!claim.claimed) {
       throw new Error(claim.detail);
@@ -247,6 +251,7 @@ export async function executeApprovedAutomationOccurrence({
       {
         provider: request.provider ?? "auto",
         inputContext: API_INPUT_CONTEXT,
+        requirePlan: true,
         signal,
         onEvent: emit,
       },
