@@ -82,7 +82,7 @@ export type AstraAutomationSystemStatus = {
 
 export type AstraAutomationRunResult = {
   ok: boolean;
-  state: "completed" | "blocked" | "error";
+  state: "completed" | "needs_provider" | "blocked" | "error";
   message: string;
   requiresApproval?: boolean;
   approvalRequest?: {
