@@ -8,7 +8,7 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "lint": "eslint lib/brain lib/memory lib/projects lib/planner lib/tools lib/agent/capabilities.ts app/api/agent components/AstraConsole.tsx components/AstraRuntime.tsx components/ApexWorld.tsx",
+    "lint": "eslint lib/brain lib/memory lib/projects lib/planner lib/tools lib/automation lib/agent/capabilities.ts lib/agent/capability-runtime.ts app/api/agent app/api/automation components/AstraConsole.tsx components/AstraRuntime.tsx components/ApexWorld.tsx",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test --test-concurrency=1 tests/*.test.ts"
   },
