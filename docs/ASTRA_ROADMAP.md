@@ -611,3 +611,22 @@ Implemented on `astra/phase5b-real-research-browser`:
 After merge, the Phase 5 Researcher gap is closed at the architecture/tooling level. General web search still requires a real local SearXNG service on the target PC; without it ASTRA remains truthful and exposes only explicit-public-URL fetch.
 
 Next code milestone: Phase 8 Business Skills.
+
+
+---
+
+## Phase 8 implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase8-business-skills`:
+
+- input-aware Finance, Sales, Marketing, Ops, Editor and Analytics skills;
+- specialist skill lifecycle mapped to the matching Command Center nodes;
+- native deterministic `business.finance.metrics`;
+- native deterministic `analytics.summary`;
+- business intent routing and quantitative-plan triggering;
+- Level-1 planner contracts for both deterministic tools;
+- live Business capability status;
+- Phase 8 node contracts marked implemented while external actions remain separate integrations;
+- regression coverage for finance arithmetic, analytics statistics, skill selection, routing, planner floors and visual-node truth.
+
+Next: Phase 9 provider-neutral CRM / Calendar / Email / Drive integration contracts and real connected transports where available.
