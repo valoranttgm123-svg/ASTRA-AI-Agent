@@ -2,6 +2,79 @@
 
 > Fill with measured values only. Never invent benchmark numbers.
 
+## Measurement harness
+
+Repository-side instrumentation is available through:
+
+```powershell
+npm run perf:runtime
+```
+
+Default behavior is read-only and loopback-only:
+
+- probes `/api/agent`;
+- probes `/api/automation`;
+- probes `/api/automation/service`;
+- collects 10 timing samples per endpoint;
+- records cold, overall P50/P95, and warm summary;
+- writes JSON to `.astra/performance/`;
+- does **not** run an LLM turn by default.
+
+To deliberately measure local Ollama inference through the real ASTRA SSE path:
+
+```powershell
+npm run perf:runtime -- --ollama-turns 3
+```
+
+Optional flags:
+
+```text
+--base <loopback-url>
+--samples <1-100>
+--timeout-ms <250-120000>
+--ollama-turns <0-20>
+--output <json-path>
+```
+
+The harness rejects non-loopback URLs. It does not execute tools, external actions, paid cloud, shell actions, or file writes through ASTRA.
+
+Ollama measurement records timing only:
+
+- response headers;
+- first ASTRA SSE event;
+- `provider.selected` event when present;
+- final ASTRA result.
+
+It does not persist the chat response text.
+
+Generated `.astra/performance/*.json` files are private runtime artifacts and stay gitignored.
+
+### Baseline population rule
+
+Do not copy harness numbers into this document unless the harness was actually run on the target machine/environment being described.
+
+Node-side runtime harness results can fill:
+
+- Date/time;
+- Commit;
+- Windows version;
+- CPU;
+- RAM;
+- Node;
+- Brain status latency;
+- Automation status latency;
+- optional Ollama ASTRA-stream latency.
+
+Browser/GPU measurements still require the real browser diagnostics for:
+
+- GPU;
+- Browser;
+- Display resolution / DPR;
+- Humanoid FPS;
+- CPU/GPU utilization;
+- browser memory;
+- Command Center render behavior.
+
 ## Test environment
 
 | Field | Value |
