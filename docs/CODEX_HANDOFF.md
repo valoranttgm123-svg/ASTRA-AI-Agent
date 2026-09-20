@@ -1571,3 +1571,29 @@ Finding:
 Decision:
 
 **Do not merge or cherry-pick PR #51. Close it as superseded after this audit reaches `main`.**
+
+---
+
+## Repository cleanup final status
+
+Evidence:
+
+- `docs/PR51_TELEMETRY_AUDIT.md`;
+- `docs/REPOSITORY_CLEANUP.md`.
+
+Completed:
+
+- PR #51 closed as superseded;
+- no open PR remains;
+- no unique telemetry code needed porting;
+- historical branches remain only as non-blocking snapshots;
+- current tree scan found no tracked private/runtime path matching the cleanup filter.
+
+Do not delete historical branches automatically. Branch pruning is a separate destructive housekeeping action.
+
+Release gates still pending outside repository cleanup:
+
+- target-PC Automation validation;
+- real Sonor/Graphify/Obsidian MEM-X;
+- Phase 16 target measurements;
+- Phase 17 real execution evidence.
