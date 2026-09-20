@@ -1404,3 +1404,36 @@ P15C completion status after green CI/merge:
 Next exact task:
 
 **Phase 15D — Cancellation / timeout / network failure matrix.**
+
+---
+
+## Handoff update — Phase 15D1 cancellation/timeout matrix
+
+PR: **#101**
+
+Implemented:
+
+- Ollama/Hermes/Cloud provider timeout now aborts with `TimeoutError`, distinct from user/global STOP `AbortError`;
+- Tool Runtime timeout now uses an authoritative race against its internal AbortController;
+- a buggy handler that ignores AbortSignal can no longer keep the ASTRA caller waiting past timeout;
+- timeout cannot later emit a winning `tool.completed` event;
+- user STOP returns promptly even if a buggy read handler ignores its signal.
+
+Regression matrix in `tests/cancellation-matrix.test.ts` covers:
+
+- Ollama in-flight STOP;
+- Hermes in-flight STOP;
+- optional Cloud in-flight STOP;
+- provider timeout vs STOP distinction;
+- Strategist cancellation through Ollama;
+- in-flight Memory source cancellation;
+- browser pre-network cancellation;
+- Tool Runtime timeout;
+- Tool Runtime global STOP;
+- no late completed lifecycle event after timeout/cancel.
+
+P15D is **not complete** yet.
+
+Next exact task after green CI/merge:
+
+**Phase 15D2 — Codex child-process timeout/cancellation/cleanup plus Automation/Command Center STOP settlement verification.**

@@ -80,26 +80,73 @@ async function withTimeout<T>(
 ): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(
-    () => controller.abort(new DOMException("Tool execution timed out.", "TimeoutError")),
+    () =>
+      controller.abort(
+        new DOMException(
+          "Tool execution timed out.",
+          "TimeoutError",
+        ),
+      ),
     timeoutMs,
   );
 
   const onAbort = () =>
     controller.abort(
       externalSignal?.reason ??
-        new DOMException("Tool execution cancelled.", "AbortError"),
+        new DOMException(
+          "Tool execution cancelled.",
+          "AbortError",
+        ),
     );
 
   if (externalSignal?.aborted) {
     onAbort();
   } else {
-    externalSignal?.addEventListener("abort", onAbort, { once: true });
+    externalSignal?.addEventListener("abort", onAbort, {
+      once: true,
+    });
   }
 
+  let removeControllerAbort = () => {};
+
+  const aborted = new Promise<never>((_resolve, reject) => {
+    const rejectAbort = () => {
+      const reason = controller.signal.reason;
+      reject(
+        reason instanceof Error
+          ? reason
+          : new DOMException(
+              "Tool execution cancelled.",
+              "AbortError",
+            ),
+      );
+    };
+
+    if (controller.signal.aborted) {
+      rejectAbort();
+      return;
+    }
+
+    controller.signal.addEventListener(
+      "abort",
+      rejectAbort,
+      { once: true },
+    );
+    removeControllerAbort = () =>
+      controller.signal.removeEventListener(
+        "abort",
+        rejectAbort,
+      );
+  });
+
   try {
-    return await run(controller.signal);
+    return await Promise.race([
+      run(controller.signal),
+      aborted,
+    ]);
   } finally {
     clearTimeout(timer);
+    removeControllerAbort();
     externalSignal?.removeEventListener("abort", onAbort);
   }
 }

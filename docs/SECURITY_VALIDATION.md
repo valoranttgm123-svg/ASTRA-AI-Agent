@@ -27,11 +27,11 @@
 | Permission Level 2 denied | No local write/shell action | Existing | UI proof optional | PENDING REVIEW |
 | Permission Level 3 denied | No external action | Existing | UI proof required before release | PENDING REVIEW |
 | Permission Level 4 | Blocked | Existing | Not required | PENDING REVIEW |
-| Provider cancellation | Abort propagates; no later success | Existing partial + Phase 15D matrix | Optional target PC | TODO |
-| Planner cancellation | Abort propagates | REQUIRED Phase 15D | Not required | TODO |
-| Memory/Sonor cancellation | Abort propagates | Existing partial + MEM-X Test F | Real Sonor required | TODO |
-| Browser/network cancellation | Abort propagates | REQUIRED Phase 15D | Not required | TODO |
-| Tool timeout | Failed timeout; no later success | Existing partial + re-verify | Not required | TODO |
+| Provider cancellation | Abort propagates; no later success | `tests/cancellation-matrix.test.ts` + existing Ollama test | Optional target PC | PASS — AUTOMATED FOR OLLAMA/HERMES/CLOUD |
+| Planner cancellation | Abort propagates | `tests/cancellation-matrix.test.ts` | Not required | PASS — AUTOMATED |
+| Memory/Sonor cancellation | Abort propagates | in-flight Memory source covered in `tests/cancellation-matrix.test.ts`; real Sonor Test F remains | Real Sonor required | PASS — MEMORY / LOCAL SONOR REQUIRED |
+| Browser/network cancellation | Abort propagates | pre-network STOP in `tests/cancellation-matrix.test.ts`; live external fetch remains optional | Not required | PASS — AUTOMATED BASIC |
+| Tool timeout | Failed timeout; no later success | authoritative timeout + no late completed event in `tests/cancellation-matrix.test.ts` | Not required | PASS — AUTOMATED |
 | Computer action STOP | Abort propagates | Existing | Target PC optional | PENDING REVIEW |
 | Automation duplicate occurrence | At-most-once claim | Existing Phase 14 tests | Target PC validator | CI VERIFIED |
 | Automation background STOP | Server tick aborted | Existing Phase 14 tests | Target PC validator | CI VERIFIED / LOCAL REQUIRED |

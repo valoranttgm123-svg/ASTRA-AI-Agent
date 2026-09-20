@@ -135,11 +135,19 @@ Never mark local/physical verification PASS from repository inspection alone.
 - result: optional MCP server failure no longer destroys native/healthy runtime; descriptor/call data is validated; permission floors and AbortSignal behavior are covered.
 - next: **P15C2 provider outage/malformed-response matrix**.
 
-## In-flight checkpoint — Phase 15C2
+## Phase 15C2 — provider failure matrix
 
 - PR: **#100**
-- branch: `astra/phase15c2-provider-failure-matrix`
-- scope: Ollama/Hermes/Cloud status/chat malformed/outage handling plus Codex unavailable/JSONL parsing;
-- P15C counts complete only after PR #100 CI is green and merged;
-- next after merge: **P15D Cancellation / timeout / network failure matrix**.
+- merge commit: `c3d2398ad6a463a9fda4e4345aecf415db0a9f81`
+- CI: **SUCCESS**
+- result: P15C provider/MCP failure isolation complete; malformed/outage responses fail closed and provider readiness is payload-validated.
+- next: **P15D Cancellation / timeout / network failure matrix**.
+
+## In-flight checkpoint — Phase 15D1
+
+- PR: **#101**
+- branch: `astra/phase15d1-cancellation-matrix`
+- scope: provider/Strategist/Memory/browser/Tool Runtime cancellation and authoritative timeout;
+- completion rule: count complete only after PR #101 CI is green and merged;
+- next after merge: **P15D2 Codex child-process + Automation/Command Center STOP settlement**.
 
