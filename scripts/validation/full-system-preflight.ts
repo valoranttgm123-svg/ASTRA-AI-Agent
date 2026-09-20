@@ -1,5 +1,4 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { normalizeLoopbackBase } from "../../lib/performance/loopback";
@@ -9,6 +8,7 @@ import {
 } from "../../lib/performance/sse";
 import { safeErrorDetail } from "../../lib/security/redaction";
 import { extractValidationEvidence } from "../../lib/validation/evidence";
+import { resolveValidationEvidencePath } from "../../lib/validation/private-output";
 
 type ScenarioId = "A" | "B" | "C" | "D";
 type ProviderChoice = "auto" | "ollama" | "codex";
@@ -171,37 +171,6 @@ function parseArgs(argv: readonly string[]): Options {
   return options;
 }
 
-function validationRoot() {
-  return path.resolve(".astra", "validation");
-}
-
-function resolveOutputPath(raw: string | undefined) {
-  const root = validationRoot();
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, "-");
-
-  const candidate = path.resolve(
-    raw ||
-      path.join(
-        root,
-        `full-system-preflight-${timestamp}.json`,
-      ),
-  );
-  const relative = path.relative(root, candidate);
-
-  if (
-    relative.startsWith("..") ||
-    path.isAbsolute(relative)
-  ) {
-    throw new Error(
-      "Validation evidence output must stay inside .astra/validation/.",
-    );
-  }
-
-  return candidate;
-}
-
 function timeoutSignal(timeoutMs: number) {
   const controller = new AbortController();
   const timer = setTimeout(
@@ -359,7 +328,7 @@ async function main() {
   const baseUrl = normalizeLoopbackBase(
     options.baseUrl,
   );
-  const outputPath = resolveOutputPath(
+  const outputPath = resolveValidationEvidencePath(
     options.output,
   );
 
