@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   automationServiceReadiness,
   automationStoreReadiness,
+  classifyWindowsStartupTasks,
   extractBrainReadiness,
   featureState,
 } from "../lib/release/readiness";
@@ -119,3 +120,30 @@ test("Phase 19A automation readiness distinguishes store and service opt-in", ()
   });
   assert.equal(serviceRunning.state, "READY");
 });
+
+test("Phase 19A Windows startup task readiness distinguishes missing disabled and installed tasks", () => {
+  assert.equal(
+    classifyWindowsStartupTasks({
+      "ASTRA-Agent": "Running",
+      "ASTRA-Ollama": "Ready",
+    }).state,
+    "READY",
+  );
+
+  assert.equal(
+    classifyWindowsStartupTasks({
+      "ASTRA-Agent": "Running",
+      "ASTRA-Ollama": "MISSING",
+    }).state,
+    "NOT_CONFIGURED",
+  );
+
+  assert.equal(
+    classifyWindowsStartupTasks({
+      "ASTRA-Agent": "Disabled",
+      "ASTRA-Ollama": "Ready",
+    }).state,
+    "OFFLINE",
+  );
+});
+
