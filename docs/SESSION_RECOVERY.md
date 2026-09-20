@@ -102,4 +102,5 @@ At creation of this protocol:
 - Sonor real validation: pending local access;
 - Phase 17A preflight tooling: merged/CI verified;
 - repository cleanup before RC: complete;
-- current implementable repository work: **Phase 19A read-only readiness self-check tooling**.
+- Phase 19A read-only readiness self-check tooling: merged/CI verified;
+- current implementable repository work: **Phase 19B safe update/reinstall tooling**.
