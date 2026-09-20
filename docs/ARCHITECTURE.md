@@ -834,3 +834,28 @@ bounded plan preflight
 ```
 
 The public `/api/agent` parser does not expose `permissionCeiling`. Normal user execution remains on the existing explicit approval path.
+## Opt-in automation service
+
+Phase 14E2 reuses the existing local ASTRA server process:
+
+```text
+ASTRA-Agent (Next.js, loopback)
+        ↓ instrumentation.ts
+ASTRA_AUTOMATION_SERVICE_ENABLED?
+   NO → service OFF
+   YES
+        ↓
+single-flight timer
+        ↓
+runAutomationTickFromStore()
+        ↓
+Level 0/1 only
+        ↓
+read-only Brain executor
+        ↓
+requirePlan + hard permission ceiling
+```
+
+The timer does not create a third Windows Scheduled Task. Level 2/3 occurrences remain visible in the approval queue and are never executed by the background service.
+
+Crash/restart semantics remain fail-safe: a claimed occurrence is not silently replayed. Interval scheduling resumes from the current eligible occurrence; an overdue unclaimed one-time definition remains due.
