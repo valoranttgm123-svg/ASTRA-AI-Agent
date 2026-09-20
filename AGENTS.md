@@ -7,14 +7,16 @@ This repository is the working source of truth for the ASTRA AI Agent project.
 Before changing any code, read these files in this exact order:
 
 1. `docs/CODEX_NEXT_MISSION.md` — **current executable mission and task order**.
-2. `docs/CODEX_HANDOFF.md` — current implementation state, verified baseline and next task.
-3. `docs/CODEX_PROGRESS_TRACKER.md` — persistent completion checklist; update after every merged slice.
-4. `docs/SECURITY_VALIDATION.md` — Phase 15 hardening matrix.
-5. `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done.
-6. `docs/ASTRA_ROADMAP.md` — milestone history and current phase sequence.
-7. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
-8. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
-9. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+2. `docs/ASTRA_WORKLOG.md` — durable chronological repository history and current checkpoint.
+3. `docs/SESSION_RECOVERY.md` — recovery protocol for interrupted/new sessions.
+4. `docs/CODEX_HANDOFF.md` — current implementation state, verified baseline and next task.
+5. `docs/CODEX_PROGRESS_TRACKER.md` — persistent completion checklist; update after every merged slice.
+6. `docs/SECURITY_VALIDATION.md` — Phase 15 hardening matrix.
+7. `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done.
+8. `docs/ASTRA_ROADMAP.md` — milestone history and current phase sequence.
+9. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
+10. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
+11. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
 
 Read these only when the active task needs their historical/detail context:
 
@@ -30,7 +32,8 @@ Read these only when the active task needs their historical/detail context:
 - Phase 14 final implementation merge: PR #92.
 - Phase 14 final merge commit: `de4fbefe6f9a23792a542a74d4d0ca1aef1aa208`.
 - Post-Phase-14 Codex mission/docs merge: PR #93.
-- Current next implementation phase: **Phase 15 — Security/failure hardening**.
+- Phase 15A and Phase 15B are merged and CI-verified.
+- Current next implementation task: **Phase 15C — Provider + MCP failure isolation**.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
 - Unattended Automation stays Level 0/1 only.
@@ -56,9 +59,9 @@ Examples:
 
 Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
-When target-PC access is unavailable, the first repository task is:
+When target-PC access is unavailable, continue from the first unchecked implementable tracker item. At the current checkpoint that is:
 
-**Phase 15A — Project path / filesystem hardening.**
+**Phase 15C — Provider + MCP failure isolation.**
 
 Do not rebuild or redesign completed Phase 14 work.
 
@@ -78,19 +81,21 @@ Do **not** ask the user to restate the roadmap or choose a phase when the reposi
 Resume protocol:
 
 1. read current `main`;
-2. read `docs/CODEX_PROGRESS_TRACKER.md`;
-3. read the latest section of `docs/CODEX_HANDOFF.md`;
-4. read `docs/CODEX_NEXT_MISSION.md`;
-5. identify the first task that is not PASS/complete and is implementable in the current environment;
-6. if an earlier task is blocked only by target-PC access, login, Sonor access, camera/mic or another external-only action, record the blocker and continue the next independent repository task;
-7. create a focused feature branch;
-8. implement the task completely enough to satisfy its exit gate;
-9. add/update regression tests;
-10. run build, tests, typecheck, lint and audit;
-11. open a PR;
-12. merge only after green CI;
-13. update `CODEX_HANDOFF.md`, `CODEX_PROGRESS_TRACKER.md` and any relevant validation document;
-14. continue automatically to the next implementable unfinished task.
+2. read `docs/ASTRA_WORKLOG.md`;
+3. read `docs/SESSION_RECOVERY.md`;
+4. read `docs/CODEX_PROGRESS_TRACKER.md`;
+5. read the latest section of `docs/CODEX_HANDOFF.md`;
+6. read `docs/CODEX_NEXT_MISSION.md`;
+7. identify the first task that is not PASS/complete and is implementable in the current environment;
+8. if an earlier task is blocked only by target-PC access, login, Sonor access, camera/mic or another external-only action, record the blocker and continue the next independent repository task;
+9. create a focused feature branch;
+10. implement the task completely enough to satisfy its exit gate;
+11. add/update regression tests;
+12. run build, tests, typecheck, lint and audit;
+13. open a PR;
+14. merge only after green CI;
+15. update `ASTRA_WORKLOG.md`, `CODEX_HANDOFF.md`, `CODEX_PROGRESS_TRACKER.md` and any relevant validation document;
+16. continue automatically to the next implementable unfinished task.
 
 Stop only when:
 
@@ -161,7 +166,8 @@ Before merging meaningful changes:
 - work on a feature branch;
 - run the production GitHub Actions build;
 - merge only when CI succeeds;
-- update the relevant build/context docs.
+- update the relevant build/context docs;
+- append the merged slice, PR, merge commit, CI result, important finding, and exact next task to `docs/ASTRA_WORKLOG.md`.
 
 ## Local commands
 
