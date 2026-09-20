@@ -98,6 +98,10 @@ function errorMessage(payload: unknown, fallback: string) {
 
 export default function AstraAutomationPanel() {
   const runtime = useAstraRuntime();
+  const {
+    automationServiceStatus,
+    refreshAutomationServiceStatus,
+  } = runtime;
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<AutomationStatusResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -125,6 +129,7 @@ export default function AstraAutomationPanel() {
         );
       }
       setStatus(payload as AutomationStatusResponse);
+      await refreshAutomationServiceStatus();
     } catch (err) {
       setError(
         err instanceof Error
@@ -134,7 +139,7 @@ export default function AstraAutomationPanel() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refreshAutomationServiceStatus]);
 
   useEffect(() => {
     if (!open) return;
@@ -161,6 +166,59 @@ export default function AstraAutomationPanel() {
       return payload;
     },
     [refresh],
+  );
+
+  const controlService = useCallback(
+    async (action: "start" | "stop" | "tick") => {
+      setBusyKey("service:" + action);
+      setError(null);
+      setNotice(null);
+
+      try {
+        const response = await fetch("/api/automation/service", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-astra-client": "1",
+          },
+          body: JSON.stringify({ action }),
+        });
+        const payload = (await response.json()) as unknown;
+
+        if (!response.ok) {
+          throw new Error(
+            errorMessage(payload, "Automation service control failed."),
+          );
+        }
+
+        const record =
+          payload && typeof payload === "object"
+            ? (payload as Record<string, unknown>)
+            : {};
+        const service =
+          record.service &&
+          typeof record.service === "object"
+            ? record.service as { lastDetail?: unknown }
+            : undefined;
+
+        setNotice(
+          typeof service?.lastDetail === "string"
+            ? service.lastDetail
+            : "Automation service control completed.",
+        );
+        await refresh();
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Automation service control failed.",
+        );
+        await refreshAutomationServiceStatus();
+      } finally {
+        setBusyKey(null);
+      }
+    },
+    [refresh, refreshAutomationServiceStatus],
   );
 
   const resetForm = useCallback(() => {
@@ -486,7 +544,10 @@ export default function AstraAutomationPanel() {
           type="button"
           className="astra-automation__stop"
           onClick={runtime.stopInteraction}
-          disabled={!runtime.automationStreaming}
+          disabled={
+            !runtime.automationStreaming &&
+            !automationServiceStatus?.tickActive
+          }
         >
           STOP ACTIVE
         </button>
@@ -504,7 +565,105 @@ export default function AstraAutomationPanel() {
         <span>
           {runtime.automationStreaming ? "STREAM ACTIVE" : "STREAM IDLE"}
         </span>
+        <span>
+          {!automationServiceStatus
+            ? "SERVICE CHECKING"
+            : !automationServiceStatus.enabled
+              ? "SERVICE OFF"
+              : automationServiceStatus.tickActive
+                ? "SERVICE TICK ACTIVE"
+                : automationServiceStatus.running
+                  ? "SERVICE RUNNING"
+                  : "SERVICE STOPPED"}
+        </span>
       </div>
+
+      <section className="astra-automation__section">
+        <div className="astra-automation__section-title">
+          BACKGROUND SERVICE
+        </div>
+        {!automationServiceStatus ? (
+          <div className="astra-automation__empty">
+            Checking local automation service...
+          </div>
+        ) : (
+          <>
+            <div className="astra-automation__meta">
+              <span>
+                {automationServiceStatus.enabled ? "OPT-IN ENABLED" : "OPT-IN OFF"}
+              </span>
+              <span>
+                {automationServiceStatus.running ? "RUNNING" : "STOPPED"}
+              </span>
+              <span>
+                {automationServiceStatus.tickActive ? "TICK ACTIVE" : "TICK IDLE"}
+              </span>
+              <span>
+                POLL · {Math.round(automationServiceStatus.pollIntervalMs / 1000)}S
+              </span>
+              <span>
+                NEXT · {displayTime(automationServiceStatus.nextTickAt)}
+              </span>
+            </div>
+            <p className="astra-automation__detail">
+              {automationServiceStatus.lastDetail}
+            </p>
+            {automationServiceStatus.lastSummary ? (
+              <div className="astra-automation__meta">
+                <span>
+                  RUNS · {automationServiceStatus.lastSummary.runCount}
+                </span>
+                <span>
+                  DONE · {automationServiceStatus.lastSummary.completed}
+                </span>
+                <span>
+                  FAILED · {automationServiceStatus.lastSummary.failed}
+                </span>
+                <span>
+                  APPROVAL · {automationServiceStatus.lastSummary.waitingApprovalCount}
+                </span>
+              </div>
+            ) : null}
+            {automationServiceStatus.enabled ? (
+              <div className="astra-automation__actions">
+                {automationServiceStatus.running ? (
+                  <button
+                    type="button"
+                    disabled={Boolean(busyKey)}
+                    onClick={() => void controlService("stop")}
+                  >
+                    STOP SERVICE
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={Boolean(busyKey)}
+                    onClick={() => void controlService("start")}
+                  >
+                    START SERVICE
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={
+                    Boolean(busyKey) ||
+                    automationServiceStatus.tickActive
+                  }
+                  onClick={() => void controlService("tick")}
+                  title="Runs only due Permission Level 0/1 occurrences"
+                >
+                  RUN SAFE TICK
+                </button>
+              </div>
+            ) : (
+              <div className="astra-automation__empty">
+                Background execution is OFF by default. Enable it explicitly with
+                scripts/windows/enable-automation.ps1, then restart ASTRA.
+              </div>
+            )}
+          </>
+        )}
+      </section>
 
       {status?.detail ? (
         <p className="astra-automation__detail">{status.detail}</p>
