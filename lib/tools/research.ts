@@ -34,6 +34,15 @@ export interface AstraResearchTransport {
   }>;
 }
 
+const RESEARCH_HEALTH_CACHE_MS = 15_000;
+let researchHealthCache:
+  | {
+      endpoint: string;
+      at: number;
+      status: AstraResearchTransportStatus;
+    }
+  | undefined;
+
 function envUrl() {
   return process.env.ASTRA_SEARXNG_URL?.trim() ?? "";
 }
@@ -135,12 +144,21 @@ export class SearXngResearchTransport
       };
     }
 
+    const cached = researchHealthCache;
+    if (
+      cached &&
+      cached.endpoint === endpoint.toString() &&
+      Date.now() - cached.at < RESEARCH_HEALTH_CACHE_MS
+    ) {
+      return cached.status;
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(
       () => controller.abort(
         new DOMException("SearXNG health check timed out.", "AbortError"),
       ),
-      2500,
+      1500,
     );
 
     try {
@@ -150,7 +168,7 @@ export class SearXngResearchTransport
         signal: controller.signal,
       });
 
-      return {
+      const status: AstraResearchTransportStatus = {
         configured: true,
         available: health.ok,
         provider: this.provider,
@@ -158,6 +176,28 @@ export class SearXngResearchTransport
           ? "Local SearXNG search endpoint responded successfully."
           : health.detail,
       };
+      researchHealthCache = {
+        endpoint: endpoint.toString(),
+        at: Date.now(),
+        status,
+      };
+      return status;
+    } catch (error) {
+      const status: AstraResearchTransportStatus = {
+        configured: true,
+        available: false,
+        provider: this.provider,
+        detail:
+          error instanceof Error
+            ? "Local SearXNG health check failed: " + error.message
+            : "Local SearXNG health check failed.",
+      };
+      researchHealthCache = {
+        endpoint: endpoint.toString(),
+        at: Date.now(),
+        status,
+      };
+      return status;
     } finally {
       clearTimeout(timer);
     }
@@ -341,7 +381,9 @@ export async function createResearchToolRegistrations(
   const status = await transport.status();
   const availability = status.available
     ? "READY"
-    : "NOT_CONFIGURED";
+    : status.configured
+      ? "OFFLINE"
+      : "NOT_CONFIGURED";
 
   const definitions: AstraToolDefinition[] = [
     {
@@ -354,7 +396,7 @@ export async function createResearchToolRegistrations(
       sideEffect: "read",
       timeoutMs: 30_000,
       supportsCancellation: true,
-      provider: status.available
+      provider: status.configured
         ? transport.provider
         : undefined,
       availability,
@@ -369,7 +411,7 @@ export async function createResearchToolRegistrations(
       sideEffect: "read",
       timeoutMs: 90_000,
       supportsCancellation: true,
-      provider: status.available
+      provider: status.configured
         ? transport.provider
         : undefined,
       availability,
