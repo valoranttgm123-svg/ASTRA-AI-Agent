@@ -37,7 +37,8 @@ Read these only when the active task needs their historical/detail context:
 - Phase 16A repository performance instrumentation is merged and CI-verified; P16B/P16C still require the target runtime/browser.
 - Phase 17A safe full-system preflight tooling is merged and CI-verified.
 - Repository cleanup before RC is complete.
-- Current implementable repository task: **Phase 19A — read-only readiness self-check tooling**.
+- Phase 19A read-only readiness self-check tooling is merged and CI-verified.
+- Current implementable repository task: **Phase 19B — safe update/reinstall tooling**.
 - MEM-X still requires real local Sonor access.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
@@ -66,7 +67,7 @@ Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
 When target-PC access is unavailable, continue from the first unchecked implementable tracker item. After Phase 15F merges, that is:
 
-**Phase 19A — read-only readiness self-check tooling**, while Phase 14/16/17 target-runtime evidence and MEM-X remain local-access gates.
+**Phase 19B — safe update/reinstall tooling**, while Phase 14/16/17 target-runtime evidence and MEM-X remain local-access gates.
 
 Do not rebuild or redesign completed Phase 14 work.
 
