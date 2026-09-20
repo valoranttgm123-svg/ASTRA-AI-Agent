@@ -398,6 +398,7 @@ export default function ApexWorld() {
               ["SKILL", runtime.brainStatus.features.skills],
               ["CODEX", runtime.brainStatus.features.codex],
               ["INT", runtime.brainStatus.features.integrations],
+              ["CREATIVE", runtime.brainStatus.features.creative],
               ["TOOLS", runtime.brainStatus.features.tools],
               ["CLOUD", runtime.brainStatus.features.cloud],
             ] as const).map(([label, feature]) => (
@@ -469,20 +470,24 @@ export default function ApexWorld() {
           statusOverride={
             selected.key === "researcher"
               ? runtime.brainStatus?.features?.research?.state
-              : ["finance", "editor", "sales", "marketing", "ops", "analytics"].includes(selected.key)
+              : ["finance", "editor", "sales", "marketing", "ops", "analytics", "social_media"].includes(selected.key)
                 ? runtime.brainStatus?.features?.business?.state
-                : ["crm", "calendar", "email", "drive"].includes(selected.key)
-                  ? runtime.brainStatus?.features?.integrations?.state
-                  : undefined
+                : selected.key === "design"
+                  ? runtime.brainStatus?.features?.creative?.state
+                  : ["crm", "calendar", "email", "drive"].includes(selected.key)
+                    ? runtime.brainStatus?.features?.integrations?.state
+                    : undefined
           }
           statusDetail={
             selected.key === "researcher"
               ? runtime.brainStatus?.features?.research?.detail
-              : ["finance", "editor", "sales", "marketing", "ops", "analytics"].includes(selected.key)
+              : ["finance", "editor", "sales", "marketing", "ops", "analytics", "social_media"].includes(selected.key)
                 ? runtime.brainStatus?.features?.business?.detail
-                : ["crm", "calendar", "email", "drive"].includes(selected.key)
-                  ? runtime.brainStatus?.features?.integrations?.detail
-                  : undefined
+                : selected.key === "design"
+                  ? runtime.brainStatus?.features?.creative?.detail
+                  : ["crm", "calendar", "email", "drive"].includes(selected.key)
+                    ? runtime.brainStatus?.features?.integrations?.detail
+                    : undefined
           }
         />
       )}
