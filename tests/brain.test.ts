@@ -39,6 +39,7 @@ import {
   updatePlanStepStatus,
 } from "../lib/planner/planner";
 import { createToolRegistry } from "../lib/tools/registry";
+import { parsePlannerDraft, shouldGeneratePlan } from "../lib/planner/generator";
 
 let root = "";
 let alurkaWorkspace = "";
@@ -151,6 +152,51 @@ before(async () => {
       chatBodies.push(body);
       const messages = body.messages as Array<{ role: string; content: string }>;
       const input = messages.find((message) => message.role === "user")?.content;
+
+      if (input?.startsWith("ASTRA_PLAN_REQUEST")) {
+        response.setHeader("content-type", "application/json");
+        response.end(
+          JSON.stringify({
+            message: {
+              content: JSON.stringify({
+                steps: [
+                  {
+                    id: "inspect",
+                    title: "Inspect the registered project state",
+                    kind: "inspect",
+                    agent: "files",
+                    permissionLevel: 0,
+                    dependsOn: [],
+                    timeoutMs: 5000,
+                    maxRetries: 0,
+                  },
+                  {
+                    id: "fix",
+                    title: "Apply the smallest safe code change",
+                    kind: "tool",
+                    agent: "developer",
+                    permissionLevel: 0,
+                    dependsOn: ["inspect"],
+                    timeoutMs: 45000,
+                    maxRetries: 1,
+                  },
+                  {
+                    id: "verify",
+                    title: "Run verification after the change",
+                    kind: "verify",
+                    agent: "developer",
+                    permissionLevel: 0,
+                    dependsOn: ["fix"],
+                    timeoutMs: 30000,
+                    maxRetries: 0,
+                  },
+                ],
+              }),
+            },
+          }),
+        );
+        return;
+      }
 
       if (input === "slow") {
         const timer = setTimeout(() => {
@@ -944,4 +990,78 @@ test("Brain loads scoped registered project context through unified memory", asy
   assert.equal(result.brain.context?.project?.id, "alurka");
   assert.ok(result.brain.context?.memorySources?.includes("project"));
   assert.equal(result.state, "completed");
+});
+
+
+test("Strategist detects explicit plans and multi-action goals without planning trivial chat", () => {
+  assert.equal(shouldGeneratePlan("halo ASTRA"), false);
+  assert.equal(shouldGeneratePlan("buat rencana project ALURKA"), true);
+  assert.equal(
+    shouldGeneratePlan("cek repo, perbaiki error lalu test hasilnya"),
+    true,
+  );
+});
+
+test("planner parser enforces conservative permission floors", () => {
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "read",
+          title: "Inspect project",
+          kind: "inspect",
+          permissionLevel: 0,
+          agent: "files",
+        },
+        {
+          id: "write",
+          title: "Modify code",
+          kind: "tool",
+          permissionLevel: 0,
+          agent: "developer",
+          dependsOn: ["read"],
+        },
+        {
+          id: "approve",
+          title: "Request external approval",
+          kind: "approval",
+          permissionLevel: 1,
+          agent: "chief_of_staff",
+          dependsOn: ["write"],
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].permissionLevel, 1);
+  assert.equal(steps[1].permissionLevel, 2);
+  assert.equal(steps[2].permissionLevel, 3);
+});
+
+test("Brain creates a bounded Strategist plan from the real local planner call", async () => {
+  const events: AstraBrainEvent[] = [];
+  const result = await astraBrain.chat(
+    "cek project ALURKA, perbaiki error lalu test hasilnya",
+    {
+      provider: "ollama",
+      onEvent: (event) => events.push(event),
+    },
+  );
+
+  assert.equal(result.state, "completed");
+  assert.equal(result.brain.plan?.status, "planned");
+  assert.equal(result.brain.plan?.projectId, "alurka");
+  assert.equal(result.brain.plan?.steps.length, 3);
+  assert.equal(result.brain.plan?.steps[0].permissionLevel, 1);
+  assert.equal(result.brain.plan?.steps[1].permissionLevel, 2);
+  assert.equal(result.brain.plan?.steps[2].kind, "verify");
+  assert.ok(events.some((event) => event.type === "plan.created"));
+  assert.ok(
+    result.brain.events.some((event) => event.type === "plan.created"),
+  );
+  assert.equal(
+    events.some((event) => event.type === "plan.step.completed"),
+    false,
+  );
+  assert.equal(chatCalls, 2);
 });
