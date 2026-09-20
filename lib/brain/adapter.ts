@@ -977,7 +977,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       getOllamaStatus(),
       getCodexStatus(policy),
       getCloudStatus(policy),
-      getMemoryContext("ASTRA status"),
+      getUnifiedMemoryContext("ASTRA status"),
       getSkillContext("chief_of_staff"),
     ]);
 
