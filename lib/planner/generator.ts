@@ -128,7 +128,18 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function defaultPermissionForKind(kind: AstraPlanStepKind) {
+function defaultPermissionForStep(
+  kind: AstraPlanStepKind,
+  agent: AstraAgentKey | undefined,
+  title: string,
+) {
+  const highImpact =
+    /(?:delete|hapus|admin|administrator|credential|password|secret|live trade|place trade|close trade|withdraw)/i.test(
+      title,
+    );
+
+  if (highImpact) return 4;
+
   switch (kind) {
     case "reason":
       return 0;
@@ -138,14 +149,27 @@ function defaultPermissionForKind(kind: AstraPlanStepKind) {
     case "verify":
       return 1;
     case "tool":
+      if (agent === "trading") return 4;
+      if (
+        agent === "github" ||
+        agent === "communication" ||
+        agent === "business"
+      ) {
+        return 3;
+      }
       return 2;
     case "approval":
       return 3;
   }
 }
 
-function normalizedPermission(value: unknown, kind: AstraPlanStepKind) {
-  const floor = defaultPermissionForKind(kind);
+function normalizedPermission(
+  value: unknown,
+  kind: AstraPlanStepKind,
+  agent: AstraAgentKey | undefined,
+  title: string,
+) {
+  const floor = defaultPermissionForStep(kind, agent, title);
   const parsed =
     typeof value === "number" && Number.isFinite(value)
       ? Math.floor(value)
@@ -172,6 +196,8 @@ function normalizeDraft(value: unknown, index: number): AstraPlanStepDraft | nul
     ? value.dependsOn.filter((item): item is string => typeof item === "string")
     : undefined;
 
+  const agent = normalizeAgent(value.agent);
+
   return {
     id:
       typeof value.id === "string" && value.id.trim()
@@ -179,10 +205,12 @@ function normalizeDraft(value: unknown, index: number): AstraPlanStepDraft | nul
         : `step-${index + 1}`,
     title,
     kind: kind as AstraPlanStepKind,
-    agent: normalizeAgent(value.agent),
+    agent,
     permissionLevel: normalizedPermission(
       value.permissionLevel,
       kind as AstraPlanStepKind,
+      agent,
+      title,
     ),
     dependsOn,
     timeoutMs:

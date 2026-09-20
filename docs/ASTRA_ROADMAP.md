@@ -487,3 +487,21 @@ Merged to `main`:
 - ✅ Phase 6 Tool Registry **metadata foundation** completed early; real handlers/MCP execution still pending
 
 The next Codex session should not rewrite these foundations. It should connect real providers/adapters to them and advance the remaining roadmap with truthful telemetry, permission gates, cancellation and verification.
+
+
+---
+
+## Phase 5A implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase5-bounded-agent-orchestrator`:
+
+- bounded dependency-aware plan executor;
+- permission gate before handler invocation;
+- retries/timeouts/cancellation;
+- real step lifecycle telemetry;
+- Memory and Ollama reasoning handlers;
+- Codex read-only inspect / permitted safe-local action / evidence-producing verify handlers;
+- truthful stop on missing Research/browser or unconfigured tool handler;
+- agent-aware permission floors for GitHub/Communication/Business/Trading actions.
+
+Phase 5 is **partially implemented**, not fully complete. Full completion requires the executable Tool Registry/MCP and real Research/browser capability from the next roadmap work.

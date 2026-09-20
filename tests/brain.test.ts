@@ -40,6 +40,7 @@ import {
 } from "../lib/planner/planner";
 import { createToolRegistry } from "../lib/tools/registry";
 import { parsePlannerDraft, shouldGeneratePlan } from "../lib/planner/generator";
+import { executeBoundedPlan } from "../lib/planner/executor";
 
 let root = "";
 let alurkaWorkspace = "";
@@ -154,44 +155,68 @@ before(async () => {
       const input = messages.find((message) => message.role === "user")?.content;
 
       if (input?.startsWith("ASTRA_PLAN_REQUEST")) {
+        const reasonOnly = input.includes("reason-only-plan");
+        const steps = reasonOnly
+          ? [
+              {
+                id: "reason-1",
+                title: "Analyze the goal and constraints",
+                kind: "reason",
+                agent: "business",
+                permissionLevel: 0,
+                dependsOn: [],
+                timeoutMs: 5000,
+                maxRetries: 0,
+              },
+              {
+                id: "reason-2",
+                title: "Produce a concise recommendation from the analysis",
+                kind: "reason",
+                agent: "chief_of_staff",
+                permissionLevel: 0,
+                dependsOn: ["reason-1"],
+                timeoutMs: 5000,
+                maxRetries: 0,
+              },
+            ]
+          : [
+              {
+                id: "inspect",
+                title: "Inspect the registered project state",
+                kind: "inspect",
+                agent: "files",
+                permissionLevel: 0,
+                dependsOn: [],
+                timeoutMs: 5000,
+                maxRetries: 0,
+              },
+              {
+                id: "fix",
+                title: "Apply the smallest safe code change",
+                kind: "tool",
+                agent: "developer",
+                permissionLevel: 0,
+                dependsOn: ["inspect"],
+                timeoutMs: 45000,
+                maxRetries: 1,
+              },
+              {
+                id: "verify",
+                title: "Run verification after the change",
+                kind: "verify",
+                agent: "developer",
+                permissionLevel: 0,
+                dependsOn: ["fix"],
+                timeoutMs: 30000,
+                maxRetries: 0,
+              },
+            ];
+
         response.setHeader("content-type", "application/json");
         response.end(
           JSON.stringify({
             message: {
-              content: JSON.stringify({
-                steps: [
-                  {
-                    id: "inspect",
-                    title: "Inspect the registered project state",
-                    kind: "inspect",
-                    agent: "files",
-                    permissionLevel: 0,
-                    dependsOn: [],
-                    timeoutMs: 5000,
-                    maxRetries: 0,
-                  },
-                  {
-                    id: "fix",
-                    title: "Apply the smallest safe code change",
-                    kind: "tool",
-                    agent: "developer",
-                    permissionLevel: 0,
-                    dependsOn: ["inspect"],
-                    timeoutMs: 45000,
-                    maxRetries: 1,
-                  },
-                  {
-                    id: "verify",
-                    title: "Run verification after the change",
-                    kind: "verify",
-                    agent: "developer",
-                    permissionLevel: 0,
-                    dependsOn: ["fix"],
-                    timeoutMs: 30000,
-                    maxRetries: 0,
-                  },
-                ],
-              }),
+              content: JSON.stringify({ steps }),
             },
           }),
         );
@@ -1064,4 +1089,213 @@ test("Brain creates a bounded Strategist plan from the real local planner call",
     false,
   );
   assert.equal(chatCalls, 2);
+});
+
+
+test("bounded plan executor respects dependencies and emits only real completion events", async () => {
+  const plan = createBoundedPlan("Execute bounded test", [
+    {
+      id: "first",
+      title: "First",
+      kind: "reason",
+      permissionLevel: 0,
+    },
+    {
+      id: "second",
+      title: "Second",
+      kind: "reason",
+      permissionLevel: 0,
+      dependsOn: ["first"],
+    },
+  ]);
+
+  const order: string[] = [];
+  const events: string[] = [];
+  const result = await executeBoundedPlan(plan, {
+    approvedPermissionLevel: 1,
+    onEvent: (event) => events.push(event.type),
+    executeStep: async (step) => {
+      order.push(step.id);
+      return {
+        status: "completed",
+        provider: "fixture",
+        detail: "completed " + step.id,
+        output: "output " + step.id,
+      };
+    },
+  });
+
+  assert.equal(result.outcome, "completed");
+  assert.deepEqual(order, ["first", "second"]);
+  assert.deepEqual(
+    result.plan.steps.map((step) => step.status),
+    ["completed", "completed"],
+  );
+  assert.equal(events.filter((type) => type === "plan.step.completed").length, 2);
+  assert.equal(events.at(-1), "plan.completed");
+});
+
+test("bounded plan executor stops before a step above the approved permission level", async () => {
+  const plan = createBoundedPlan("Permission test", [
+    {
+      id: "external",
+      title: "External action",
+      kind: "tool",
+      agent: "communication",
+      permissionLevel: 3,
+    },
+  ]);
+
+  let calls = 0;
+  const result = await executeBoundedPlan(plan, {
+    approvedPermissionLevel: 2,
+    executeStep: async () => {
+      calls += 1;
+      return {
+        status: "completed",
+        detail: "should not run",
+      };
+    },
+  });
+
+  assert.equal(calls, 0);
+  assert.equal(result.outcome, "waiting_approval");
+  assert.equal(result.blockedStepId, "external");
+  assert.equal(result.plan.steps[0].status, "waiting_approval");
+});
+
+test("bounded plan executor retries only within the step retry limit", async () => {
+  const plan = createBoundedPlan("Retry test", [
+    {
+      id: "retry",
+      title: "Retry once",
+      kind: "reason",
+      permissionLevel: 0,
+      maxRetries: 1,
+    },
+  ]);
+
+  let calls = 0;
+  const result = await executeBoundedPlan(plan, {
+    approvedPermissionLevel: 1,
+    executeStep: async () => {
+      calls += 1;
+      if (calls === 1) {
+        return {
+          status: "failed",
+          detail: "transient fixture failure",
+        };
+      }
+      return {
+        status: "completed",
+        detail: "second attempt succeeded",
+      };
+    },
+  });
+
+  assert.equal(calls, 2);
+  assert.equal(result.outcome, "completed");
+  assert.equal(result.plan.steps[0].status, "completed");
+});
+
+test("planner permission floors protect GitHub, communication, business, and trading tool steps", () => {
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "github",
+          title: "Push branch",
+          kind: "tool",
+          agent: "github",
+          permissionLevel: 0,
+        },
+        {
+          id: "mail",
+          title: "Send email",
+          kind: "tool",
+          agent: "communication",
+          permissionLevel: 0,
+        },
+        {
+          id: "business",
+          title: "Update customer system",
+          kind: "tool",
+          agent: "business",
+          permissionLevel: 0,
+        },
+        {
+          id: "trade",
+          title: "Place trade",
+          kind: "tool",
+          agent: "trading",
+          permissionLevel: 0,
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].permissionLevel, 3);
+  assert.equal(steps[1].permissionLevel, 3);
+  assert.equal(steps[2].permissionLevel, 3);
+  assert.equal(steps[3].permissionLevel, 4);
+});
+
+test("Brain bounded orchestrator executes a real reasoning-only plan step by step", async () => {
+  const events: AstraBrainEvent[] = [];
+  const result = await astraBrain.execute(
+    {
+      input: "buat rencana reason-only-plan untuk analisis sederhana",
+      approved: true,
+    },
+    {
+      provider: "ollama",
+      onEvent: (event) => events.push(event),
+    },
+  );
+
+  assert.equal(result.state, "completed");
+  assert.equal(result.brain.execution, "executed");
+  assert.equal(result.brain.plan?.status, "completed");
+  assert.equal(
+    result.brain.plan?.steps.every((step) => step.status === "completed"),
+    true,
+  );
+  assert.ok(events.some((event) => event.type === "plan.step.started"));
+  assert.equal(
+    events.filter((event) => event.type === "plan.step.completed").length,
+    2,
+  );
+  assert.ok(events.some((event) => event.type === "plan.completed"));
+  assert.ok(result.brain.route.includes("business"));
+  assert.equal(chatCalls, 3);
+});
+
+test("Brain bounded orchestrator fails truthfully when a real tool executor is unavailable", async () => {
+  process.env.ASTRA_ALLOW_FILE_WRITE = "true";
+  const events: AstraBrainEvent[] = [];
+  const result = await astraBrain.execute(
+    {
+      input: "cek project ALURKA, perbaiki error lalu test hasilnya",
+      approved: true,
+    },
+    {
+      provider: "auto",
+      onEvent: (event) => events.push(event),
+    },
+  );
+
+  assert.equal(result.state, "error");
+  assert.equal(result.brain.execution, "blocked");
+  assert.equal(result.brain.plan?.steps[0].status, "completed");
+  assert.equal(result.brain.plan?.steps[1].status, "failed");
+  assert.equal(result.brain.plan?.steps[2].status, "pending");
+  assert.ok(events.some((event) => event.type === "plan.step.failed"));
+  assert.equal(
+    events.some(
+      (event) =>
+        event.type === "plan.step.completed" &&
+        event.detail?.includes("Run verification"),
+    ),
+    false,
+  );
 });

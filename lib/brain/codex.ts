@@ -176,6 +176,7 @@ export async function chatWithCodex({
   policyText,
   policy,
   executionRequested = false,
+  verificationRequested = false,
   signal,
 }: {
   input: string;
@@ -184,6 +185,7 @@ export async function chatWithCodex({
   policyText?: string;
   policy: AstraBrainPermissionSnapshot;
   executionRequested?: boolean;
+  verificationRequested?: boolean;
   signal?: AbortSignal;
 }) {
   const config = getCodexConfig(policy);
@@ -203,11 +205,13 @@ export async function chatWithCodex({
       : config.sandbox === "danger-full-access"
         ? "Danger-full-access was explicitly enabled by local ASTRA configuration. Stay inside the configured workspace, keep changes minimal, and never perform external actions unless the ASTRA policy explicitly permits them."
         : "Workspace writes are enabled by ASTRA policy. Keep changes minimal and verify them.",
-    executionRequested
-      ? writableSandbox
-        ? "EXECUTION MODE: perform the requested task now inside the configured workspace. Do not merely describe a patch. Make the permitted changes, run relevant verification commands, and report what actually completed. End the final response with exactly one marker line: ASTRA_EXECUTION_STATUS: completed only if the requested change and verification actually succeeded; otherwise use ASTRA_EXECUTION_STATUS: blocked or ASTRA_EXECUTION_STATUS: failed."
-        : "EXECUTION MODE was requested, but the Codex sandbox is read-only. Do not claim files were changed."
-      : "CHAT MODE: inspect or reason as requested; do not make changes unless execution mode is explicitly requested.",
+    verificationRequested
+      ? "VERIFICATION MODE: do not modify files. Run only read-only inspection or verification commands permitted by the sandbox, collect concrete evidence, and report what actually ran. End the final response with exactly one marker line: ASTRA_EXECUTION_STATUS: completed only if the requested verification actually ran and passed; otherwise use ASTRA_EXECUTION_STATUS: blocked or ASTRA_EXECUTION_STATUS: failed."
+      : executionRequested
+        ? writableSandbox
+          ? "EXECUTION MODE: perform the requested task now inside the configured workspace. Do not merely describe a patch. Make the permitted changes, run relevant verification commands, and report what actually completed. End the final response with exactly one marker line: ASTRA_EXECUTION_STATUS: completed only if the requested change and verification actually succeeded; otherwise use ASTRA_EXECUTION_STATUS: blocked or ASTRA_EXECUTION_STATUS: failed."
+          : "EXECUTION MODE was requested, but the Codex sandbox is read-only. Do not claim files were changed."
+        : "CHAT MODE: inspect or reason as requested; do not make changes unless execution mode is explicitly requested.",
     "Do not use paid APIs or external side effects unless the ASTRA policy explicitly allows them.",
     "Return a concise final result in the same language as the user.",
     "",

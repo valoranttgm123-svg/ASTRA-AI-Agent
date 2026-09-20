@@ -1,5 +1,39 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 5A bounded Chief orchestrator checkpoint
+
+This branch adds real bounded plan execution on top of the validated Phase 4 Strategist plan.
+
+Implemented:
+- `lib/planner/executor.ts` executes validated plan steps sequentially according to dependencies;
+- per-step permission gates stop before invoking the handler;
+- bounded retries, per-step timeout, cancellation, dependency checks and output caps are enforced centrally;
+- only a real handler result may produce `plan.step.completed`;
+- Level 3/4 steps cannot be silently covered by the normal one-click safe-local approval path;
+- planner permission floors are now agent-aware: GitHub/Communication/Business tool actions floor at Level 3, Trading tool actions at Level 4, and obvious high-impact titles floor at Level 4;
+- `lib/brain/plan-executor.ts` supplies real current handlers:
+  - Memory → unified Memory Manager;
+  - Reason → local Ollama;
+  - engineering/files/computer read-only inspection → Codex when available, otherwise bounded registered Memory/Project context;
+  - safe local developer/files/computer tool action → Codex execution marker path when explicitly permitted;
+  - verification → new Codex read-only VERIFICATION MODE with required completion marker;
+  - Research → truthfully fails until a real research/browser tool is connected;
+  - explicit approval checkpoint → waits for approval;
+- complex `astraBrain.execute()` requests now use the bounded plan orchestrator; simple requests keep the existing one-shot execution path;
+- real `plan.step.started/progress/completed/failed`, `plan.completed`, and `plan.cancelled` events are streamed only from actual executor state.
+
+Important limitations:
+- Phase 5 is not fully complete because real Research/browser execution is still absent;
+- real MCP/tool handlers from Phase 6 remain pending;
+- Level 3/4 scoped approval UI is not implemented yet;
+- Sonor remains untouched by this milestone and stays delegated to the existing local Sonor/Codex mission.
+
+Next roadmap work:
+1. validate/merge this Phase 5A checkpoint;
+2. implement Phase 6 executable Tool Registry handlers + MCP boundary;
+3. add a real Research/browser tool and complete remaining Phase 5 delegation coverage;
+4. then proceed to Phase 7 Files + GitHub production flow with verification.
+
 ## 2026-09-20 — Phase 4A real Strategist planner checkpoint
 
 This branch implements the first real model-backed Strategist planning path without enabling autonomous plan execution.

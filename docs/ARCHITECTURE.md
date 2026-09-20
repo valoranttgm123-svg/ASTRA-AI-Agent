@@ -215,3 +215,39 @@ The model output is never trusted as executable state. `createBoundedPlan()` rem
 Phase 4A emits only `plan.created` because no plan step has executed yet. `plan.step.started/progress/completed/failed` are reserved for Phase 5 when a real bounded executor/orchestrator exists.
 
 Planner failure is non-fatal: ASTRA may continue the normal provider response without a plan rather than fabricating one.
+
+
+## Bounded Chief Orchestrator
+
+Phase 5A executes only validated `AstraPlan` objects.
+
+```text
+Validated AstraPlan
+      ↓
+permission gate
+      ↓
+dependency-ready step
+      ↓
+bounded timeout / retry / cancellation
+      ↓
+real step handler
+      ├─ Memory Manager
+      ├─ Ollama reasoning
+      ├─ Codex read-only inspection
+      ├─ Codex safe local execution when permitted
+      └─ Codex evidence-producing verification
+      ↓
+real step result
+      ↓
+plan.step.* telemetry
+      ↓
+next dependency-ready step
+```
+
+The executor never marks a step completed from model prose alone. A handler must explicitly return a completed outcome. Missing Research/browser or MCP/tool capability fails or waits truthfully.
+
+A normal explicit execute approval authorizes only the safe-local path used by this phase. Higher-impact Level 3/4 steps remain blocked/waiting for stronger scoped approval rather than inheriting that approval.
+
+### Codex verification mode
+
+Codex now supports a dedicated read-only verification request. It must run allowed inspection/verification commands and return the same explicit `ASTRA_EXECUTION_STATUS` marker used for evidence-sensitive execution. A textual opinion without that marker does not pass a verification step.
