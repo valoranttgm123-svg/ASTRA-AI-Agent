@@ -3,6 +3,7 @@ import type { AstraAgent } from "./types";
 export const ASTRA_AGENTS: AstraAgent[] = [
   { key: "chief_of_staff", name: "Chief", role: "Routes work and coordinates specialists", capabilities: ["task routing", "planning", "approval gates"] },
   { key: "memory", name: "Memory", role: "Stores durable project context", capabilities: ["project context", "decisions", "preferences"] },
+  { key: "strategist", name: "Strategist", role: "Builds bounded plans, priorities, dependencies, and risk checkpoints", capabilities: ["planning", "prioritization", "dependencies", "risk checkpoints"] },
   { key: "researcher", name: "Research", role: "Researches public information and sources", capabilities: ["web research", "comparison", "source summaries"] },
   { key: "developer", name: "Developer", role: "Builds, reviews, and debugs software", capabilities: ["coding", "debugging", "architecture"] },
   { key: "computer", name: "Computer", role: "Controls approved desktop actions", capabilities: ["desktop automation", "app control", "terminal tasks"] },
