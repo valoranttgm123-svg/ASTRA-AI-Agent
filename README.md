@@ -4,7 +4,15 @@ ASTRA is a personal multi-agent AI project built on top of the open-source **APE
 
 ## Current status
 
-**Brain V1 architecture is implemented.** The UI accepts text/mic/gesture input, drives the real interaction lifecycle, routes requests through the ASTRA Brain Adapter, loads local Memory/Skills, chooses a permitted provider, and streams real Brain lifecycle events into the Command Center. Hermes and Ollama are local-first paths; Codex is the engineering specialist; optional paid cloud is disabled by default.
+**ASTRA MAX Phase 14 Automation is implementation-complete and CI-verified.** The repository now includes the Brain/Planner/Tool Runtime foundations, Memory and Project Registry foundations, executable tools, provider routing, real Command Center telemetry, multimodal interaction, approval-gated scheduled workflows, a default-OFF local Automation service, global STOP, and end-to-end Automation safety coverage.
+
+Current truthful release status:
+
+`PHASE 14 IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
+
+The next implementation phase is **Phase 15 — Security/failure hardening**. The exact Codex execution order through the core release and JARVIS-Class continuation is maintained in `docs/CODEX_NEXT_MISSION.md`.
+
+Hermes/Ollama/Codex/integrations are reported from real configuration/runtime state. Optional paid cloud remains disabled by default; unavailable integrations must remain `NOT_CONFIGURED` / unavailable rather than being presented as working.
 
 ## Included agents
 
@@ -73,11 +81,11 @@ Do **not** commit `.env.local`, tokens, passwords, SSH keys, broker credentials,
 This repository stores the ASTRA project handoff/context so future Codex sessions can continue without rebuilding history from scratch.
 
 Start here:
-- `AGENTS.md`
-- `docs/CODEX_HANDOFF.md`
-- `docs/ASTRA_CONVERSATION_HISTORY.md`
-- `docs/HUMANOID_BUILD_LOG.md`
-- `docs/ASTRA_BRAIN_V1.md`
+- `AGENTS.md` — automatic Codex repository instructions
+- `docs/CODEX_NEXT_MISSION.md` — current task order and exit gates
+- `docs/CODEX_HANDOFF.md` — verified implementation state
+- `docs/SECURITY_VALIDATION.md` — Phase 15 hardening matrix
+- `docs/ASTRA_MAX.md` — full Phase 0–30 roadmap / Definition of Done
 
 The stored history contains project decisions and implementation context, not credentials, hidden reasoning, or private system prompts.
 
