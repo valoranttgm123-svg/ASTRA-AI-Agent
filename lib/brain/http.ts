@@ -6,6 +6,7 @@ import type {
   AstraInputTrigger,
   AstraProviderChoice,
 } from "@/lib/agent/types";
+import { safePublicDetail } from "@/lib/security/redaction";
 
 const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const PROVIDERS = new Set<AstraProviderChoice>(["auto", "ollama", "codex"]);
@@ -250,6 +251,12 @@ export function parseAgentRequest(body: Record<string, unknown>): AgentRequest {
 export function errorResponse(error: unknown) {
   const status = error instanceof RequestError ? error.status : 400;
   const message =
-    error instanceof RequestError ? error.message : "Permintaan tidak valid.";
+    error instanceof RequestError
+      ? safePublicDetail(
+          error.message,
+          "Permintaan tidak valid.",
+          700,
+        )
+      : "Permintaan tidak valid.";
   return Response.json({ ok: false, error: message }, { status });
 }
