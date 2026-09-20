@@ -26,6 +26,26 @@ export type AstraAutomationStoreContext = {
   detail: string;
 };
 
+
+let automationMutationTail: Promise<void> = Promise.resolve();
+
+async function withAutomationMutationLock<T>(
+  run: () => Promise<T>,
+): Promise<T> {
+  const previous = automationMutationTail;
+  let release!: () => void;
+  automationMutationTail = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  await previous;
+  try {
+    return await run();
+  } finally {
+    release();
+  }
+}
+
 function envFlag(name: string, fallback: boolean) {
   const value = process.env[name]?.trim().toLowerCase();
   if (!value) return fallback;
@@ -293,6 +313,31 @@ export async function saveAutomationStore(
   };
 }
 
+export async function mutateAutomationStore<T>(
+  mutate: (
+    automations: AstraAutomationDefinition[],
+  ) =>
+    | {
+        automations: AstraAutomationDefinition[];
+        result: T;
+      }
+    | Promise<{
+        automations: AstraAutomationDefinition[];
+        result: T;
+      }>,
+): Promise<T> {
+  return withAutomationMutationLock(async () => {
+    const store = await loadAutomationStore();
+    if (!store.enabled || !store.available) {
+      throw new Error(store.detail);
+    }
+
+    const outcome = await mutate([...store.automations]);
+    await saveAutomationStore(outcome.automations);
+    return outcome.result;
+  });
+}
+
 export type AstraAutomationClaimResult = {
   claimed: boolean;
   automation?: AstraAutomationDefinition;
@@ -318,52 +363,61 @@ export async function claimAutomationOccurrence({
     throw new Error("Invalid automation claim time.");
   }
 
-  const store = await loadAutomationStore();
-  if (!store.enabled || !store.available) {
-    throw new Error(store.detail);
-  }
+  return mutateAutomationStore((automations) => {
+    const index = automations.findIndex(
+      (automation) =>
+        automation.id.toLowerCase() === automationId.trim().toLowerCase(),
+    );
+    if (index < 0) {
+      return {
+        automations,
+        result: {
+          claimed: false,
+          detail: "Automation definition was not found.",
+        },
+      };
+    }
 
-  const index = store.automations.findIndex(
-    (automation) =>
-      automation.id.toLowerCase() === automationId.trim().toLowerCase(),
-  );
-  if (index < 0) {
-    return {
-      claimed: false,
-      detail: "Automation definition was not found.",
+    const current = automations[index];
+    const due = getAutomationDueState(current, now);
+    if (due.kind !== "due") {
+      return {
+        automations,
+        result: {
+          claimed: false,
+          automation: current,
+          detail: "Automation occurrence is no longer due.",
+        },
+      };
+    }
+    if (due.scheduledFor !== normalizedScheduledFor) {
+      return {
+        automations,
+        result: {
+          claimed: false,
+          automation: current,
+          detail:
+            "Automation occurrence changed before it could be claimed.",
+        },
+      };
+    }
+
+    const updated: AstraAutomationDefinition = {
+      ...current,
+      lastRunAt: normalizedScheduledFor,
+      updatedAt: now.toISOString(),
     };
-  }
+    const next = [...automations];
+    next[index] = updated;
 
-  const current = store.automations[index];
-  const due = getAutomationDueState(current, now);
-  if (due.kind !== "due") {
     return {
-      claimed: false,
-      automation: current,
-      detail: "Automation occurrence is no longer due.",
+      automations: next,
+      result: {
+        claimed: true,
+        automation: updated,
+        detail:
+          "Automation occurrence claimed for single-process execution.",
+      },
     };
-  }
-  if (due.scheduledFor !== normalizedScheduledFor) {
-    return {
-      claimed: false,
-      automation: current,
-      detail:
-        "Automation occurrence changed before it could be claimed.",
-    };
-  }
-
-  const updated: AstraAutomationDefinition = {
-    ...current,
-    lastRunAt: normalizedScheduledFor,
-    updatedAt: now.toISOString(),
-  };
-  const next = [...store.automations];
-  next[index] = updated;
-  await saveAutomationStore(next);
-
-  return {
-    claimed: true,
-    automation: updated,
-    detail: "Automation occurrence claimed for single-process execution.",
-  };
+  });
 }
