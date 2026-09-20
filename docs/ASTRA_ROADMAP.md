@@ -870,3 +870,22 @@ Implemented on `astra/phase14d3b1-runtime-stream`:
 - the Runtime exposes `runAutomationOccurrence()` for the upcoming Automation panel.
 
 No new event bus or independent cancellation controller was introduced.
+---
+
+## Phase 14D3B2 implementation checkpoint — safe Automation panel
+
+Implemented on `astra/phase14d3b2-automation-panel`:
+
+- compact collapsible Automation panel mounted in the ASTRA shell;
+- truthful local definition/store/queue status from `/api/automation`;
+- new definitions save PAUSED by default;
+- edit is exposed only while a definition is PAUSED;
+- enable / pause / disable / delete controls use the existing loopback mutation API;
+- exact due Level-2/3 occurrence approval uses the shared Runtime SSE path;
+- existing Level-3 scope is shown before APPROVE ONCE;
+- DENY does not silently retry a claimed occurrence;
+- STOP ACTIVE uses the existing shared Runtime cancellation path;
+- Command Center timeline distinguishes automation waiting approval, failed/cancelled, and completed events;
+- responsive panel styling does not change Humanoid rendering.
+
+The interactive control/approval/STOP path is now present. The remaining Phase 14 implementation task is the explicit opt-in local timer/service for unattended Level 0/1 work plus final target-PC validation.
