@@ -4,6 +4,8 @@ import { visualNodeForAgent } from "@/lib/agent/capabilities";
 import type { AstraAgentKey } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
+import type { AstraPlan } from "@/lib/planner/contracts";
+import { generateStrategistPlan, shouldGeneratePlan } from "@/lib/planner/generator";
 import {
   chatWithCodex,
   codexMayReceiveMemory,
@@ -40,6 +42,8 @@ type ExecutionContext = {
   memoryLifecycle: AstraMemoryLifecycleEvent[];
   skills: AstraSkillContext;
   project: Awaited<ReturnType<typeof resolveProjectContext>>;
+  plan?: AstraPlan;
+  plannerDetail?: string;
   policy: AstraBrainPermissionSnapshot;
   policyText: string;
   localContext: string;
@@ -94,11 +98,42 @@ async function buildExecutionContext(
   const skillOnlyContext = skills.text;
   const localContext = [skills.text, memory.text].filter(Boolean).join("\n\n");
 
+  let plan: AstraPlan | undefined;
+  let plannerDetail: string | undefined;
+
+  if (shouldGeneratePlan(input)) {
+    try {
+      const generated = await generateStrategistPlan({
+        goal: input,
+        projectId: project.match?.project.id,
+        context: localContext,
+        signal,
+      });
+      plan = generated.plan;
+      plannerDetail =
+        "Strategist generated " +
+        generated.plan.steps.length +
+        " bounded step" +
+        (generated.plan.steps.length === 1 ? "" : "s") +
+        " with local Ollama model " +
+        generated.model +
+        ".";
+    } catch (error) {
+      signal?.throwIfAborted();
+      plannerDetail =
+        error instanceof Error
+          ? "Strategist planning unavailable: " + error.message
+          : "Strategist planning unavailable.";
+    }
+  }
+
   return {
     memory,
     memoryLifecycle,
     skills,
     project,
+    plan,
+    plannerDetail,
     policy,
     policyText: permissionPolicyPrompt(policy),
     localContext,
@@ -179,6 +214,24 @@ function contextEvents(
       visualNode: "memory",
       label: "Memory loaded",
       detail: `Retrieved ${context.memory.records.length} relevant memory record${context.memory.records.length === 1 ? "" : "s"}.`,
+    });
+    offset += 1;
+  }
+
+  if (context.plan) {
+    events.push({
+      id: `${now}-plan`,
+      type: "plan.created",
+      at: now + offset,
+      agent: "chief_of_staff",
+      visualNode: "strategist",
+      label: "Plan created",
+      detail:
+        "Strategist created " +
+        context.plan.steps.length +
+        " bounded step" +
+        (context.plan.steps.length === 1 ? "" : "s") +
+        ". No plan step has executed yet.",
     });
     offset += 1;
   }
@@ -401,6 +454,21 @@ function emitLiveContext(
       visualNode: "memory",
       label: "Memory loaded",
       detail: `Retrieved ${context.memory.records.length} relevant memory record${context.memory.records.length === 1 ? "" : "s"}.`,
+    });
+  }
+
+  if (context.plan) {
+    emitLiveEvent(options, {
+      type: "plan.created",
+      agent: "chief_of_staff",
+      visualNode: "strategist",
+      label: "Plan created",
+      detail:
+        "Strategist created " +
+        context.plan.steps.length +
+        " bounded step" +
+        (context.plan.steps.length === 1 ? "" : "s") +
+        ". No plan step has executed yet.",
     });
   }
 
@@ -648,6 +716,7 @@ function envelopeContext(context: ExecutionContext) {
         : undefined,
       skills: context.skills.skills.map((skill) => skill.id),
     },
+    plan: context.plan,
     permissions: context.policy,
   };
 }

@@ -1,5 +1,24 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 4A real Strategist planner checkpoint
+
+This branch implements the first real model-backed Strategist planning path without enabling autonomous plan execution.
+
+Implemented:
+- `lib/planner/generator.ts` detects explicit/multi-action goals that genuinely benefit from planning;
+- Strategist uses the existing local Ollama adapter to request a structured JSON plan;
+- every model-produced draft is parsed/validated and then normalized through the existing `createBoundedPlan()` safety contract;
+- permission floors are conservative: reasoning 0, read/inspect/research/verify 1, local tool action 2, approval 3; the model cannot lower these floors;
+- generated plans are attached to the Brain envelope;
+- successful generation emits a real `plan.created` event on the Strategist visual node;
+- no `plan.step.*` completion/progress events are emitted because Phase 5 execution/orchestration is not implemented yet;
+- planner failure degrades gracefully and does not block the normal ASTRA chat/provider turn;
+- Sonor is not modified by this milestone.
+
+Next roadmap task after this checkpoint:
+**Phase 5 — Agent Orchestrator / bounded plan executor.**
+It should consume only validated `AstraPlan` steps, delegate to real existing agents/providers/tools, enforce permission/approval/cancellation/timeout/retry boundaries, emit real step lifecycle events, and verify outcomes. Do not fake step completion.
+
 ## 2026-09-20 — Sonor preservation + ASTRA UI roadmap approved
 
 Authoritative Sonor continuation documents:
