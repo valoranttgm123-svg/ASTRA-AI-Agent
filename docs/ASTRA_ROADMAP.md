@@ -963,7 +963,7 @@ Detailed next-session execution order is now maintained in:
 - `docs/CODEX_NEXT_MISSION.md`
 - `docs/SECURITY_VALIDATION.md`
 
-The next implementation phase is **Phase 15 — Security/failure hardening**.
+Phase 15 repository hardening is complete after the P15F final regression/report PR passes CI and merges. Target-PC Automation validation and real Sonor/Graphify/Obsidian validation remain separate release gates. If local Sonor access is unavailable, continue **Phase 16 — Performance** repository-side instrumentation/preparation without inventing benchmark values.
 
 Before the Phase 20 core release gate, Codex must also complete the real Sonor/Graphify/Obsidian validation described in `docs/SONOR_CODEX_MISSION.md`. Existing Sonor must be preserved, not rebuilt.
 
