@@ -140,7 +140,13 @@ function knownToolPermission(toolId: string | undefined) {
   if (!toolId) return 0;
   if (
     toolId === "github.push" ||
-    toolId === "github.pull-request.open"
+    toolId === "github.pull-request.open" ||
+    toolId === "crm.note.add" ||
+    toolId === "calendar.event.create" ||
+    toolId === "calendar.event.update" ||
+    toolId === "email.draft.create" ||
+    toolId === "email.send" ||
+    toolId === "drive.upload"
   ) {
     return 3;
   }
@@ -163,7 +169,13 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "research.search" ||
     toolId === "research.web" ||
     toolId === "business.finance.metrics" ||
-    toolId === "analytics.summary"
+    toolId === "analytics.summary" ||
+    toolId === "crm.search" ||
+    toolId === "calendar.list" ||
+    toolId === "email.search" ||
+    toolId === "email.read" ||
+    toolId === "drive.search" ||
+    toolId === "drive.read"
   ) {
     return 1;
   }
