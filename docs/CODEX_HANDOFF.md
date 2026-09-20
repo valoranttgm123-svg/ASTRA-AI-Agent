@@ -1,5 +1,61 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 7B authenticated GitHub transport + tool-aware planner checkpoint
+
+This branch adds the provider/auth boundary required to finish the external half of the Files/GitHub production flow.
+
+Implemented:
+- `lib/tools/github.ts` defines a provider-neutral `AstraGitHubTransport`;
+- default local provider is `GhCliGitHubTransport`;
+- GitHub tools become READY only when:
+  1. GitHub CLI exists; and
+  2. `gh auth status --hostname github.com` succeeds;
+- no GitHub token is accepted in planner/tool input and provider diagnostics redact recognizable token/Bearer patterns;
+- `github.push`:
+  - Level 3 external write;
+  - verifies current local branch;
+  - restricts remote URL to GitHub;
+  - uses shell-free git push;
+  - verifies remote ref with `git ls-remote`;
+- `github.pull-request.open`:
+  - Level 3 external write;
+  - uses fixed `gh pr create` arguments;
+  - success requires a verified github.com PR URL;
+- `github.ci.status`:
+  - Level 1 read;
+  - reads bounded GitHub Actions run JSON through `gh run list`;
+- Tool Runtime dynamically replaces static NOT_CONFIGURED GitHub placeholders only when the transport reports authenticated availability;
+- Brain status now reports dynamic GitHub push/PR/CI availability;
+- Strategist plans may carry structured `toolId` + bounded JSON `toolInput`;
+- planner receives the truthful runtime tool catalog and is instructed not to invent tool ids or treat unavailable tools as READY;
+- registered tool-id permission floors override generic agent floors (for example local Git status remains Level 1 even though the visual agent is GitHub);
+- bounded orchestrator executes structured tool steps through Tool Runtime;
+- a plan scoped to one project cannot redirect its structured tool call to a different project;
+- Ollama may remain the reasoning/planning provider while real registered Tool Runtime handlers perform approved actions; only unstructured side-effecting prose actions remain blocked.
+
+Verified by fixture tests:
+- structured planner tool ids/inputs survive normalization;
+- local structured tool plan executes through Brain with Ollama as reasoning provider;
+- authenticated GitHub fixture exposes READY push/PR/CI;
+- push is blocked below Level 3;
+- push is blocked when external-action policy is off;
+- Level-3 + external-action policy permits the verified fixture push/PR;
+- CI remains Level-1 read;
+- unavailable/unauthed transport remains NOT_CONFIGURED and never calls external handlers.
+
+Truthful runtime limitation:
+**This repository implementation does not prove that the target Windows PC is currently authenticated with GitHub CLI.** On that PC the GitHub tools will remain NOT_CONFIGURED until `gh auth status` passes.
+
+Phase 7 remains not fully production-complete until:
+1. Level-3 scoped approval is exposed through the ASTRA UI/API flow;
+2. the real target PC validates branch → edit → tests/build → commit → push → PR → CI;
+3. CI success is incorporated as a verification step for the full workflow.
+
+Sonor is not modified by this milestone.
+
+Next roadmap task after this merge:
+**Phase 7C — scoped Level-3 approval + end-to-end GitHub workflow verification**, then real Research/browser capability to close remaining Phase 5 gaps.
+
 ## 2026-09-20 — Phase 7A scoped Files + local Git checkpoint
 
 This branch implements the safe local half of the Files/GitHub production workflow.

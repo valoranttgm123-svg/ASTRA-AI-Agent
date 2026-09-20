@@ -39,6 +39,33 @@ function uniqueStepId(candidate: string, used: Set<string>) {
   return id;
 }
 
+function boundedToolInput(
+  value: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!value) return undefined;
+  try {
+    const serialized = JSON.stringify(value);
+    if (serialized.length > 12_000) return undefined;
+    const parsed = JSON.parse(serialized) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return undefined;
+    }
+    return parsed as Record<string, unknown>;
+  } catch {
+    return undefined;
+  }
+}
+
+function normalizeToolId(value: string | undefined) {
+  const id = value
+    ?.trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120);
+  return id || undefined;
+}
+
 function normalizeStep(
   draft: AstraPlanStepDraft,
   index: number,
@@ -76,6 +103,10 @@ function normalizeStep(
       0,
       limits.maxRetriesPerStep,
     ),
+    toolId:
+      draft.kind === "tool" ? normalizeToolId(draft.toolId) : undefined,
+    toolInput:
+      draft.kind === "tool" ? boundedToolInput(draft.toolInput) : undefined,
     status: "pending",
   };
 }

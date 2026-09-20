@@ -20,7 +20,7 @@ import { permissionPolicyPrompt } from "./policy";
 import { getUnifiedMemoryContext } from "./unified-memory";
 import type { AstraBrainPermissionSnapshot } from "./types";
 import type { AstraToolLifecycleEvent } from "@/lib/tools/contracts";
-import { astraNativeToolRuntime } from "@/lib/tools/runtime";
+import { astraNativeToolRuntime, createDefaultToolRuntime } from "@/lib/tools/runtime";
 
 type BrainPlanExecutorOptions = {
   plan: AstraPlan;
@@ -235,6 +235,101 @@ async function inspectMemory({
       (memory.records.length === 1 ? "" : "s") +
       ".",
     output: memory.text || memory.detail,
+  };
+}
+
+async function executeStructuredTool({
+  step,
+  project,
+  policy,
+  approvedPermissionLevel,
+  signal,
+  onToolEvent,
+}: {
+  step: AstraPlanStep;
+  project?: AstraProjectRecord;
+  policy: AstraBrainPermissionSnapshot;
+  approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
+  signal: AbortSignal;
+  onToolEvent?: (event: AstraToolLifecycleEvent) => void;
+}): Promise<AstraPlanStepExecutionOutcome | null> {
+  if (!step.toolId) return null;
+
+  const runtime = await createDefaultToolRuntime(signal);
+  const definition = runtime.get(step.toolId);
+  if (!definition) {
+    return {
+      status: "failed",
+      detail: "Plan referenced an unknown ASTRA tool: " + step.toolId,
+    };
+  }
+
+  const input: Record<string, unknown> = {
+    ...(step.toolInput ?? {}),
+  };
+
+  if (project) {
+    const requestedProject =
+      typeof input.projectId === "string" ? input.projectId.trim() : "";
+    if (
+      requestedProject &&
+      requestedProject.toLowerCase() !== project.id.toLowerCase()
+    ) {
+      return {
+        status: "failed",
+        detail:
+          "Tool step attempted to target project " +
+          requestedProject +
+          " while the bounded plan is scoped to " +
+          project.id +
+          ".",
+      };
+    }
+    input.projectId = project.id;
+  }
+
+  const result = await runtime.execute(step.toolId, input, {
+    approvedPermissionLevel,
+    policy: {
+      allowShell: policy.allowShell,
+      allowFileWrite: policy.allowFileWrite,
+      allowExternalActions: policy.allowExternalActions,
+    },
+    signal,
+    onEvent: onToolEvent,
+  });
+
+  let output = "";
+  if (result.output !== undefined) {
+    try {
+      output = JSON.stringify(result.output).slice(0, 6000);
+    } catch {
+      output = "";
+    }
+  }
+
+  if (result.status === "completed" && result.verified) {
+    return {
+      status: "completed",
+      provider: result.provider || definition.provider,
+      detail: result.detail,
+      output,
+    };
+  }
+
+  if (result.status === "blocked") {
+    return {
+      status: "waiting_approval",
+      provider: result.provider || definition.provider,
+      detail: result.detail,
+    };
+  }
+
+  return {
+    status: "failed",
+    provider: result.provider || definition.provider,
+    detail: result.detail,
+    output,
   };
 }
 
@@ -470,15 +565,26 @@ export async function executeBrainPlan(
               "No real research/browser tool is configured in ASTRA yet. Phase 6/7 must provide one before research steps can complete.",
           };
 
-        case "tool":
+        case "tool": {
+          const structured = await executeStructuredTool({
+            step,
+            project: options.project,
+            policy: options.policy,
+            approvedPermissionLevel: options.approvedPermissionLevel,
+            signal: stepContext.signal,
+            onToolEvent: options.onToolEvent,
+          });
+          if (structured) return structured;
+
           if (options.providerChoice === "ollama") {
             return {
               status: "failed",
               provider: "ollama",
               detail:
-                "Ollama is reasoning-only and cannot execute tool steps.",
+                "This tool step has no registered toolId. Ollama is reasoning-only and cannot execute an unstructured action.",
             };
           }
+
           return executeCodexTool({
             step,
             goal: stepContext.goal,
@@ -486,6 +592,7 @@ export async function executeBrainPlan(
             policy: options.policy,
             signal: stepContext.signal,
           });
+        }
 
         case "verify":
           if (options.providerChoice === "ollama") {

@@ -323,3 +323,47 @@ External GitHub actions are deliberately separate:
 - `github.pull-request.open` — Level 3, NOT_CONFIGURED.
 
 A future authenticated GitHub transport must pass through the same Tool Runtime and approval boundary before those actions can become READY.
+
+
+## Authenticated GitHub transport
+
+Phase 7B keeps external GitHub actions behind the same Tool Runtime:
+
+```text
+Strategist
+  ↓
+toolId + bounded toolInput
+  ↓
+Tool Runtime
+  ↓
+permission / policy gate
+  ↓
+AstraGitHubTransport
+  ↓
+GhCliGitHubTransport (default local provider)
+  ├─ gh auth status
+  ├─ git push + remote-ref verification
+  ├─ gh pr create + URL verification
+  └─ gh run list (read-only CI state)
+```
+
+The default GitHub provider is not considered configured merely because `gh` is installed. `gh auth status --hostname github.com` must succeed.
+
+External writes remain Level 3:
+- `github.push`;
+- `github.pull-request.open`.
+
+CI reads remain Level 1:
+- `github.ci.status`.
+
+### Tool-aware planning
+
+Plan steps may contain:
+- `toolId`;
+- bounded JSON `toolInput`.
+
+The model is given the runtime tool catalog. A tool id is still revalidated by the executor; model output is not authority. The executor also pins the plan to its resolved Project Registry project and rejects cross-project tool redirection.
+
+Tool Runtime completion still requires `verified=true`.
+
+Phase 7B does not bypass approval. Current normal execute approval remains the safe-local Level-2 path, so Level-3 GitHub writes wait until the scoped Level-3 approval flow is implemented.

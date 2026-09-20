@@ -545,3 +545,25 @@ Implemented on `astra/phase7a-scoped-files-local-git`:
 - temporary-repo end-to-end test of the complete local flow.
 
 External GitHub push and PR creation remain Level-3 `NOT_CONFIGURED`; Phase 7 is partial until a real authenticated GitHub provider and CI verification path are connected.
+
+
+---
+
+## Phase 7B implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase7b-authenticated-github-transport`:
+
+- provider-neutral authenticated GitHub transport;
+- default local `gh` CLI provider with verified auth status;
+- Level-3 verified push with GitHub remote/current-branch/remote-ref checks;
+- Level-3 PR creation with returned URL verification;
+- Level-1 bounded GitHub Actions status read;
+- dynamic READY / NOT_CONFIGURED GitHub tool availability;
+- structured planner `toolId` / bounded `toolInput`;
+- live tool catalog supplied to Strategist;
+- registered-tool permission floors;
+- structured tool execution through bounded orchestrator;
+- project-scope enforcement for tool calls;
+- fixture tests for auth availability, approval/policy gates, verified external actions and CI reads.
+
+Phase 7 is still partial until scoped Level-3 approval and a real target-PC push/PR/CI validation complete.

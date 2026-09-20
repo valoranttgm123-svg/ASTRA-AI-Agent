@@ -6,8 +6,8 @@ import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
 import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
-import type { AstraToolLifecycleEvent } from "@/lib/tools/contracts";
-import { astraNativeToolRuntime } from "@/lib/tools/runtime";
+import type { AstraToolDefinition, AstraToolLifecycleEvent } from "@/lib/tools/contracts";
+import { astraNativeToolRuntime, createDefaultToolRuntime } from "@/lib/tools/runtime";
 import { generateStrategistPlan, shouldGeneratePlan } from "@/lib/planner/generator";
 import {
   chatWithCodex,
@@ -46,6 +46,7 @@ type ExecutionContext = {
   memoryLifecycle: AstraMemoryLifecycleEvent[];
   skills: AstraSkillContext;
   project: Awaited<ReturnType<typeof resolveProjectContext>>;
+  tools: readonly AstraToolDefinition[];
   plan?: AstraPlan;
   plannerDetail?: string;
   policy: AstraBrainPermissionSnapshot;
@@ -104,13 +105,22 @@ async function buildExecutionContext(
 
   let plan: AstraPlan | undefined;
   let plannerDetail: string | undefined;
+  let tools: readonly AstraToolDefinition[] = astraNativeToolRuntime.list();
 
   if (shouldGeneratePlan(input)) {
+    try {
+      const runtime = await createDefaultToolRuntime(signal);
+      tools = runtime.list();
+    } catch {
+      tools = astraNativeToolRuntime.list();
+    }
+
     try {
       const generated = await generateStrategistPlan({
         goal: input,
         projectId: project.match?.project.id,
         context: localContext,
+        tools,
         signal,
       });
       plan = generated.plan;
@@ -136,6 +146,7 @@ async function buildExecutionContext(
     memoryLifecycle,
     skills,
     project,
+    tools,
     plan,
     plannerDetail,
     policy,
@@ -1172,14 +1183,17 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     }
 
     if (context.plan) {
-      const maxPermission = Math.max(
-        ...context.plan.steps.map((step) => step.permissionLevel),
+      const hasUnstructuredAction = context.plan.steps.some(
+        (step) =>
+          step.kind === "tool" &&
+          step.permissionLevel > 1 &&
+          !step.toolId,
       );
 
-      if (preferredProvider === "ollama" && maxPermission > 1) {
+      if (preferredProvider === "ollama" && hasUnstructuredAction) {
         return blocked(
-          "Plan ini memiliki langkah aksi nyata. Ollama hanya dapat menjalankan reasoning/read-only; gunakan Auto atau Codex untuk langkah aksi.",
-          "Explicit Ollama mode cannot execute plan steps above permission level 1.",
+          "Plan ini memiliki action yang belum terikat ke tool ASTRA nyata. Ollama boleh merencanakan dan menggunakan registered Tool Runtime, tetapi tidak boleh mengeksekusi action prose tanpa toolId.",
+          "Explicit Ollama mode cannot execute an unstructured side-effecting plan step.",
         );
       }
 
@@ -1456,6 +1470,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       cloud,
       memory,
       skills,
+      toolRuntime,
     ] = await Promise.all([
       getHermesStatus(),
       getOllamaStatus(),
@@ -1463,6 +1478,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       getCloudStatus(policy),
       getUnifiedMemoryContext("ASTRA status"),
       getSkillContext("chief_of_staff"),
+      createDefaultToolRuntime().catch(() => astraNativeToolRuntime),
     ]);
 
     const features: NonNullable<AstraBrainStatus["features"]> = {
@@ -1487,20 +1503,26 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       tools: {
         enabled: true,
         available:
-          astraNativeToolRuntime
+          toolRuntime
             .list()
             .some((tool) => tool.availability === "READY") ||
           hermes.available ||
           (codex.available && codex.sandbox !== "read-only"),
         detail:
-          astraNativeToolRuntime
+          toolRuntime
             .list()
             .filter((tool) => tool.availability === "READY").length +
-          " native tool(s) READY. " +
+          " tool(s) READY. GitHub push=" +
+          (toolRuntime.get("github.push")?.availability ?? "NOT_CONFIGURED") +
+          ", PR=" +
+          (toolRuntime.get("github.pull-request.open")?.availability ?? "NOT_CONFIGURED") +
+          ", CI=" +
+          (toolRuntime.get("github.ci.status")?.availability ?? "NOT_CONFIGURED") +
+          ". " +
           toolsPolicyDetail(policy) +
           " Codex sandbox: " +
           codex.sandbox +
-          ". MCP transport is not configured by the native runtime unless a real transport is explicitly injected.",
+          ". MCP transport remains explicit/injected only.",
       },
       cloud: {
         enabled: cloud.enabled,

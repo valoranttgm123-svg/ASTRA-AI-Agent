@@ -34,6 +34,8 @@ export type AstraPlanStepDraft = {
   dependsOn?: string[];
   timeoutMs?: number;
   maxRetries?: number;
+  toolId?: string;
+  toolInput?: Record<string, unknown>;
 };
 
 export type AstraPlanStep = {
@@ -45,6 +47,8 @@ export type AstraPlanStep = {
   dependsOn: string[];
   timeoutMs: number;
   maxRetries: number;
+  toolId?: string;
+  toolInput?: Record<string, unknown>;
   status: AstraPlanStepStatus;
 };
 
