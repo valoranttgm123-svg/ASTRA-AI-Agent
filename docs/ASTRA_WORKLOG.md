@@ -171,12 +171,21 @@ Never mark local/physical verification PASS from repository inspection alone.
 - truthful status: `PHASE 15 REPOSITORY HARDENING COMPLETE / CI VERIFIED / LOCAL RELEASE GATES REMAIN`
 - next implementable repository work while MEM-X is externally blocked: **Phase 16 performance instrumentation/preparation**.
 
-## In-flight checkpoint — Phase 16A
+## Phase 16A — performance measurement instrumentation
 
-- PR: **#105**;
-- branch: `astra/phase16a-performance-measurement-harness`;
-- scope: loopback-only runtime timing harness + deterministic statistics + SSE timing parser;
-- no target-PC/browser performance value has been invented or recorded;
-- generated results go to gitignored `.astra/performance/`;
-- completion rule: repository instrumentation counts complete only after CI is green and the PR is merged;
-- target-PC runtime/browser measurements remain Phase 16 local gates.
+- PR: **#105**
+- merge commit: `dcc639bdd5fbe7254ee5a9922ee604fe581d8d55`
+- CI: **SUCCESS**
+- result: loopback runtime measurement harness, P50/P95 statistics and ASTRA SSE timing instrumentation merged.
+- truth boundary: no target-PC/browser benchmark value is claimed.
+- P16B/P16C remain local target-runtime gates.
+
+## In-flight checkpoint — Phase 17A
+
+- branch: `astra/phase17a-full-system-preflight`;
+- scope: privacy-preserving chat-mode preflight evidence runner for scenarios A–D;
+- output is confined to gitignored `.astra/validation/`;
+- no response text, approval token/scope, plan title/goal or tool input is persisted;
+- no external action is approved or executed by the runner;
+- Phase 17 scenario PASS remains a target-runtime/manual gate;
+- completion rule: P17A repository preparation counts complete only after CI is green and the PR is merged.
