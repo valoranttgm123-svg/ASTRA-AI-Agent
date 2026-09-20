@@ -620,3 +620,29 @@ Examples:
 A provider-unavailable event alone does not mark a node failed because ASTRA may continue through a valid fallback provider.
 
 The ReasoningWeb roster now receives the runtime state for each node. Legacy visual placement remains, but static visual `live` flags are no longer authority for capability readiness.
+## Automation scheduling safety foundation
+
+Phase 14A introduces a pure scheduling/safety layer without starting a hidden background service.
+
+```text
+Automation definition
+      ↓
+schedule validation
+      ↓
+deterministic due occurrence
+      ↓
+permission ceiling
+  ├─ Level 0–1 → eligible for unattended run
+  ├─ Level 2–3 → WAITING_APPROVAL for this run
+  └─ Level 4   → rejected
+      ↓
+future Phase 14B scheduler worker
+      ↓
+existing Brain / Planner / Tool Runtime
+```
+
+Current code lives in `lib/automation/`.
+
+The layer intentionally does not persist jobs or execute tools yet. It only decides whether a bounded scheduled occurrence is due and whether the existing permission model allows that occurrence to proceed. This prevents a future scheduler from becoming an alternate path around ASTRA approvals.
+
+Safety constants currently enforce a one-hour minimum interval, a 30-day maximum interval, and a 30-minute maximum per-run runtime. Durable storage and the worker must remain private/local and must preserve global STOP cancellation.

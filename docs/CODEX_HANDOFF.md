@@ -982,3 +982,34 @@ Production:
 npm run build
 npm run start
 ```
+---
+
+## Handoff update — Phase 14A automation foundation — 2026-09-20
+
+Current feature branch:
+
+`astra/phase14a-automation-safety-foundation`
+
+Completed in this slice:
+
+- `lib/automation/contracts.ts`;
+- `lib/automation/scheduler.ts`;
+- `lib/automation/index.ts`;
+- `tests/automation.test.ts`;
+- lint scope now includes `lib/automation`;
+- deterministic once/interval due calculation;
+- minimum recurring frequency of 60 minutes;
+- unattended Permission Level 1 ceiling;
+- per-run approval requirement for Level 2/3;
+- Level 4 scheduling rejection;
+- pause/disable semantics and runtime bounds.
+
+Do not replace this with an unrelated cron package or a second permission system.
+
+Next exact task after this branch is validated/merged:
+
+**Phase 14B — durable local scheduler runtime.**
+
+Implement a private local automation store under `.astra/`, a bounded cancellable queue/worker, real lifecycle telemetry, and per-run approval binding into the existing Brain/Planner/Tool Runtime. Do not execute Level 2/3 work merely because a job exists. Level 4 must remain unavailable to scheduled automation.
+
+External/target-PC validation is still required before Phase 14 is complete.
