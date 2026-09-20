@@ -16,6 +16,12 @@ import ReasoningWebJs from "./ReasoningWeb";
 import ShaderBackgroundJs from "./ShaderBackground";
 import OrbStatusBar from "./OrbStatusBar";
 import { useAstraRuntime } from "./AstraRuntime";
+import {
+  ASTRA_CAPABILITY_NODES,
+  ASTRA_REASONING_ROSTER,
+  capabilityStateLabel,
+  type AstraCapabilityState,
+} from "@/lib/agent/capabilities";
 
 export type NodeSel = { name: string; key: string; color: string };
 
@@ -23,6 +29,7 @@ export type NodeSel = { name: string; key: string; color: string };
 const ReasoningWeb = ReasoningWebJs as unknown as React.ComponentType<{
   state?: string; trace?: unknown; mode?: string; coreless?: boolean;
   onSelect?: (n: NodeSel) => void; light?: boolean;
+  roster?: ReadonlyArray<readonly [string, string, string, number, number, boolean, number, number]>;
 }>;
 const ShaderBackground = ShaderBackgroundJs as unknown as React.ComponentType<{
   opacity?: number; voiceActive?: boolean; gold?: boolean;
@@ -31,98 +38,45 @@ type AgentInfo = {
   role: string;
   caps: string[];
   asks?: string[];
-  status: "online" | "standby" | "integration";
+  status: AstraCapabilityState;
+  implementation: "implemented" | "partial" | "planned";
 };
 
-/* Mirrors the ROSTER in ReasoningWeb.jsx (a verbatim copy from the Apex app, so
-   it is not edited here). Backs the visually-hidden agent list that gives the
-   decorative SVG graph a keyboard and screen-reader equivalent - keep in sync if
-   the copy's roster changes. */
-export const ROSTER: { key: string; name: string; color: string }[] = [
-  { key: "chief_of_staff", name: "Chief of staff", color: "#00e5ff" },
-  { key: "memory",         name: "Memory",         color: "#00e5ff" },
-  { key: "strategist",     name: "Strategist",     color: "#00e5ff" },
-  { key: "researcher",     name: "Researcher",     color: "#00e5ff" },
-  { key: "finance",        name: "Finance",        color: "#00e5ff" },
-  { key: "editor",         name: "Editor",         color: "#00e5ff" },
-  { key: "sales",          name: "Sales",          color: "#f5a623" },
-  { key: "marketing",      name: "Marketing",      color: "#f5a623" },
-  { key: "ops",            name: "Ops",            color: "#f5a623" },
-  { key: "social_media",   name: "Social",         color: "#f5a623" },
-  { key: "engineering",    name: "Engineering",    color: "#f5a623" },
-  { key: "design",         name: "Design",         color: "#f5a623" },
-  { key: "developer",      name: "Developer",      color: "#f5a623" },
-  { key: "analytics",      name: "Analytics",      color: "#7f9bb3" },
-  { key: "crm",            name: "CRM",            color: "#7f9bb3" },
-  { key: "calendar",       name: "Calendar",       color: "#7f9bb3" },
-  { key: "email",          name: "Email",          color: "#7f9bb3" },
-  { key: "drive",          name: "Drive",          color: "#7f9bb3" },
-];
+export const ROSTER: { key: string; name: string; color: string }[] =
+  ASTRA_CAPABILITY_NODES.map((node) => ({
+    key: node.key,
+    name: node.label,
+    color: node.color,
+  }));
 
-/* Overview data per ReasoningWeb roster id - the site's template content */
-export const INFO: Record<string, AgentInfo> = {
-  chief_of_staff: { role: "Right hand - runs the day", status: "online",
-    caps: ["Prioritizes the day and keeps loose ends closed", "Routes every request to the right specialist", "Escalates only what truly needs a human"],
-    asks: ["What needs attention today?", "Chase the open quotes"] },
-  memory: { role: "Long-term memory", status: "online",
-    caps: ["Remembers every client, project and decision", "Feeds context into every task automatically", "Learns preferences over time"],
-    asks: ["What did we decide about X?", "History with this client"] },
-  strategist: { role: "Big-picture thinking", status: "online",
-    caps: ["Weekly strategy reviews", "Goal and milestone tracking", "Spots opportunities and risks early"],
-    asks: ["Where should we double down?"] },
-  researcher: { role: "Deep research", status: "online",
-    caps: ["Market and competitor research", "Technical deep-dives", "Source-checked summaries"],
-    asks: ["Research this market", "Compare these suppliers"] },
-  finance: { role: "Money watch", status: "online",
-    caps: ["Revenue and pipeline tracking", "Pricing sanity checks", "Monthly performance recaps"],
-    asks: ["How was this month?", "Is this quote priced right?"] },
-  editor: { role: "Quality gate", status: "online",
-    caps: ["Rewrites and tightens every draft", "Keeps the brand voice consistent", "Final pass before anything ships"],
-    asks: ["Polish this post", "Tighten this email"] },
-  sales: { role: "Deal closer", status: "online",
-    caps: ["Follow-ups for every lead", "Warm-outreach drafts", "Pipeline nudges so nothing goes cold"],
-    asks: ["Draft a follow-up", "Who went quiet?"] },
-  marketing: { role: "Growth engine", status: "online",
-    caps: ["Campaign generation", "Pricing analysis", "Brand positioning and content calendar"],
-    asks: ["Generate campaign", "Competitor research"] },
-  ops: { role: "Business operator", status: "online",
-    caps: ["Client quotes and proposals", "Project scoping and timelines", "Supplier sourcing"],
-    asks: ["Draft client quote", "Build project scope"] },
-  social_media: { role: "Voice of the brand", status: "online",
-    caps: ["Writes posts and captions", "Creates reel scripts", "Posts to Instagram, LinkedIn and Facebook"],
-    asks: ["Write post caption", "Plan content week"] },
-  engineering: { role: "Engineering brain", status: "online",
-    caps: ["3D-print settings and materials", "Tolerances and fit", "Laser power and speed guidance"],
-    asks: ["Review STL file", "Calculate tolerances"] },
-  design: { role: "Visual workshop", status: "online",
-    caps: ["Background removal and replacement", "Text overlays", "Resize for social media", "Filters and enhancement"],
-    asks: ["Remove background", "Resize for IG"] },
-  developer: { role: "Keeper of the build log", status: "standby",
-    caps: ["Keeps Apex's development log", "Recaps what shipped - day / week / month", "Future: builds Apex itself"],
-    asks: ["Recap last week"] },
-  analytics: { role: "Numbers feed", status: "integration",
-    caps: ["Performance metrics across every channel", "Feeds the weekly reviews"] },
-  crm: { role: "Client memory bank", status: "integration",
-    caps: ["Every lead and client in one pipeline", "Stage tracking from first contact to paid"] },
-  calendar: { role: "Schedule sense", status: "integration",
-    caps: ["Knows the calendar", "Reminders and follow-up timing"] },
-  email: { role: "Inbox hands", status: "integration",
-    caps: ["Inbox triage and reply drafts", "Connected and in use"] },
-  drive: { role: "File access", status: "integration",
-    caps: ["Reads and files documents", "Connected and in use"] },
-};
+export const INFO = Object.fromEntries(
+  ASTRA_CAPABILITY_NODES.map((node) => [
+    node.key,
+    {
+      role: node.role,
+      caps: node.capabilities,
+      asks: node.examples,
+      status: node.defaultState,
+      implementation: node.implementation,
+    },
+  ]),
+) as Record<string, AgentInfo>;
 
-const STATUS_LINE: Record<AgentInfo["status"], { color: string; text: string }> = {
-  online: { color: "#34d399", text: "Online - Apex routes work to it automatically" },
-  standby: { color: "#c9a84c", text: "Standby - in active development" },
-  integration: { color: "#7f9bb3", text: "Integration - wired into the core" },
+const STATUS_LINE: Record<AstraCapabilityState, { color: string; text: string }> = {
+  READY: { color: "#34d399", text: capabilityStateLabel("READY") },
+  ACTIVE: { color: "#63eaff", text: capabilityStateLabel("ACTIVE") },
+  WAITING_APPROVAL: { color: "#f5b942", text: capabilityStateLabel("WAITING_APPROVAL") },
+  BLOCKED: { color: "#ff9d66", text: capabilityStateLabel("BLOCKED") },
+  OFFLINE: { color: "#64748b", text: capabilityStateLabel("OFFLINE") },
+  NOT_CONFIGURED: { color: "#7f9bb3", text: capabilityStateLabel("NOT_CONFIGURED") },
+  ERROR: { color: "#ff5f6d", text: capabilityStateLabel("ERROR") },
 };
 
 /* ── AGENT OVERVIEW window - the site's template (the app opens live cockpits) ── */
 export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => void }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{ sx: number; sy: number } | null>(null);
-  const info = INFO[sel.key] ?? { role: "Specialist", status: "online" as const, caps: ["Part of the Apex core"] };
+  const info = INFO[sel.key] ?? { role: "Specialist", status: "NOT_CONFIGURED" as const, implementation: "planned" as const, caps: ["No registered ASTRA capability yet"] };
   const c = sel.color;
   const status = STATUS_LINE[info.status];
 
@@ -308,6 +262,7 @@ export default function ApexWorld() {
           through the equivalent list of real buttons below. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
         <ReasoningWeb
+          roster={ASTRA_REASONING_ROSTER}
           state={webState}
           trace={runtime.brainTrace}
           mode="full"
@@ -317,7 +272,7 @@ export default function ApexWorld() {
       </div>
 
       {/* Keyboard and screen-reader equivalent of the agent graph. */}
-      <nav className="visually-hidden" aria-label="Apex agents">
+      <nav className="visually-hidden" aria-label="ASTRA capabilities">
         <ul>
           {ROSTER.map((a) => (
             <li key={a.key}>
@@ -339,7 +294,7 @@ export default function ApexWorld() {
       <div
         role="button"
         tabIndex={0}
-        aria-label="Apex core - tap to energize"
+        aria-label="ASTRA core - tap to energize"
         onClick={boost}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); boost(); } }}
         onMouseDown={(e) => e.preventDefault()}

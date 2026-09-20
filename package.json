@@ -8,7 +8,7 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "lint": "eslint lib/brain app/api/agent components/AstraConsole.tsx components/AstraRuntime.tsx",
+    "lint": "eslint lib/brain lib/agent/capabilities.ts app/api/agent components/AstraConsole.tsx components/AstraRuntime.tsx components/ApexWorld.tsx",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test --test-concurrency=1 tests/*.test.ts"
   },
@@ -32,5 +32,7 @@
     "tsx": "^4.23.13",
     "typescript": "^5"
   },
-  "overrides": { "postcss": "^8.5.23" }
+  "overrides": {
+    "postcss": "^8.5.23"
+  }
 }

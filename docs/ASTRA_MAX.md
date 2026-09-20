@@ -4,6 +4,14 @@ Status: **Approved continuation roadmap**
 Baseline: latest stable `main` after Brain V1 / V15 streaming / V13 gesture safety fixes.
 Primary implementation branch when work begins: `astra/astra-max-production`
 
+
+## Implementation checkpoint — 2026-09-20
+
+- **Phase 0 — Baseline lock: COMPLETE.** ASTRA MAX started from stable `main` `15ed870f...`; recoverable backup `backup/astra-before-max-production-2026-09-20` was created.
+- **Phase 1 — Agent/capability normalization: COMPLETE.** `lib/agent/capabilities.ts` is now the canonical 18-node Command Center registry. Brain visual routing and `ApexWorld` consume this registry. Nodes without a real configured capability default to `NOT_CONFIGURED` instead of fake ONLINE status.
+- Phase 1 validation: production build, unit/integration tests, typecheck, lint, and dependency audit passed in GitHub Actions.
+- **Next automatic work: Phase 2 — Memory Intelligence.** Preserve the existing local-memory behavior while adding source/provenance contracts and provider-neutral memory-source boundaries before live Graphify/Obsidian integration.
+
 ## Mission
 
 Continue ASTRA from the latest stable `main` until it becomes a complete, usable, local-first personal AI agent.

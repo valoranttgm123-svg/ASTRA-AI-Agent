@@ -1,5 +1,6 @@
 import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
+import { visualNodeForAgent } from "@/lib/agent/capabilities";
 import type { AstraAgentKey } from "@/lib/agent/types";
 import {
   chatWithCodex,
@@ -30,18 +31,6 @@ import type {
   AstraBrainStatus,
 } from "./types";
 
-const VISUAL_NODE_BY_AGENT: Record<AstraAgentKey, string> = {
-  chief_of_staff: "chief_of_staff",
-  memory: "memory",
-  researcher: "researcher",
-  developer: "developer",
-  computer: "ops",
-  files: "drive",
-  github: "developer",
-  communication: "email",
-  business: "ops",
-  trading: "finance",
-};
 
 type ExecutionContext = {
   memory: AstraMemoryContext;
@@ -52,9 +41,6 @@ type ExecutionContext = {
   skillOnlyContext: string;
 };
 
-function visualNode(agent: AstraAgentKey) {
-  return VISUAL_NODE_BY_AGENT[agent];
-}
 
 function routeFor(selected: AstraAgentKey): AstraAgentKey[] {
   return selected === "chief_of_staff"
@@ -118,7 +104,7 @@ function baseEvents(selected: AstraAgentKey, now = Date.now()): AstraBrainEvent[
       type: "router.selected",
       at: now + 1,
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: "Route selected",
       detail: `Chief routed the request to ${selected}.`,
     });
@@ -154,7 +140,7 @@ function contextEvents(
       type: "skill.selected",
       at: now + offset,
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: "Skills loaded",
       detail: context.skills.skills.map((skill) => skill.id).join(", "),
     });
@@ -221,7 +207,7 @@ function emitLiveStart(
     emitLiveEvent(options, {
       type: "router.selected",
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: "Route selected",
       detail: `Chief routed the request to ${selected}.`,
     });
@@ -247,7 +233,7 @@ function emitLiveContext(
     emitLiveEvent(options, {
       type: "skill.selected",
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: "Skills loaded",
       detail: context.skills.skills.map((skill) => skill.id).join(", "),
     });
@@ -256,7 +242,7 @@ function emitLiveContext(
   emitLiveEvent(options, {
     type: "policy.applied",
     agent: selected,
-    visualNode: visualNode(selected),
+    visualNode: visualNodeForAgent(selected),
     label: "Permission policy applied",
     detail: toolsPolicyDetail(context.policy),
   });
@@ -272,7 +258,7 @@ function emitLiveProviderStart(
     type: "provider.selected",
     provider,
     agent: selected,
-    visualNode: provider === "codex" ? "developer" : visualNode(selected),
+    visualNode: provider === "codex" ? "developer" : visualNodeForAgent(selected),
     label: `${label} selected`,
     detail:
       provider === "codex"
@@ -285,7 +271,7 @@ function emitLiveProviderStart(
     type: "agent.started",
     provider,
     agent: selected,
-    visualNode: visualNode(selected),
+    visualNode: visualNodeForAgent(selected),
     label: "Agent started",
     detail: `${ASTRA_AGENT_MAP[selected].name} started execution through ${label}.`,
   });
@@ -301,7 +287,7 @@ function emitLiveProviderUnavailable(
     type: "provider.unavailable",
     provider,
     agent: selected,
-    visualNode: provider === "codex" ? "developer" : visualNode(selected),
+    visualNode: provider === "codex" ? "developer" : visualNodeForAgent(selected),
     label: `${providerLabel(provider)} unavailable`,
     detail,
   });
@@ -317,7 +303,7 @@ function emitLiveProviderComplete(
     type: "agent.completed",
     provider,
     agent: selected,
-    visualNode: visualNode(selected),
+    visualNode: visualNodeForAgent(selected),
     label: "Agent completed",
     detail: `${ASTRA_AGENT_MAP[selected].name} completed the ${label} turn.`,
   });
@@ -340,7 +326,7 @@ function emitLiveBlocked(
     type: "agent.blocked",
     provider: "routing_only",
     agent: selected,
-    visualNode: visualNode(selected),
+    visualNode: visualNodeForAgent(selected),
     label: "Execution blocked",
     detail,
   });
@@ -372,7 +358,7 @@ function providerEvents(
       type: "provider.selected",
       at: startAt,
       agent: selected,
-      visualNode: provider === "codex" ? "developer" : visualNode(selected),
+      visualNode: provider === "codex" ? "developer" : visualNodeForAgent(selected),
       label: `${label} selected`,
       detail:
         provider === "codex"
@@ -386,7 +372,7 @@ function providerEvents(
       type: "agent.started",
       at: startAt + 1,
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: "Agent started",
       detail: `${ASTRA_AGENT_MAP[selected].name} started execution through ${label}.`,
     },
@@ -395,7 +381,7 @@ function providerEvents(
       type: "agent.completed",
       at: startAt + 2,
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: "Agent completed",
       detail: `${ASTRA_AGENT_MAP[selected].name} completed the ${label} turn.`,
     },
@@ -431,7 +417,7 @@ function routingOnlyEvents(
       type: "provider.unavailable",
       at: now + offset,
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: "Execution providers unavailable",
       detail: providerDetail,
     });
@@ -444,7 +430,7 @@ function routingOnlyEvents(
       type: "agent.blocked",
       at: now + offset,
       agent: selected,
-      visualNode: visualNode(selected),
+      visualNode: visualNodeForAgent(selected),
       label: state === "blocked" ? "Execution blocked" : "Execution waiting",
       detail:
         providerDetail ||
@@ -500,7 +486,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
         provider: "routing_only",
         execution: response.state === "completed" ? "executed" : "routing_only",
         route,
-        visualNodes: route.map(visualNode),
+        visualNodes: route.map(visualNodeForAgent),
         events,
         ...envelopeContext(context),
       },
@@ -585,7 +571,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             execution: "executed",
             requestedMode: "chat",
             route,
-            visualNodes: route.map(visualNode),
+            visualNodes: route.map(visualNodeForAgent),
             events: providerEvents(selected, "codex", context),
             ...envelopeContext(context),
           },
@@ -622,7 +608,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             execution: "executed",
             requestedMode: "chat",
             route,
-            visualNodes: route.map(visualNode),
+            visualNodes: route.map(visualNodeForAgent),
             events: providerEvents(selected, "hermes", context),
             ...envelopeContext(context),
           },
@@ -659,7 +645,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             execution: "executed",
             requestedMode: "chat",
             route,
-            visualNodes: route.map(visualNode),
+            visualNodes: route.map(visualNodeForAgent),
             events: providerEvents(selected, "ollama", context),
             ...envelopeContext(context),
           },
@@ -704,7 +690,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             execution: "executed",
             requestedMode: "chat",
             route,
-            visualNodes: route.map(visualNode),
+            visualNodes: route.map(visualNodeForAgent),
             events: providerEvents(selected, "cloud", context),
             ...envelopeContext(context),
           },
@@ -729,7 +715,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       brain: {
         ...fallback.brain,
         route,
-        visualNodes: route.map(visualNode),
+        visualNodes: route.map(visualNodeForAgent),
         events: routingOnlyEvents(
           selected,
           fallback.state,
@@ -774,7 +760,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           execution: "blocked",
           requestedMode: "execute",
           route,
-          visualNodes: route.map(visualNode),
+          visualNodes: route.map(visualNodeForAgent),
           events: routingOnlyEvents(selected, "blocked", context, detail),
           ...envelopeContext(context),
         },
@@ -861,7 +847,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
               execution: "executed",
               requestedMode: "execute",
               route,
-              visualNodes: route.map(visualNode),
+              visualNodes: route.map(visualNodeForAgent),
               events: providerEvents(selected, "codex", context),
               ...envelopeContext(context),
             },
@@ -902,7 +888,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           execution: "executed",
           requestedMode: "execute",
           route,
-          visualNodes: route.map(visualNode),
+          visualNodes: route.map(visualNodeForAgent),
           events: providerEvents(selected, "hermes", context),
           ...envelopeContext(context),
         },

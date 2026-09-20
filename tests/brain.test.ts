@@ -13,6 +13,12 @@ import { getMemoryContext } from "../lib/brain/memory";
 import { chatWithOllama, getOllamaStatus } from "../lib/brain/ollama";
 import { getPermissionPolicy } from "../lib/brain/policy";
 import { ASTRA_AGENT_MAP } from "../lib/agent/roster";
+import {
+  ASTRA_CAPABILITY_MAP,
+  ASTRA_CAPABILITY_NODES,
+  ASTRA_REASONING_ROSTER,
+  visualNodeForAgent,
+} from "../lib/agent/capabilities";
 import type { AstraBrainEvent } from "../lib/brain/types";
 
 let root = "";
@@ -250,4 +256,41 @@ test("explicit Ollama execution is honestly blocked", async () => {
   assert.equal(result.state, "blocked");
   assert.equal(result.brain.execution, "blocked");
   assert.equal(chatCalls, 0);
+});
+
+
+test("ASTRA MAX capability registry owns exactly 18 unique Command Center nodes", () => {
+  assert.equal(ASTRA_CAPABILITY_NODES.length, 18);
+  const keys = ASTRA_CAPABILITY_NODES.map((node) => node.key);
+  assert.equal(new Set(keys).size, 18);
+  assert.deepEqual(
+    ASTRA_REASONING_ROSTER.map((entry) => entry[0]),
+    keys,
+  );
+  for (const key of keys) {
+    assert.equal(ASTRA_CAPABILITY_MAP[key].key, key);
+  }
+});
+
+test("READY capability nodes are implemented locally and need no missing configuration", () => {
+  const ready = ASTRA_CAPABILITY_NODES.filter((node) => node.defaultState === "READY");
+  assert.ok(ready.length > 0);
+  for (const node of ready) {
+    assert.equal(node.implementation, "implemented");
+    assert.equal(node.requiresConfiguration, false);
+  }
+  assert.equal(ASTRA_CAPABILITY_MAP.email.defaultState, "NOT_CONFIGURED");
+  assert.equal(ASTRA_CAPABILITY_MAP.calendar.defaultState, "NOT_CONFIGURED");
+  assert.equal(ASTRA_CAPABILITY_MAP.crm.defaultState, "NOT_CONFIGURED");
+  assert.equal(ASTRA_CAPABILITY_MAP.design.defaultState, "NOT_CONFIGURED");
+});
+
+test("every execution agent maps to a registered visual capability node", () => {
+  for (const key of Object.keys(ASTRA_AGENT_MAP) as Array<keyof typeof ASTRA_AGENT_MAP>) {
+    const visual = visualNodeForAgent(key);
+    assert.ok(ASTRA_CAPABILITY_MAP[visual], `missing capability for ${key}`);
+  }
+  assert.equal(visualNodeForAgent("computer"), "ops");
+  assert.equal(visualNodeForAgent("communication"), "email");
+  assert.equal(visualNodeForAgent("files"), "drive");
 });
