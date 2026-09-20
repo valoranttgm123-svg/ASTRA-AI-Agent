@@ -55,7 +55,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     guardRequest(request, true);
-    let mutation;
+    let mutation: ReturnType<typeof parseAutomationMutation>;
     try {
       mutation = parseAutomationMutation(await readJson(request));
     } catch (error) {
