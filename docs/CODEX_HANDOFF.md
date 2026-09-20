@@ -1064,3 +1064,23 @@ Next exact task:
 **Phase 14D — approval-resume + runtime/API integration.**
 
 Bind Level 2/3 scheduled occurrences to the existing scoped approval machinery without permanent trust, expose safe loopback CRUD/status controls, connect real automation lifecycle into Brain/Command Center, and only then add an explicit local timer/service. Level 4 remains unavailable.
+## Handoff update — Phase 14D1 automation API + telemetry
+
+Added:
+
+- `app/api/automation/route.ts`;
+- `lib/automation/http.ts`;
+- `lib/automation/management.ts`;
+- `lib/automation/telemetry.ts`;
+- process-local serialized store mutation shared with occurrence claims;
+- automation lifecycle types in the Brain event contract;
+- Ops Command Center mapping for real automation lifecycle;
+- API/management/telemetry regression tests.
+
+Next exact task:
+
+**Phase 14D2 — scoped approval-resume for scheduled Level 2/3 occurrences.**
+
+Do not invent permanent trust. A scheduled occurrence must be bound to a short-lived, single-use approval challenge for that exact automation id + scheduled occurrence + permission level. Level 2 may use the existing explicit safe-local approval semantics; Level 3 must retain the existing strong external-action checks and policy/provider availability. Level 4 remains unavailable.
+
+After approval-resume is validated, add an explicit runtime event stream/control path and only later an opt-in timer/service.
