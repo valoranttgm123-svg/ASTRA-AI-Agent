@@ -158,15 +158,22 @@ const financeMetrics: AstraToolHandler = async (
     };
   }
 
-  cogs ??= 0;
+  const cogsKnown = cogs !== undefined;
+  const cogsValue = cogs ?? 0;
   const fixedCost = nonNegative(input.fixedCost) ?? 0;
   const otherCost = nonNegative(input.otherCost) ?? 0;
   const tax = nonNegative(input.tax) ?? 0;
 
-  const totalCost =
-    cogs + fixedCost + otherCost + tax;
-  const grossProfit = revenue - cogs;
-  const netProfit = revenue - totalCost;
+  const totalCost = cogsKnown
+    ? cogsValue + fixedCost + otherCost + tax
+    : undefined;
+  const grossProfit = cogsKnown
+    ? revenue - cogsValue
+    : undefined;
+  const netProfit =
+    totalCost !== undefined
+      ? revenue - totalCost
+      : undefined;
 
   const averageSellingPrice =
     unitsSold !== undefined && unitsSold > 0
@@ -211,19 +218,19 @@ const financeMetrics: AstraToolHandler = async (
       metrics: {
         totalCost: rounded(totalCost),
         grossProfit: rounded(grossProfit),
-        grossMarginPct: ratioPercent(
-          grossProfit,
-          revenue,
-        ),
+        grossMarginPct:
+          grossProfit !== undefined
+            ? ratioPercent(grossProfit, revenue)
+            : null,
         markupPct:
-          cogs > 0
-            ? ratioPercent(grossProfit, cogs)
+          grossProfit !== undefined && cogsValue > 0
+            ? ratioPercent(grossProfit, cogsValue)
             : null,
         netProfit: rounded(netProfit),
-        netMarginPct: ratioPercent(
-          netProfit,
-          revenue,
-        ),
+        netMarginPct:
+          netProfit !== undefined
+            ? ratioPercent(netProfit, revenue)
+            : null,
         averageSellingPrice: rounded(
           averageSellingPrice,
         ),
@@ -236,8 +243,22 @@ const financeMetrics: AstraToolHandler = async (
             ? Math.ceil(breakEvenUnits)
             : null,
       },
+      assumptions: [
+        ...(input.fixedCost === undefined
+          ? ["fixedCost omitted and treated as 0 for net-cost arithmetic"]
+          : []),
+        ...(input.otherCost === undefined
+          ? ["otherCost omitted and treated as 0 for net-cost arithmetic"]
+          : []),
+        ...(input.tax === undefined
+          ? ["tax omitted and treated as 0 for net-cost arithmetic"]
+          : []),
+        ...(!cogsKnown
+          ? ["COGS unavailable; gross/net profit and margin metrics are intentionally null"]
+          : []),
+      ],
       evidenceRule:
-        "Metrics are deterministic calculations from supplied inputs; they do not verify that the supplied business values are complete or correct.",
+        "Metrics are deterministic calculations from supplied inputs. Missing COGS is never assumed to be zero; omitted optional fixed/other/tax costs are explicitly disclosed as zero assumptions.",
     },
   };
 };
