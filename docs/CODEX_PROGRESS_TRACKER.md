@@ -102,7 +102,8 @@ Phase 18 result: **PENDING**
 ## Phase 19 — Windows ready-to-use release
 
 - [x] P19A — read-only readiness self-check implemented — PR #109
-- [ ] P19B — target-PC self-check evidence captured
+- [x] P19B — safe update/reinstall tooling implemented — PR #110
+- [ ] P19C — target-PC self-check + install/update/reinstall evidence captured
 - [ ] install path verified
 - [ ] startup tasks verified
 - [ ] loopback binding verified
