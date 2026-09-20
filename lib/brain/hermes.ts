@@ -1,6 +1,7 @@
 import type { AstraAgent } from "@/lib/agent/types";
 import { isRecordPayload, isStructuredProviderPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
+import { safeErrorDetail } from "@/lib/security/redaction";
 
 const DEFAULT_HERMES_URL = "http://127.0.0.1:8642";
 const DEFAULT_HERMES_MODEL = "hermes-agent";
@@ -153,9 +154,11 @@ export async function getHermesStatus(): Promise<HermesStatus> {
     const detail =
       error instanceof DOMException && error.name === "AbortError"
         ? "Hermes gateway status check timed out."
-        : error instanceof Error
-          ? error.message.slice(0, 500)
-          : "Hermes gateway is not reachable.";
+        : safeErrorDetail(
+          error,
+          "Hermes gateway is not reachable.",
+          500,
+        );
 
     return {
       enabled: true,
