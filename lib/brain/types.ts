@@ -76,6 +76,11 @@ export type AstraBrainRunOptions = {
   provider?: AstraProviderChoice;
   inputContext?: AstraInputContext;
   requirePlan?: boolean;
+  /**
+   * Internal runtime ceiling. Not accepted from the public agent request body.
+   * Used by trusted schedulers to guarantee unattended read-only execution.
+   */
+  permissionCeiling?: 0 | 1 | 2 | 3;
   signal?: AbortSignal;
 };
 
