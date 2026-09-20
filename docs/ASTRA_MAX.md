@@ -1838,3 +1838,10 @@ ASTRA now has a loopback-only automation definition API under the same request s
 Automation lifecycle event types are also integrated into the Brain/Command Center contract. When a future runtime emits a real automation event, the Ops node can truthfully show ACTIVE, WAITING_APPROVAL, ERROR/BLOCKED, and return to its base state on completion.
 
 This slice does not grant Level 2/3 execution approval and does not start an always-on scheduler.
+## Phase 14D2 — scoped approval-resume for scheduled actions
+
+Scheduled Permission Level 2/3 occurrences can now enter the existing ASTRA execution approval path without creating permanent trust.
+
+Level 2 requires explicit approval for the exact occurrence. Level 3 first enters the normal bounded Brain plan; when a real Level-3 tool step is identified, ASTRA uses the existing one-time scoped approval token. The server-generated Brain input includes the automation id and scheduled timestamp, so the existing approval hash is occurrence-specific.
+
+Automation execution sets `requirePlan=true`. If no bounded plan is available, scheduled Level 2/3 work fails closed instead of falling through to a generic provider executor. Any generated step above the automation's configured permission ceiling is blocked and its approval request is not exposed.
