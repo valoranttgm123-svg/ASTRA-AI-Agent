@@ -4,6 +4,7 @@ import type { AgentResponse, AstraAgentKey } from "./types";
 const RULES: Array<{ agent: AstraAgentKey; words: string[] }> = [
   { agent: "github", words: ["github", "repo", "repository", "branch", "commit", "pull request", "pr"] },
   { agent: "developer", words: ["code", "coding", "bug", "error", "debug", "build", "typescript", "javascript", "python"] },
+  { agent: "strategist", words: ["strategy", "strategi", "plan", "planning", "rencana", "roadmap", "prioritas", "milestone"] },
   { agent: "researcher", words: ["research", "riset", "cari", "search", "compare", "bandingkan", "internet"] },
   { agent: "files", words: ["file", "folder", "dokumen", "document", "pdf", "word"] },
   { agent: "communication", words: ["email", "gmail", "calendar", "kalender", "meeting", "jadwal"] },
