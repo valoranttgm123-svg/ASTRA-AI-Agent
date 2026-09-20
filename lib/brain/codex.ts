@@ -154,9 +154,12 @@ export async function getCodexStatus(
       model: config.model || null,
       sandbox: config.sandbox,
       detail:
-        error instanceof Error
-          ? `Codex CLI unavailable: ${error.message}`
-          : "Codex CLI unavailable.",
+        "Codex CLI unavailable: " +
+        safeErrorDetail(
+          error,
+          "unavailable",
+          500,
+        ),
     };
   }
 }
