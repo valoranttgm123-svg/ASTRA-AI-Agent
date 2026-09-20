@@ -2,6 +2,7 @@ import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
 import { visualNodeForAgent } from "@/lib/agent/capabilities";
 import type { AstraAgentKey } from "@/lib/agent/types";
+import { resolveProjectContext } from "@/lib/projects/registry";
 import {
   chatWithCodex,
   codexMayReceiveMemory,
@@ -35,6 +36,7 @@ import type {
 type ExecutionContext = {
   memory: AstraMemoryContext;
   skills: AstraSkillContext;
+  project: Awaited<ReturnType<typeof resolveProjectContext>>;
   policy: AstraBrainPermissionSnapshot;
   policyText: string;
   localContext: string;
@@ -67,9 +69,10 @@ async function buildExecutionContext(
   selected: AstraAgentKey,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
-  const [memory, skills] = await Promise.all([
+  const [memory, skills, project] = await Promise.all([
     getMemoryContext(input),
     getSkillContext(selected),
+    resolveProjectContext(input),
   ]);
 
   const skillOnlyContext = skills.text;
@@ -78,6 +81,7 @@ async function buildExecutionContext(
   return {
     memory,
     skills,
+    project,
     policy,
     policyText: permissionPolicyPrompt(policy),
     localContext,
@@ -120,6 +124,23 @@ function contextEvents(
 ): AstraBrainEvent[] {
   const events: AstraBrainEvent[] = [];
   let offset = 2;
+
+  if (context.project.match) {
+    events.push({
+      id: `${now}-project`,
+      type: "project.selected",
+      at: now + offset,
+      agent: "chief_of_staff",
+      visualNode: "chief_of_staff",
+      label: "Project selected",
+      detail:
+        context.project.match.project.name +
+        " (" +
+        context.project.match.reason +
+        ")",
+    });
+    offset += 1;
+  }
 
   if (context.memory.entries.length > 0) {
     events.push({
@@ -219,6 +240,20 @@ function emitLiveContext(
   context: ExecutionContext,
   options?: AstraBrainRunOptions,
 ) {
+  if (context.project.match) {
+    emitLiveEvent(options, {
+      type: "project.selected",
+      agent: "chief_of_staff",
+      visualNode: "chief_of_staff",
+      label: "Project selected",
+      detail:
+        context.project.match.project.name +
+        " (" +
+        context.project.match.reason +
+        ")",
+    });
+  }
+
   if (context.memory.entries.length > 0) {
     emitLiveEvent(options, {
       type: "memory.loaded",
@@ -464,6 +499,13 @@ function envelopeContext(context: ExecutionContext) {
     context: {
       memoryEntries: context.memory.entries.length,
       memorySources: [...new Set(context.memory.records.map((record) => record.provenance.sourceType))],
+      project: context.project.match
+        ? {
+            id: context.project.match.project.id,
+            name: context.project.match.project.name,
+            reason: context.project.match.reason,
+          }
+        : undefined,
       skills: context.skills.skills.map((skill) => skill.id),
     },
     permissions: context.policy,

@@ -22,6 +22,11 @@ import {
 import type { AstraBrainEvent } from "../lib/brain/types";
 import { searchMemorySources } from "../lib/memory/manager";
 import type { AstraMemorySource } from "../lib/memory/contracts";
+import {
+  getProjectRegistry,
+  normalizeProjects,
+  resolveProject,
+} from "../lib/projects/registry";
 
 let root = "";
 let fixture: Server;
@@ -36,6 +41,32 @@ before(async () => {
     JSON.stringify([
       { id: "one", text: "ASTRA local provider decision", tags: ["astra"], project: "ASTRA", updatedAt: "2026-09-20T00:00:00Z" },
       { id: "two", text: "Ollama remains private and bounded", tags: ["ollama"], project: "ASTRA", updatedAt: "2026-09-20T01:00:00Z" },
+    ]),
+  );
+  await writeFile(
+    path.join(root, "projects.json"),
+    JSON.stringify([
+      {
+        id: "astra",
+        name: "ASTRA",
+        aliases: ["astra ai"],
+        memoryNamespace: "astra",
+        status: "active",
+        currentMilestone: "ASTRA MAX",
+        lastActivity: "2026-09-20T08:00:00Z",
+        repositories: ["valoranttgm123-svg/ASTRA-AI-Agent"],
+        openTasks: ["Continue ASTRA MAX"],
+      },
+      {
+        id: "alurka",
+        name: "ALURKA",
+        aliases: ["aplikasi alurka", "pos alurka"],
+        memoryNamespace: "alurka",
+        status: "active",
+        currentMilestone: "POS development",
+        lastActivity: "2026-09-20T09:00:00Z",
+        openTasks: ["Continue POS work"],
+      },
     ]),
   );
 
@@ -95,6 +126,8 @@ beforeEach(() => {
   process.env.ASTRA_OLLAMA_THINKING = "false";
   process.env.ASTRA_OLLAMA_MAX_TOKENS = "1024";
   process.env.ASTRA_MEMORY_FILE = path.join(root, "memory.json");
+  process.env.ASTRA_PROJECTS_FILE = path.join(root, "projects.json");
+  process.env.ASTRA_PROJECTS_ENABLED = "true";
   process.env.ASTRA_MEMORY_MAX_ENTRIES = "1";
   process.env.ASTRA_MEMORY_MAX_CHARS = "80";
   delete process.env.ASTRA_ALLOW_FILE_WRITE;
@@ -432,4 +465,45 @@ test("multi-source memory manager degrades around failed sources and supports ca
     ),
     { name: "AbortError" },
   );
+});
+
+
+test("Project Registry loads only explicitly registered local metadata", async () => {
+  const registry = await getProjectRegistry();
+  assert.equal(registry.available, true);
+  assert.equal(registry.projects.length, 2);
+  assert.deepEqual(registry.projects.map((project) => project.id), ["astra", "alurka"]);
+  assert.match(registry.source, /projects\.json$/);
+});
+
+test("Project Registry resolves names, aliases, and the most recent active project", async () => {
+  const registry = await getProjectRegistry();
+  assert.equal(resolveProject("lanjutkan ALURKA", registry.projects)?.project.id, "alurka");
+  assert.equal(resolveProject("cek aplikasi alurka terakhir", registry.projects)?.project.id, "alurka");
+  const recent = resolveProject("lanjutkan project terakhir", registry.projects);
+  assert.equal(recent?.project.id, "alurka");
+  assert.equal(recent?.reason, "recent");
+  assert.equal(resolveProject("pertanyaan umum tanpa project", registry.projects), null);
+});
+
+test("Project Registry normalization rejects duplicate IDs and bounds metadata", () => {
+  const projects = normalizeProjects([
+    { id: "one", name: "One", aliases: ["a"] },
+    { id: "ONE", name: "Duplicate", aliases: ["b"] },
+    { name: "" },
+  ]);
+  assert.equal(projects.length, 1);
+  assert.equal(projects[0].id, "one");
+});
+
+
+test("Brain exposes truthful registered project selection and event", async () => {
+  const events: AstraBrainEvent[] = [];
+  const result = await astraBrain.chat("lanjutkan ALURKA", {
+    provider: "ollama",
+    onEvent: (event) => events.push(event),
+  });
+  assert.equal(result.brain.context?.project?.id, "alurka");
+  assert.equal(result.brain.context?.project?.name, "ALURKA");
+  assert.ok(events.some((event) => event.type === "project.selected"));
 });
