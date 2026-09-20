@@ -29,7 +29,8 @@ type Mode =
   | "empty"
   | "oversized"
   | "http503"
-  | "missing-model";
+  | "missing-model"
+  | "bad-models-field";
 
 let server: Server;
 let base = "";
@@ -90,6 +91,12 @@ function writeMode(
 before(async () => {
   server = createServer(async (request, response) => {
     if (request.url === "/api/tags") {
+      if (ollamaTagsMode === "bad-models-field") {
+        response.setHeader("content-type", "application/json");
+        response.end(JSON.stringify({ models: "not-an-array" }));
+        return;
+      }
+
       const payload =
         ollamaTagsMode === "missing-model"
           ? { models: [{ name: "other-model" }] }
@@ -246,59 +253,11 @@ test("Phase 15C2 Ollama status and chat accept only structured bounded payloads"
 });
 
 test("Phase 15C2 Ollama rejects a malformed models field instead of fabricating readiness", async () => {
-  server.removeAllListeners("request");
-  server.on("request", (request, response) => {
-    if (request.url === "/api/tags") {
-      response.setHeader("content-type", "application/json");
-      response.end(JSON.stringify({ models: "not-an-array" }));
-      return;
-    }
-    response.statusCode = 404;
-    response.end();
-  });
+  ollamaTagsMode = "bad-models-field";
 
   const status = await getOllamaStatus();
   assert.equal(status.available, false);
   assert.match(status.detail, /malformed model list/i);
-
-  server.removeAllListeners("request");
-  server.on("request", async (request, response) => {
-    if (request.url === "/api/tags") {
-      writeMode(response, ollamaTagsMode, { models: [{ name: "fixture-model" }] });
-      return;
-    }
-    if (request.url === "/api/chat") {
-      writeMode(response, ollamaChatMode, {
-        message: { role: "assistant", content: "ollama fixture response" },
-        done: true,
-      });
-      return;
-    }
-    if (request.url === "/v1/capabilities") {
-      writeMode(response, hermesCapabilitiesMode, { tools: [], status: "ok" });
-      return;
-    }
-    if (request.url === "/v1/chat/completions") {
-      writeMode(response, hermesChatMode, {
-        choices: [{ message: { content: "hermes fixture response" } }],
-      });
-      return;
-    }
-    if (request.url === "/models") {
-      writeMode(response, cloudModelsMode, {
-        data: [{ id: "fixture-cloud-model" }],
-      });
-      return;
-    }
-    if (request.url === "/chat/completions") {
-      writeMode(response, cloudChatMode, {
-        choices: [{ message: { content: "cloud fixture response" } }],
-      });
-      return;
-    }
-    response.statusCode = 404;
-    response.end();
-  });
 });
 
 test("Phase 15C2 Hermes status validates the capabilities payload before reporting available", async () => {
