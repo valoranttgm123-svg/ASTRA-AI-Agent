@@ -10,7 +10,9 @@ Primary implementation branch when work begins: `astra/astra-max-production`
 - **Phase 0 — Baseline lock: COMPLETE.** ASTRA MAX started from stable `main` `15ed870f...`; recoverable backup `backup/astra-before-max-production-2026-09-20` was created.
 - **Phase 1 — Agent/capability normalization: COMPLETE.** `lib/agent/capabilities.ts` is now the canonical 18-node Command Center registry. Brain visual routing and `ApexWorld` consume this registry. Nodes without a real configured capability default to `NOT_CONFIGURED` instead of fake ONLINE status.
 - Phase 1 validation: production build, unit/integration tests, typecheck, lint, and dependency audit passed in GitHub Actions.
-- **Next automatic work: Phase 2 — Memory Intelligence.** Preserve the existing local-memory behavior while adding source/provenance contracts and provider-neutral memory-source boundaries before live Graphify/Obsidian integration.
+- **Phase 2 foundation — Memory Intelligence contracts: COMPLETE.** Local memory now preserves provenance, project, privacy, relevance and confidence metadata. A provider-neutral multi-source manager enforces dedupe, project isolation, bounds, source failure handling and cancellation.
+- **Phase 2 live-source integration remains pending.** Graphify/Obsidian/Sonor are not claimed as connected yet; they must implement the new memory-source contract and remain local/read-only by default until explicitly configured.
+- **Next safe foundation work: Phase 3 — Project Registry.**
 
 ## Mission
 
