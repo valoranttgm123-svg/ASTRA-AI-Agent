@@ -20,6 +20,8 @@ import {
   visualNodeForAgent,
 } from "../lib/agent/capabilities";
 import type { AstraBrainEvent } from "../lib/brain/types";
+import { searchMemorySources } from "../lib/memory/manager";
+import type { AstraMemorySource } from "../lib/memory/contracts";
 
 let root = "";
 let fixture: Server;
@@ -307,4 +309,127 @@ test("every execution agent maps to a registered visual capability node", () => 
 test("Brain envelope reports retrieved memory source types", async () => {
   const result = await astraBrain.chat("ASTRA provider", { provider: "ollama" });
   assert.deepEqual(result.brain.context?.memorySources, ["local"]);
+});
+
+
+test("multi-source memory manager enforces project isolation, dedupe, ranking, and bounds", async () => {
+  const local: AstraMemorySource = {
+    id: "local-fixture",
+    type: "local",
+    async search() {
+      return {
+        source: "local-fixture",
+        sourceType: "local",
+        available: true,
+        detail: "ok",
+        records: [
+          {
+            id: "shared",
+            content: "ASTRA decision from local memory",
+            relevance: 0.7,
+            confidence: 1,
+            provenance: {
+              source: "local-fixture",
+              sourceType: "local",
+              project: "ASTRA",
+              privacy: "private_local",
+              reference: "decision:shared",
+            },
+          },
+          {
+            id: "other-project",
+            content: "ALURKA only context",
+            relevance: 0.99,
+            confidence: 1,
+            provenance: {
+              source: "local-fixture",
+              sourceType: "local",
+              project: "ALURKA",
+              privacy: "private_local",
+              reference: "decision:alurka",
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const graph: AstraMemorySource = {
+    id: "graph-fixture",
+    type: "graphify",
+    async search() {
+      return {
+        source: "graph-fixture",
+        sourceType: "graphify",
+        available: true,
+        detail: "ok",
+        records: [
+          {
+            id: "shared-graph",
+            content: "ASTRA decision from graph",
+            relevance: 0.9,
+            confidence: 0.8,
+            provenance: {
+              source: "graph-fixture",
+              sourceType: "graphify",
+              project: "ASTRA",
+              privacy: "project_local",
+              reference: "decision:shared",
+            },
+          },
+          {
+            id: "second",
+            content: "ASTRA second graph context",
+            relevance: 0.8,
+            confidence: 0.8,
+            provenance: {
+              source: "graph-fixture",
+              sourceType: "graphify",
+              project: "ASTRA",
+              privacy: "project_local",
+              reference: "decision:second",
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const result = await searchMemorySources(
+    { input: "ASTRA", project: "ASTRA", limit: 2, maxChars: 200 },
+    [local, graph],
+  );
+
+  assert.equal(result.records.length, 2);
+  assert.equal(result.records[0].provenance.reference, "decision:shared");
+  assert.equal(result.records[0].provenance.sourceType, "graphify");
+  assert.equal(result.records[1].provenance.reference, "decision:second");
+  assert.ok(result.records.every((record) => record.provenance.project !== "ALURKA"));
+});
+
+test("multi-source memory manager degrades around failed sources and supports cancellation", async () => {
+  const failing: AstraMemorySource = {
+    id: "broken-source",
+    type: "obsidian",
+    async search() {
+      throw new Error("fixture failure");
+    },
+  };
+  const result = await searchMemorySources(
+    { input: "ASTRA", limit: 3, maxChars: 200 },
+    [failing],
+  );
+  assert.equal(result.records.length, 0);
+  assert.equal(result.sources[0].available, false);
+  assert.doesNotMatch(result.sources[0].detail, /password|token/i);
+
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(
+    searchMemorySources(
+      { input: "ASTRA", limit: 3, maxChars: 200, signal: controller.signal },
+      [failing],
+    ),
+    { name: "AbortError" },
+  );
 });
