@@ -567,3 +567,25 @@ Implemented on `astra/phase7b-authenticated-github-transport`:
 - fixture tests for auth availability, approval/policy gates, verified external actions and CI reads.
 
 Phase 7 is still partial until scoped Level-3 approval and a real target-PC push/PR/CI validation complete.
+
+
+---
+
+## Phase 7C implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase7c-scoped-level3-approval`:
+
+- preflight before any plan execution for elevated permissions;
+- one-time five-minute Level-3 challenge;
+- exact input + exact stored-plan binding;
+- exact-step approval only;
+- safe visible approval scope;
+- separate Level-3 ASTRA Console confirmation;
+- no token display;
+- no model replanning on approval replay;
+- follow-up challenge for a second Level-3 action;
+- Level-4 rejection before execution;
+- API/SSE token validation and lifecycle events;
+- regression tests for scope, single-use, policy/availability, exact-step and Level-4 boundaries.
+
+After merge, Phase 7 requires real target-PC validation (gh auth + registered workspace + branch/edit/verify/commit/push/PR/CI). The next code milestone is a real Research/browser capability to close the remaining Phase 5 orchestration gap.
