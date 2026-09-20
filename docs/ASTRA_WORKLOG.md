@@ -151,11 +151,11 @@ Never mark local/physical verification PASS from repository inspection alone.
 - result: provider STOP/timeout distinction and authoritative Tool Runtime timeout are covered.
 - next: **P15D2 Codex child-process + Automation/Command Center STOP settlement**.
 
-## In-flight checkpoint — Phase 15D2
+## Phase 15D2 — Codex STOP + runtime settlement
 
 - PR: **#102**
-- branch: `astra/phase15d2-codex-stop-settlement`
-- scope: Codex child-process timeout/cancel cleanup + Automation/Command Center STOP settlement;
-- Phase 15D counts complete only after PR #102 CI is green and merged;
-- next after merge: **P15E Secret / error / telemetry leakage hardening**.
+- merge commit: `5d182999b7bcf3e63a560a06b2a2bb4a68b5405c`
+- CI: **SUCCESS**
+- result: Phase 15D complete; Codex owned child cleanup and Automation/Command Center STOP settlement are verified.
+- next: **P15E Secret / error / telemetry leakage hardening**.
 
