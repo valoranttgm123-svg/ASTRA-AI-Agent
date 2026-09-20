@@ -8,10 +8,11 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "lint": "eslint lib/brain lib/memory lib/projects lib/planner lib/automation lib/security lib/performance lib/tools lib/agent/capabilities.ts app/api/agent app/api/automation components/AstraConsole.tsx components/AstraAutomationPanel.tsx components/AstraRuntime.tsx components/ApexWorld.tsx instrumentation.ts scripts/performance",
+    "lint": "eslint lib/brain lib/memory lib/projects lib/planner lib/automation lib/security lib/performance lib/validation lib/tools lib/agent/capabilities.ts app/api/agent app/api/automation components/AstraConsole.tsx components/AstraAutomationPanel.tsx components/AstraRuntime.tsx components/ApexWorld.tsx instrumentation.ts scripts/performance scripts/validation",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
-    "perf:runtime": "tsx scripts/performance/measure-runtime.ts"
+    "perf:runtime": "tsx scripts/performance/measure-runtime.ts",
+    "validate:preflight": "tsx scripts/validation/full-system-preflight.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.0.1",

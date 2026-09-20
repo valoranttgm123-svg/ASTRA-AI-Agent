@@ -95,8 +95,9 @@ Never resume by weakening these:
 At creation of this protocol:
 
 - P15A–P15E: merged/CI verified;
-- current branch gate: **P15F final security regression/report**;
-- after P15F merge: Phase 15 repository hardening complete;
+- Phase 15 repository hardening: merged/CI verified;
+- Phase 16A instrumentation: merged/CI verified;
+- Phase 16 target runtime/browser measurements: pending local access;
 - Phase 14 local validation: pending;
 - Sonor real validation: pending local access;
-- next implementable repository work when local access is unavailable: **Phase 16 performance instrumentation/preparation**.
+- current implementable repository work: **Phase 17A safe full-system preflight evidence runner**.

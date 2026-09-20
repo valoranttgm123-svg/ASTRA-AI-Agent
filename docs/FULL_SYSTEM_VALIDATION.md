@@ -2,6 +2,61 @@
 
 > Execute against a real current build. Do not mark PASS from code inspection alone.
 
+## Safe preflight evidence runner
+
+Repository-side preflight instrumentation is available through:
+
+```powershell
+npm run validate:preflight
+```
+
+This runner is **not** the Phase 17 PASS gate.
+
+It:
+
+- is loopback-only;
+- uses `mode: "chat"` only;
+- does not set `approved`;
+- does not send an approval token;
+- does not create a PR;
+- does not send email;
+- does not modify calendar;
+- does not run Scenario E STOP automatically;
+- stores metadata-only evidence in gitignored `.astra/validation/`.
+
+Captured evidence may include:
+
+- provider/execution state;
+- route + visual nodes;
+- project id/name/reason;
+- memory entry count + source types;
+- selected skills;
+- event types;
+- plan step count/kinds/tool ids/max permission;
+- whether an approval is required;
+- safe approval metadata without the approval token/scope;
+- timing.
+
+The runner deliberately does **not** persist:
+
+- response message text;
+- approval token;
+- approval scope;
+- event detail;
+- plan goal/title;
+- tool input;
+- email/body text.
+
+Examples:
+
+```powershell
+npm run validate:preflight
+npm run validate:preflight -- --scenarios A,C
+npm run validate:preflight -- --provider ollama
+```
+
+Use the captured JSON only as preflight evidence. Real Phase 17 completion still requires the manual/approved execution described in each scenario below.
+
 ## Environment
 
 | Field | Value |

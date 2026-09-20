@@ -61,6 +61,10 @@ Phase 16 result: **IN PROGRESS — instrumentation only; no target-PC measuremen
 
 ## Phase 17 — Full-system validation
 
+- [x] P17A — safe chat-mode preflight evidence runner implemented — PR #106
+- [ ] P17B — target-runtime A–D preflight evidence captured
+- [ ] P17C — approved real execution for scenarios requiring writes/integrations
+- [ ] P17D — real emergency STOP scenario
 - [ ] Scenario A — project continuation
 - [ ] Scenario B — engineering PR workflow
 - [ ] Scenario C — ALURKA campaign
@@ -69,7 +73,7 @@ Phase 16 result: **IN PROGRESS — instrumentation only; no target-PC measuremen
 - [ ] failure variants recorded
 - [ ] `docs/FULL_SYSTEM_VALIDATION.md` filled with evidence
 
-Phase 17 result: **PENDING**
+Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 
 ## Repository cleanup before RC
 
