@@ -3,6 +3,7 @@ import type { AstraAgentKey } from "@/lib/agent/types";
 import { chatWithOllama } from "@/lib/brain/ollama";
 import type { AstraPlan, AstraPlanStepDraft, AstraPlanStepKind } from "./contracts";
 import { createBoundedPlan } from "./planner";
+import type { AstraToolDefinition } from "@/lib/tools/contracts";
 
 const PLAN_KINDS = new Set<AstraPlanStepKind>([
   "inspect",
@@ -128,10 +129,40 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function knownToolPermission(toolId: string | undefined) {
+  if (!toolId) return 0;
+  if (
+    toolId === "github.push" ||
+    toolId === "github.pull-request.open"
+  ) {
+    return 3;
+  }
+  if (
+    toolId === "project.file.write" ||
+    toolId === "project.git.create-branch" ||
+    toolId === "project.git.stage-files" ||
+    toolId === "project.git.commit" ||
+    toolId === "project.verify.npm-script"
+  ) {
+    return 2;
+  }
+  if (
+    toolId === "project.context.search" ||
+    toolId === "project.file.read" ||
+    toolId === "project.git.status" ||
+    toolId === "project.git.diff-file" ||
+    toolId === "github.ci.status"
+  ) {
+    return 1;
+  }
+  return 0;
+}
+
 function defaultPermissionForStep(
   kind: AstraPlanStepKind,
   agent: AstraAgentKey | undefined,
   title: string,
+  toolId?: string,
 ) {
   const highImpact =
     /(?:delete|hapus|admin|administrator|credential|password|secret|live trade|place trade|close trade|withdraw)/i.test(
@@ -148,7 +179,8 @@ function defaultPermissionForStep(
     case "research":
     case "verify":
       return 1;
-    case "tool":
+    case "tool": {
+      const toolFloor = knownToolPermission(toolId);
       if (agent === "trading") return 4;
       if (
         agent === "github" ||
@@ -157,7 +189,8 @@ function defaultPermissionForStep(
       ) {
         return 3;
       }
-      return 2;
+      return Math.max(2, toolFloor);
+    }
     case "approval":
       return 3;
   }
@@ -168,8 +201,9 @@ function normalizedPermission(
   kind: AstraPlanStepKind,
   agent: AstraAgentKey | undefined,
   title: string,
+  toolId?: string,
 ) {
-  const floor = defaultPermissionForStep(kind, agent, title);
+  const floor = defaultPermissionForStep(kind, agent, title, toolId);
   const parsed =
     typeof value === "number" && Number.isFinite(value)
       ? Math.floor(value)
@@ -182,6 +216,28 @@ function normalizeAgent(value: unknown): AstraAgentKey | undefined {
   return AGENT_KEYS.has(value as AstraAgentKey)
     ? (value as AstraAgentKey)
     : undefined;
+}
+
+function normalizeToolId(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const id = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120);
+  return id || undefined;
+}
+
+function normalizeToolInput(value: unknown): Record<string, unknown> | undefined {
+  if (!isObject(value)) return undefined;
+  try {
+    const serialized = JSON.stringify(value);
+    if (serialized.length > 12_000) return undefined;
+    return JSON.parse(serialized) as Record<string, unknown>;
+  } catch {
+    return undefined;
+  }
 }
 
 function normalizeDraft(value: unknown, index: number): AstraPlanStepDraft | null {
@@ -197,6 +253,10 @@ function normalizeDraft(value: unknown, index: number): AstraPlanStepDraft | nul
     : undefined;
 
   const agent = normalizeAgent(value.agent);
+  const toolId =
+    kind === "tool" ? normalizeToolId(value.toolId) : undefined;
+  const toolInput =
+    kind === "tool" ? normalizeToolInput(value.toolInput) : undefined;
 
   return {
     id:
@@ -211,8 +271,11 @@ function normalizeDraft(value: unknown, index: number): AstraPlanStepDraft | nul
       kind as AstraPlanStepKind,
       agent,
       title,
+      toolId,
     ),
     dependsOn,
+    toolId,
+    toolInput,
     timeoutMs:
       typeof value.timeoutMs === "number" && Number.isFinite(value.timeoutMs)
         ? value.timeoutMs
@@ -252,11 +315,13 @@ export async function generateStrategistPlan({
   goal,
   projectId,
   context,
+  tools,
   signal,
 }: {
   goal: string;
   projectId?: string;
   context?: string;
+  tools?: readonly AstraToolDefinition[];
   signal?: AbortSignal;
 }): Promise<AstraGeneratedPlan> {
   const cleanGoal = goal.trim();
@@ -266,7 +331,9 @@ export async function generateStrategistPlan({
     "ASTRA STRATEGIST PLANNER MODE.",
     "Return JSON only. No markdown and no prose outside JSON.",
     "Schema:",
-    '{"steps":[{"id":"step-1","title":"...","kind":"inspect|memory|research|reason|tool|verify|approval","agent":"chief_of_staff|memory|researcher|developer|computer|files|github|communication|business|trading","permissionLevel":0,"dependsOn":[],"timeoutMs":30000,"maxRetries":0}]}',
+    '{"steps":[{"id":"step-1","title":"...","kind":"inspect|memory|research|reason|tool|verify|approval","agent":"chief_of_staff|memory|researcher|developer|computer|files|github|communication|business|trading","permissionLevel":0,"dependsOn":[],"timeoutMs":30000,"maxRetries":0,"toolId":"optional.real.tool.id","toolInput":{"projectId":"...","other":"bounded JSON"}}]}',
+    "For kind=tool, use toolId/toolInput only when a matching ASTRA tool appears in the supplied tool catalog. Never invent a tool id.",
+    "Do not use NOT_CONFIGURED/OFFLINE/ERROR tools as if they were available. A plan may include an approval/checkpoint around a requested unavailable integration, but must not claim it can execute.",
     "Create the smallest useful plan, normally 2-8 steps.",
     "Do not claim any step has executed.",
     "Use inspect/memory/research/reason before side-effecting tool steps when appropriate.",
@@ -274,6 +341,25 @@ export async function generateStrategistPlan({
     "Permission guidance: 0 reasoning only, 1 read, 2 safe local action, 3 external write/action, 4 high-impact.",
     "Never lower a risky action's permission to make it easier to run.",
     "Dependencies may reference only earlier step ids.",
+    tools && tools.length > 0
+      ? "ASTRA tool catalog:\\n" +
+        tools
+          .slice(0, 60)
+          .map(
+            (tool) =>
+              "- " +
+              tool.id +
+              " | " +
+              tool.availability +
+              " | permission " +
+              tool.permissionLevel +
+              " | " +
+              tool.sideEffect +
+              " | " +
+              tool.description,
+          )
+          .join("\\n")
+      : "ASTRA tool catalog: no executable tools were supplied.",
     context ? `Bounded ASTRA context:\\n${context}` : "",
   ]
     .filter(Boolean)
