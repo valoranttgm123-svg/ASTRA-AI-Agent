@@ -7,6 +7,7 @@ import {
 } from "@/lib/brain/http";
 import { executeApprovedAutomationOccurrence } from "@/lib/automation/approval";
 import { parseAutomationRunRequest } from "@/lib/automation/http";
+import { safeErrorDetail } from "@/lib/security/redaction";
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +36,11 @@ export async function POST(request: Request) {
       return Response.json({ ok: true, ...result });
     } catch (error) {
       throw new RequestError(
-        error instanceof Error
-          ? error.message
-          : "Automation occurrence could not be executed.",
+        safeErrorDetail(
+          error,
+          "Automation occurrence could not be executed.",
+          700,
+        ),
         400,
       );
     }
