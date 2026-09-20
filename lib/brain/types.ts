@@ -15,6 +15,7 @@ export type AstraBrainProvider =
 export type AstraBrainEventType =
   | "request.received"
   | "router.selected"
+  | "project.selected"
   | "memory.loaded"
   | "memory.search.started"
   | "memory.source.queried"
@@ -76,6 +77,11 @@ export type AstraBrainEnvelope = {
   context?: {
     memoryEntries: number;
     memorySources?: AstraMemorySourceType[];
+    project?: {
+      id: string;
+      name: string;
+      reason: "id" | "name" | "alias" | "recent";
+    };
     skills: string[];
   };
   permissions?: AstraBrainPermissionSnapshot;
