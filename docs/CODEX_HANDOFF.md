@@ -1,5 +1,57 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 7A scoped Files + local Git checkpoint
+
+This branch implements the safe local half of the Files/GitHub production workflow.
+
+Implemented:
+- centralized project path safety in `lib/projects/paths.ts`;
+  - registered workspace containment;
+  - lexical + realpath containment;
+  - sensitive-name/segment blocking;
+  - supported text-extension allowlist;
+  - safe existing-file and writable-target resolution;
+- existing project-context memory loader now reuses the same path guard;
+- `project.file.read` (Level 1/read):
+  - exact path only;
+  - registered workspace only;
+  - bounded text read;
+  - SHA-256 returned for optimistic write precondition;
+- `project.file.write` (Level 2/local write):
+  - exact safe target only;
+  - bounded content;
+  - existing files require `expectedSha256` from a prior read;
+  - stale hash blocks overwrite;
+  - exact read-back verification after write;
+- bounded shell-free process helper (`spawn`, `shell:false`, fixed commands/args, cancellation, output cap);
+- real local Git tools:
+  - `project.git.status` — Level 1;
+  - `project.git.diff-file` — Level 1, one explicit safe file;
+  - `project.git.create-branch` — Level 2;
+  - `project.git.stage-files` — Level 2, explicit safe paths only;
+  - `project.git.commit` — Level 2, revalidates every staged path and verifies a new HEAD;
+- `project.verify.npm-script` — Level 2/shell-gated, allowlist only: test/typecheck/lint/build;
+- `github.push` and `github.pull-request.open` exist as Level-3 external actions but remain `NOT_CONFIGURED` with no handler/provider.
+
+End-to-end fixture coverage:
+`read → SHA-guarded write → git diff → branch → stage → npm test → commit → verify HEAD/status`
+runs in a temporary Git repository, not the real user project.
+
+Security notes:
+- no recursive filesystem scan;
+- no arbitrary shell command input;
+- sensitive files such as .env/private keys remain blocked;
+- local commit refuses unsafe/deleted staged paths;
+- GitHub external actions remain blocked until an authenticated provider is explicitly connected.
+
+Phase 7 is **partial**, not complete. Next:
+1. merge this checkpoint after CI;
+2. add a provider-neutral authenticated GitHub transport for push/PR/CI reads behind Level 3;
+3. wire planner/orchestrator tool selection so validated plan steps can invoke these exact tool IDs/inputs instead of relying on prose;
+4. verify a real branch → safe edit → tests/build → commit → push → PR → CI workflow on the target PC.
+
+Sonor is not modified by this milestone.
+
 ## 2026-09-20 — Phase 6A executable Tool Runtime checkpoint
 
 This branch converts the existing Tool Registry from metadata-only into a real permission-gated execution runtime.

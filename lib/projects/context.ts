@@ -1,55 +1,10 @@
-import { realpath, readFile, stat } from "node:fs/promises";
-import path from "node:path";
+import { readFile, stat } from "node:fs/promises";
 import type { AstraMemoryRecord, AstraMemorySource } from "@/lib/memory/contracts";
 import type { AstraProjectRecord } from "./contracts";
-
-const ALLOWED_EXTENSIONS = new Set([
-  ".md",
-  ".mdx",
-  ".txt",
-  ".json",
-  ".jsonc",
-  ".yaml",
-  ".yml",
-  ".toml",
-  ".csv",
-  ".ts",
-  ".tsx",
-  ".js",
-  ".jsx",
-  ".mjs",
-  ".cjs",
-  ".py",
-  ".html",
-  ".css",
-  ".scss",
-  ".sql",
-  ".ps1",
-  ".sh",
-]);
-
-const SENSITIVE_NAMES = new Set([
-  ".env",
-  ".env.local",
-  ".env.production",
-  ".env.development",
-  "id_rsa",
-  "id_ed25519",
-  "credentials",
-  "credentials.json",
-  "secrets",
-  "secrets.json",
-  "auth.json",
-]);
-
-const SENSITIVE_SEGMENTS = new Set([
-  ".ssh",
-  ".gnupg",
-  "credentials",
-  "secrets",
-  "token",
-  "tokens",
-]);
+import {
+  resolveExistingProjectFile,
+  resolveProjectWorkspace,
+} from "./paths";
 
 function envFlag(name: string, fallback: boolean) {
   const value = process.env[name]?.trim().toLowerCase();
@@ -87,63 +42,6 @@ function relevance(query: string, content: string, fileName: string) {
   return Math.min(1, matches / input.size);
 }
 
-function normalizedRelative(root: string, target: string) {
-  const relative = path.relative(root, target);
-  if (
-    relative === "" ||
-    relative.startsWith(".." + path.sep) ||
-    relative === ".." ||
-    path.isAbsolute(relative)
-  ) {
-    return relative === "" ? "." : null;
-  }
-  return relative;
-}
-
-function isSensitive(relativePath: string) {
-  const normalized = relativePath.replace(/\\/g, "/");
-  const segments = normalized
-    .split("/")
-    .map((segment) => segment.trim().toLowerCase())
-    .filter(Boolean);
-  const base = segments.length > 0 ? segments[segments.length - 1] : "";
-
-  if (SENSITIVE_NAMES.has(base)) return true;
-  if (/^\.env(?:\.|$)/i.test(base)) return true;
-  if (/\.(pem|key|p12|pfx|crt)$/i.test(base)) return true;
-  return segments.some((segment) => SENSITIVE_SEGMENTS.has(segment));
-}
-
-function allowedExtension(relativePath: string) {
-  return ALLOWED_EXTENSIONS.has(path.extname(relativePath).toLowerCase());
-}
-
-async function resolveRegisteredFile(
-  workspaceReal: string,
-  configuredPath: string,
-): Promise<{ absolute: string; relative: string } | null> {
-  const candidate = path.isAbsolute(configuredPath)
-    ? path.resolve(configuredPath)
-    : path.resolve(workspaceReal, configuredPath);
-
-  const lexicalRelative = normalizedRelative(workspaceReal, candidate);
-  if (!lexicalRelative || lexicalRelative === ".") return null;
-  if (isSensitive(lexicalRelative) || !allowedExtension(lexicalRelative)) return null;
-
-  let targetReal: string;
-  try {
-    targetReal = await realpath(candidate);
-  } catch {
-    return null;
-  }
-
-  const realRelative = normalizedRelative(workspaceReal, targetReal);
-  if (!realRelative || realRelative === ".") return null;
-  if (isSensitive(realRelative) || !allowedExtension(realRelative)) return null;
-
-  return { absolute: targetReal, relative: realRelative.replace(/\\/g, "/") };
-}
-
 export function createProjectContextMemorySource(
   project: AstraProjectRecord,
 ): AstraMemorySource {
@@ -164,22 +62,8 @@ export function createProjectContextMemorySource(
         };
       }
 
-      if (!project.workspace) {
-        return {
-          source: "project-context:" + project.id,
-          sourceType: "project" as const,
-          available: false,
-          detail: "Registered project has no workspace path.",
-          records: [],
-        };
-      }
-
-      let workspaceReal: string;
-      try {
-        workspaceReal = await realpath(path.resolve(project.workspace));
-        const workspaceStat = await stat(workspaceReal);
-        if (!workspaceStat.isDirectory()) throw new Error("not a directory");
-      } catch {
+      const workspace = await resolveProjectWorkspace(project);
+      if (!workspace) {
         return {
           source: "project-context:" + project.id,
           sourceType: "project" as const,
@@ -202,15 +86,19 @@ export function createProjectContextMemorySource(
         1048576,
       );
 
-      const configured = [...new Set([...project.docs, ...project.importantFiles])]
-        .slice(0, maxFiles);
+      const configured = [
+        ...new Set([...project.docs, ...project.importantFiles]),
+      ].slice(0, maxFiles);
 
       const records: AstraMemoryRecord[] = [];
 
       for (const configuredPath of configured) {
         query.signal?.throwIfAborted();
-        const resolved = await resolveRegisteredFile(workspaceReal, configuredPath);
-        if (!resolved) continue;
+        const resolved = await resolveExistingProjectFile(
+          project,
+          configuredPath,
+        );
+        if (!resolved || resolved.workspace !== workspace) continue;
 
         let fileStat;
         try {
