@@ -23,6 +23,8 @@ Current truthful status:
   - [x] P15C1 — MCP discovery/descriptor/call isolation — PR #99
   - [x] P15C2 — Ollama/Hermes/Codex/Cloud outage + malformed-response matrix — PR #100
 - [ ] P15D — cancellation / timeout / network failure matrix
+  - [x] P15D1 — provider/Strategist/Memory/browser/Tool Runtime cancellation+timeout — PR #101
+  - [ ] P15D2 — Codex child process + Automation/Command Center STOP settlement
 - [ ] P15E — secret / error / telemetry leakage hardening
 - [ ] P15F — security regression matrix + report
 
