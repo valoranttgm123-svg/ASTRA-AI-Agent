@@ -1,5 +1,15 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — JARVIS-Class continuation approved
+
+The ASTRA MAX mission now continues beyond the core release through **Phase 21–30 JARVIS-Class Expansion** in `docs/ASTRA_MAX.md`.
+
+Phase 20 is a core release gate, not the final stop. After it is stable, Codex should continue automatically through always-on voice, identity/trust/secrets, screen/vision context, proactive event engine, durable background tasks, episodic memory/context fusion, secure multi-device presence, self-diagnostics/recovery/offline mode, skill/IoT expansion, and final JARVIS-Class integration/reliability validation.
+
+Do not interpret “JARVIS-Class” as permission for hidden surveillance, unrestricted autonomy, or fictional/impossible capability claims. All existing ASTRA permission, privacy, truthful telemetry, verification, loopback/local-first and emergency-stop rules remain in force.
+
+Ultimate roadmap stop condition: Phase 30 and its verified final status.
+
 ## 2026-09-20 — ASTRA MAX continuation approved
 
 The approved continuation mission is now `docs/ASTRA_MAX.md`.
