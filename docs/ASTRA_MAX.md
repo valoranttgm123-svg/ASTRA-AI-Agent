@@ -12,7 +12,11 @@ Primary implementation branch when work begins: `astra/astra-max-production`
 - Phase 1 validation: production build, unit/integration tests, typecheck, lint, and dependency audit passed in GitHub Actions.
 - **Phase 2 foundation — Memory Intelligence contracts: COMPLETE.** Local memory now preserves provenance, project, privacy, relevance and confidence metadata. A provider-neutral multi-source manager enforces dedupe, project isolation, bounds, source failure handling and cancellation.
 - **Phase 2 live-source integration remains pending.** Graphify/Obsidian/Sonor are not claimed as connected yet; they must implement the new memory-source contract and remain local/read-only by default until explicitly configured.
-- **Next safe foundation work: Phase 3 — Project Registry.**
+- **Phase 3 foundation — Project Registry: COMPLETE.** ASTRA now reads only explicitly registered project metadata from `.astra/projects.json` (or `ASTRA_PROJECTS_FILE`), resolves id/name/alias and “project terakhir”, and reports real `project.selected` Brain context/events. It does not scan arbitrary folders.
+- **Phase 3 full project-context loading remains pending.** Registered docs/workspaces are metadata only until scoped Files/Drive tools are connected; do not claim ASTRA has read those project files merely because the project was identified.
+- **Phase 4 safety foundation — Planner contracts: COMPLETE.** Plans are bounded to 12 steps, retries to 2, step timeouts to 120 seconds, permissions to levels 0–4, and dependencies to already-created steps. No model-driven planning or autonomous execution is enabled yet.
+- **Phase 6 foundation — Tool Registry metadata: COMPLETE EARLY.** A provider-neutral non-executing registry now validates category, provider, availability, timeout, side-effect class and permission floor. No tool handler/MCP/shell/email/computer action is enabled yet.
+- **Next Codex implementation sequence:** finish Phase 2 live Graphify/Obsidian/Sonor sources and real memory lifecycle telemetry; finish Phase 3 scoped project-context retrieval; implement real Phase 4 Strategist/Planner generation using the existing safety contracts; then Phase 5 orchestration and Phase 6 real tool/MCP handlers behind permission + approval + verification.
 
 ## Mission
 
