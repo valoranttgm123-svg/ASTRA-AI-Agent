@@ -1,5 +1,21 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — ASTRA MAX Phase 2 memory foundation checkpoint
+
+The provider-neutral Memory Intelligence foundation is implemented and validated on `astra/astra-max-memory-foundation`.
+
+Completed:
+- provenance/source contracts in `lib/memory/contracts.ts`;
+- local-memory retrieval now returns provenance, project, privacy, relevance and confidence while keeping the old bounded text/entry interface compatible;
+- Brain envelope reports retrieved memory source types;
+- `lib/memory/manager.ts` provides bounded multi-source ranking, dedupe, project isolation, cancellation and graceful source-failure handling;
+- event type contracts exist for future real memory lifecycle telemetry;
+- automated tests cover local provenance, Brain source reporting, multi-source isolation, dedupe and cancellation.
+
+Important limitation: Graphify, Obsidian and Sonor are **not connected yet**. Do not report them as live. They should plug into the new `AstraMemorySource` contract later.
+
+Next safe foundation work: **Phase 3 Project Registry**. It must read only explicitly registered project metadata and must not scan arbitrary user directories.
+
 ## 2026-09-20 — ASTRA MAX Phase 0–1 implementation checkpoint
 
 Phase 0 and Phase 1 are implemented on `astra/astra-max-production` and validated by CI.
