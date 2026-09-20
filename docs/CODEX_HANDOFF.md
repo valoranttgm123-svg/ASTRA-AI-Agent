@@ -1,5 +1,21 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — ASTRA MAX continuation approved
+
+The approved continuation mission is now `docs/ASTRA_MAX.md`.
+
+Codex must treat that document as the production roadmap from the current stable Brain V1 / V15 / V13 state through the final ready-to-use release. Do not rebuild completed foundations. Continue the phases sequentially, commit recoverable checkpoints, validate each milestone, and keep this handoff plus `docs/ASTRA_ROADMAP.md` and `docs/ARCHITECTURE.md` updated.
+
+Key product decision:
+- all 18 ReasoningWeb nodes must become truthful real capabilities, skills, tools/integrations, or explicit unavailable/not-configured states;
+- no fake ONLINE agents, fake tool work, fake telemetry, or fake success;
+- Graphify + Obsidian/Sonor memory intelligence is included in the roadmap, followed by Project Registry, Planner/Orchestrator, Tool Registry/MCP, Files/GitHub, business specialists, communication integrations, Design/Social, Computer Agent, multimodal/voice, Command Center MAX, automation, hardening, release candidate, Windows ready-to-use, and final release;
+- Codex should continue automatically milestone-to-milestone and stop only when a genuine external action (OAuth/login/device permission/high-impact approval) requires the user.
+
+Current stable baseline before ASTRA MAX implementation: `main` at or newer than `9aaa2b2`.
+
+For the complete mission, read `docs/ASTRA_MAX.md` before implementation.
+
 ## 2026-09-19 — Brain V1 local release verification
 
 - B1–B8 implementation is complete in `astra/brain-v1-complete`.

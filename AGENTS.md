@@ -5,10 +5,11 @@ This repository is the working source of truth for the ASTRA AI Agent project.
 Before changing ASTRA, read these files in order:
 
 1. `docs/CODEX_HANDOFF.md` — current architecture, active state, constraints, next work.
-2. `docs/ASTRA_CONVERSATION_HISTORY.md` — conversation-derived project history and user decisions.
-3. `docs/HUMANOID_BUILD_LOG.md` — detailed Humanoid implementation history.
-4. `docs/ASTRA_BRAIN_V1.md` — approved Brain architecture direction.
-5. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+2. `docs/ASTRA_MAX.md` — approved production roadmap from current Brain V1/V15 state through ready-to-use final release. Continue its phases sequentially unless genuinely blocked by an external user action.
+3. `docs/ASTRA_CONVERSATION_HISTORY.md` — conversation-derived project history and user decisions.
+4. `docs/HUMANOID_BUILD_LOG.md` — detailed Humanoid implementation history.
+5. `docs/ASTRA_BRAIN_V1.md` — approved Brain architecture direction.
+6. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
 
 ## Project intent
 
@@ -104,3 +105,12 @@ Never commit:
 - hidden chain-of-thought.
 
 The conversation-history document stores project-relevant decisions and facts, not hidden reasoning or credentials.
+
+
+## Current approved continuation — ASTRA MAX
+
+The next major implementation mission is defined in `docs/ASTRA_MAX.md`.
+
+Do not stop after Memory, MCP, or one integration and wait for a new roadmap. Work milestone-by-milestone through the ASTRA MAX roadmap, preserving recoverable commits and validation gates, until the Definition of Done is reached or progress is genuinely blocked by an external action that requires the user.
+
+The 18 ReasoningWeb nodes must become truthful capabilities or truthful unavailable states. A node must never be presented as READY/ONLINE simply because it exists visually.

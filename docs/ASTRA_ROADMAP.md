@@ -372,3 +372,71 @@ No node may appear active unless a real event supports that state.
 ✅ Brain-driven Humanoid/Command Center unification
 ⏳ Sonor workflow/memory bridge (next project stage)
 ```
+
+
+---
+
+# ASTRA MAX — approved continuation to ready-to-use release
+
+Detailed specification: `docs/ASTRA_MAX.md`.
+
+The product decision on 2026-09-20 is to continue beyond Brain V1 as one structured production program rather than isolated feature requests. Codex should execute the phases below sequentially and keep the repository recoverable and validated at each stage.
+
+## ASTRA MAX phase sequence
+
+1. **Phase 0 — Baseline lock**: verify current `main`, tests/build, backup, feature branch.
+2. **Phase 1 — Agent/capability normalization**: map every visual node to a truthful agent/skill/tool/integration/runtime state.
+3. **Phase 2 — Memory Intelligence**: unified local memory, provenance, Graphify, Obsidian, optional Sonor, bounded retrieval.
+4. **Phase 3 — Project Registry**: multi-project identity, aliases, workspaces, repos, docs, milestones and memory namespaces.
+5. **Phase 4 — Strategist + Planner**: bounded multi-step planning, retries, cancellation, permission checkpoints.
+6. **Phase 5 — Agent Orchestrator**: Chief coordinates real specialists.
+7. **Phase 6 — Tool Registry + MCP**: provider-neutral execution interface and policy gate.
+8. **Phase 7 — Files + GitHub production flow**: inspect/edit/test/build/diff/PR/CI/verify.
+9. **Phase 8 — Business skills**: Finance, Sales, Marketing, Ops, Editor, Analytics.
+10. **Phase 9 — Communication/cloud-file integrations**: CRM, Calendar, Email, Drive with truthful NOT_CONFIGURED states until connected.
+11. **Phase 10 — Design + Social**: provider-neutral creative/social workflow.
+12. **Phase 11 — Computer Agent**: controlled Windows actions, OFF by default, permission gated, global STOP.
+13. **Phase 12 — Voice + Multimodal**: unify text, mic, gesture, camera, image and optional screen context.
+14. **Phase 13 — Command Center MAX**: real live operational visualization; no fake traces.
+15. **Phase 14 — Automation**: safe scheduled workflows under the same permission model.
+16. **Phase 15 — Security/failure hardening**: outages, malformed output, injection, cancellation, path and permission failures.
+17. **Phase 16 — Performance pass**: protect Humanoid FPS while measuring agent/memory/tool overhead.
+18. **Phase 17 — Full system test**: project continuation, development PR workflow, ALURKA campaign workflow, calendar/email workflow, emergency stop.
+19. **Phase 18 — Release Candidate**: all tests/typecheck/lint/build/audit/diff checks pass.
+20. **Phase 19 — Windows ready-to-use release**: install/start/self-check path for ASTRA + Ollama + Codex/integrations.
+21. **Phase 20 — Final release**: only after the full Definition of Done in `docs/ASTRA_MAX.md`.
+
+## 18-node Command Center requirement
+
+The existing visual roster remains, but every node must be truthful:
+
+- Chief of Staff
+- Memory
+- Strategist
+- Researcher
+- Finance
+- Editor
+- Sales
+- Marketing
+- Ops
+- Social
+- Engineering
+- Design
+- Developer
+- Analytics
+- CRM
+- Calendar
+- Email
+- Drive
+
+Allowed operational states:
+
+`READY`, `ACTIVE`, `WAITING_APPROVAL`, `BLOCKED`, `OFFLINE`, `NOT_CONFIGURED`, `ERROR`.
+
+A visual node is not evidence of a working capability. Real runtime events and real adapters/tools must drive status.
+
+## Final target
+
+ASTRA is not considered ready merely because individual modules exist. It is ready only when it can truthfully identify a project, retrieve relevant memory, plan work, select real agents/tools, request permissions, execute permitted steps, stream progress, verify results, report failures honestly, and preserve useful project state while the Humanoid remains responsive and global STOP works.
+
+See `docs/ASTRA_MAX.md` for the full Definition of Done, permission model, security boundaries, verification requirements, final-report format, and Git strategy.
