@@ -1179,6 +1179,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
 
     let approvedPermissionLevel: 0 | 1 | 2 | 3 | 4 =
       context.policy.requireApproval ? (task.approved ? 2 : 1) : 2;
+    let approvedStepIds: string[] = [];
+    let usedScopedApproval = false;
 
     if (task.approvalToken) {
       const grant = consumeLevel3Approval({
@@ -1205,7 +1207,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
 
       context.plan = grant.plan;
-      approvedPermissionLevel = grant.level;
+      approvedPermissionLevel = 2;
+      approvedStepIds = [grant.request.stepId];
+      usedScopedApproval = true;
 
       emitLiveEvent(options, {
         type: "approval.granted",
@@ -1233,21 +1237,33 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     }
 
     if (context.plan) {
-      const nextHigherPermissionStep = context.plan.steps.find(
-        (step) =>
-          step.status === "pending" &&
-          step.permissionLevel > approvedPermissionLevel,
-      );
+      if (!usedScopedApproval) {
+        const highImpactStep = context.plan.steps.find(
+          (step) =>
+            step.status === "pending" &&
+            step.permissionLevel >= 4,
+        );
 
-      if (nextHigherPermissionStep) {
-        if (nextHigherPermissionStep.permissionLevel >= 4) {
+        if (highImpactStep) {
           return blocked(
-            "Plan ini membutuhkan izin Level-4/high-impact. ASTRA belum mengizinkan approval Level-4 melalui UI normal.",
-            "High-impact Level-4 step requires a future stronger authorization path.",
+            "Plan ini mengandung izin Level-4/high-impact pada step: " +
+              highImpactStep.title +
+              ". ASTRA belum mengizinkan approval Level-4 melalui UI normal.",
+            "High-impact Level-4 plan was rejected before any plan step executed.",
             true,
           );
         }
+      }
 
+      const nextHigherPermissionStep = usedScopedApproval
+        ? undefined
+        : context.plan.steps.find(
+            (step) =>
+              step.status === "pending" &&
+              step.permissionLevel > approvedPermissionLevel,
+          );
+
+      if (nextHigherPermissionStep) {
         if (
           nextHigherPermissionStep.permissionLevel === 3 &&
           nextHigherPermissionStep.toolId
@@ -1337,6 +1353,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         policy: context.policy,
         providerChoice: preferredProvider,
         approvedPermissionLevel,
+        approvedStepIds,
         signal: options?.signal,
         onEvent: (event) => {
           const live = emitLiveEvent(options, planExecutionEventFields(event));
@@ -1409,6 +1426,63 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           ? " Blocked at " + result.blockedStepId + "."
           : "");
 
+      let followUpApprovalRequest: AstraApprovalRequest | undefined;
+
+      if (needsApproval && result.blockedStepId) {
+        const blockedStep = result.plan.steps.find(
+          (step) => step.id === result.blockedStepId,
+        );
+
+        if (
+          blockedStep?.permissionLevel === 3 &&
+          blockedStep.toolId
+        ) {
+          const definition = context.tools.find(
+            (tool) => tool.id === blockedStep.toolId,
+          );
+
+          if (
+            definition?.availability === "READY" &&
+            (definition.sideEffect !== "external_write" ||
+              context.policy.allowExternalActions)
+          ) {
+            const approvalPlan: AstraPlan = {
+              ...result.plan,
+              status: "planned",
+              steps: result.plan.steps.map((step) =>
+                step.id === blockedStep.id
+                  ? { ...step, status: "pending" as const }
+                  : step,
+              ),
+            };
+
+            followUpApprovalRequest = createLevel3Approval({
+              input,
+              plan: approvalPlan,
+              step: {
+                ...blockedStep,
+                status: "pending",
+              },
+            });
+
+            context.plan = approvalPlan;
+
+            emitLiveEvent(options, {
+              type: "approval.requested",
+              agent: blockedStep.agent ?? "chief_of_staff",
+              visualNode: visualNodeForAgent(
+                blockedStep.agent ?? "chief_of_staff",
+              ),
+              label: "Next Level-3 approval requested",
+              detail:
+                "A new one-time approval is required for " +
+                blockedStep.toolId +
+                ".",
+            });
+          }
+        }
+      }
+
       const blockedEvent = emitLiveEvent(options, {
         type: "agent.blocked",
         agent: selected,
@@ -1443,6 +1517,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         state: needsApproval ? "blocked" : "error",
         message: detail,
         requiresApproval: needsApproval,
+        approvalRequest: followUpApprovalRequest,
         brain: {
           provider,
           execution: "blocked",
