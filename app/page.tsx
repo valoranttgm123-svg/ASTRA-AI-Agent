@@ -1,6 +1,7 @@
 import ApexWorld from "@/components/ApexWorld";
 import ApexOverviewPanel from "@/components/ApexOverviewPanel";
 import AstraConsole from "@/components/AstraConsole";
+import AstraAutomationPanel from "@/components/AstraAutomationPanel";
 import AstraHumanoidPortal from "@/components/AstraHumanoidPortal";
 import { AstraRuntimeProvider } from "@/components/AstraRuntime";
 
@@ -18,6 +19,7 @@ export default function Home() {
         </section>
 
         <AstraConsole />
+        <AstraAutomationPanel />
         <AstraHumanoidPortal />
 
         <a

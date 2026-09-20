@@ -1855,3 +1855,8 @@ This is backend-only. Command Center and the Automation control UI do not consum
 The browser Runtime now consumes live automation SSE through the same interaction controller and event state used by ordinary ASTRA Brain requests. Automation events enter the existing `brainEvents` and `brainTrace`, allowing the existing Ops capability mapping to reflect real scheduled work.
 
 Global STOP and newer user interactions abort the same active request controller. The Automation UI is still deferred to D3B2.
+## Phase 14D3B2 — Automation control panel
+
+ASTRA now exposes a compact local Automation panel over the existing safe APIs. Definitions are created paused, editing is restricted to paused definitions, Level-2/3 due occurrences require exact per-run approval, existing Level-3 scope is displayed before single-use approval, and active streamed occurrences can be stopped through the shared Runtime abort path.
+
+The panel does not start a background worker. The next Phase 14 slice is the explicit opt-in local timer/service for unattended Level 0/1 automation only.
