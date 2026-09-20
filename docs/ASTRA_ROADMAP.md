@@ -649,3 +649,22 @@ Implemented on `astra/phase9-communication-cloud-integrations`:
 - regression coverage for permission, policy, verification and capability truth.
 
 Next: Phase 10 Design + Social provider-neutral creative/publishing workflow.
+
+
+---
+
+## Phase 10 implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase10-design-social`:
+
+- real Social content-preparation skill;
+- real Design visual-brief skill;
+- Social/Design lifecycle mapped to truthful visual nodes;
+- provider-neutral creative transport;
+- Level-3 design generate/edit and social publish/schedule contracts;
+- default NOT_CONFIGURED provider state;
+- verified-completion requirement;
+- live creative feature status;
+- regression coverage for routing, permission, policy and capability truth.
+
+Next: Phase 11 controlled Computer Agent, OFF by default.

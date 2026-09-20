@@ -123,6 +123,7 @@ export type AstraBrainStatus = {
     research: AstraBrainFeatureStatus;
     business: AstraBrainFeatureStatus;
     integrations: AstraBrainFeatureStatus;
+    creative: AstraBrainFeatureStatus;
     tools: AstraBrainFeatureStatus;
     cloud: AstraBrainFeatureStatus;
   };

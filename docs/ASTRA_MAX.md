@@ -1756,3 +1756,12 @@ The user must remain able to see and control what ASTRA can hear, see, remember,
 - Account/cloud writes remain Level 3 and use the existing scoped approval path.
 - Default state remains `NOT_CONFIGURED` until a real authenticated provider reports exact capability readiness.
 - Provider success is accepted only when verification is explicit.
+
+
+## Phase 10 checkpoint
+
+- **Phase 10 — Design + Social: IMPLEMENTED ON CURRENT FEATURE BRANCH.**
+- Social content preparation is an implemented reasoning skill.
+- Design briefing is implemented.
+- Actual image generation/editing and social publishing/scheduling use a provider-neutral transport and remain `NOT_CONFIGURED` until a real provider is connected.
+- Every provider-backed creative action is Level 3 and requires scoped external-action approval.

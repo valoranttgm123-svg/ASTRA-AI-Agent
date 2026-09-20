@@ -47,6 +47,10 @@ import { astraNativeToolRuntime, createToolRuntime } from "../lib/tools/runtime"
 import type { AstraMcpTransport } from "../lib/tools/mcp";
 import type { AstraGitHubTransport } from "../lib/tools/github";
 import {
+  createCreativeToolRegistrations,
+  type AstraCreativeTransport,
+} from "../lib/tools/creative";
+import {
   createIntegrationToolRegistrations,
   type AstraIntegrationTransport,
 } from "../lib/tools/integrations";
@@ -3290,4 +3294,251 @@ test("Phase 9 integration capability nodes are partial and truthfully require co
     assert.equal(node.defaultState, "NOT_CONFIGURED", key);
     assert.equal(node.requiresConfiguration, true, key);
   }
+});
+
+
+test("Phase 10 creative catalog stays NOT_CONFIGURED without a provider", () => {
+  for (const id of [
+    "design.image.generate",
+    "design.image.edit",
+    "social.publish",
+    "social.schedule",
+  ]) {
+    assert.equal(
+      astraNativeToolRuntime.get(id)?.availability,
+      "NOT_CONFIGURED",
+      id,
+    );
+  }
+});
+
+test("Phase 10 Social and Design preparation skills are truthful and map to their nodes", async () => {
+  const social = await getSkillContext(
+    "business",
+    "buat caption instagram dan reel untuk ALURKA",
+  );
+  assert.ok(
+    social.skills.some((skill) => skill.id === "social-content"),
+  );
+  assert.equal(
+    visualNodeForSkill("social-content", "business"),
+    "social_media",
+  );
+
+  const design = await getSkillContext(
+    "business",
+    "buat visual brief poster promosi ALURKA",
+  );
+  assert.ok(
+    design.skills.some((skill) => skill.id === "design-brief"),
+  );
+  assert.equal(
+    visualNodeForSkill("design-brief", "business"),
+    "design",
+  );
+
+  assert.equal(
+    selectAgent("buat caption instagram untuk promo"),
+    "business",
+  );
+  assert.equal(
+    selectAgent("buat visual brief poster promosi"),
+    "business",
+  );
+});
+
+test("Phase 10 creative provider exposes only verified supported capabilities", async () => {
+  const calls: string[] = [];
+  const transport: AstraCreativeTransport = {
+    provider: "fixture-creative",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-creative",
+        detail: "fixture creative ready",
+        capabilities: [
+          "design.image.generate",
+          "social.publish",
+        ],
+      };
+    },
+    async call(capability, input) {
+      calls.push(capability);
+      return {
+        ok: true,
+        verified: true,
+        detail: "verified " + capability,
+        output: { capability, input, artifactId: "fixture-artifact" },
+      };
+    },
+  };
+
+  const runtime = await createToolRuntime({
+    creativeTransports: [transport],
+  });
+
+  assert.equal(
+    runtime.get("design.image.generate")?.availability,
+    "READY",
+  );
+  assert.equal(runtime.get("social.publish")?.availability, "READY");
+  assert.equal(
+    runtime.get("design.image.edit")?.availability,
+    "NOT_CONFIGURED",
+  );
+  assert.equal(
+    runtime.get("social.schedule")?.availability,
+    "NOT_CONFIGURED",
+  );
+
+  const low = await runtime.execute(
+    "design.image.generate",
+    { prompt: "fixture poster" },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(low.status, "blocked");
+
+  const policyBlocked = await runtime.execute(
+    "social.publish",
+    { text: "fixture post" },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(policyBlocked.status, "blocked");
+
+  const generated = await runtime.execute(
+    "design.image.generate",
+    { prompt: "fixture poster" },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(generated.status, "completed");
+  assert.equal(generated.verified, true);
+
+  const published = await runtime.execute(
+    "social.publish",
+    { text: "fixture post" },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(published.status, "completed");
+  assert.equal(published.verified, true);
+  assert.deepEqual(calls, [
+    "design.image.generate",
+    "social.publish",
+  ]);
+});
+
+test("Phase 10 creative provider success without verification is rejected", async () => {
+  const transport: AstraCreativeTransport = {
+    provider: "fixture-creative-unverified",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-creative-unverified",
+        detail: "fixture ready",
+        capabilities: ["design.image.edit"],
+      };
+    },
+    async call() {
+      return {
+        ok: true,
+        verified: false,
+        detail: "unverified creative claim",
+        output: { fake: true },
+      };
+    },
+  };
+
+  const registrations = await createCreativeToolRegistrations(
+    transport,
+  );
+  const runtime = createExecutableToolRegistry(
+    registrations.definitions,
+    registrations.handlers,
+  );
+
+  const result = await runtime.execute(
+    "design.image.edit",
+    { assetId: "fixture" },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: true,
+      },
+    },
+  );
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.verified, false);
+});
+
+test("Phase 10 planner keeps all generation and publishing actions at Level 3", () => {
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "generate",
+          title: "Generate poster",
+          kind: "tool",
+          agent: "business",
+          permissionLevel: 0,
+          toolId: "design.image.generate",
+        },
+        {
+          id: "publish",
+          title: "Publish social post",
+          kind: "tool",
+          agent: "business",
+          permissionLevel: 0,
+          toolId: "social.publish",
+          dependsOn: ["generate"],
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].permissionLevel, 3);
+  assert.equal(steps[1].permissionLevel, 3);
+});
+
+test("Phase 10 capability truth separates ready Social drafting from configured Design execution", () => {
+  const social = ASTRA_CAPABILITY_MAP.social_media;
+  assert.equal(social.implementation, "implemented");
+  assert.equal(social.defaultState, "READY");
+  assert.equal(social.requiresConfiguration, false);
+
+  const design = ASTRA_CAPABILITY_MAP.design;
+  assert.equal(design.implementation, "partial");
+  assert.equal(design.defaultState, "NOT_CONFIGURED");
+  assert.equal(design.requiresConfiguration, true);
 });

@@ -13,6 +13,8 @@ const RULES: Array<{ agent: AstraAgentKey; words: string[] }> = [
       "ops", "operasional", "operations", "workflow", "checklist", "supplier", "inventory",
       "editor", "proofread", "proofreading", "rewrite", "tulis ulang", "revisi", "copywriting",
       "analytics", "analitik", "kpi", "metric", "metrics", "metrik", "trend", "tren", "anomali",
+      "social", "sosial", "caption", "instagram", "tiktok", "facebook", "reel", "reels", "konten",
+      "design", "desain", "visual", "poster", "banner", "thumbnail",
     ],
   },
   { agent: "github", words: ["github", "repo", "repository", "branch", "commit", "pull request", "pr"] },
