@@ -515,3 +515,26 @@ real provider (only when configured)
 Default runtime state is `NOT_CONFIGURED`. A provider may expose only the exact capabilities it actually supports. Reads are Level 1. CRM writes, calendar mutation, email draft/send, and Drive upload are Level 3 external writes and therefore require the existing scoped approval path.
 
 A provider result must include verified completion. An unverified success claim is rejected by ASTRA.
+
+
+## Design and Social execution boundary
+
+Phase 10 separates content/brief reasoning from real provider actions.
+
+```text
+Social/Design intent
+   ↓
+Business specialist skill
+   ├─ Social drafting / content plan (reasoning)
+   └─ Design visual brief (reasoning)
+            ↓ when a real asset/action is requested
+       Tool Runtime
+            ↓
+      Level-3 approval
+            ↓
+  AstraCreativeTransport
+            ↓
+ verified configured provider
+```
+
+`design.image.generate`, `design.image.edit`, `social.publish`, and `social.schedule` are Level-3 external actions. They remain `NOT_CONFIGURED` without a provider and may not claim success without verified provider evidence.
