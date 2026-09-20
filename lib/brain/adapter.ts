@@ -81,7 +81,7 @@ async function buildExecutionContext(
   const [memory, skills] = await Promise.all([
     getUnifiedMemoryContext(
       input,
-      project.match?.project.name,
+      project.match?.project,
       signal,
       (event) => {
         memoryLifecycle.push(event);
