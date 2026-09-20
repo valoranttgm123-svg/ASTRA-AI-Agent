@@ -32,8 +32,9 @@ Read these only when the active task needs their historical/detail context:
 - Phase 14 final implementation merge: PR #92.
 - Phase 14 final merge commit: `de4fbefe6f9a23792a542a74d4d0ca1aef1aa208`.
 - Post-Phase-14 Codex mission/docs merge: PR #93.
-- Phase 15A and Phase 15B are merged and CI-verified.
-- Current next implementation task: **Phase 15C — Provider + MCP failure isolation**.
+- Phase 15A–P15E are merged and CI-verified.
+- Phase 15F final matrix/report is the current branch gate; after green merge Phase 15 repository hardening is complete.
+- Next: run MEM-X when real local Sonor access exists; otherwise continue Phase 16 repository-side performance work without inventing measurements.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
 - Unattended Automation stays Level 0/1 only.
@@ -59,9 +60,9 @@ Examples:
 
 Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
-When target-PC access is unavailable, continue from the first unchecked implementable tracker item. At the current checkpoint that is:
+When target-PC access is unavailable, continue from the first unchecked implementable tracker item. After Phase 15F merges, that is:
 
-**Phase 15C — Provider + MCP failure isolation.**
+**Phase 16 — Performance instrumentation/preparation**, while real measurements remain a target-PC gate.
 
 Do not rebuild or redesign completed Phase 14 work.
 
