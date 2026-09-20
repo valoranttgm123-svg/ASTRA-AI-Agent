@@ -115,17 +115,23 @@ export function deriveCapabilityRuntimeMap(
       case "skill.selected":
       case "provider.selected":
       case "agent.started":
+      case "automation.due":
+      case "automation.claimed":
+      case "automation.started":
         setEventState(current, event, "ACTIVE");
         break;
       case "approval.requested":
+      case "automation.waiting_approval":
         setEventState(current, event, "WAITING_APPROVAL");
         break;
       case "agent.blocked":
       case "plan.cancelled":
+      case "automation.cancelled":
         setEventState(current, event, "BLOCKED");
         break;
       case "plan.step.failed":
       case "tool.failed":
+      case "automation.failed":
         setEventState(current, event, "ERROR");
         break;
       case "approval.granted":
@@ -133,7 +139,8 @@ export function deriveCapabilityRuntimeMap(
         break;
       case "plan.step.completed":
       case "tool.completed":
-      case "agent.completed": {
+      case "agent.completed":
+      case "automation.completed": {
         const node = eventNode(event);
         if (node) current[node] = { ...base[node] };
         break;
