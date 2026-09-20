@@ -143,11 +143,19 @@ Never mark local/physical verification PASS from repository inspection alone.
 - result: P15C provider/MCP failure isolation complete; malformed/outage responses fail closed and provider readiness is payload-validated.
 - next: **P15D Cancellation / timeout / network failure matrix**.
 
-## In-flight checkpoint — Phase 15D1
+## Phase 15D1 — cancellation/timeout matrix
 
 - PR: **#101**
-- branch: `astra/phase15d1-cancellation-matrix`
-- scope: provider/Strategist/Memory/browser/Tool Runtime cancellation and authoritative timeout;
-- completion rule: count complete only after PR #101 CI is green and merged;
-- next after merge: **P15D2 Codex child-process + Automation/Command Center STOP settlement**.
+- merge commit: `beec046f16142d75d5c27deca3e9acbb27cf584d`
+- CI: **SUCCESS**
+- result: provider STOP/timeout distinction and authoritative Tool Runtime timeout are covered.
+- next: **P15D2 Codex child-process + Automation/Command Center STOP settlement**.
+
+## In-flight checkpoint — Phase 15D2
+
+- PR: **#102**
+- branch: `astra/phase15d2-codex-stop-settlement`
+- scope: Codex child-process timeout/cancel cleanup + Automation/Command Center STOP settlement;
+- Phase 15D counts complete only after PR #102 CI is green and merged;
+- next after merge: **P15E Secret / error / telemetry leakage hardening**.
 

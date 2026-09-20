@@ -17,7 +17,7 @@
 | Ollama malformed response | Fail safely | `tests/provider-hardening.test.ts` | Not required | PASS — AUTOMATED |
 | Hermes unavailable/malformed | Fail safely; no fake tool success | `tests/provider-hardening.test.ts` | Only if Hermes configured | PASS — AUTOMATED |
 | Explicit Codex unavailable | No silent Ollama fallback | existing Brain test + `tests/provider-hardening.test.ts` | Target PC Codex status | PASS — AUTOMATED / LOCAL REQUIRED FOR REAL CLI |
-| Codex malformed/failed child | Failed/blocked; child cleaned | malformed JSONL parser covered in `tests/provider-hardening.test.ts`; process cleanup continues in P15D | Optional target PC | PARTIAL — P15D PROCESS/CANCEL TEST REMAINS |
+| Codex malformed/failed child | Failed/blocked; child cleaned | `tests/codex-process.test.ts` exercises real spawn/JSONL/non-zero/timeout/STOP cleanup | Optional target PC | PASS — AUTOMATED / LOCAL REAL CLI OPTIONAL |
 | Optional cloud disabled | No cloud call | Existing policy coverage | Not required | PENDING REVIEW |
 | Cloud network/malformed response | Fail safely; no secret leakage | `tests/provider-hardening.test.ts`; leakage review continues P15E | Optional only if configured | PASS — FAILURE HANDLING / P15E REDACTION REMAINS |
 | MCP discovery outage | Native runtime remains usable where possible; MCP not READY | `tests/mcp-hardening.test.ts` | Only if MCP configured | PASS — AUTOMATED |
@@ -32,7 +32,7 @@
 | Memory/Sonor cancellation | Abort propagates | in-flight Memory source covered in `tests/cancellation-matrix.test.ts`; real Sonor Test F remains | Real Sonor required | PASS — MEMORY / LOCAL SONOR REQUIRED |
 | Browser/network cancellation | Abort propagates | pre-network STOP in `tests/cancellation-matrix.test.ts`; live external fetch remains optional | Not required | PASS — AUTOMATED BASIC |
 | Tool timeout | Failed timeout; no later success | authoritative timeout + no late completed event in `tests/cancellation-matrix.test.ts` | Not required | PASS — AUTOMATED |
-| Computer action STOP | Abort propagates | Existing | Target PC optional | PENDING REVIEW |
+| Computer action STOP | Abort propagates | existing Computer test + shared Tool Runtime cancellation matrix | Target PC optional | PASS — AUTOMATED / LOCAL OPTIONAL |
 | Automation duplicate occurrence | At-most-once claim | Existing Phase 14 tests | Target PC validator | CI VERIFIED |
 | Automation background STOP | Server tick aborted | Existing Phase 14 tests | Target PC validator | CI VERIFIED / LOCAL REQUIRED |
 | Automation Level 2/3 unattended | Never runs unattended | Existing Phase 14 E2E | Target PC validator | CI VERIFIED / LOCAL REQUIRED |
