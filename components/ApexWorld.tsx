@@ -519,28 +519,8 @@ export default function ApexWorld() {
         <AgentOverview
           sel={selected}
           onClose={() => setSelected(null)}
-          statusOverride={
-            selected.key === "researcher"
-              ? runtime.brainStatus?.features?.research?.state
-              : ["finance", "editor", "sales", "marketing", "ops", "analytics", "social_media"].includes(selected.key)
-                ? runtime.brainStatus?.features?.business?.state
-                : selected.key === "design"
-                  ? runtime.brainStatus?.features?.creative?.state
-                  : ["crm", "calendar", "email", "drive"].includes(selected.key)
-                    ? runtime.brainStatus?.features?.integrations?.state
-                    : undefined
-          }
-          statusDetail={
-            selected.key === "researcher"
-              ? runtime.brainStatus?.features?.research?.detail
-              : ["finance", "editor", "sales", "marketing", "ops", "analytics", "social_media"].includes(selected.key)
-                ? runtime.brainStatus?.features?.business?.detail
-                : selected.key === "design"
-                  ? runtime.brainStatus?.features?.creative?.detail
-                  : ["crm", "calendar", "email", "drive"].includes(selected.key)
-                    ? runtime.brainStatus?.features?.integrations?.detail
-                    : undefined
-          }
+          statusOverride={selectedRuntime?.state}
+          statusDetail={selectedRuntime?.detail}
         />
       )}
     </div>
