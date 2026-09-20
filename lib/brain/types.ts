@@ -5,6 +5,10 @@ import type {
   AstraInputContext,
 } from "@/lib/agent/types";
 import type { AstraMemorySourceType } from "@/lib/memory/contracts";
+import type {
+  AstraCapabilityNodeKey,
+  AstraCapabilityState,
+} from "@/lib/agent/capabilities";
 import type { AstraPlan } from "@/lib/planner/contracts";
 
 export type AstraBrainProvider =
@@ -119,6 +123,15 @@ export type AstraBrainStatus = {
   model?: string;
   fallback?: AstraBrainProvider;
   permissions?: AstraBrainPermissionSnapshot;
+  capabilities?: Partial<
+    Record<
+      AstraCapabilityNodeKey,
+      {
+        state: AstraCapabilityState;
+        detail: string;
+      }
+    >
+  >;
   features?: {
     memory: AstraBrainFeatureStatus;
     skills: AstraBrainFeatureStatus;
