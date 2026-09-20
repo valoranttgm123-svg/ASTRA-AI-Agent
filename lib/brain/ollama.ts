@@ -1,4 +1,5 @@
 import type { AstraAgent } from "@/lib/agent/types";
+import { isRecordPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434";
@@ -16,18 +17,6 @@ export type OllamaStatus = {
   detail: string;
 };
 
-type OllamaTagsResponse = {
-  models?: Array<{
-    name?: string;
-    model?: string;
-  }>;
-};
-
-type OllamaChatResponse = {
-  message?: {
-    role?: string;
-    content?: string;
-  };
   done?: boolean;
 };
 
@@ -123,9 +112,29 @@ async function listInstalledModels(
     throw new Error(`Ollama tags failed (HTTP ${response.status}).`);
   }
 
-  const payload = (await response.json()) as OllamaTagsResponse;
-  return (payload.models ?? [])
-    .map((item) => item.name?.trim() || item.model?.trim() || "")
+  const payload = await readBoundedProviderJson(
+    response,
+    "Ollama tags",
+  );
+  if (!isRecordPayload(payload)) {
+    throw new Error("Ollama tags returned a malformed payload.");
+  }
+
+  const models = payload.models;
+  if (models === undefined) return [];
+  if (!Array.isArray(models)) {
+    throw new Error("Ollama tags returned a malformed model list.");
+  }
+
+  return models
+    .map((item) => {
+      if (!isRecordPayload(item)) return "";
+      const name =
+        typeof item.name === "string" ? item.name.trim() : "";
+      const model =
+        typeof item.model === "string" ? item.model.trim() : "";
+      return name || model;
+    })
     .filter(Boolean);
 }
 
@@ -269,8 +278,20 @@ export async function chatWithOllama({
     throw new Error(`Ollama chat failed (HTTP ${response.status}).`);
   }
 
-  const payload = (await response.json()) as OllamaChatResponse;
-  const message = payload.message?.content?.trim();
+  const payload = await readBoundedProviderJson(
+    response,
+    "Ollama chat",
+  );
+  if (!isRecordPayload(payload)) {
+    throw new Error("Ollama returned a malformed chat payload.");
+  }
+
+  const rawMessage = payload.message;
+  const message =
+    isRecordPayload(rawMessage) &&
+    typeof rawMessage.content === "string"
+      ? rawMessage.content.trim()
+      : "";
 
   if (!message) {
     throw new Error("Ollama returned an empty chat response.");
