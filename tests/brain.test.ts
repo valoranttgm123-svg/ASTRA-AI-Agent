@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { once } from "node:events";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -27,6 +27,7 @@ import {
   parseSonorBridgeResponse,
   sonorMemorySource,
 } from "../lib/memory/sonor";
+import { createProjectContextMemorySource } from "../lib/projects/context";
 import {
   getProjectRegistry,
   normalizeProjects,
@@ -40,6 +41,7 @@ import {
 import { createToolRegistry } from "../lib/tools/registry";
 
 let root = "";
+let alurkaWorkspace = "";
 let fixture: Server;
 let base = "";
 let chatCalls = 0;
@@ -47,6 +49,24 @@ let chatBodies: Array<Record<string, unknown>> = [];
 
 before(async () => {
   root = await mkdtemp(path.join(os.tmpdir(), "astra-v15-tests-"));
+  alurkaWorkspace = path.join(root, "alurka-workspace");
+  await mkdir(alurkaWorkspace, { recursive: true });
+  await writeFile(
+    path.join(alurkaWorkspace, "registered.md"),
+    "ALURKA workflow registered context",
+  );
+  await writeFile(
+    path.join(alurkaWorkspace, "unlisted.md"),
+    "THIS UNLISTED FILE MUST NOT ENTER ASTRA CONTEXT",
+  );
+  await writeFile(
+    path.join(alurkaWorkspace, ".env"),
+    "SECRET_FIXTURE_VALUE=never-read",
+  );
+  await writeFile(
+    path.join(root, "outside.md"),
+    "OUTSIDE WORKSPACE MUST NOT ENTER ASTRA CONTEXT",
+  );
   await writeFile(
     path.join(root, "memory.json"),
     JSON.stringify([
@@ -76,6 +96,9 @@ before(async () => {
         status: "active",
         currentMilestone: "POS development",
         lastActivity: "2026-09-20T09:00:00Z",
+        workspace: alurkaWorkspace,
+        docs: ["registered.md", "../outside.md", ".env"],
+        importantFiles: [],
         openTasks: ["Continue POS work"],
       },
     ]),
@@ -171,6 +194,9 @@ beforeEach(() => {
   process.env.ASTRA_MEMORY_FILE = path.join(root, "memory.json");
   process.env.ASTRA_PROJECTS_FILE = path.join(root, "projects.json");
   process.env.ASTRA_PROJECTS_ENABLED = "true";
+  process.env.ASTRA_PROJECT_CONTEXT_ENABLED = "true";
+  process.env.ASTRA_PROJECT_CONTEXT_MAX_FILES = "20";
+  process.env.ASTRA_PROJECT_CONTEXT_MAX_FILE_BYTES = "262144";
   process.env.ASTRA_MEMORY_MAX_ENTRIES = "1";
   process.env.ASTRA_MEMORY_MAX_CHARS = "80";
   delete process.env.ASTRA_ALLOW_FILE_WRITE;
@@ -880,4 +906,41 @@ test("Brain streams and retains real memory lifecycle telemetry", async () => {
   const completed = live.findIndex((event) => event.type === "memory.search.completed");
   assert.ok(started >= 0);
   assert.ok(completed > started);
+});
+
+
+test("project context source reads only explicitly registered safe files inside workspace", async () => {
+  const registry = await getProjectRegistry();
+  const project = registry.projects.find((item) => item.id === "alurka");
+  assert.ok(project);
+
+  const source = createProjectContextMemorySource(project);
+  const result = await source.search({
+    input: "ALURKA workflow",
+    project: "ALURKA",
+    limit: 10,
+    maxChars: 4000,
+  });
+
+  assert.equal(result.available, true);
+  assert.equal(result.records.length, 1);
+  assert.match(result.records[0].content, /registered context/);
+  assert.equal(result.records[0].provenance.sourceType, "project");
+  assert.equal(result.records[0].provenance.project, "ALURKA");
+  assert.equal(
+    result.records[0].provenance.reference,
+    "project:alurka:registered.md",
+  );
+  assert.doesNotMatch(result.records[0].content, /UNLISTED|SECRET|OUTSIDE/);
+});
+
+test("Brain loads scoped registered project context through unified memory", async () => {
+  process.env.ASTRA_SONOR_ENABLED = "false";
+  const result = await astraBrain.chat("lanjutkan ALURKA workflow", {
+    provider: "ollama",
+  });
+
+  assert.equal(result.brain.context?.project?.id, "alurka");
+  assert.ok(result.brain.context?.memorySources?.includes("project"));
+  assert.equal(result.state, "completed");
 });
