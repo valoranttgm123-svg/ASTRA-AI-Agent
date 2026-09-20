@@ -1,0 +1,66 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { test } from "node:test";
+
+function readWindowsScript(name: string) {
+  return readFileSync(
+    path.resolve("scripts", "windows", name),
+    "utf8",
+  );
+}
+
+test("Phase 19B updater is fast-forward only and preserves private runtime paths", () => {
+  const source = readWindowsScript("update-local.ps1");
+
+  assert.match(source, /pull[\s\S]*--ff-only/i);
+  assert.match(source, /status --porcelain --untracked-files=no/i);
+  assert.match(source, /\.env\.local/);
+  assert.match(source, /\.astra/);
+  assert.match(source, /self-check\.ps1/i);
+  assert.match(source, /install-local\.ps1/i);
+
+  assert.doesNotMatch(source, /\bgit\s+reset\b/i);
+  assert.doesNotMatch(source, /\bgit\s+clean\b/i);
+  assert.doesNotMatch(
+    source,
+    /Remove-Item[^\n]*(?:\.env\.local|\.astra)/i,
+  );
+});
+
+test("Phase 19B reinstall uses existing non-destructive install/uninstall wrappers and checks private preservation", () => {
+  const source = readWindowsScript(
+    "reinstall-local.ps1",
+  );
+  const uninstall = readWindowsScript(
+    "uninstall-local.ps1",
+  );
+
+  assert.match(source, /uninstall-local\.ps1/i);
+  assert.match(source, /install-local\.ps1/i);
+  assert.match(source, /self-check\.ps1/i);
+  assert.match(source, /\.env\.local/);
+  assert.match(source, /\.astra/);
+
+  assert.doesNotMatch(
+    source,
+    /Remove-Item[^\n]*(?:\.env\.local|\.astra)/i,
+  );
+  assert.doesNotMatch(uninstall, /\.env\.local/i);
+  assert.doesNotMatch(uninstall, /\.astra/i);
+  assert.doesNotMatch(uninstall, /node_modules|AI-Models|Ollama/i);
+});
+
+test("Phase 19B uninstall remains scoped to startup tasks and desktop shortcut", () => {
+  const source = readWindowsScript(
+    "uninstall-local.ps1",
+  );
+
+  assert.match(source, /ASTRA-Agent/);
+  assert.match(source, /ASTRA-Ollama/);
+  assert.match(source, /ASTRA\.url/);
+  assert.match(
+    source,
+    /File proyek dan model tidak dihapus/i,
+  );
+});
