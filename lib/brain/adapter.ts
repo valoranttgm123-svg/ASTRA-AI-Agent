@@ -1131,7 +1131,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
   }
 
   async execute(
-    task: { input: string; approved?: boolean },
+    task: { input: string; approved?: boolean; approvalToken?: string },
     options?: AstraBrainRunOptions,
   ): Promise<AstraBrainChatResult> {
     options?.signal?.throwIfAborted();
