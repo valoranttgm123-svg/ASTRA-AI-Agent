@@ -46,7 +46,7 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 
 ## Phase 16 — Performance
 
-- [x] P16A — repository runtime measurement harness implemented — current PR
+- [x] P16A — repository runtime measurement harness implemented — PR #105
 - [ ] P16B — target-PC runtime measurements captured
 - [ ] P16C — browser/Humanoid HIGH measurements captured
 - [ ] P16D — evidence-based bottleneck fixes and re-measurement
