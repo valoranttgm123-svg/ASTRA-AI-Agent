@@ -80,6 +80,19 @@ import {
   createLevel3Approval,
 } from "../lib/brain/approvals";
 import type { AstraToolDefinition } from "../lib/tools/contracts";
+import type { AstraAutomationRunner } from "../lib/automation/contracts";
+import {
+  AUTOMATION_LIMITS,
+  automationEnabled,
+  createAutomation,
+  listAutomations,
+  normalizeAutomations,
+  validateAutomationDraft,
+} from "../lib/automation/store";
+import {
+  dueAutomationIds,
+  runDueAutomations,
+} from "../lib/automation/engine";
 
 let root = "";
 let alurkaWorkspace = "";
@@ -87,6 +100,7 @@ let fixture: Server;
 let base = "";
 let chatCalls = 0;
 let chatBodies: Array<Record<string, unknown>> = [];
+let testSequence = 0;
 
 before(async () => {
   root = await mkdtemp(path.join(os.tmpdir(), "astra-v15-tests-"));
@@ -397,6 +411,14 @@ beforeEach(() => {
   delete process.env.ASTRA_SONOR_SEARCH_PATH;
   delete process.env.ASTRA_SONOR_TIMEOUT_MS;
   delete process.env.ASTRA_SEARXNG_URL;
+  delete process.env.ASTRA_AUTOMATION_ENABLED;
+  delete process.env.ASTRA_AUTOMATION_POLL_MS;
+  delete process.env.ASTRA_AUTOMATION_LEASE_MS;
+  testSequence += 1;
+  process.env.ASTRA_AUTOMATION_FILE = path.join(
+    root,
+    "automations-" + testSequence + ".json",
+  );
   chatCalls = 0;
   chatBodies = [];
 });
@@ -4103,4 +4125,262 @@ test("Phase 13 provider-unavailable event alone does not fabricate node failure"
 
   assert.equal(result.researcher.state, "NOT_CONFIGURED");
   assert.equal(result.researcher.detail, "search provider missing");
+});
+
+
+test("Phase 14 automation is OFF by default and schedule validation is bounded", () => {
+  assert.equal(automationEnabled(), false);
+  assert.equal(AUTOMATION_LIMITS.minIntervalMinutes, 5);
+
+  assert.throws(
+    () =>
+      validateAutomationDraft({
+        title: "Too fast",
+        prompt: "status",
+        schedule: { kind: "interval", everyMinutes: 1 },
+      }),
+    /schedule/i,
+  );
+
+  const draft = validateAutomationDraft({
+    title: "Daily status",
+    prompt: "summarize ASTRA status",
+    provider: "ollama",
+    mode: "chat",
+    schedule: { kind: "interval", everyMinutes: 1440 },
+  });
+  assert.equal(draft.provider, "ollama");
+  assert.equal(draft.mode, "chat");
+  assert.deepEqual(draft.schedule, {
+    kind: "interval",
+    everyMinutes: 1440,
+  });
+});
+
+test("Phase 14 local automation store persists bounded records", async () => {
+  const created = await createAutomation(
+    {
+      title: "One-time check",
+      prompt: "cek status ASTRA",
+      schedule: {
+        kind: "once",
+        at: "2026-09-20T12:00:00Z",
+      },
+    },
+    new Date("2026-09-20T11:00:00Z"),
+  );
+
+  assert.match(created.id, /^auto-/);
+  assert.equal(created.enabled, true);
+  assert.equal(created.nextRunAt, "2026-09-20T12:00:00.000Z");
+
+  const records = await listAutomations();
+  assert.equal(records.length, 1);
+  assert.equal(records[0].title, "One-time check");
+  assert.equal(records[0].prompt, "cek status ASTRA");
+});
+
+test("Phase 14 due automation runs as trusted automation input and completes once", async () => {
+  process.env.ASTRA_AUTOMATION_ENABLED = "true";
+  await createAutomation(
+    {
+      title: "Scheduled briefing",
+      prompt: "brief ASTRA",
+      mode: "chat",
+      schedule: {
+        kind: "once",
+        at: "2026-09-20T12:00:00Z",
+      },
+    },
+    new Date("2026-09-20T11:00:00Z"),
+  );
+
+  const calls: Array<Record<string, unknown>> = [];
+  const runner: AstraAutomationRunner = {
+    async chat(prompt, options) {
+      calls.push({
+        prompt,
+        trigger: options.inputContext.trigger,
+        source: options.inputContext.source,
+      });
+      return {
+        ok: true,
+        state: "completed",
+        message: "scheduled briefing completed",
+      };
+    },
+    async execute() {
+      throw new Error("execute should not be called");
+    },
+  };
+
+  const result = await runDueAutomations({
+    runner,
+    now: new Date("2026-09-20T12:01:00Z"),
+  });
+
+  assert.equal(result.enabled, true);
+  assert.equal(result.claimed, 1);
+  assert.deepEqual(calls, [
+    {
+      prompt: "brief ASTRA",
+      trigger: "automation",
+      source: "text",
+    },
+  ]);
+
+  const [stored] = await listAutomations();
+  assert.equal(stored.enabled, false);
+  assert.equal(stored.nextRunAt, null);
+  assert.equal(stored.activeRun, undefined);
+  assert.equal(stored.lastRun?.status, "completed");
+});
+
+test("Phase 14 scheduled execute never grants approval and never persists approval tokens", async () => {
+  process.env.ASTRA_AUTOMATION_ENABLED = "true";
+  await createAutomation(
+    {
+      title: "External action request",
+      prompt: "send email follow-up",
+      mode: "execute",
+      schedule: {
+        kind: "once",
+        at: "2026-09-20T12:00:00Z",
+      },
+    },
+    new Date("2026-09-20T11:00:00Z"),
+  );
+
+  const runner: AstraAutomationRunner = {
+    async chat() {
+      throw new Error("chat should not be called");
+    },
+    async execute(task, options) {
+      assert.equal(task.approved, false);
+      assert.equal(options.inputContext.trigger, "automation");
+      return {
+        ok: false,
+        state: "blocked",
+        message: "Level-3 approval required",
+        requiresApproval: true,
+        approvalRequest: {
+          token: "SECRET-AUTOMATION-TOKEN",
+          level: 3,
+          planId: "plan-1",
+          stepId: "send",
+          title: "Send follow-up",
+          toolId: "email.send",
+          expiresAt: "2026-09-20T12:06:00Z",
+        },
+      };
+    },
+  };
+
+  await runDueAutomations({
+    runner,
+    now: new Date("2026-09-20T12:01:00Z"),
+  });
+
+  const [stored] = await listAutomations();
+  assert.equal(stored.lastRun?.status, "waiting_approval");
+  assert.equal(stored.lastRun?.requiresApproval, true);
+  assert.equal(stored.lastRun?.approval?.toolId, "email.send");
+  assert.doesNotMatch(
+    JSON.stringify(stored),
+    /SECRET-AUTOMATION-TOKEN/,
+  );
+});
+
+test("Phase 14 active lease prevents duplicate due claims", () => {
+  const records = normalizeAutomations([
+    {
+      id: "auto-fixture",
+      title: "Fixture",
+      prompt: "status",
+      enabled: true,
+      mode: "chat",
+      provider: "auto",
+      schedule: { kind: "interval", everyMinutes: 5 },
+      nextRunAt: "2026-09-20T12:00:00Z",
+      createdAt: "2026-09-20T11:00:00Z",
+      updatedAt: "2026-09-20T11:00:00Z",
+      activeRun: {
+        runId: "run-active",
+        startedAt: "2026-09-20T12:00:00Z",
+        leaseUntil: "2026-09-20T12:20:00Z",
+      },
+    },
+  ]);
+
+  assert.deepEqual(
+    dueAutomationIds(records, new Date("2026-09-20T12:05:00Z")),
+    [],
+  );
+  assert.deepEqual(
+    dueAutomationIds(records, new Date("2026-09-20T12:21:00Z")),
+    ["auto-fixture"],
+  );
+});
+
+test("Phase 14 cancellation is persisted and propagates through scheduler", async () => {
+  process.env.ASTRA_AUTOMATION_ENABLED = "true";
+  await createAutomation(
+    {
+      title: "Cancellable job",
+      prompt: "wait for cancellation",
+      mode: "chat",
+      schedule: {
+        kind: "once",
+        at: "2026-09-20T12:00:00Z",
+      },
+    },
+    new Date("2026-09-20T11:00:00Z"),
+  );
+
+  const runner: AstraAutomationRunner = {
+    async chat(_prompt, options) {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(resolve, 2000);
+        const onAbort = () => {
+          clearTimeout(timer);
+          reject(
+            options.signal?.reason instanceof Error
+              ? options.signal.reason
+              : new DOMException("automation cancelled", "AbortError"),
+          );
+        };
+        if (options.signal?.aborted) onAbort();
+        else options.signal?.addEventListener("abort", onAbort, {
+          once: true,
+        });
+      });
+      return {
+        ok: true,
+        state: "completed",
+        message: "should not complete",
+      };
+    },
+    async execute() {
+      throw new Error("execute should not be called");
+    },
+  };
+
+  const controller = new AbortController();
+  const promise = runDueAutomations({
+    runner,
+    now: new Date("2026-09-20T12:01:00Z"),
+    signal: controller.signal,
+  });
+  setTimeout(
+    () =>
+      controller.abort(
+        new DOMException("automation cancelled", "AbortError"),
+      ),
+    10,
+  );
+
+  await assert.rejects(promise, /automation cancelled/i);
+  const [stored] = await listAutomations();
+  assert.equal(stored.lastRun?.status, "cancelled");
+  assert.equal(stored.activeRun, undefined);
 });
