@@ -55,8 +55,9 @@ export function useFingerTracking(quality: TrackingQuality) {
     frames: 0,
   });
   const stableGestureRef = useRef<HandGesture>("none");
+  const gestureArmedRef = useRef(true);
   const gestureEventIdRef = useRef(0);
-  const lastGestureAtRef = useRef(0);
+  const lastGestureAtRef = useRef(Number.NEGATIVE_INFINITY);
 
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState<FingerTrackingStatus>("off");
@@ -111,7 +112,8 @@ export function useFingerTracking(quality: TrackingQuality) {
     targetRef.current.y = 0;
     gestureCandidateRef.current = { gesture: "none", frames: 0 };
     stableGestureRef.current = "none";
-    lastGestureAtRef.current = 0;
+    gestureArmedRef.current = true;
+    lastGestureAtRef.current = Number.NEGATIVE_INFINITY;
 
     if (updateState) {
       setEnabled(false);
@@ -276,12 +278,16 @@ export function useFingerTracking(quality: TrackingQuality) {
                 stableGestureRef.current = "none";
                 setGesture("none");
               }
+              gestureArmedRef.current = true;
             } else if (stableGestureRef.current !== rawGesture) {
+              stableGestureRef.current = rawGesture;
+              setGesture(rawGesture);
+
               const gestureNow = performance.now();
-              if (gestureNow - lastGestureAtRef.current >= 900) {
-                stableGestureRef.current = rawGesture;
+              const cooldownReady = gestureNow - lastGestureAtRef.current >= 900;
+              if (gestureArmedRef.current && cooldownReady) {
+                gestureArmedRef.current = false;
                 lastGestureAtRef.current = gestureNow;
-                setGesture(rawGesture);
                 gestureEventIdRef.current += 1;
                 setGestureEvent({
                   id: gestureEventIdRef.current,
