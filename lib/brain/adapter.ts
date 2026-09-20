@@ -37,6 +37,7 @@ import {
   permissionPolicyPrompt,
   toolsPolicyDetail,
 } from "./policy";
+import { getAutomationSystemStatus } from "@/lib/automation/worker";
 import { getSkillContext, type AstraSkillContext } from "./skills";
 import { executeBrainPlan } from "./plan-executor";
 import {
@@ -1701,6 +1702,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       memory,
       skills,
       toolRuntime,
+      automation,
     ] = await Promise.all([
       getHermesStatus(),
       getOllamaStatus(),
@@ -1709,6 +1711,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       getUnifiedMemoryContext("ASTRA status"),
       getSkillContext("chief_of_staff"),
       createDefaultToolRuntime().catch(() => astraNativeToolRuntime),
+      getAutomationSystemStatus(),
     ]);
 
     const features: NonNullable<AstraBrainStatus["features"]> = {
@@ -1850,6 +1853,25 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         state: "READY",
         detail:
           "Text input envelope=READY, voice transcript metadata=READY, gesture/camera control metadata=READY (local control only). Camera pixels, image payloads, and screen payloads are NOT_CONFIGURED and are never inferred from metadata.",
+      },
+      automation: {
+        enabled: automation.enabled,
+        available: automation.available && automation.enabled,
+        state: !automation.available
+          ? "ERROR"
+          : automation.enabled
+            ? "READY"
+            : "NOT_CONFIGURED",
+        detail:
+          automation.detail +
+          " Jobs=" +
+          automation.automations +
+          ", due=" +
+          automation.due +
+          ", worker=" +
+          (automation.workerRunning ? "RUNNING" : "STOPPED") +
+          ".",
+        endpoint: automation.source,
       },
       tools: {
         enabled: true,
