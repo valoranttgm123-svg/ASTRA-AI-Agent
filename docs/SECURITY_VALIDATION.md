@@ -13,13 +13,13 @@
 | Symlink escape from workspace | No path returned/read/written | `tests/security-paths.test.ts` | Platform-specific symlink support | PASS — AUTOMATED |
 | Sensitive file path | Refused | `tests/security-paths.test.ts` | Not required | PASS — AUTOMATED |
 | Retrieved prompt injection | Treated as untrusted evidence; no privilege increase | `tests/context-safety.test.ts` + independent permission/tool-policy tests | Optional live provider test | PASS — AUTOMATED |
-| Ollama unavailable | Truthful OFFLINE/failure; no fake response | Existing + expand Phase 15C | Target PC outage proof | TODO |
-| Ollama malformed response | Fail safely | REQUIRED Phase 15C | Not required | TODO |
-| Hermes unavailable/malformed | Fail safely; no fake tool success | REQUIRED Phase 15C | Only if Hermes configured | TODO |
-| Explicit Codex unavailable | No silent Ollama fallback | Existing + expand Phase 15C | Target PC Codex status | TODO |
-| Codex malformed/failed child | Failed/blocked; child cleaned | REQUIRED Phase 15C | Optional target PC | TODO |
+| Ollama unavailable | Truthful OFFLINE/failure; no fake response | `tests/provider-hardening.test.ts` + existing Brain tests | Target PC outage proof | PASS — AUTOMATED / LOCAL OPTIONAL |
+| Ollama malformed response | Fail safely | `tests/provider-hardening.test.ts` | Not required | PASS — AUTOMATED |
+| Hermes unavailable/malformed | Fail safely; no fake tool success | `tests/provider-hardening.test.ts` | Only if Hermes configured | PASS — AUTOMATED |
+| Explicit Codex unavailable | No silent Ollama fallback | existing Brain test + `tests/provider-hardening.test.ts` | Target PC Codex status | PASS — AUTOMATED / LOCAL REQUIRED FOR REAL CLI |
+| Codex malformed/failed child | Failed/blocked; child cleaned | malformed JSONL parser covered in `tests/provider-hardening.test.ts`; process cleanup continues in P15D | Optional target PC | PARTIAL — P15D PROCESS/CANCEL TEST REMAINS |
 | Optional cloud disabled | No cloud call | Existing policy coverage | Not required | PENDING REVIEW |
-| Cloud network/malformed response | Fail safely; no secret leakage | REQUIRED Phase 15C/E | Optional only if configured | TODO |
+| Cloud network/malformed response | Fail safely; no secret leakage | `tests/provider-hardening.test.ts`; leakage review continues P15E | Optional only if configured | PASS — FAILURE HANDLING / P15E REDACTION REMAINS |
 | MCP discovery outage | Native runtime remains usable where possible; MCP not READY | `tests/mcp-hardening.test.ts` | Only if MCP configured | PASS — AUTOMATED |
 | MCP malformed descriptor | Reject/skip malformed tool; no crash/fake READY | `tests/mcp-hardening.test.ts` | Not required | PASS — AUTOMATED |
 | MCP tool call failure | Failed + unverified | `tests/mcp-hardening.test.ts` + existing Tool Runtime tests | Optional | PASS — AUTOMATED |

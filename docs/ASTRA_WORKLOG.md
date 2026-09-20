@@ -127,11 +127,19 @@ Every merged feature/security slice must append:
 
 Never mark local/physical verification PASS from repository inspection alone.
 
-## In-flight checkpoint — Phase 15C1
+## Phase 15C1 — MCP failure isolation
 
 - PR: **#99**
-- branch: `astra/phase15c1-mcp-failure-isolation`
-- scope: MCP provider failure isolation and runtime validation;
-- completion rule: only count as repository-complete after PR CI is green and PR #99 is merged;
-- next slice after merge: **P15C2 provider outage/malformed-response matrix**.
+- merge commit: `6551a9b8537986251382495d6e39832e5bcf96e2`
+- CI: **SUCCESS**
+- result: optional MCP server failure no longer destroys native/healthy runtime; descriptor/call data is validated; permission floors and AbortSignal behavior are covered.
+- next: **P15C2 provider outage/malformed-response matrix**.
+
+## In-flight checkpoint — Phase 15C2
+
+- PR: **#100**
+- branch: `astra/phase15c2-provider-failure-matrix`
+- scope: Ollama/Hermes/Cloud status/chat malformed/outage handling plus Codex unavailable/JSONL parsing;
+- P15C counts complete only after PR #100 CI is green and merged;
+- next after merge: **P15D Cancellation / timeout / network failure matrix**.
 

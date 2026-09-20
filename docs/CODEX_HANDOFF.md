@@ -1367,3 +1367,40 @@ Next exact task after green CI/merge:
 **Phase 15C2 — provider outage/malformed-response matrix for Ollama, Hermes, Codex and optional Cloud.**
 
 Phase 14 target-PC validation and real Sonor validation remain external/local gates.
+
+---
+
+## Handoff update — Phase 15C2 provider failure matrix
+
+PR: **#100**
+
+Implemented:
+
+- shared bounded provider JSON reader in `lib/brain/provider-safety.ts`;
+- Ollama tags/chat responses are bounded and shape-validated;
+- malformed Ollama model lists cannot report readiness;
+- Hermes `/v1/capabilities` must return structured bounded JSON before status is READY;
+- Hermes chat malformed/empty/oversized/HTTP-error responses fail closed;
+- optional Cloud `/models` must return structured bounded JSON before status is READY;
+- Cloud chat malformed/empty/oversized/HTTP-error responses fail closed;
+- real loopback connection-refused cases covered for Ollama/Hermes/Cloud;
+- non-loopback Hermes endpoint remains rejected;
+- configured Ollama model missing remains truthful unavailable;
+- Cloud remains explicit opt-in/policy gated;
+- Codex absent executable remains unavailable;
+- malformed Codex JSONL lines are ignored rather than treated as valid events.
+
+Regression coverage:
+
+- `tests/provider-hardening.test.ts`.
+
+P15C completion status after green CI/merge:
+
+- C1 MCP isolation/validation: complete;
+- C2 provider failure matrix: complete;
+- Codex child timeout/cancellation/cleanup moves into **P15D**, where STOP semantics are tested end-to-end;
+- secret/error redaction remains **P15E**.
+
+Next exact task:
+
+**Phase 15D — Cancellation / timeout / network failure matrix.**
