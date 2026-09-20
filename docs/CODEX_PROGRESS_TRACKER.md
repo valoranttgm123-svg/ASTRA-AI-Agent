@@ -85,6 +85,8 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 
 ## Phase 18 — Release Candidate
 
+- [x] P18A — repository RC gate automation implemented — current PR
+- [ ] P18B — repository gate recorded on release-candidate main
 - [ ] npm test
 - [ ] npm run typecheck
 - [ ] npm run lint
@@ -97,7 +99,7 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 - [ ] target-PC Automation result known
 - [ ] Sonor result known truthfully
 
-Phase 18 result: **PENDING**
+Phase 18 result: **PREPARATION IN PROGRESS — repository gate tooling only; program/local gates pending**
 
 ## Phase 19 — Windows ready-to-use release
 
