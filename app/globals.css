@@ -130,6 +130,73 @@ body {
   color: #ff9c9c;
 }
 
+.astra-console__approval {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(245, 166, 35, 0.38);
+  border-radius: 12px;
+  background: rgba(245, 166, 35, 0.07);
+  box-shadow: inset 0 0 24px rgba(245, 166, 35, 0.035);
+}
+
+.astra-console__approval-head {
+  margin-bottom: 7px;
+  color: #ffc45f;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.astra-console__approval-meta,
+.astra-console__approval-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.astra-console__approval-meta span,
+.astra-console__approval-scope span {
+  max-width: 100%;
+  padding: 4px 6px;
+  border: 1px solid rgba(245, 166, 35, 0.18);
+  border-radius: 6px;
+  color: rgba(255, 225, 174, 0.78);
+  background: rgba(245, 166, 35, 0.045);
+  font-size: 8px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.astra-console__approval-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.astra-console__approval-actions button {
+  border: 1px solid rgba(245, 166, 35, 0.4);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #ffd995;
+  background: rgba(245, 166, 35, 0.1);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.astra-console__approval-actions button:last-child {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.astra-console__approval-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .astra-console__form {
   display: grid;
   grid-template-columns: 1fr auto;
