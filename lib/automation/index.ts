@@ -49,3 +49,19 @@ export type { AstraAutomationClaimResult } from "./store";
 
 export { runAutomationTickFromStore } from "./runner";
 export { claimAutomationOccurrence } from "./store";
+
+export type {
+  AstraAutomationMutation,
+} from "./http";
+export type {
+  AstraAutomationMutationResult,
+  AstraAutomationUpsertInput,
+} from "./management";
+
+export { parseAutomationMutation } from "./http";
+export {
+  deleteAutomationDefinition,
+  setAutomationDefinitionStatus,
+  upsertAutomationDefinition,
+} from "./management";
+export { automationEventToBrainEvent } from "./telemetry";
