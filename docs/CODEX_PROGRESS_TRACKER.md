@@ -79,9 +79,9 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 
 - [x] Compare stale PR #51 to current main — `docs/PR51_TELEMETRY_AUDIT.md`
 - [x] Port only genuinely unique unsuperseded behavior/tests — none identified; no port required
-- [ ] Close PR #51 as superseded if nothing useful remains
-- [ ] verify no abandoned release-blocking branch is required
-- [ ] verify no secret/private runtime file is tracked
+- [x] Close PR #51 as superseded if nothing useful remains — closed after audit
+- [x] verify no abandoned release-blocking branch is required — no open PRs; historical branches retained as non-blocking snapshots
+- [x] verify no secret/private runtime file is tracked — current tree scan clean
 
 ## Phase 18 — Release Candidate
 
