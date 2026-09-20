@@ -187,3 +187,12 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: privacy-preserving chat-mode preflight evidence runner for scenarios A–D merged.
 - truth boundary: no Phase 17 scenario PASS is claimed; target-runtime real execution remains required.
+
+## Repository cleanup — PR #51 audit
+
+- compared `astra/v15-brain-streaming-telemetry` against current `main`;
+- old branch: 16 commits ahead of its historic base, 621 commits behind current `main`;
+- no unique unsuperseded production behavior/test identified;
+- old NDJSON/`AsyncLocalStorage` telemetry is superseded by SSE/`onEvent`;
+- audit: `docs/PR51_TELEMETRY_AUDIT.md`;
+- next: merge audit documentation, then close PR #51 as superseded.
