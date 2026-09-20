@@ -16,6 +16,11 @@ import { BROWSER_TOOL_DEFINITIONS, BROWSER_TOOL_HANDLERS } from "./browser";
 import type { AstraResearchTransport } from "./research";
 import { createResearchToolRegistrations, SearXngResearchTransport } from "./research";
 import type { AstraIntegrationTransport } from "./integrations";
+import type { AstraCreativeTransport } from "./creative";
+import {
+  createCreativeToolRegistrations,
+  CREATIVE_TOOL_DEFINITIONS,
+} from "./creative";
 import {
   createIntegrationToolRegistrations,
   INTEGRATION_TOOL_DEFINITIONS,
@@ -27,6 +32,7 @@ export function createNativeToolRuntime(): AstraExecutableToolRegistry {
       ...NATIVE_TOOL_DEFINITIONS,
       ...BROWSER_TOOL_DEFINITIONS,
       ...INTEGRATION_TOOL_DEFINITIONS,
+      ...CREATIVE_TOOL_DEFINITIONS,
     ],
     {
       ...NATIVE_TOOL_HANDLERS,
@@ -40,12 +46,14 @@ export async function createToolRuntime(options?: {
   githubTransport?: AstraGitHubTransport;
   researchTransport?: AstraResearchTransport;
   integrationTransports?: readonly AstraIntegrationTransport[];
+  creativeTransports?: readonly AstraCreativeTransport[];
   signal?: AbortSignal;
 }): Promise<AstraExecutableToolRegistry> {
   let definitions: AstraToolDefinition[] = [
     ...NATIVE_TOOL_DEFINITIONS,
     ...BROWSER_TOOL_DEFINITIONS,
     ...INTEGRATION_TOOL_DEFINITIONS,
+    ...CREATIVE_TOOL_DEFINITIONS,
   ];
   const handlers: Record<string, AstraToolHandler> = {
     ...NATIVE_TOOL_HANDLERS,
@@ -102,6 +110,25 @@ export async function createToolRuntime(options?: {
     definitions.push(...integration.definitions);
 
     for (const [id, handler] of Object.entries(integration.handlers)) {
+      handlers[id] = handler;
+    }
+  }
+
+  for (const transport of options?.creativeTransports ?? []) {
+    const creative = await createCreativeToolRegistrations(
+      transport,
+      options?.signal,
+    );
+    const creativeIds = new Set(
+      creative.definitions.map((definition) => definition.id),
+    );
+
+    definitions = definitions.filter(
+      (definition) => !creativeIds.has(definition.id),
+    );
+    definitions.push(...creative.definitions);
+
+    for (const [id, handler] of Object.entries(creative.handlers)) {
       handlers[id] = handler;
     }
   }
