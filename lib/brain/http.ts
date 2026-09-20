@@ -101,6 +101,14 @@ export function parseAgentRequest(body: Record<string, unknown>): AgentRequest {
   if (body.approved !== undefined && typeof body.approved !== "boolean") {
     throw new RequestError("Approval tidak valid.");
   }
+  if (
+    body.approvalToken !== undefined &&
+    (typeof body.approvalToken !== "string" ||
+      body.approvalToken.trim().length < 8 ||
+      body.approvalToken.trim().length > 160)
+  ) {
+    throw new RequestError("Approval token tidak valid.");
+  }
 
   const provider = (body.provider ?? "auto") as AstraProviderChoice;
   if (!PROVIDERS.has(provider)) {
@@ -111,6 +119,10 @@ export function parseAgentRequest(body: Record<string, unknown>): AgentRequest {
     message: body.message.trim(),
     mode: body.mode === "execute" ? "execute" : "chat",
     approved: Boolean(body.approved),
+    approvalToken:
+      typeof body.approvalToken === "string"
+        ? body.approvalToken.trim()
+        : undefined,
     provider,
   };
 }
