@@ -275,3 +275,367 @@ body {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.06); }
 }
+
+
+/* Phase 14D3B2 — compact Automation control plane */
+.astra-automation__launcher {
+  position: fixed;
+  left: clamp(14px, 2.4vw, 34px);
+  bottom: clamp(14px, 2.4vw, 28px);
+  z-index: 55;
+  border: 1px solid rgba(245, 166, 35, 0.34);
+  border-radius: 999px;
+  padding: 9px 14px;
+  color: #ffd48a;
+  background: rgba(15, 12, 7, 0.82);
+  box-shadow: 0 10px 34px rgba(0,0,0,0.36), 0 0 26px rgba(245,166,35,0.07);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.astra-automation {
+  position: fixed;
+  left: clamp(14px, 2.4vw, 34px);
+  bottom: clamp(14px, 2.4vw, 28px);
+  z-index: 58;
+  width: min(390px, calc(100vw - 28px));
+  max-height: calc(100dvh - 60px);
+  overflow: auto;
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  border-radius: 16px;
+  color: rgba(245, 252, 255, 0.72);
+  background: rgba(4, 10, 18, 0.95);
+  box-shadow: 0 18px 62px rgba(0,0,0,0.55), 0 0 40px rgba(245,166,35,0.055);
+  font-family: var(--font-mono);
+}
+
+.astra-automation button,
+.astra-automation input,
+.astra-automation textarea,
+.astra-automation select {
+  font: inherit;
+}
+
+.astra-automation button {
+  border: 1px solid rgba(99, 234, 255, 0.2);
+  border-radius: 7px;
+  padding: 7px 9px;
+  color: #bff8ff;
+  background: rgba(99, 234, 255, 0.055);
+  cursor: pointer;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.astra-automation button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.astra-automation__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(245,166,35,0.12);
+  background: rgba(4, 10, 18, 0.97);
+}
+
+.astra-automation__title {
+  color: #ffd48a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.astra-automation__subtitle {
+  margin-top: 3px;
+  color: rgba(255, 220, 160, 0.38);
+  font-size: 7px;
+  letter-spacing: 0.16em;
+}
+
+.astra-automation__close {
+  border: 0 !important;
+  padding: 4px 7px !important;
+  color: rgba(255,255,255,0.45) !important;
+  background: transparent !important;
+  font-size: 16px !important;
+}
+
+.astra-automation__toolbar,
+.astra-automation__summary,
+.astra-automation__actions,
+.astra-automation__approval-actions,
+.astra-automation__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.astra-automation__toolbar {
+  padding: 10px 12px 6px;
+}
+
+.astra-automation__stop {
+  margin-left: auto;
+  border-color: rgba(255, 95, 109, 0.32) !important;
+  color: #ff9da7 !important;
+  background: rgba(255,95,109,0.06) !important;
+}
+
+.astra-automation__summary {
+  padding: 3px 12px 8px;
+}
+
+.astra-automation__summary span,
+.astra-automation__meta span,
+.astra-automation__scope span {
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 5px;
+  padding: 3px 5px;
+  color: rgba(225, 247, 252, 0.48);
+  background: rgba(255,255,255,0.025);
+  font-size: 7px;
+  line-height: 1.35;
+}
+
+.astra-automation__detail,
+.astra-automation__error,
+.astra-automation__notice {
+  margin: 0 12px 8px;
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.astra-automation__detail { color: rgba(218, 242, 248, 0.38); }
+.astra-automation__error { color: #ff9da7; }
+.astra-automation__notice { color: #83ffbc; }
+
+.astra-automation__section,
+.astra-automation__form,
+.astra-automation__approval {
+  margin: 8px 10px 10px;
+  padding: 10px;
+  border: 1px solid rgba(99,234,255,0.1);
+  border-radius: 10px;
+  background: rgba(99,234,255,0.018);
+}
+
+.astra-automation__approval {
+  border-color: rgba(245, 185, 66, 0.28);
+  background: rgba(245,185,66,0.045);
+}
+
+.astra-automation__approval > strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #ffc45f;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.astra-automation__approval > span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255,225,174,0.72);
+  font-size: 8px;
+  overflow-wrap: anywhere;
+}
+
+.astra-automation__scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.astra-automation__approval-actions {
+  margin-top: 9px;
+}
+
+.astra-automation__approval-actions button:first-child {
+  border-color: rgba(245,185,66,0.4);
+  color: #ffd995;
+  background: rgba(245,185,66,0.1);
+}
+
+.astra-automation__section-title {
+  margin-bottom: 8px;
+  color: rgba(146, 239, 255, 0.72);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.astra-automation__empty {
+  color: rgba(220, 244, 250, 0.34);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.astra-automation__queue-item,
+.astra-automation__definition {
+  padding: 8px 0;
+  border-top: 1px solid rgba(255,255,255,0.055);
+}
+
+.astra-automation__queue-item:first-of-type,
+.astra-automation__definition:first-child {
+  border-top: 0;
+}
+
+.astra-automation__queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.astra-automation__queue-item div {
+  min-width: 0;
+}
+
+.astra-automation__queue-item strong,
+.astra-automation__definition-head strong {
+  display: block;
+  color: rgba(238, 252, 255, 0.78);
+  font-size: 8.5px;
+  overflow-wrap: anywhere;
+}
+
+.astra-automation__queue-item span,
+.astra-automation__definition-head div > span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(215,244,250,0.35);
+  font-size: 7px;
+}
+
+.astra-automation__readonly {
+  flex-shrink: 0;
+  color: #83ffbc !important;
+  font-size: 7px !important;
+  letter-spacing: 0.08em;
+}
+
+.astra-automation__definition-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.astra-automation__definition p {
+  margin: 7px 0;
+  color: rgba(225, 247, 252, 0.5);
+  font-size: 8px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astra-automation__status {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 3px 6px;
+  font-size: 6.8px;
+  letter-spacing: 0.08em;
+}
+
+.astra-automation__status--enabled {
+  color: #83ffbc;
+  background: rgba(131,255,188,0.07);
+  border: 1px solid rgba(131,255,188,0.2);
+}
+
+.astra-automation__status--paused {
+  color: #ffc45f;
+  background: rgba(245,185,66,0.06);
+  border: 1px solid rgba(245,185,66,0.2);
+}
+
+.astra-automation__status--disabled {
+  color: #8aa0ad;
+  background: rgba(138,160,173,0.06);
+  border: 1px solid rgba(138,160,173,0.15);
+}
+
+.astra-automation__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 7px;
+}
+
+.astra-automation__danger {
+  border-color: rgba(255,95,109,0.22) !important;
+  color: #ff9da7 !important;
+  background: rgba(255,95,109,0.045) !important;
+}
+
+.astra-automation__form {
+  display: grid;
+  gap: 7px;
+  border-color: rgba(245,166,35,0.16);
+}
+
+.astra-automation__form input,
+.astra-automation__form textarea,
+.astra-automation__form select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 7px;
+  outline: none;
+  padding: 8px 9px;
+  color: #effcff;
+  background: rgba(255,255,255,0.035);
+  font-size: 8px;
+}
+
+.astra-automation__form textarea {
+  resize: vertical;
+}
+
+.astra-automation__form input:focus,
+.astra-automation__form textarea:focus,
+.astra-automation__form select:focus {
+  border-color: rgba(99,234,255,0.4);
+}
+
+.astra-automation__form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.45fr;
+  gap: 7px;
+}
+
+.astra-automation__form-placeholder {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 7px;
+  padding: 8px 9px;
+  color: rgba(255,255,255,0.28);
+  font-size: 8px;
+}
+
+@media (max-width: 700px) {
+  .astra-automation__launcher {
+    bottom: 84px;
+  }
+
+  .astra-automation {
+    left: 14px;
+    right: 14px;
+    top: 58px;
+    bottom: auto;
+    width: auto;
+    max-height: calc(100dvh - 150px);
+  }
+}
