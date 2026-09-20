@@ -5,6 +5,7 @@ export type AstraProviderChoice = "auto" | "ollama" | "codex";
 export type AstraAgentKey =
   | "chief_of_staff"
   | "memory"
+  | "strategist"
   | "researcher"
   | "developer"
   | "computer"
