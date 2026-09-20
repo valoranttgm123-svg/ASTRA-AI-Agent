@@ -1,5 +1,18 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — scoped registered project context checkpoint
+
+Phase 3 project context now has a real read-only loading path:
+- `lib/projects/context.ts` reads only paths explicitly listed in a resolved project's `docs` / `importantFiles`;
+- every target must remain inside the registered `workspace` after both lexical resolution and `realpath` resolution;
+- there is no recursive directory scan;
+- `.env`, credentials/secrets, SSH/GPG paths, certificate/private-key formats and unsupported/binary extensions are rejected;
+- per-file size and file-count limits are configurable;
+- accepted files enter the existing Memory Manager with provenance source type `project`;
+- Brain unified memory can combine local memory + registered project files + Sonor without special-case prompt concatenation.
+
+This does **not** grant arbitrary filesystem access. Project identification alone still cannot read files that are not explicitly registered.
+
 ## 2026-09-20 — real Memory lifecycle telemetry checkpoint
 
 This branch adds real retrieval telemetry emitted by the Memory Manager itself:
