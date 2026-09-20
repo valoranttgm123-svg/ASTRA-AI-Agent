@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import type { AstraAgent } from "@/lib/agent/types";
 import type { AstraBrainPermissionSnapshot } from "./types";
+import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_TIMEOUT_MS = 180000;
 const DEFAULT_STATUS_TIMEOUT_MS = 2500;
@@ -197,6 +198,7 @@ export async function chatWithCodex({
     `Routed specialist: ${agent.name}.`,
     `Role: ${agent.role}.`,
     `Capabilities: ${agent.capabilities.join(", ")}.`,
+    UNTRUSTED_RETRIEVED_CONTEXT_POLICY,
     policyText || "",
     context || "",
     "Operate only inside the configured workspace.",
