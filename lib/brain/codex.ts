@@ -153,7 +153,7 @@ export async function getCodexStatus(
   }
 }
 
-function parseCodexLine(line: string) {
+export function parseCodexLine(line: string) {
   try {
     return JSON.parse(line) as {
       type?: string;
