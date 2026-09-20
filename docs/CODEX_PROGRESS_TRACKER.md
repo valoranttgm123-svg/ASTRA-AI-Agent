@@ -101,6 +101,8 @@ Phase 18 result: **PENDING**
 
 ## Phase 19 — Windows ready-to-use release
 
+- [x] P19A — read-only readiness self-check implemented — PR #109
+- [ ] P19B — target-PC self-check evidence captured
 - [ ] install path verified
 - [ ] startup tasks verified
 - [ ] loopback binding verified
@@ -112,7 +114,7 @@ Phase 18 result: **PENDING**
 - [ ] read-only self-check available
 - [ ] reinstall/update path verified
 
-Phase 19 result: **PENDING**
+Phase 19 result: **IN PROGRESS — self-check tooling only; target-PC readiness not claimed**
 
 ## Phase 20 — ASTRA MAX Core Release Gate
 

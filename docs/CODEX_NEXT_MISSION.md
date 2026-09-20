@@ -27,19 +27,24 @@ External-only blockers must be recorded but must not stop unrelated repository w
 Repository-complete and CI-verified:
 
 - Phase 15A–15F security/failure hardening;
-- Phase 16A runtime performance measurement instrumentation — PR #105.
+- Phase 16A runtime performance measurement instrumentation — PR #105;
+- Phase 17A safe full-system preflight instrumentation — PR #106;
+- pre-RC repository cleanup, including closure of stale PR #51.
 
 Still local/target-runtime gated:
 
 - Phase 14 target-PC Automation validation;
 - MEM-X real Sonor/Graphify/Obsidian validation;
-- Phase 16B/P16C target runtime/browser measurements.
+- Phase 16B/P16C target runtime/browser measurements;
+- Phase 17B–P17D real scenario evidence.
 
 Current implementable repository task:
 
-**Phase 17A — safe full-system preflight evidence runner.**
+**Phase 19A — read-only readiness self-check tooling.**
 
-The preflight runner must never be treated as Phase 17 PASS. Real scenario execution, approved side effects and emergency STOP remain target-runtime gates.
+P19A must collect evidence conservatively from the running ASTRA instance, keep output private, avoid reading secrets, avoid mutating services/configuration, and leave the Phase 20 release verdict NOT_EVALUATED.
+
+After P19A merges, continue the next independent release/readiness preparation that does not require inventing target-PC evidence.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer those repository truths.
 

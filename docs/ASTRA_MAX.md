@@ -1027,6 +1027,37 @@ All required checks must pass.
 
 ## Phase 19 — Windows ready-to-use release
 
+### Phase 19A — read-only readiness self-check
+
+Repository-side self-check command:
+
+```powershell
+npm run release:self-check
+```
+
+Windows convenience wrapper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\self-check.ps1
+```
+
+Behavior:
+
+- loopback-only ASTRA status reads;
+- reads Brain, Automation store, and Automation service status;
+- derives Ollama/Codex/Cloud/Memory/Tool states from the running ASTRA Brain status;
+- inspects installed `ASTRA-Agent` and `ASTRA-Ollama` Scheduled Tasks on Windows without changing them;
+- writes evidence only to gitignored `.astra/readiness/`;
+- never reads secrets from `.env`;
+- does not start/stop services;
+- does not approve actions;
+- does not choose the Phase 20 release verdict;
+- Sonor remains `UNKNOWN` until real MEM-X validation.
+
+The self-check is evidence collection, not proof that installation, reinstall/update, physical STOP, Sonor, or performance validation passed.
+
+
+
 Improve installer/startup path:
 
 `Install → ASTRA local service → Ollama → ASTRA UI → status self-check`
