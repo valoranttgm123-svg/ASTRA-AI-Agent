@@ -25,3 +25,16 @@ export {
   normalizeAutomationDefinitions,
   saveAutomationStore,
 } from "./store";
+
+export type {
+  AstraAutomationLifecycleEvent,
+  AstraAutomationLifecycleEventType,
+  AstraAutomationQueueItem,
+  AstraAutomationTickPlan,
+} from "./queue";
+
+export {
+  ASTRA_AUTOMATION_MAX_READY_PER_TICK,
+  ASTRA_AUTOMATION_MAX_WAITING_APPROVAL_PER_TICK,
+  planAutomationTick,
+} from "./queue";
