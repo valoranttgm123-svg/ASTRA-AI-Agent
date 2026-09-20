@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { AstraApprovalRequest } from "@/lib/agent/types";
 import type { AstraPlan, AstraPlanStep } from "@/lib/planner/contracts";
+import type { AstraToolDefinition } from "@/lib/tools/contracts";
 
 const APPROVAL_TTL_MS = 5 * 60_000;
 const MAX_PENDING_APPROVALS = 64;
@@ -142,5 +143,96 @@ export function consumeLevel3Approval({
     plan: clonePlan(stored.plan),
     request: stored.request,
     level: 3,
+  };
+}
+
+
+export type AstraApprovalPreflight =
+  | { kind: "none" }
+  | { kind: "level4"; step: AstraPlanStep; detail: string }
+  | { kind: "level3"; step: AstraPlanStep; tool: AstraToolDefinition }
+  | { kind: "blocked"; step: AstraPlanStep; detail: string };
+
+export function assessPlanApproval({
+  plan,
+  approvedPermissionLevel,
+  tools,
+  allowExternalActions,
+  skipLevel3Preflight = false,
+}: {
+  plan: AstraPlan;
+  approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
+  tools: readonly AstraToolDefinition[];
+  allowExternalActions: boolean;
+  skipLevel3Preflight?: boolean;
+}): AstraApprovalPreflight {
+  if (!skipLevel3Preflight) {
+    const highImpact = plan.steps.find(
+      (step) =>
+        step.status === "pending" &&
+        step.permissionLevel >= 4,
+    );
+    if (highImpact) {
+      return {
+        kind: "level4",
+        step: highImpact,
+        detail:
+          "High-impact Level-4 plan must be rejected before any plan step executes.",
+      };
+    }
+  }
+
+  if (skipLevel3Preflight) return { kind: "none" };
+
+  const next = plan.steps.find(
+    (step) =>
+      step.status === "pending" &&
+      step.permissionLevel > approvedPermissionLevel,
+  );
+
+  if (!next) return { kind: "none" };
+
+  if (next.permissionLevel === 3 && next.toolId) {
+    const tool = tools.find((candidate) => candidate.id === next.toolId);
+
+    if (!tool || tool.availability !== "READY") {
+      return {
+        kind: "blocked",
+        step: next,
+        detail:
+          "Required Level-3 tool is not READY: " +
+          next.toolId +
+          ".",
+      };
+    }
+
+    if (
+      tool.sideEffect === "external_write" &&
+      !allowExternalActions
+    ) {
+      return {
+        kind: "blocked",
+        step: next,
+        detail:
+          "External-action policy is disabled for " +
+          tool.id +
+          ".",
+      };
+    }
+
+    return {
+      kind: "level3",
+      step: next,
+      tool,
+    };
+  }
+
+  return {
+    kind: "blocked",
+    step: next,
+    detail:
+      "Plan requires permission Level-" +
+      next.permissionLevel +
+      " without an available scoped approval path.",
   };
 }
