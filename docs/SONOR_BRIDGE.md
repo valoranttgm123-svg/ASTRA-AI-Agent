@@ -144,3 +144,13 @@ Until a real Sonor endpoint on the target PC is inspected and configured:
 - Sonor is **not yet claimed as live/READY** in the user's actual runtime.
 
 Once the endpoint is configured and the production PC test passes, update this document and `docs/CODEX_HANDOFF.md`.
+
+
+## Authoritative continuation documents
+
+Before touching the user's real Sonor project, read:
+
+- `docs/SONOR_CODEX_MISSION.md` — preserve/audit/private-backup/integrate mission.
+- `docs/SONOR_UI_INTEGRATION.md` — approved ASTRA UI treatment.
+
+The local Sonor implementation is the source of truth. These documents intentionally tell Codex to inspect and continue that implementation rather than creating a replacement.
