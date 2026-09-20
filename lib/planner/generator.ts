@@ -86,6 +86,13 @@ export function shouldGeneratePlan(input: string): boolean {
 
   if (EXPLICIT_PLAN_WORDS.some((word) => hasWord(text, word))) return true;
 
+  const hasNumericBusinessInput = /\d/.test(text);
+  const deterministicBusinessIntent =
+    /(?:margin|markup|laba|profit|break\s*even|\bbep\b|harga\s*jual|budget|anggaran|omzet|revenue|cogs|modal)/i.test(text) ||
+    /(?:analytics|analitik|\bkpi\b|metric|metrik|trend|tren|anomali|ringkasan\s+data)/i.test(text);
+
+  if (hasNumericBusinessInput && deterministicBusinessIntent) return true;
+
   const actionCount = ACTION_WORDS.filter((word) => hasWord(text, word)).length;
   const connectorCount = [
     /\blalu\b/i,
