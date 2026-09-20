@@ -151,7 +151,10 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "project.file.read" ||
     toolId === "project.git.status" ||
     toolId === "project.git.diff-file" ||
-    toolId === "github.ci.status"
+    toolId === "github.ci.status" ||
+    toolId === "browser.fetch" ||
+    toolId === "research.search" ||
+    toolId === "research.web"
   ) {
     return 1;
   }
