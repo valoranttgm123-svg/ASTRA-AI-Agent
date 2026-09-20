@@ -44,6 +44,7 @@ import {
   consumeLevel3Approval,
   createLevel3Approval,
 } from "./approvals";
+import { resolveExecutionPermission } from "./execution-permissions";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -1257,21 +1258,17 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       );
     }
 
+    const permissionResolution = resolveExecutionPermission({
+      requireApproval: context.policy.requireApproval,
+      approved: task.approved === true,
+      requirePlan: options?.requirePlan === true,
+      permissionCeiling: options?.permissionCeiling,
+      hasApprovalToken: Boolean(task.approvalToken),
+    });
     const unattendedReadOnly =
-      options?.requirePlan === true &&
-      options.permissionCeiling !== undefined &&
-      options.permissionCeiling <= 1 &&
-      !task.approvalToken;
-
-    let approvedPermissionLevel: 0 | 1 | 2 | 3 | 4 =
-      context.policy.requireApproval ? (task.approved ? 2 : 1) : 2;
-
-    if (options?.permissionCeiling !== undefined) {
-      approvedPermissionLevel = Math.min(
-        approvedPermissionLevel,
-        options.permissionCeiling,
-      ) as 0 | 1 | 2 | 3 | 4;
-    }
+      permissionResolution.unattendedReadOnly;
+    let approvedPermissionLevel =
+      permissionResolution.approvedPermissionLevel;
 
     let approvedStepIds: string[] = [];
     let usedScopedApproval = false;
