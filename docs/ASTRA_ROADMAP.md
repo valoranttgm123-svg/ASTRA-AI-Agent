@@ -927,3 +927,24 @@ Implemented on `astra/phase14e2-optin-automation-service`:
 - tests cover default-OFF behavior, poll bounds, single-flight ticks, server-side STOP, timer start/stop, and lifecycle ids.
 
 Phase 14E3 connects service telemetry/global STOP to the existing browser Runtime and completes final Phase 14 validation.
+---
+
+## Phase 14E3 implementation checkpoint — final service/Runtime integration
+
+Implemented on `astra/phase14e3-automation-final-integration`:
+
+- loopback `/api/automation/service/stream` publishes real background service status + lifecycle through SSE;
+- `AstraRuntime` consumes background automation lifecycle into the existing `brainEvents` and `brainTrace`;
+- background service events update Command Center Ops without stealing the foreground active-agent label;
+- global Runtime STOP now aborts the active browser Automation request and also sends server-side `stop-active` to the background service;
+- Automation panel displays truthful service opt-in/running/tick/poll/next-wake/summary state;
+- panel exposes service start/stop and explicit safe manual tick only when the env opt-in is enabled;
+- final end-to-end test verifies Level-1 unattended execution, Level-2 approval gating, hard Brain ceiling, durable claim, telemetry, and duplicate suppression;
+- Windows target-PC safety validator added at `scripts/windows/validate-automation.ps1`;
+- final activation/validation runbook added at `docs/AUTOMATION_VALIDATION.md`.
+
+Phase 14 implementation is complete when this branch passes CI. Production completion still requires the documented target-PC activation/validation because the background service is intentionally OFF by default.
+
+Required status until that physical/local validation is actually run:
+
+`IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
