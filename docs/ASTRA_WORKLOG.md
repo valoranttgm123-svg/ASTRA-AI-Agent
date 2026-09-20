@@ -173,6 +173,7 @@ Never mark local/physical verification PASS from repository inspection alone.
 
 ## In-flight checkpoint — Phase 16A
 
+- PR: **#105**;
 - branch: `astra/phase16a-performance-measurement-harness`;
 - scope: loopback-only runtime timing harness + deterministic statistics + SSE timing parser;
 - no target-PC/browser performance value has been invented or recorded;
