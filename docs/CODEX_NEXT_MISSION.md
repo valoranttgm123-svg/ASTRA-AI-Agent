@@ -27,26 +27,27 @@ External-only blockers must be recorded but must not stop unrelated repository w
 Repository-complete and CI-verified:
 
 - Phase 15A–15F security/failure hardening;
-- Phase 16A runtime performance measurement instrumentation — PR #105;
+- Phase 16A performance measurement instrumentation — PR #105;
 - Phase 17A safe full-system preflight instrumentation — PR #106;
 - pre-RC repository cleanup;
-- Phase 19A read-only readiness self-check tooling — PR #109.
+- Phase 19A read-only readiness self-check — PR #109;
+- Phase 19B safe update/reinstall tooling — PR #110.
 
 Still local/target-runtime gated:
 
 - Phase 14 target-PC Automation validation;
 - MEM-X real Sonor/Graphify/Obsidian validation;
-- Phase 16B/P16C target runtime/browser measurements;
-- Phase 17B–P17D real scenario evidence;
-- Phase 19 target-PC install/self-check evidence.
+- Phase 16 target runtime/browser measurements;
+- Phase 17 real scenario evidence;
+- Phase 19 target-PC install/update/reinstall/self-check evidence.
 
 Current implementable repository task:
 
-**Phase 19B — safe update/reinstall tooling.**
+**Phase 18A — repository RC gate automation.**
 
-P19B must preserve private runtime/configuration, avoid destructive Git recovery, use fast-forward-only update behavior, and remain unverified until actually executed on the target Windows PC.
+P18A must automate test/typecheck/lint/build/high-severity audit/diff-check but must not turn repository CI success into a fake RC or READY claim.
 
-After P19B merges, continue the next independent release/report preparation that does not require inventing target-PC evidence.
+After P18A merges, continue Phase 20 report preparation or other independent release tooling while all external/local gates remain explicit.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer those repository truths.
 
