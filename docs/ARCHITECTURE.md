@@ -588,3 +588,35 @@ Accepted message sources are currently `text` and `voice`. Gesture and camera ar
 `visualContentProvided` must be false. Image/screen modalities are rejected until a real visual payload contract and explicitly configured provider/tool exist.
 
 This prevents metadata from becoming a prompt-injection channel: fields are bounded enums/booleans rather than free-form strings.
+
+
+## Command Center MAX runtime truth model
+
+Phase 13 separates persistent capability readiness from transient execution state.
+
+```text
+Brain status()
+   ↓
+18-node base capability snapshot
+   ↓
+Command Center
+   +
+live SSE Brain/tool/approval lifecycle
+   ↓
+transient node overlay
+   ↓
+ReasoningWeb + Agent Overview + operational panel
+```
+
+Base state comes from provider/tool availability. Transient execution state comes only from real lifecycle events.
+
+Examples:
+- `agent.started` / `tool.started` → ACTIVE;
+- `approval.requested` → WAITING_APPROVAL;
+- `agent.blocked` → BLOCKED;
+- `tool.failed` / `plan.step.failed` → ERROR;
+- `response.ready` resets transient states to the latest server base snapshot.
+
+A provider-unavailable event alone does not mark a node failed because ASTRA may continue through a valid fallback provider.
+
+The ReasoningWeb roster now receives the runtime state for each node. Legacy visual placement remains, but static visual `live` flags are no longer authority for capability readiness.
