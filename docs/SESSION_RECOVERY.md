@@ -100,4 +100,6 @@ At creation of this protocol:
 - Phase 16 target runtime/browser measurements: pending local access;
 - Phase 14 local validation: pending;
 - Sonor real validation: pending local access;
-- current implementable repository work: **Phase 17A safe full-system preflight evidence runner**.
+- Phase 17A preflight tooling: merged/CI verified;
+- repository cleanup before RC: complete;
+- current implementable repository work: **Phase 19A read-only readiness self-check tooling**.
