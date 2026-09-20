@@ -39,6 +39,9 @@ import {
   updatePlanStepStatus,
 } from "../lib/planner/planner";
 import { createToolRegistry } from "../lib/tools/registry";
+import { createExecutableToolRegistry } from "../lib/tools/executor";
+import { astraNativeToolRuntime, createToolRuntime } from "../lib/tools/runtime";
+import type { AstraMcpTransport } from "../lib/tools/mcp";
 import { parsePlannerDraft, shouldGeneratePlan } from "../lib/planner/generator";
 import { executeBoundedPlan } from "../lib/planner/executor";
 
@@ -1298,4 +1301,229 @@ test("Brain bounded orchestrator fails truthfully when a real tool executor is u
     ),
     false,
   );
+});
+
+
+test("native Tool Runtime reads only explicitly registered project context and verifies output", async () => {
+  const lifecycle: string[] = [];
+  const result = await astraNativeToolRuntime.execute(
+    "project.context.search",
+    {
+      projectId: "alurka",
+      query: "workflow",
+      limit: 10,
+    },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+      onEvent: (event) => lifecycle.push(event.type),
+    },
+  );
+
+  assert.equal(result.status, "completed");
+  assert.equal(result.verified, true);
+  assert.deepEqual(lifecycle, ["tool.started", "tool.completed"]);
+
+  const payload = result.output as {
+    records: Array<{ content: string; provenance: { reference: string } }>;
+  };
+  assert.equal(payload.records.length, 1);
+  assert.match(payload.records[0].content, /registered context/);
+  assert.equal(
+    payload.records[0].provenance.reference,
+    "project:alurka:registered.md",
+  );
+  assert.doesNotMatch(
+    JSON.stringify(payload),
+    /UNLISTED|SECRET|OUTSIDE/,
+  );
+});
+
+test("executable Tool Runtime blocks before handler when permission or policy is insufficient", async () => {
+  let calls = 0;
+  const runtime = createExecutableToolRegistry(
+    [
+      {
+        id: "fixture.write",
+        name: "Fixture Write",
+        category: "filesystem",
+        description: "Fixture local write",
+        permissionLevel: 2,
+        sideEffect: "local_write",
+        timeoutMs: 5000,
+        supportsCancellation: true,
+        provider: "fixture",
+        availability: "READY",
+      },
+    ],
+    {
+      "fixture.write": async () => {
+        calls += 1;
+        return {
+          status: "completed",
+          detail: "fixture wrote",
+          verified: true,
+        };
+      },
+    },
+  );
+
+  const noApproval = await runtime.execute(
+    "fixture.write",
+    {},
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(noApproval.status, "blocked");
+  assert.equal(calls, 0);
+
+  const noPolicy = await runtime.execute(
+    "fixture.write",
+    {},
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(noPolicy.status, "blocked");
+  assert.equal(calls, 0);
+});
+
+test("executable Tool Runtime rejects unverified completion claims", async () => {
+  const runtime = createExecutableToolRegistry(
+    [
+      {
+        id: "fixture.unverified",
+        name: "Fixture Unverified",
+        category: "analytics",
+        description: "Fixture read that lies about verification",
+        permissionLevel: 1,
+        sideEffect: "read",
+        timeoutMs: 5000,
+        supportsCancellation: true,
+        provider: "fixture",
+        availability: "READY",
+      },
+    ],
+    {
+      "fixture.unverified": async () => ({
+        status: "completed",
+        detail: "claimed completion",
+        verified: false,
+        output: { claimed: true },
+      }),
+    },
+  );
+
+  const result = await runtime.execute(
+    "fixture.unverified",
+    {},
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.verified, false);
+  assert.match(result.detail, /without verified evidence/i);
+});
+
+test("MCP transport uses the same executable Tool Runtime permission and verification boundary", async () => {
+  let calls = 0;
+  const transport: AstraMcpTransport = {
+    serverId: "fixture-server",
+    async listTools() {
+      return [
+        {
+          name: "lookup",
+          description: "Read fixture knowledge",
+          permissionLevel: 1,
+          sideEffect: "read",
+        },
+      ];
+    },
+    async callTool(name, input) {
+      calls += 1;
+      assert.equal(name, "lookup");
+      assert.deepEqual(input, { query: "ASTRA" });
+      return {
+        ok: true,
+        detail: "fixture MCP lookup completed",
+        content: { answer: "ASTRA fixture" },
+      };
+    },
+  };
+
+  const runtime = await createToolRuntime({
+    mcpTransports: [transport],
+  });
+  assert.equal(runtime.has("mcp.fixture-server.lookup"), true);
+
+  const result = await runtime.execute(
+    "mcp.fixture-server.lookup",
+    { query: "ASTRA" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+
+  assert.equal(calls, 1);
+  assert.equal(result.status, "completed");
+  assert.equal(result.verified, true);
+  assert.deepEqual(result.output, { answer: "ASTRA fixture" });
+});
+
+test("Brain streams real native tool lifecycle during bounded project inspection", async () => {
+  process.env.ASTRA_ALLOW_FILE_WRITE = "true";
+  const events: AstraBrainEvent[] = [];
+
+  await astraBrain.execute(
+    {
+      input: "cek project ALURKA, perbaiki error lalu test hasilnya",
+      approved: true,
+    },
+    {
+      provider: "auto",
+      onEvent: (event) => events.push(event),
+    },
+  );
+
+  const started = events.find(
+    (event) =>
+      event.type === "tool.started" &&
+      event.visualNode === "drive",
+  );
+  const completed = events.find(
+    (event) =>
+      event.type === "tool.completed" &&
+      event.visualNode === "drive",
+  );
+
+  assert.ok(started);
+  assert.ok(completed);
+  assert.match(started.label, /Project Context Search/);
 });
