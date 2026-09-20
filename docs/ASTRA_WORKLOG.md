@@ -228,6 +228,7 @@ Never mark local/physical verification PASS from repository inspection alone.
 
 ## In-flight checkpoint — Phase 18A
 
+- PR: **#111**;
 - branch: `astra/phase18a-repository-rc-gate`;
 - scope: one local repository-gate command + explicit GitHub CI diff-range check;
 - local command: `npm run release:repo-gate`;
