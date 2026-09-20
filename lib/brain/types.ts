@@ -39,6 +39,8 @@ export type AstraBrainEventType =
   | "memory.write.denied"
   | "skill.selected"
   | "policy.applied"
+  | "approval.requested"
+  | "approval.granted"
   | "provider.selected"
   | "provider.unavailable"
   | "agent.started"
@@ -125,7 +127,7 @@ export type AstraBrainStatus = {
 export interface AstraBrain {
   chat(input: string, options?: AstraBrainRunOptions): Promise<AstraBrainChatResult>;
   execute(
-    task: { input: string; approved?: boolean },
+    task: { input: string; approved?: boolean; approvalToken?: string },
     options?: AstraBrainRunOptions,
   ): Promise<AstraBrainChatResult>;
   cancel(): Promise<void>;
