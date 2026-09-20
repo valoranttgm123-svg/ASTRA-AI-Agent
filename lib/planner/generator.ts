@@ -160,7 +160,10 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "project.git.stage-files" ||
     toolId === "project.git.commit" ||
     toolId === "project.verify.npm-script" ||
-    toolId === "computer.app.launch"
+    toolId === "computer.app.launch" ||
+    toolId === "automation.create" ||
+    toolId === "automation.enable" ||
+    toolId === "automation.disable"
   ) {
     return 2;
   }
@@ -181,7 +184,8 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "email.read" ||
     toolId === "drive.search" ||
     toolId === "drive.read" ||
-    toolId === "computer.process.list"
+    toolId === "computer.process.list" ||
+    toolId === "automation.list"
   ) {
     return 1;
   }
