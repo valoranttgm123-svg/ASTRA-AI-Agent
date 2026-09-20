@@ -1,5 +1,25 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Existing Sonor workflow graph discovered
+
+The user already has a Codex-built local Sonor project/workflow graph at `http://127.0.0.1:55127/#graph`.
+
+Observed/confirmed product context:
+- Sonor already exposes the neural/workflow graph UI;
+- project grouping includes ALURKA, HASBI JAYA, TRADING and other local categories;
+- the UI already exposes Graphify relationship navigation and Obsidian linked-note context;
+- Sonor also aggregates project/files and Codex + ChatGPT conversation context.
+
+Decision: **do not rebuild Graphify/Obsidian inside ASTRA.** Treat Sonor as the existing local aggregation layer and connect ASTRA through a provider-neutral SonorBridge.
+
+Repository work already scaffolded:
+- `lib/brain/memory-sources.ts` — memory/provenance contracts;
+- `lib/brain/sonor.ts` — safe loopback-only bridge boundary;
+- `docs/SONOR_BRIDGE.md` — integration decision and verification checklist;
+- `.env.example` — Sonor disabled by default at `http://127.0.0.1:55127`.
+
+Do not invent Sonor API endpoints from the UI. On the target PC, inspect the actual local Sonor source/network contract first, then implement the verified search/health adapter. Until then Sonor is NOT_CONFIGURED rather than READY.
+
 ## 2026-09-20 — ASTRA MAX Phase 0–1 implementation checkpoint
 
 Phase 0 and Phase 1 are implemented on `astra/astra-max-production` and validated by CI.
