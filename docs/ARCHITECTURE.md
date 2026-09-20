@@ -646,3 +646,22 @@ Current code lives in `lib/automation/`.
 The layer intentionally does not persist jobs or execute tools yet. It only decides whether a bounded scheduled occurrence is due and whether the existing permission model allows that occurrence to proceed. This prevents a future scheduler from becoming an alternate path around ASTRA approvals.
 
 Safety constants currently enforce a one-hour minimum interval, a 30-day maximum interval, and a 30-minute maximum per-run runtime. Durable storage and the worker must remain private/local and must preserve global STOP cancellation.
+## Private automation store
+
+Phase 14B adds persistence only after Phase 14A validation:
+
+```text
+private .astra/automations.json
+          ↓
+bounded file-size check
+          ↓
+strict schema normalization
+          ↓
+duplicate-id rejection
+          ↓
+Phase 14A schedule + permission validation
+          ↓
+validated automation definitions
+```
+
+Malformed storage fails closed and returns zero definitions. The default store is private local data and remains excluded from Git through the existing `.astra/` boundary. No background scheduler is started by the store module itself.
