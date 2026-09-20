@@ -251,11 +251,12 @@ export function createProjectContextMemorySource(
         });
       }
 
-      records.sort(
-        (a, b) =>
-          b.relevance - a.relevance ||
-          b.provenance.timestamp.localeCompare(a.provenance.timestamp),
-      );
+      records.sort((a, b) => {
+        if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+        const aTime = Date.parse(a.provenance.timestamp ?? "") || 0;
+        const bTime = Date.parse(b.provenance.timestamp ?? "") || 0;
+        return bTime - aTime;
+      });
 
       const bounded = records.slice(
         0,
