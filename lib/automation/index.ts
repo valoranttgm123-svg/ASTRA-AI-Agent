@@ -38,3 +38,14 @@ export {
   ASTRA_AUTOMATION_MAX_WAITING_APPROVAL_PER_TICK,
   planAutomationTick,
 } from "./queue";
+
+export type {
+  AstraAutomationExecutionOutcome,
+  AstraAutomationExecutor,
+  AstraAutomationRunRecord,
+  AstraAutomationTickResult,
+} from "./runner";
+export type { AstraAutomationClaimResult } from "./store";
+
+export { runAutomationTickFromStore } from "./runner";
+export { claimAutomationOccurrence } from "./store";
