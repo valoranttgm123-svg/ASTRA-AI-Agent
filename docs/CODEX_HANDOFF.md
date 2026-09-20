@@ -1,5 +1,42 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 9 communication/cloud integration contracts
+
+Implemented on `astra/phase9-communication-cloud-integrations`:
+
+- provider-neutral `AstraIntegrationTransport`;
+- canonical CRM, Calendar, Email and Drive tool catalog;
+- read operations are Level 1;
+- account/cloud mutations are Level 3 external writes;
+- default runtime exposes every integration truthfully as `NOT_CONFIGURED`;
+- a provider may make only the exact capabilities it reports become `READY`;
+- provider results require `verified=true`; claimed success without verification is rejected;
+- planner permission floors cover integration reads/writes;
+- Brain feature status exposes aggregate integration readiness;
+- Command Center CRM/Calendar/Email/Drive nodes read live runtime status rather than inherited static labels;
+- capability nodes are now `partial`, not `planned`: the adapter exists, but real account/provider configuration is still required;
+- regression tests cover selective capability exposure, Level-1 reads, Level-3 approval/policy gates, unverified provider rejection, planner floors, and truthful node state.
+
+Canonical tool IDs:
+- `crm.search`
+- `crm.note.add`
+- `calendar.list`
+- `calendar.event.create`
+- `calendar.event.update`
+- `email.search`
+- `email.read`
+- `email.draft.create`
+- `email.send`
+- `drive.search`
+- `drive.read`
+- `drive.upload`
+
+Important truth:
+This milestone does not claim Gmail, Google Calendar, Drive, or any CRM is already connected inside the ASTRA local runtime. Real transports/OAuth remain external configuration. The architecture is now ready to accept verified providers without changing planner/approval semantics.
+
+Next milestone after merge:
+**Phase 10 — Design + Social**, using the same provider-neutral pattern and keeping publish/generation actions truthful and permission-gated.
+
 ## 2026-09-20 — Phase 8 Business Skills checkpoint
 
 This branch turns six legacy business nodes into truthful ASTRA capabilities without adding fake external integrations.

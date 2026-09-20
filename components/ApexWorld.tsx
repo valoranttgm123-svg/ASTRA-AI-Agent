@@ -397,6 +397,7 @@ export default function ApexWorld() {
               ["MEM", runtime.brainStatus.features.memory],
               ["SKILL", runtime.brainStatus.features.skills],
               ["CODEX", runtime.brainStatus.features.codex],
+              ["INT", runtime.brainStatus.features.integrations],
               ["TOOLS", runtime.brainStatus.features.tools],
               ["CLOUD", runtime.brainStatus.features.cloud],
             ] as const).map(([label, feature]) => (
@@ -470,14 +471,18 @@ export default function ApexWorld() {
               ? runtime.brainStatus?.features?.research?.state
               : ["finance", "editor", "sales", "marketing", "ops", "analytics"].includes(selected.key)
                 ? runtime.brainStatus?.features?.business?.state
-                : undefined
+                : ["crm", "calendar", "email", "drive"].includes(selected.key)
+                  ? runtime.brainStatus?.features?.integrations?.state
+                  : undefined
           }
           statusDetail={
             selected.key === "researcher"
               ? runtime.brainStatus?.features?.research?.detail
               : ["finance", "editor", "sales", "marketing", "ops", "analytics"].includes(selected.key)
                 ? runtime.brainStatus?.features?.business?.detail
-                : undefined
+                : ["crm", "calendar", "email", "drive"].includes(selected.key)
+                  ? runtime.brainStatus?.features?.integrations?.detail
+                  : undefined
           }
         />
       )}

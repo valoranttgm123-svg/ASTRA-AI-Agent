@@ -15,12 +15,18 @@ import { createGitHubToolRegistrations, GhCliGitHubTransport } from "./github";
 import { BROWSER_TOOL_DEFINITIONS, BROWSER_TOOL_HANDLERS } from "./browser";
 import type { AstraResearchTransport } from "./research";
 import { createResearchToolRegistrations, SearXngResearchTransport } from "./research";
+import type { AstraIntegrationTransport } from "./integrations";
+import {
+  createIntegrationToolRegistrations,
+  INTEGRATION_TOOL_DEFINITIONS,
+} from "./integrations";
 
 export function createNativeToolRuntime(): AstraExecutableToolRegistry {
   return createExecutableToolRegistry(
     [
       ...NATIVE_TOOL_DEFINITIONS,
       ...BROWSER_TOOL_DEFINITIONS,
+      ...INTEGRATION_TOOL_DEFINITIONS,
     ],
     {
       ...NATIVE_TOOL_HANDLERS,
@@ -33,11 +39,13 @@ export async function createToolRuntime(options?: {
   mcpTransports?: readonly AstraMcpTransport[];
   githubTransport?: AstraGitHubTransport;
   researchTransport?: AstraResearchTransport;
+  integrationTransports?: readonly AstraIntegrationTransport[];
   signal?: AbortSignal;
 }): Promise<AstraExecutableToolRegistry> {
   let definitions: AstraToolDefinition[] = [
     ...NATIVE_TOOL_DEFINITIONS,
     ...BROWSER_TOOL_DEFINITIONS,
+    ...INTEGRATION_TOOL_DEFINITIONS,
   ];
   const handlers: Record<string, AstraToolHandler> = {
     ...NATIVE_TOOL_HANDLERS,
@@ -75,6 +83,25 @@ export async function createToolRuntime(options?: {
     definitions.push(...research.definitions);
 
     for (const [id, handler] of Object.entries(research.handlers)) {
+      handlers[id] = handler;
+    }
+  }
+
+  for (const transport of options?.integrationTransports ?? []) {
+    const integration = await createIntegrationToolRegistrations(
+      transport,
+      options?.signal,
+    );
+    const integrationIds = new Set(
+      integration.definitions.map((definition) => definition.id),
+    );
+
+    definitions = definitions.filter(
+      (definition) => !integrationIds.has(definition.id),
+    );
+    definitions.push(...integration.definitions);
+
+    for (const [id, handler] of Object.entries(integration.handlers)) {
       handlers[id] = handler;
     }
   }

@@ -46,6 +46,10 @@ import { createExecutableToolRegistry } from "../lib/tools/executor";
 import { astraNativeToolRuntime, createToolRuntime } from "../lib/tools/runtime";
 import type { AstraMcpTransport } from "../lib/tools/mcp";
 import type { AstraGitHubTransport } from "../lib/tools/github";
+import {
+  createIntegrationToolRegistrations,
+  type AstraIntegrationTransport,
+} from "../lib/tools/integrations";
 import { parsePlannerDraft, shouldGeneratePlan } from "../lib/planner/generator";
 import { executeBoundedPlan } from "../lib/planner/executor";
 import { executeBrainPlan } from "../lib/brain/plan-executor";
@@ -3044,4 +3048,246 @@ test("Phase 8 deterministic business tools remain Level 1 and quantitative reque
     ),
     true,
   );
+});
+
+
+test("Phase 9 integration catalog stays NOT_CONFIGURED without a real provider", () => {
+  for (const id of [
+    "crm.search",
+    "crm.note.add",
+    "calendar.list",
+    "calendar.event.create",
+    "calendar.event.update",
+    "email.search",
+    "email.read",
+    "email.draft.create",
+    "email.send",
+    "drive.search",
+    "drive.read",
+    "drive.upload",
+  ]) {
+    assert.equal(
+      astraNativeToolRuntime.get(id)?.availability,
+      "NOT_CONFIGURED",
+      id,
+    );
+  }
+});
+
+test("Phase 9 provider exposes only capabilities it truthfully supports", async () => {
+  const calls: string[] = [];
+  const transport: AstraIntegrationTransport = {
+    provider: "fixture-cloud",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-cloud",
+        detail: "fixture connected",
+        capabilities: [
+          "email.search",
+          "email.send",
+          "calendar.list",
+          "drive.read",
+        ],
+      };
+    },
+    async call(capability, input) {
+      calls.push(capability);
+      return {
+        ok: true,
+        verified: true,
+        detail: "verified " + capability,
+        output: { capability, input },
+      };
+    },
+  };
+
+  const runtime = await createToolRuntime({
+    integrationTransports: [transport],
+  });
+
+  assert.equal(runtime.get("email.search")?.availability, "READY");
+  assert.equal(runtime.get("email.send")?.availability, "READY");
+  assert.equal(runtime.get("calendar.list")?.availability, "READY");
+  assert.equal(runtime.get("drive.read")?.availability, "READY");
+
+  assert.equal(runtime.get("crm.search")?.availability, "NOT_CONFIGURED");
+  assert.equal(runtime.get("drive.upload")?.availability, "NOT_CONFIGURED");
+
+  const read = await runtime.execute(
+    "email.search",
+    { query: "invoice" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(read.status, "completed");
+  assert.equal(read.verified, true);
+
+  const lowApproval = await runtime.execute(
+    "email.send",
+    {
+      to: "fixture@example.test",
+      subject: "Fixture",
+      body: "Fixture",
+    },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(lowApproval.status, "blocked");
+
+  const noExternalPolicy = await runtime.execute(
+    "email.send",
+    {
+      to: "fixture@example.test",
+      subject: "Fixture",
+      body: "Fixture",
+    },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(noExternalPolicy.status, "blocked");
+
+  const sent = await runtime.execute(
+    "email.send",
+    {
+      to: "fixture@example.test",
+      subject: "Fixture",
+      body: "Fixture",
+    },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(sent.status, "completed");
+  assert.equal(sent.verified, true);
+  assert.deepEqual(calls, ["email.search", "email.send"]);
+});
+
+test("Phase 9 provider success without verification is rejected", async () => {
+  const transport: AstraIntegrationTransport = {
+    provider: "fixture-unverified",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-unverified",
+        detail: "fixture connected",
+        capabilities: ["crm.search"],
+      };
+    },
+    async call() {
+      return {
+        ok: true,
+        verified: false,
+        detail: "provider claimed success without verification",
+        output: { fake: true },
+      };
+    },
+  };
+
+  const registrations = await createIntegrationToolRegistrations(transport);
+  const runtime = createExecutableToolRegistry(
+    registrations.definitions,
+    registrations.handlers,
+  );
+
+  const result = await runtime.execute(
+    "crm.search",
+    { query: "customer" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.verified, false);
+});
+
+test("Phase 9 planner enforces integration read/write permission floors", () => {
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "read-email",
+          title: "Search email",
+          kind: "tool",
+          agent: "communication",
+          permissionLevel: 0,
+          toolId: "email.search",
+          toolInput: { query: "invoice" },
+        },
+        {
+          id: "send-email",
+          title: "Send email",
+          kind: "tool",
+          agent: "communication",
+          permissionLevel: 0,
+          toolId: "email.send",
+          toolInput: {
+            to: "fixture@example.test",
+          },
+          dependsOn: ["read-email"],
+        },
+        {
+          id: "calendar",
+          title: "Read calendar",
+          kind: "tool",
+          agent: "communication",
+          permissionLevel: 0,
+          toolId: "calendar.list",
+        },
+        {
+          id: "upload",
+          title: "Upload artifact",
+          kind: "tool",
+          agent: "files",
+          permissionLevel: 0,
+          toolId: "drive.upload",
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].permissionLevel, 1);
+  assert.equal(steps[1].permissionLevel, 3);
+  assert.equal(steps[2].permissionLevel, 1);
+  assert.equal(steps[3].permissionLevel, 3);
+});
+
+test("Phase 9 integration capability nodes are partial and truthfully require configuration", () => {
+  for (const key of ["crm", "calendar", "email", "drive"] as const) {
+    const node = ASTRA_CAPABILITY_MAP[key];
+    assert.equal(node.implementation, "partial", key);
+    assert.equal(node.defaultState, "NOT_CONFIGURED", key);
+    assert.equal(node.requiresConfiguration, true, key);
+  }
 });
