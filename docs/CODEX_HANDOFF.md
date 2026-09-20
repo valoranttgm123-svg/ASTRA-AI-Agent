@@ -1330,3 +1330,40 @@ Next repository task after green CI/merge:
 **Phase 15C — Provider + MCP failure isolation.**
 
 Phase 14 target-PC validation remains an external/local gate and is not claimed complete.
+
+---
+
+## Handoff update — Phase 15C1 MCP failure isolation
+
+PR: **#99**
+
+Implemented:
+
+- MCP descriptor runtime validation;
+- bounded name/description/schema handling;
+- normalized stable MCP tool ids;
+- permission floor escalation from declared permission to side-effect minimum;
+- malformed MCP call results fail unverified;
+- one optional MCP discovery failure no longer destroys native/healthy Tool Runtime;
+- duplicate MCP ids are isolated instead of crashing registry construction;
+- MCP discovery AbortSignal is rethrown and never treated as an ordinary provider outage;
+- existing Tool Runtime input/output bounds remain authoritative.
+
+Regression tests:
+
+- `tests/mcp-hardening.test.ts`;
+- broken + healthy MCP servers together;
+- aborted discovery;
+- malformed/oversized descriptors;
+- duplicate normalized ids;
+- permission-floor mismatch;
+- malformed call result;
+- oversized MCP output.
+
+P15C is **not complete** yet.
+
+Next exact task after green CI/merge:
+
+**Phase 15C2 — provider outage/malformed-response matrix for Ollama, Hermes, Codex and optional Cloud.**
+
+Phase 14 target-PC validation and real Sonor validation remain external/local gates.
