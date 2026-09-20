@@ -1870,3 +1870,10 @@ This allows the upcoming local scheduler service to run bounded read-only work w
 ASTRA now has a single-flight local automation timer inside the existing ASTRA-Agent process. It is OFF by default and auto-starts only when `ASTRA_AUTOMATION_SERVICE_ENABLED=true`. Unattended execution is delegated exclusively to the hard-ceiling Level 0/1 Brain executor from Phase 14E1.
 
 The service exposes loopback health/control, a server-side active-tick STOP path, bounded recent lifecycle history, and Windows enable/disable tooling. Level 2/3 remain outside this unattended service and continue through exact-occurrence approval; Level 4 remains unavailable.
+## Phase 14E3 — final Automation integration
+
+The background Automation service now streams real lifecycle/status to the same browser Runtime/Command Center event path used by interactive ASTRA work. Background events drive the existing Ops node but do not overwrite the foreground active-agent label. Global STOP aborts both browser-owned Automation work and the active server-side service tick.
+
+The Automation panel reports the actual service state and only exposes START/STOP/RUN SAFE TICK when the service env opt-in permits it. A final end-to-end test covers store → queue → service → hard-ceiling Brain executor → durable claim/telemetry.
+
+Phase 14 code is implementation-complete after CI. Because the service is OFF by default, final production status remains `TARGET-PC VALIDATION REQUIRED` until `scripts/windows/validate-automation.ps1` is actually run successfully on the target PC. See `docs/AUTOMATION_VALIDATION.md`.
