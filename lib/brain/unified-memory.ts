@@ -3,6 +3,8 @@ import { getMemoryContext } from "./memory";
 import type { AstraMemoryLifecycleListener, AstraMemorySource } from "@/lib/memory/contracts";
 import { searchMemorySources } from "@/lib/memory/manager";
 import { sonorMemorySource } from "@/lib/memory/sonor";
+import type { AstraProjectRecord } from "@/lib/projects/contracts";
+import { createProjectContextMemorySource } from "@/lib/projects/context";
 
 function parsePositiveInt(
   value: string | undefined,
@@ -28,7 +30,7 @@ function recordToEntry(
 
 export async function getUnifiedMemoryContext(
   input: string,
-  project?: string,
+  project?: AstraProjectRecord,
   signal?: AbortSignal,
   onEvent?: AstraMemoryLifecycleListener,
 ): Promise<AstraMemoryContext> {
@@ -51,15 +53,19 @@ export async function getUnifiedMemoryContext(
   const limit = parsePositiveInt(process.env.ASTRA_MEMORY_MAX_ENTRIES, 6, 20);
   const maxChars = parsePositiveInt(process.env.ASTRA_MEMORY_MAX_CHARS, 4200, 16000);
 
+  const sources: AstraMemorySource[] = [localSource];
+  if (project) sources.push(createProjectContextMemorySource(project));
+  sources.push(sonorMemorySource);
+
   const aggregate = await searchMemorySources(
     {
       input,
-      project,
+      project: project?.name,
       limit,
       maxChars,
       signal,
     },
-    [localSource, sonorMemorySource],
+    sources,
     onEvent,
   );
 
@@ -85,17 +91,14 @@ export async function getUnifiedMemoryContext(
     used += line.length;
   }
 
-  const sonorResult = aggregate.sources.find(
-    (source) => source.sourceType === "sonor",
-  );
   const enabled =
     local.enabled ||
+    Boolean(project) ||
     Boolean(process.env.ASTRA_SONOR_ENABLED?.match(/^(1|true|on|yes)$/i));
 
   return {
     enabled,
-    available:
-      local.available || Boolean(sonorResult?.available),
+    available: aggregate.sources.some((source) => source.available),
     source: "astra-memory-manager",
     entries: entries.slice(0, lines.length),
     records: records.slice(0, lines.length),
