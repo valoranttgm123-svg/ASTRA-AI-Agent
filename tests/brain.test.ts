@@ -32,6 +32,7 @@ import {
   runnablePlanSteps,
   updatePlanStepStatus,
 } from "../lib/planner/planner";
+import { createToolRegistry } from "../lib/tools/registry";
 
 let root = "";
 let fixture: Server;
@@ -558,5 +559,101 @@ test("planner rejects empty goals and plans without valid steps", () => {
   );
   assert.throws(() =>
     createBoundedPlan("Goal", [{ title: "   ", kind: "inspect" }]),
+  );
+});
+
+
+test("Tool Registry enforces side-effect permission floors and READY provider truth", () => {
+  const registry = createToolRegistry([
+    {
+      id: "files.read",
+      name: "Read Files",
+      category: "filesystem",
+      description: "Read registered project files",
+      permissionLevel: 1,
+      sideEffect: "read",
+      timeoutMs: 5000,
+      supportsCancellation: true,
+      provider: "native-files",
+      availability: "READY",
+    },
+    {
+      id: "github.push",
+      name: "GitHub Push",
+      category: "github",
+      description: "Push an approved branch",
+      permissionLevel: 3,
+      sideEffect: "external_write",
+      timeoutMs: 999999,
+      supportsCancellation: true,
+      provider: "github",
+      availability: "NOT_CONFIGURED",
+    },
+  ]);
+
+  assert.equal(registry.list().length, 2);
+  assert.equal(registry.get("FILES.READ")?.id, "files.read");
+  assert.equal(registry.get("github.push")?.timeoutMs, 120000);
+  assert.throws(() =>
+    createToolRegistry([
+      {
+        id: "email.send",
+        name: "Send Email",
+        category: "email",
+        description: "Send an email",
+        permissionLevel: 1,
+        sideEffect: "external_write",
+        timeoutMs: 5000,
+        supportsCancellation: true,
+        provider: "gmail",
+        availability: "NOT_CONFIGURED",
+      },
+    ]),
+  );
+  assert.throws(() =>
+    createToolRegistry([
+      {
+        id: "missing-provider",
+        name: "Missing Provider",
+        category: "mcp",
+        description: "Invalid ready tool",
+        permissionLevel: 1,
+        sideEffect: "read",
+        timeoutMs: 5000,
+        supportsCancellation: true,
+        availability: "READY",
+      },
+    ]),
+  );
+});
+
+test("Tool Registry rejects duplicate normalized IDs", () => {
+  assert.throws(() =>
+    createToolRegistry([
+      {
+        id: "files.read",
+        name: "One",
+        category: "filesystem",
+        description: "One",
+        permissionLevel: 1,
+        sideEffect: "read",
+        timeoutMs: 5000,
+        supportsCancellation: true,
+        provider: "native",
+        availability: "READY",
+      },
+      {
+        id: "FILES.READ",
+        name: "Two",
+        category: "filesystem",
+        description: "Two",
+        permissionLevel: 1,
+        sideEffect: "read",
+        timeoutMs: 5000,
+        supportsCancellation: true,
+        provider: "native",
+        availability: "READY",
+      },
+    ]),
   );
 });
