@@ -197,3 +197,13 @@ Never mark local/physical verification PASS from repository inspection alone.
 - old NDJSON/`AsyncLocalStorage` telemetry is superseded by SSE/`onEvent`;
 - audit: `docs/PR51_TELEMETRY_AUDIT.md`;
 - next: merge audit documentation, then close PR #51 as superseded.
+
+## Repository cleanup — final status
+
+- PR #51: **closed as superseded**;
+- audit: `docs/PR51_TELEMETRY_AUDIT.md`;
+- open PR count after closure: **0**;
+- current tree secret/private-path audit: **no suspicious tracked path matched**;
+- historical branches remain intentionally as non-blocking snapshots;
+- cleanup evidence: `docs/REPOSITORY_CLEANUP.md`;
+- next repository-side work may prepare release/readiness tooling, but Phase 16/17 cannot be marked PASS without target-runtime evidence.
