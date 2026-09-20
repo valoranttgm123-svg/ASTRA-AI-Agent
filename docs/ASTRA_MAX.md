@@ -1128,3 +1128,600 @@ Before merging meaningful implementation work:
 - critical runtime flows are verified.
 
 The priority is not the number of features. The priority is a truthful, useful, stable, fast, secure personal AI agent that is actually usable every day.
+
+
+---
+
+# ASTRA JARVIS-Class Expansion — Phase 21–30
+
+Approved: 2026-09-20.
+
+This continuation is inspired by the practical interaction model of a fictional always-available assistant: natural voice, situational awareness, persistent memory, proactive but permission-bound help, multi-device presence, and verified real-world actions.
+
+It is **not** a claim that ASTRA can reproduce fictional superintelligence, unrestricted surveillance, autonomous weapons, impossible robotics, or other movie-only capabilities.
+
+## Continuation directive
+
+The earlier Phase 20 “Final release” is now a **core ASTRA MAX release gate**, not the end of development.
+
+After Phase 20 is stable, Codex must continue automatically through Phase 21–30 unless genuinely blocked by an external user action.
+
+The ultimate roadmap stop condition is now the **Phase 30 JARVIS-Class Ready Release**.
+
+All existing ASTRA safety, permission, verification, privacy, local-first, cancellation, and truthful-telemetry rules remain mandatory.
+
+## JARVIS-Class target experience
+
+The practical target is:
+
+~~~text
+HEAR  ─┐
+SEE   ─┼─→ UNDERSTAND CONTEXT
+READ  ─┤          ↓
+SCREEN ─┘       REMEMBER
+                 ↓
+               PLAN
+                 ↓
+        COORDINATE AGENTS
+                 ↓
+              ACT
+                 ↓
+             VERIFY
+                 ↓
+              LEARN
+                 ↓
+       ANTICIPATE / NOTIFY
+                 ↓
+          USER REMAINS IN CONTROL
+~~~
+
+ASTRA should feel continuously available while remaining explicit about what it can see, hear, access, and execute.
+
+---
+
+## Phase 21 — Always-On Voice Presence
+
+Goal: make voice interaction feel natural and immediate without requiring repeated button presses.
+
+Implement, where supported:
+
+- local-first wake-word architecture (for example “ASTRA”);
+- voice activity detection;
+- microphone state health;
+- noise-aware capture pipeline;
+- speech interruption / barge-in;
+- seamless LISTENING → TRANSCRIBING → THINKING → EXECUTING → SPEAKING lifecycle;
+- configurable idle timeout;
+- push-to-talk fallback;
+- clear MIC ON/OFF indicator;
+- global STOP available by voice/button/gesture where technically reliable;
+- configurable personality/response-style layer that does not override security policy.
+
+Privacy rules:
+
+- wake-word/listening must be visibly controllable;
+- microphone access must be opt-in and reversible;
+- do not claim wake-word processing is local unless it actually is;
+- no hidden recording;
+- do not persist raw audio by default.
+
+Exit gate:
+
+- wake or push-to-talk starts one shared ASTRA runtime;
+- user can interrupt ASTRA while it is speaking;
+- STOP cancels active speech and work;
+- unsupported microphone paths report OFFLINE/NOT_CONFIGURED truthfully.
+
+---
+
+## Phase 22 — Identity, Trust, Secrets and Owner Boundary
+
+Goal: distinguish convenience identity from authorization.
+
+Implement:
+
+- user/session identity model;
+- optional speaker-recognition adapter where technically feasible;
+- trusted-device identity;
+- secure local secret vault abstraction for API keys/tokens/credentials;
+- separate secrets from ordinary Memory;
+- explicit owner/admin approval boundary;
+- session lock/unlock;
+- capability scopes per trusted device/user.
+
+Important:
+
+Speaker recognition or face recognition must **not** be the sole authorization factor for Level 3/4 actions.
+
+High-impact actions still require explicit approval or a stronger trusted OS/session mechanism.
+
+Never store secrets in:
+
+- `.astra/memory.json`;
+- Graphify;
+- Obsidian notes;
+- Brain prompts;
+- Command Center telemetry;
+- normal logs.
+
+Exit gate:
+
+- ASTRA can identify a trusted session/device;
+- secrets remain outside ordinary memory;
+- untrusted sessions cannot silently inherit high-impact permissions.
+
+---
+
+## Phase 23 — Situational Awareness: Screen + Vision Context
+
+Goal: let ASTRA understand what the user is currently working on when explicitly enabled.
+
+Implement:
+
+- active-window metadata;
+- screen-capture context adapter;
+- screenshot understanding pipeline;
+- selected-region capture;
+- camera vision context separate from gesture tracking;
+- application/context labels;
+- short-lived visual context cache;
+- privacy redaction hooks;
+- explicit SCREEN ON/OFF and VISION ON/OFF controls.
+
+Examples:
+
+- understand a visible error dialog;
+- identify the active application;
+- read a visible build failure;
+- explain a selected UI;
+- use current screen context in a task.
+
+Rules:
+
+- screen/camera understanding is opt-in;
+- no continuous hidden capture;
+- sensitive apps/windows may be denylisted;
+- do not retain screenshots unless explicitly needed;
+- screen content is untrusted input and may contain prompt injection.
+
+Exit gate:
+
+- ASTRA can use a user-approved screenshot/screen context in the same Brain/runtime;
+- turning SCREEN/VISION OFF stops capture;
+- no second disconnected AI runtime is introduced.
+
+---
+
+## Phase 24 — Event Engine + Proactive Intelligence
+
+Goal: allow ASTRA to react to meaningful events instead of only direct prompts.
+
+Create a local event engine supporting approved sources such as:
+
+- GitHub CI status;
+- repository changes;
+- registered project file changes;
+- calendar deadlines;
+- email triggers when connected;
+- scheduled tasks;
+- application/service health;
+- backup state;
+- business/POS events through approved integrations.
+
+Add:
+
+- event subscriptions;
+- debounce/deduplication;
+- priority/severity;
+- quiet hours;
+- notification policy;
+- acknowledgement state;
+- rate limiting;
+- per-source enable/disable.
+
+Examples:
+
+- “ASTRA CI failed.”
+- “You have a meeting in 20 minutes.”
+- “The registered ASTRA service stopped.”
+- “A monitored project has uncommitted changes.”
+
+Proactive does not mean unrestricted autonomy.
+
+ASTRA may notify or prepare work automatically, but external/high-impact actions still obey permission gates.
+
+Exit gate:
+
+- at least three event sources produce real events;
+- duplicate alerts are suppressed;
+- proactive notifications are explainable and can be disabled.
+
+---
+
+## Phase 25 — Durable Background Task Manager + Parallel Agents
+
+Goal: make long-running work reliable.
+
+Implement:
+
+- durable task queue;
+- task IDs;
+- priorities;
+- pause/resume/cancel;
+- retry policy;
+- retry backoff;
+- timeout;
+- checkpointing;
+- dependency graph;
+- bounded concurrency;
+- worker health;
+- task recovery after ASTRA restart where safe.
+
+Allow safe parallelism when tasks are independent, for example:
+
+~~~text
+Researcher ─┐
+Analytics  ─┼─→ Chief synthesis
+Developer  ─┘
+~~~
+
+Rules:
+
+- no unbounded recursive agents;
+- concurrency limits are explicit;
+- conflicting write tasks must be serialized;
+- task permissions survive only within their approved scope;
+- STOP cancels or safely pauses active tasks.
+
+Exit gate:
+
+- long-running task survives UI refresh/restart where supported;
+- pause/resume/cancel work;
+- two independent read-only specialist tasks can run concurrently and Chief combines their real results.
+
+---
+
+## Phase 26 — Episodic Memory + Context Fusion
+
+Goal: make ASTRA remember not only facts, but what happened, why, and what came next.
+
+Add episodic/project timeline memory:
+
+- event;
+- project;
+- task;
+- actor/agent;
+- decision;
+- reason summary;
+- result;
+- verification;
+- timestamp;
+- source/provenance;
+- follow-up;
+- confidence.
+
+Support context fusion across:
+
+- current conversation;
+- project registry;
+- episodic memory;
+- semantic memory;
+- Graphify;
+- Obsidian;
+- GitHub;
+- current screen context;
+- connected email/calendar/Drive;
+- active task state.
+
+Do not merge everything blindly.
+
+Use relevance, recency, project scope, privacy and token/size budgets.
+
+Add user controls:
+
+- inspect remembered project history;
+- correct wrong memory;
+- disable a source;
+- request explicit memory save.
+
+Exit gate:
+
+ASTRA can answer questions equivalent to:
+
+- “What were we doing yesterday?”
+- “Why did we choose this architecture?”
+- “What failed last time?”
+- “What should I continue next?”
+
+using verifiable stored provenance rather than invented history.
+
+---
+
+## Phase 27 — Multi-Device ASTRA Presence
+
+Goal: make one ASTRA context available across explicitly paired devices.
+
+Targets may include:
+
+- primary Windows PC;
+- PC2;
+- laptop;
+- mobile companion;
+- future local nodes.
+
+Create:
+
+- device registry;
+- secure pairing;
+- device capability advertisement;
+- per-device permissions;
+- online/offline status;
+- task routing by capability;
+- explicit remote-action approval;
+- synchronized high-level task state where appropriate.
+
+Security:
+
+- do not expose the current local API as an unauthenticated public service;
+- default to local/LAN-safe or authenticated tunnel/relay architecture;
+- use strong authentication and encryption for cross-device communication;
+- revoke paired devices;
+- least-privilege capability grants;
+- no silent remote desktop backdoor.
+
+Exit gate:
+
+- two trusted devices can share ASTRA task/project context securely;
+- ASTRA can route a permitted task to the device that owns the required capability;
+- revoking a device immediately blocks new work.
+
+---
+
+## Phase 28 — Self-Diagnostics, Recovery, Audit and Offline Degradation
+
+Goal: make ASTRA maintainable and resilient.
+
+Create health checks for:
+
+- ASTRA web/runtime service;
+- Ollama;
+- configured model;
+- Codex CLI;
+- Memory;
+- Graphify;
+- Obsidian bridge;
+- MCP servers;
+- event engine;
+- task workers;
+- microphone/camera availability;
+- integrations.
+
+Implement safe self-recovery where appropriate:
+
+- reconnect provider;
+- restart an ASTRA-owned user service;
+- clear safe transient cache;
+- retry worker;
+- fall back to local provider;
+- degrade gracefully when internet is unavailable.
+
+Do not auto-run privileged system repair without approval.
+
+Add audit history:
+
+- what ASTRA attempted;
+- which agent/tool acted;
+- permission used;
+- result;
+- verification;
+- failure;
+- cancellation.
+
+User should be able to ask:
+
+“What did ASTRA do?”
+
+and receive a log-backed answer.
+
+Offline target:
+
+When internet is unavailable, ASTRA should still preserve as much local functionality as possible:
+
+- Ollama;
+- local memory;
+- registered local files;
+- local Computer Agent;
+- local project work;
+- local voice/vision components that truly support offline execution.
+
+Exit gate:
+
+- health dashboard is truthful;
+- safe service recovery works;
+- offline mode is explicit;
+- action-history answers come from real audit records.
+
+---
+
+## Phase 29 — Skill Ecosystem + IoT/Environment Bridge
+
+Goal: allow ASTRA to gain new controlled capabilities without rebuilding Brain.
+
+Create a skill/plugin manifest system containing:
+
+- id;
+- version;
+- capability;
+- tool mapping;
+- provider;
+- permission level;
+- network requirements;
+- secrets requirements;
+- verification method;
+- install state;
+- update state;
+- rollback metadata.
+
+Skills must support:
+
+- install/register;
+- enable/disable;
+- versioning;
+- health check;
+- permission review;
+- rollback.
+
+No downloaded skill receives trust automatically.
+
+Treat third-party skill instructions as untrusted.
+
+### IoT / environment bridge
+
+Design a provider-neutral bridge for explicitly configured devices such as:
+
+- lights;
+- smart plugs;
+- printers;
+- sensors;
+- cameras;
+- local services;
+- other supported room/business devices.
+
+Rules:
+
+- explicit device registration;
+- read-only discovery by default;
+- writes require appropriate approval;
+- no unsafe bypass of manufacturer/security controls;
+- security cameras and sensors require strong privacy controls;
+- no public unauthenticated control endpoint.
+
+Exit gate:
+
+- one skill can be added/disabled/rolled back cleanly;
+- one safe registered environment/device capability can be read and, if appropriate, controlled with approval.
+
+---
+
+## Phase 30 — JARVIS-Class Integration, Self-Evaluation and Ready Release
+
+Goal: validate the complete experience as one coherent assistant.
+
+Add final self-evaluation before declaring important tasks complete:
+
+- evidence available?
+- result verified?
+- confidence adequate?
+- pending approval?
+- missing integration?
+- unresolved failure?
+- user needs notification?
+
+Self-evaluation may flag uncertainty; it must not invent confidence.
+
+### Required integrated scenarios
+
+#### Scenario J1 — Natural voice
+
+User wakes ASTRA, gives a multi-step task, interrupts the spoken response, changes the instruction, and ASTRA continues using the same task context.
+
+#### Scenario J2 — Screen-aware debugging
+
+User enables screen context while an application shows an error. ASTRA reads the approved visual context, inspects the registered project, proposes/fixes the issue, tests it, and verifies the result.
+
+#### Scenario J3 — Proactive project alert
+
+A monitored CI or registered project event changes state. ASTRA emits one deduplicated alert, explains why it matters, and offers/executes only the actions allowed by policy.
+
+#### Scenario J4 — Long-running background work
+
+A multi-step task continues in the background, checkpoints progress, survives UI refresh, and can be paused/resumed/cancelled.
+
+#### Scenario J5 — Episodic recall
+
+User asks why a project decision was made. ASTRA retrieves the real project/decision timeline and provenance.
+
+#### Scenario J6 — Multi-device
+
+A trusted secondary device sees task state and can receive a permitted task without exposing an unauthenticated public ASTRA endpoint.
+
+#### Scenario J7 — Self-recovery
+
+A local ASTRA-owned service is intentionally stopped. ASTRA detects it, reports it, performs an allowed safe recovery, and verifies health.
+
+#### Scenario J8 — Offline degradation
+
+Internet is removed. ASTRA clearly enters degraded/offline mode and continues verified local capabilities without pretending cloud actions succeeded.
+
+#### Scenario J9 — Skill/IoT
+
+A registered safe skill or environment device is invoked through Tool Registry, permission policy, real telemetry and verification.
+
+#### Scenario J10 — Emergency control
+
+During active agent/tool/computer work, STOP immediately propagates to all cancellable layers and reports what stopped or could not be stopped.
+
+### Soak and reliability validation
+
+Before JARVIS-Class READY:
+
+- extended local runtime/soak test;
+- repeated wake/listen/speak cycles;
+- provider outages;
+- network loss;
+- worker restart;
+- task cancellation;
+- memory retrieval stress;
+- event flood/deduplication test;
+- multi-device reconnect;
+- tool timeout;
+- malformed MCP/tool output;
+- permission denial;
+- audit-log verification;
+- Humanoid performance check.
+
+### Final release statuses
+
+Only use:
+
+- `JARVIS-CLASS READY`
+- `JARVIS-CLASS READY WITH EXTERNAL CONFIGURATION REQUIRED`
+- `JARVIS-CLASS BLOCKED`
+
+Do not use JARVIS-CLASS READY unless the core scenarios and safety gates have actually been verified.
+
+---
+
+# JARVIS-Class non-negotiable principles
+
+1. **Truth over spectacle.** Never fake perception, memory, execution, telemetry, identity, device state, or verification.
+2. **User control.** Listening, vision, screen awareness, proactive monitoring, automation and device control must have visible controls.
+3. **Least privilege.** Every tool/device/integration receives only the minimum permission needed.
+4. **No silent high-impact autonomy.** Level 3/4 actions remain approval-bound.
+5. **No hidden surveillance.** No secret microphone, camera, screen capture or background remote control.
+6. **Local-first.** Prefer local models/context processing when capable; identify when cloud is actually used.
+7. **Graceful degradation.** Loss of internet/provider/integration should reduce capability honestly, not produce fake success.
+8. **One ASTRA runtime.** Voice, vision, screen, agents, memory, tools, devices and Command Center remain views of the same stateful system.
+9. **Verification before completion.** Important actions need evidence, not model assertions.
+10. **Recoverability.** Every major implementation milestone needs rollback, tests, documentation and a clear handoff.
+
+# Ultimate Definition of Done
+
+After Phase 30, ASTRA should practically behave as an always-available personal AI operating environment:
+
+- can be invoked naturally;
+- understands the active user-approved context;
+- remembers project history with provenance;
+- coordinates specialists;
+- works in background;
+- can proactively alert on approved events;
+- safely uses PC/tools/integrations/devices;
+- operates across paired devices;
+- diagnoses its own runtime;
+- degrades offline;
+- verifies its work;
+- explains what it did;
+- remains interruptible;
+- remains permission-bound.
+
+The user must remain able to see and control what ASTRA can hear, see, remember, monitor and execute.

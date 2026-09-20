@@ -440,3 +440,35 @@ A visual node is not evidence of a working capability. Real runtime events and r
 ASTRA is not considered ready merely because individual modules exist. It is ready only when it can truthfully identify a project, retrieve relevant memory, plan work, select real agents/tools, request permissions, execute permitted steps, stream progress, verify results, report failures honestly, and preserve useful project state while the Humanoid remains responsive and global STOP works.
 
 See `docs/ASTRA_MAX.md` for the full Definition of Done, permission model, security boundaries, verification requirements, final-report format, and Git strategy.
+
+
+---
+
+# ASTRA JARVIS-Class Expansion — approved continuation after Phase 20
+
+Detailed specification: `docs/ASTRA_MAX.md#astra-jarvis-class-expansion--phase-2130`.
+
+Product decision on 2026-09-20: Phase 20 is now the **ASTRA MAX Core Release Gate**, not the terminal roadmap stop. After the core release is stable, Codex should continue through Phase 21–30 automatically unless a genuine external/user action blocks progress.
+
+## Phase 21–30 sequence
+
+21. **Always-On Voice Presence** — wake word architecture, VAD, interruption/barge-in, truthful mic state, personality layer.
+22. **Identity / Trust / Secrets** — trusted session/device identity, optional speaker recognition, secure secret vault, explicit authorization boundaries.
+23. **Situational Awareness** — opt-in screen context, screenshot understanding, camera vision, active application context and privacy controls.
+24. **Event Engine + Proactive Intelligence** — approved event subscriptions, proactive alerts, dedupe, quiet hours and notification policy.
+25. **Background Tasks + Parallel Agents** — durable queue, checkpoints, pause/resume/cancel, bounded concurrency and safe parallel specialist work.
+26. **Episodic Memory + Context Fusion** — project timeline, decisions/results/provenance, relevance-bounded fusion across memory/project/screen/integrations.
+27. **Multi-Device Presence** — secure pairing, device registry, per-device capability permissions and safe task routing.
+28. **Self-Diagnostics / Recovery / Audit / Offline** — health checks, safe recovery, action history and graceful local-first degradation.
+29. **Skill Ecosystem + IoT Bridge** — versioned permission-reviewed skills plus explicitly registered environment/device capabilities.
+30. **JARVIS-Class Integration + Self-Evaluation + Ready Release** — integrated scenarios, soak/reliability tests, final safety/performance/verification gates.
+
+## Ultimate roadmap stop condition
+
+The final completion status is one of:
+
+- `JARVIS-CLASS READY`
+- `JARVIS-CLASS READY WITH EXTERNAL CONFIGURATION REQUIRED`
+- `JARVIS-CLASS BLOCKED`
+
+The “JARVIS-Class” label describes the practical assistant experience target, not fictional superintelligence or impossible movie capabilities.
