@@ -210,6 +210,7 @@ Never mark local/physical verification PASS from repository inspection alone.
 
 ## In-flight checkpoint — Phase 19A
 
+- PR: **#109**;
 - branch: `astra/phase19a-readonly-self-check`;
 - scope: read-only running-ASTRA readiness evidence + Windows startup-task presence;
 - command: `npm run release:self-check`;
