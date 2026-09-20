@@ -103,4 +103,5 @@ At creation of this protocol:
 - Phase 17A preflight tooling: merged/CI verified;
 - repository cleanup before RC: complete;
 - Phase 19A read-only readiness self-check tooling: merged/CI verified;
-- current implementable repository work: **Phase 19B safe update/reinstall tooling**.
+- Phase 19B safe update/reinstall tooling: merged/CI verified;
+- current implementable repository work: **Phase 18A repository RC gate automation**.
