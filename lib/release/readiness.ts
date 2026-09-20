@@ -34,6 +34,19 @@ function stringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
 }
 
+function normalizeReadinessState(
+  value: unknown,
+): ReadinessState {
+  return value === "READY" ||
+    value === "OFFLINE" ||
+    value === "NOT_CONFIGURED" ||
+    value === "ERROR" ||
+    value === "UNKNOWN" ||
+    value === "NOT_APPLICABLE"
+    ? value
+    : "UNKNOWN";
+}
+
 export function featureState(
   value: unknown,
 ): ReadinessState {
@@ -93,21 +106,23 @@ export function extractBrainReadiness(
     ? payload.permissions
     : {};
 
-  const capabilityStates = Object.fromEntries(
-    Object.entries(capabilities).map(([key, value]) => [
-      key,
-      isRecord(value)
-        ? stringValue(value.state) ?? "UNKNOWN"
-        : "UNKNOWN",
-    ]),
-  );
+  const capabilityStates: Record<string, ReadinessState> =
+    Object.fromEntries(
+      Object.entries(capabilities).map(([key, value]) => [
+        key,
+        isRecord(value)
+          ? normalizeReadinessState(value.state)
+          : "UNKNOWN",
+      ]),
+    );
 
-  const featureStates = Object.fromEntries(
-    Object.entries(features).map(([key, value]) => [
-      key,
-      featureState(value),
-    ]),
-  );
+  const featureStates: Record<string, ReadinessState> =
+    Object.fromEntries(
+      Object.entries(features).map(([key, value]) => [
+        key,
+        featureState(value),
+      ]),
+    );
 
   const strategistState =
     typeof capabilityStates.strategist === "string"
