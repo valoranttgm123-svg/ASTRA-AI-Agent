@@ -17,7 +17,7 @@ Primary implementation branch when work begins: `astra/astra-max-production`
 - **Phase 3 scoped project-context loading: IMPLEMENTED.** ASTRA may read only explicitly registered `docs` / `importantFiles` under the resolved project's registered `workspace`. It does not scan directories, rejects path escape/symlink escape, blocks secret/key files, applies file-count/size/type limits, and feeds accepted content into the same provenance-aware Memory Manager as source `project`.
 - **Phase 4 safety foundation — Planner contracts: COMPLETE.** Plans are bounded to 12 steps, retries to 2, step timeouts to 120 seconds, permissions to levels 0–4, and dependencies to already-created steps. No model-driven planning or autonomous execution is enabled yet.
 - **Phase 6 foundation — Tool Registry metadata: COMPLETE EARLY.** A provider-neutral non-executing registry now validates category, provider, availability, timeout, side-effect class and permission floor. No tool handler/MCP/shell/email/computer action is enabled yet.
-- **Next Codex implementation sequence:** inspect/configure the real local Sonor endpoint on the target PC; implement real Phase 4 Strategist/Planner generation using the existing safety contracts; then Phase 5 orchestration and Phase 6 real tool/MCP handlers behind permission + approval + verification.
+- **Next Codex implementation sequence:** follow `docs/SONOR_CODEX_MISSION.md` for the existing local Sonor (preserve/audit/private-backup/reuse existing APIs/minimal compatibility layer/real validation), follow `docs/SONOR_UI_INTEGRATION.md` for the ASTRA-side knowledge UI, then continue real Phase 4 Strategist/Planner generation, Phase 5 orchestration and Phase 6 tool/MCP handlers behind permission + approval + verification.
 
 ## Mission
 
