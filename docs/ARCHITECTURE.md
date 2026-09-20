@@ -859,3 +859,33 @@ requirePlan + hard permission ceiling
 The timer does not create a third Windows Scheduled Task. Level 2/3 occurrences remain visible in the approval queue and are never executed by the background service.
 
 Crash/restart semantics remain fail-safe: a claimed occurrence is not silently replayed. Interval scheduling resumes from the current eligible occurrence; an overdue unclaimed one-time definition remains due.
+## Final Automation runtime topology
+
+After Phase 14E3:
+
+```text
+                       ┌─ interactive Level 2/3 approval SSE ─┐
+ASTRA UI / Runtime ────┤                                     ├─→ brainEvents / brainTrace → Ops
+                       └─ background service telemetry SSE ──┘
+          │
+          └─ GLOBAL STOP
+                 ├─ browser request AbortController
+                 └─ POST /api/automation/service { stop-active }
+
+ASTRA-Agent
+   │
+   ├─ Automation control/status APIs (loopback only)
+   ├─ optional in-process service (OFF by default)
+   │       ↓
+   │   single-flight tick
+   │       ↓
+   │   Level 0/1 only
+   │       ↓
+   │   local Ollama + bounded plan + hard Brain permission ceiling
+   │
+   └─ Level 2/3 remain explicit exact-occurrence approval paths
+```
+
+The browser has no second Automation event bus. Both interactive and background Automation lifecycle ultimately enter the same Command Center capability runtime map.
+
+See `docs/AUTOMATION_VALIDATION.md` for target-PC completion criteria.
