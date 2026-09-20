@@ -14,3 +14,14 @@ export {
   getAutomationDueState,
   validateAutomationDefinition,
 } from "./scheduler";
+
+export type { AstraAutomationStoreContext } from "./store";
+
+export {
+  ASTRA_AUTOMATION_MAX_ENTRIES,
+  ASTRA_AUTOMATION_MAX_FILE_BYTES,
+  getAutomationStorePath,
+  loadAutomationStore,
+  normalizeAutomationDefinitions,
+  saveAutomationStore,
+} from "./store";
