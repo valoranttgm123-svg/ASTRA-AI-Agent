@@ -146,7 +146,25 @@ export default function ReasoningWeb({ state = 'standby', trace = null, mode = '
         fillG.append(c)
       })
       const map = {}, pts = []
-      NODES.forEach((r) => { const n = { id: r[0], label: r[1], layer: r[2], x: r[3], y: r[4], live: r[5], bend: r[6], r: r[7], col: P.col[r[2]] || COL[r[2]] }; map[r[0]] = n; pts.push(n) })
+      const STATE_COL = {
+        ACTIVE: '#63eaff',
+        WAITING_APPROVAL: '#f5b942',
+        BLOCKED: '#ff9d66',
+        OFFLINE: '#64748b',
+        NOT_CONFIGURED: '#7f9bb3',
+        ERROR: '#ff5f6d',
+      }
+      NODES.forEach((r) => {
+        const state = r[8] || (r[5] ? 'READY' : 'NOT_CONFIGURED')
+        const layerCol = P.col[r[2]] || COL[r[2]]
+        const n = {
+          id: r[0], label: r[1], layer: r[2], x: r[3], y: r[4],
+          live: r[5], bend: r[6], r: r[7], state,
+          col: STATE_COL[state] || layerCol,
+        }
+        map[r[0]] = n
+        pts.push(n)
+      })
       // Keep a clear moat around the centre so no node sits ON the orb — push the inner ring out.
       const MINR = 128
       pts.forEach((n) => { const dx = n.x - AX, dy = n.y - AY, d = Math.hypot(dx, dy) || 1; if (d < MINR) { n.x = AX + dx / d * MINR; n.y = AY + dy / d * MINR } })
@@ -172,12 +190,13 @@ export default function ReasoningWeb({ state = 'standby', trace = null, mode = '
         // Visual hierarchy (UI sweep): tool dorms + unbuilt nodes must not carry the same label weight
         // as live AGENTS — a dashed "Drive" reading as big as "Design" was misleading the map.
         const minor = !n.live || n.layer === 'tool'
+        const terminalState = n.state === 'ERROR' || n.state === 'BLOCKED'
         const t = mk('text', {
           x: above ? n.x : n.x + ux * off,
           y: above ? n.y - (rr + 9) : n.y + uy * off + (Math.abs(uy) < 0.3 ? 4 : 0),
           'text-anchor': above ? 'middle' : (ux > 0.3 ? 'start' : (ux < -0.3 ? 'end' : 'middle')),
           'font-size': minor ? 9.5 : 12, 'font-family': 'inherit',
-          fill: !n.live ? P.labelDorm : (minor ? P.labelMinor : P.label),
+          fill: terminalState ? n.col : (!n.live ? P.labelDorm : (minor ? P.labelMinor : P.label)),
           opacity: !n.live ? 0.75 : 1 })
         t.textContent = n.label
         nodesG.append(t)
@@ -313,7 +332,7 @@ export default function ReasoningWeb({ state = 'standby', trace = null, mode = '
       <svg ref={svgRef} width="100%" height="100%" viewBox={viewBox || "0 0 680 480"}
            preserveAspectRatio="xMidYMid meet"
            style={{ fontFamily: 'inherit', pointerEvents: 'none', overflow: 'visible' }}
-           role="img" aria-label="Apex reasoning web" />
+           role="img" aria-label="ASTRA live capability web" />
     </>
   )
 }
