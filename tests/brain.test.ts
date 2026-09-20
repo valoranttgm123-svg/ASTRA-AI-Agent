@@ -32,8 +32,8 @@ before(async () => {
   await writeFile(
     path.join(root, "memory.json"),
     JSON.stringify([
-      { id: "one", text: "ASTRA local provider decision", tags: ["astra"] },
-      { id: "two", text: "Ollama remains private and bounded", tags: ["ollama"] },
+      { id: "one", text: "ASTRA local provider decision", tags: ["astra"], project: "ASTRA", updatedAt: "2026-09-20T00:00:00Z" },
+      { id: "two", text: "Ollama remains private and bounded", tags: ["ollama"], project: "ASTRA", updatedAt: "2026-09-20T01:00:00Z" },
     ]),
   );
 
@@ -168,11 +168,19 @@ test("request parser validates size, shape, mode, and provider", async () => {
   );
 });
 
-test("memory retrieval is local and bounded", async () => {
+test("memory retrieval is local, bounded, and carries provenance", async () => {
   const context = await getMemoryContext("Ollama ASTRA");
   assert.equal(context.entries.length, 1);
+  assert.equal(context.records.length, 1);
   assert.ok(context.text.length <= 80);
   assert.match(context.text, /ASTRA|Ollama/);
+  assert.equal(context.records[0].provenance.sourceType, "local");
+  assert.equal(context.records[0].provenance.source, "astra-local-memory");
+  assert.equal(context.records[0].provenance.project, "ASTRA");
+  assert.equal(context.records[0].provenance.privacy, "private_local");
+  assert.match(context.records[0].provenance.reference, /^local:/);
+  assert.ok(context.records[0].relevance >= 0 && context.records[0].relevance <= 1);
+  assert.equal(context.records[0].confidence, 1);
 });
 
 test("permission policy defaults to approval and denies side effects", () => {
@@ -293,4 +301,10 @@ test("every execution agent maps to a registered visual capability node", () => 
   assert.equal(visualNodeForAgent("computer"), "ops");
   assert.equal(visualNodeForAgent("communication"), "email");
   assert.equal(visualNodeForAgent("files"), "drive");
+});
+
+
+test("Brain envelope reports retrieved memory source types", async () => {
+  const result = await astraBrain.chat("ASTRA provider", { provider: "ollama" });
+  assert.deepEqual(result.brain.context?.memorySources, ["local"]);
 });
