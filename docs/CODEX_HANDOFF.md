@@ -1134,3 +1134,21 @@ Next exact task:
 **Phase 14D3B2 — minimal Automation panel.**
 
 Use the existing `/api/automation` definition API and `runAutomationOccurrence()`. The panel should show definitions/queue state, allow create/edit in paused state, enable/pause/disable/delete, approve exact due Level-2/3 occurrences, display existing Level-3 scope, and call the existing global STOP. Do not add an always-on timer yet.
+## Handoff update — Phase 14D3B2 Automation panel
+
+Completed:
+
+- `components/AstraAutomationPanel.tsx`;
+- panel mounted in `app/page.tsx`;
+- responsive Automation styling;
+- safe definition lifecycle controls;
+- due Level-2/3 approval UI;
+- existing Level-3 scope review;
+- shared STOP button;
+- Automation lifecycle coloring in Command Center.
+
+Next exact task:
+
+**Phase 14E — explicit opt-in local automation service.**
+
+Implement an in-process/local-service timer that is OFF by default, executes only Permission Level 0/1 through the bounded runner, uses the real ASTRA Brain/Planner/Tool Runtime under a hard read-only permission ceiling, exposes truthful service health/status, supports server-side global STOP, prevents overlapping ticks, preserves durable at-most-once claims, and never executes Level 2/3 unattended. Then perform CI and target-PC activation validation before Phase 14 is marked complete.
