@@ -15,7 +15,8 @@ Current `main` checkpoint:
 - Phase 17A safe validation preflight: **merged / CI verified**;
 - repository cleanup before RC: **complete**;
 - Phase 19A read-only readiness self-check: **merged / CI verified**;
-- current branch gate: **Phase 19B — safe update/reinstall tooling**;
+- Phase 19B safe update/reinstall tooling: **merged / CI verified**;
+- current branch gate: **Phase 18A — repository RC gate automation**;
 - Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
 - real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**.
@@ -224,3 +225,13 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: fast-forward-only updater, non-destructive reinstall/repair wrapper, Windows release operations guide and safety regression tests merged.
 - truth boundary: target-PC update/reinstall behavior remains unverified until actually executed.
+
+## In-flight checkpoint — Phase 18A
+
+- branch: `astra/phase18a-repository-rc-gate`;
+- scope: one local repository-gate command + explicit GitHub CI diff-range check;
+- local command: `npm run release:repo-gate`;
+- required categories: test, typecheck, lint, build, high-severity audit, `git diff --check`;
+- GitHub checkout uses full history for PR/push range validation;
+- no RC/READY claim is produced by this tooling;
+- Phase 14 target-PC, MEM-X, Phase 16 measurements, Phase 17 scenarios and Phase 19 target-PC evidence remain separate program gates.
