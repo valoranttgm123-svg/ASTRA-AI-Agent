@@ -19,7 +19,11 @@ export async function POST(request: Request) {
   try {
     guardRequest(request, true);
     const body = parseAgentRequest(await readJson(request));
-    const options = { provider: body.provider, signal: request.signal };
+    const options = {
+      provider: body.provider,
+      inputContext: body.inputContext,
+      signal: request.signal,
+    };
     const result =
       body.mode === "execute"
         ? await astraBrain.execute(
