@@ -4,6 +4,7 @@ import type {
   AstraProviderChoice,
 } from "@/lib/agent/types";
 import type { AstraMemorySourceType } from "@/lib/memory/contracts";
+import type { AstraPlan } from "@/lib/planner/contracts";
 
 export type AstraBrainProvider =
   | "routing_only"
@@ -85,6 +86,7 @@ export type AstraBrainEnvelope = {
   route: AstraAgentKey[];
   visualNodes: string[];
   events: AstraBrainEvent[];
+  plan?: AstraPlan;
   context?: {
     memoryEntries: number;
     memorySources?: AstraMemorySourceType[];
