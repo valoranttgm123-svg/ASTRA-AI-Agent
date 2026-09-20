@@ -1105,3 +1105,17 @@ Next exact task:
 Add an SSE path for automation occurrence lifecycle and underlying Brain events so Command Center can update live. Then add a minimal Automation panel using the existing loopback definition API: list status, create/edit paused definitions, enable/pause/disable, approve exact due Level 2/3 occurrence, show Level-3 scope, STOP active run.
 
 Do not start an always-on Windows timer/service until the live control/STOP path is proven.
+## Handoff update — Phase 14D3A automation SSE
+
+Added:
+
+- `app/api/automation/run/stream/route.ts`;
+- real-time automation + Brain event streaming;
+- final result/error SSE frames;
+- request-abort propagation.
+
+Next exact task:
+
+**Phase 14D3B — frontend Automation controls + Command Center stream consumption.**
+
+Reuse this SSE endpoint. Do not create a second event bus. Append streamed Brain events into the existing ASTRA Runtime event list so the existing Ops capability mapping drives the Command Center truthfully.
