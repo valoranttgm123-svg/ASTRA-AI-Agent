@@ -43,6 +43,7 @@ import { createToolRegistry } from "../lib/tools/registry";
 import { createExecutableToolRegistry } from "../lib/tools/executor";
 import { astraNativeToolRuntime, createToolRuntime } from "../lib/tools/runtime";
 import type { AstraMcpTransport } from "../lib/tools/mcp";
+import type { AstraGitHubTransport } from "../lib/tools/github";
 import { parsePlannerDraft, shouldGeneratePlan } from "../lib/planner/generator";
 import { executeBoundedPlan } from "../lib/planner/executor";
 
@@ -201,30 +202,48 @@ before(async () => {
 
       if (input?.startsWith("ASTRA_PLAN_REQUEST")) {
         const reasonOnly = input.includes("reason-only-plan");
-        const steps = reasonOnly
+        const toolAware = input.includes("tool-aware-plan");
+        const steps = toolAware
           ? [
               {
-                id: "reason-1",
-                title: "Analyze the goal and constraints",
-                kind: "reason",
-                agent: "business",
+                id: "git-status",
+                title: "Read the registered project Git status",
+                kind: "tool",
+                agent: "github",
                 permissionLevel: 0,
                 dependsOn: [],
                 timeoutMs: 5000,
                 maxRetries: 0,
-              },
-              {
-                id: "reason-2",
-                title: "Produce a concise recommendation from the analysis",
-                kind: "reason",
-                agent: "chief_of_staff",
-                permissionLevel: 0,
-                dependsOn: ["reason-1"],
-                timeoutMs: 5000,
-                maxRetries: 0,
+                toolId: "project.git.status",
+                toolInput: {
+                  projectId: "alurka",
+                },
               },
             ]
-          : [
+          : reasonOnly
+            ? [
+                {
+                  id: "reason-1",
+                  title: "Analyze the goal and constraints",
+                  kind: "reason",
+                  agent: "business",
+                  permissionLevel: 0,
+                  dependsOn: [],
+                  timeoutMs: 5000,
+                  maxRetries: 0,
+                },
+                {
+                  id: "reason-2",
+                  title: "Produce a concise recommendation from the analysis",
+                  kind: "reason",
+                  agent: "chief_of_staff",
+                  permissionLevel: 0,
+                  dependsOn: ["reason-1"],
+                  timeoutMs: 5000,
+                  maxRetries: 0,
+                },
+              ]
+            : [
               {
                 id: "inspect",
                 title: "Inspect the registered project state",
@@ -1751,4 +1770,280 @@ test("Phase 7 scoped file and local Git workflow is end-to-end verified", async 
     astraNativeToolRuntime.get("github.pull-request.open")?.availability,
     "NOT_CONFIGURED",
   );
+});
+
+
+test("planner preserves structured tool id/input and applies the registered local tool floor", () => {
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "status",
+          title: "Read project Git status",
+          kind: "tool",
+          agent: "github",
+          permissionLevel: 0,
+          toolId: "project.git.status",
+          toolInput: {
+            projectId: "alurka",
+          },
+        },
+        {
+          id: "push",
+          title: "Push approved branch",
+          kind: "tool",
+          agent: "github",
+          permissionLevel: 0,
+          toolId: "github.push",
+          toolInput: {
+            projectId: "alurka",
+            branch: "astra/example",
+          },
+          dependsOn: ["status"],
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].toolId, "project.git.status");
+  assert.deepEqual(steps[0].toolInput, { projectId: "alurka" });
+  assert.equal(steps[0].permissionLevel, 1);
+  assert.equal(steps[1].toolId, "github.push");
+  assert.equal(steps[1].permissionLevel, 3);
+});
+
+test("Brain executes a structured registered tool plan even when Ollama is the reasoning provider", async () => {
+  const events: AstraBrainEvent[] = [];
+  const result = await astraBrain.execute(
+    {
+      input: "buat rencana tool-aware-plan untuk ALURKA",
+      approved: true,
+    },
+    {
+      provider: "ollama",
+      onEvent: (event) => events.push(event),
+    },
+  );
+
+  assert.equal(result.state, "completed");
+  assert.equal(result.brain.plan?.status, "completed");
+  assert.equal(result.brain.plan?.steps[0].toolId, "project.git.status");
+  assert.equal(result.brain.plan?.steps[0].status, "completed");
+  assert.ok(events.some((event) => event.type === "tool.started"));
+  assert.ok(events.some((event) => event.type === "tool.completed"));
+});
+
+test("authenticated GitHub transport tools stay behind Level 3 and external-action policy", async () => {
+  let pushes = 0;
+  let prs = 0;
+  let ciReads = 0;
+
+  const transport: AstraGitHubTransport = {
+    provider: "fixture-github",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-github",
+        detail: "fixture authenticated",
+      };
+    },
+    async push(input) {
+      pushes += 1;
+      assert.equal(input.branch, "astra/phase7-fixture");
+      return {
+        ok: true,
+        detail: "fixture push verified",
+        output: { branch: input.branch, verifiedRemoteRef: true },
+      };
+    },
+    async openPullRequest(input) {
+      prs += 1;
+      return {
+        ok: true,
+        detail: "fixture PR verified",
+        output: {
+          url: "https://github.com/example/repo/pull/1",
+          base: input.base,
+          head: input.head,
+        },
+      };
+    },
+    async ciStatus() {
+      ciReads += 1;
+      return {
+        ok: true,
+        detail: "fixture CI read",
+        output: {
+          runs: [
+            {
+              status: "completed",
+              conclusion: "success",
+            },
+          ],
+        },
+      };
+    },
+  };
+
+  const runtime = await createToolRuntime({
+    githubTransport: transport,
+  });
+
+  assert.equal(runtime.get("github.push")?.availability, "READY");
+  assert.equal(runtime.get("github.pull-request.open")?.availability, "READY");
+  assert.equal(runtime.get("github.ci.status")?.availability, "READY");
+
+  const lowApproval = await runtime.execute(
+    "github.push",
+    {
+      projectId: "alurka",
+      branch: "astra/phase7-fixture",
+    },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(lowApproval.status, "blocked");
+  assert.equal(pushes, 0);
+
+  const noExternalPolicy = await runtime.execute(
+    "github.push",
+    {
+      projectId: "alurka",
+      branch: "astra/phase7-fixture",
+    },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(noExternalPolicy.status, "blocked");
+  assert.equal(pushes, 0);
+
+  const push = await runtime.execute(
+    "github.push",
+    {
+      projectId: "alurka",
+      branch: "astra/phase7-fixture",
+    },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(push.status, "completed");
+  assert.equal(push.verified, true);
+  assert.equal(pushes, 1);
+
+  const pr = await runtime.execute(
+    "github.pull-request.open",
+    {
+      projectId: "alurka",
+      base: "main",
+      head: "astra/phase7-fixture",
+      title: "Fixture PR",
+      body: "Fixture body",
+    },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: true,
+      },
+    },
+  );
+  assert.equal(pr.status, "completed");
+  assert.equal(pr.verified, true);
+  assert.equal(prs, 1);
+
+  const ci = await runtime.execute(
+    "github.ci.status",
+    {
+      projectId: "alurka",
+      branch: "astra/phase7-fixture",
+    },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(ci.status, "completed");
+  assert.equal(ci.verified, true);
+  assert.equal(ciReads, 1);
+});
+
+test("unavailable GitHub transport remains NOT_CONFIGURED and exposes no executable external handler", async () => {
+  let calls = 0;
+  const transport: AstraGitHubTransport = {
+    provider: "fixture-github-offline",
+    async status() {
+      return {
+        configured: false,
+        available: false,
+        provider: "fixture-github-offline",
+        detail: "fixture not authenticated",
+      };
+    },
+    async push() {
+      calls += 1;
+      return { ok: true, detail: "must not run" };
+    },
+    async openPullRequest() {
+      calls += 1;
+      return { ok: true, detail: "must not run" };
+    },
+    async ciStatus() {
+      calls += 1;
+      return { ok: true, detail: "must not run" };
+    },
+  };
+
+  const runtime = await createToolRuntime({
+    githubTransport: transport,
+  });
+
+  assert.equal(runtime.get("github.push")?.availability, "NOT_CONFIGURED");
+  assert.equal(
+    runtime.get("github.pull-request.open")?.availability,
+    "NOT_CONFIGURED",
+  );
+  assert.equal(runtime.get("github.ci.status")?.availability, "NOT_CONFIGURED");
+
+  const result = await runtime.execute(
+    "github.push",
+    {
+      projectId: "alurka",
+      branch: "astra/phase7-fixture",
+    },
+    {
+      approvedPermissionLevel: 3,
+      policy: {
+        allowShell: false,
+        allowFileWrite: true,
+        allowExternalActions: true,
+      },
+    },
+  );
+
+  assert.equal(result.status, "blocked");
+  assert.equal(calls, 0);
 });
