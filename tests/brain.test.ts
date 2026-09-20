@@ -2782,6 +2782,41 @@ test("Phase 8 finance tool derives revenue/COGS from unit data and rejects missi
   assert.match(missing.detail, /require revenue/i);
 });
 
+test("Phase 8 finance tool leaves COGS-dependent metrics null when COGS evidence is absent", async () => {
+  const result = await astraNativeToolRuntime.execute(
+    "business.finance.metrics",
+    { revenue: 1000 },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+
+  assert.equal(result.status, "completed");
+  const output = result.output as {
+    inputs: { cogs: number | null };
+    metrics: {
+      grossProfit: number | null;
+      grossMarginPct: number | null;
+      markupPct: number | null;
+      netProfit: number | null;
+      netMarginPct: number | null;
+    };
+    assumptions: string[];
+  };
+  assert.equal(output.inputs.cogs, null);
+  assert.equal(output.metrics.grossProfit, null);
+  assert.equal(output.metrics.grossMarginPct, null);
+  assert.equal(output.metrics.markupPct, null);
+  assert.equal(output.metrics.netProfit, null);
+  assert.equal(output.metrics.netMarginPct, null);
+  assert.ok(output.assumptions.some((item) => /COGS unavailable/i.test(item)));
+});
+
 test("Phase 8 analytics tool summarizes bounded numeric records deterministically", async () => {
   const result = await astraNativeToolRuntime.execute(
     "analytics.summary",
