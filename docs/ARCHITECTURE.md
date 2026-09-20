@@ -780,3 +780,22 @@ final result | error
 ```
 
 The request AbortSignal is the cancellation boundary. No independent scheduler process is started by this endpoint.
+## Automation events in ASTRA Runtime
+
+Phase 14D3B1 keeps one browser event/cancellation path:
+
+```text
+automation SSE
+    ↓
+AstraRuntime
+    ├─ shared request AbortController
+    ├─ brainEvents
+    ├─ brainTrace
+    └─ brainStreaming
+          ↓
+deriveCapabilityRuntimeMap()
+          ↓
+Ops node / Command Center
+```
+
+There is no automation-specific event bus. The additional `automationStreaming` boolean exists only so UI controls can identify that the shared active request is an automation occurrence.

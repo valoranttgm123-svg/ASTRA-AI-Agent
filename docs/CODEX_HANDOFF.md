@@ -1119,3 +1119,18 @@ Next exact task:
 **Phase 14D3B — frontend Automation controls + Command Center stream consumption.**
 
 Reuse this SSE endpoint. Do not create a second event bus. Append streamed Brain events into the existing ASTRA Runtime event list so the existing Ops capability mapping drives the Command Center truthfully.
+## Handoff update — Phase 14D3B1 Runtime integration
+
+Added to `components/AstraRuntime.tsx`:
+
+- `runAutomationOccurrence()`;
+- automation SSE parsing;
+- shared Brain event append path;
+- shared request controller / STOP behavior;
+- `automationStreaming` UI state.
+
+Next exact task:
+
+**Phase 14D3B2 — minimal Automation panel.**
+
+Use the existing `/api/automation` definition API and `runAutomationOccurrence()`. The panel should show definitions/queue state, allow create/edit in paused state, enable/pause/disable/delete, approve exact due Level-2/3 occurrences, display existing Level-3 scope, and call the existing global STOP. Do not add an always-on timer yet.

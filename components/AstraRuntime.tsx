@@ -14,6 +14,10 @@ import type {
   AstraBrainProvider,
   AstraBrainStatus,
 } from "@/lib/brain/types";
+import type {
+  AstraAutomationOccurrenceRequest,
+  AstraAutomationOccurrenceResult,
+} from "@/lib/automation/approval";
 
 type SpeechRecognitionAlternativeLike = {
   transcript: string;
@@ -77,6 +81,10 @@ type AstraRuntimeValue = {
   brainEvents: AstraBrainEvent[];
   brainTrace: ReasoningTrace | null;
   brainStreaming: boolean;
+  automationStreaming: boolean;
+  runAutomationOccurrence: (
+    request: AstraAutomationOccurrenceRequest,
+  ) => Promise<AstraAutomationOccurrenceResult>;
   send: (
     message: string,
     options?: {
@@ -186,6 +194,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [brainEvents, setBrainEvents] = useState<AstraBrainEvent[]>([]);
   const [brainTrace, setBrainTrace] = useState<ReasoningTrace | null>(null);
   const [brainStreaming, setBrainStreaming] = useState(false);
+  const [automationStreaming, setAutomationStreaming] = useState(false);
 
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -341,6 +350,47 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     window.speechSynthesis.speak(utterance);
   }, [clearResetTimer, settleIdle, voiceEnabledState]);
 
+  const appendRuntimeBrainEvent = useCallback((
+    event: AstraBrainEvent,
+    expectedRequestSequence?: number,
+  ) => {
+    if (
+      expectedRequestSequence !== undefined &&
+      expectedRequestSequence !== requestSequenceRef.current
+    ) {
+      return;
+    }
+
+    setBrainEvents((current) => {
+      if (current.some((item) => item.id === event.id)) return current;
+      return [...current, event].slice(-24);
+    });
+
+    if (event.provider) {
+      setBrainProvider(event.provider);
+    }
+
+    if (event.agent) {
+      setActiveAgent(
+        event.agent
+          .split("_")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" "),
+      );
+    }
+
+    if (event.visualNode) {
+      setBrainTrace({
+        n: ++brainTraceSequenceRef.current,
+        trace: [{
+          helper: event.visualNode,
+          type: event.type,
+          at: event.at,
+        }],
+      });
+    }
+  }, []);
+
   const send = useCallback(async (
     message: string,
     options?: {
@@ -376,35 +426,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     const appendBrainEvent = (event: AstraBrainEvent) => {
       if (requestSequence !== requestSequenceRef.current) return;
       streamedEventCount += 1;
-
-      setBrainEvents((current) => {
-        if (current.some((item) => item.id === event.id)) return current;
-        return [...current, event].slice(-24);
-      });
-
-      if (event.provider) {
-        setBrainProvider(event.provider);
-      }
-
-      if (event.agent) {
-        setActiveAgent(
-          event.agent
-            .split("_")
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(" "),
-        );
-      }
-
-      if (event.visualNode) {
-        setBrainTrace({
-          n: ++brainTraceSequenceRef.current,
-          trace: [{
-            helper: event.visualNode,
-            type: event.type,
-            at: event.at,
-          }],
-        });
-      }
+      appendRuntimeBrainEvent(event, requestSequence);
     };
 
     try {
@@ -588,7 +610,14 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       settleIdle(1500);
       throw error;
     }
-  }, [cancelSpeech, clearResetTimer, invalidateRecognition, settleIdle, speak]);
+  }, [
+    appendRuntimeBrainEvent,
+    cancelSpeech,
+    clearResetTimer,
+    invalidateRecognition,
+    settleIdle,
+    speak,
+  ]);
 
   const execute = useCallback(
     (message: string, provider: AstraProviderChoice = "auto") =>
@@ -610,6 +639,178 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       }),
     [send],
   );
+
+  const runAutomationOccurrence = useCallback(async (
+    request: AstraAutomationOccurrenceRequest,
+  ): Promise<AstraAutomationOccurrenceResult> => {
+    clearResetTimer();
+    invalidateRecognition();
+    cancelSpeech();
+
+    const requestSequence = ++requestSequenceRef.current;
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
+
+    setMicError(null);
+    setLastResponse(null);
+    setOrbState("thinking");
+    setAvatarState("thinking");
+    setSpeechLevel(0);
+    setPlaybackActive(false);
+    setActiveAgent("Ops");
+    setBrainStreaming(true);
+    setAutomationStreaming(true);
+
+    try {
+      const response = await fetch("/api/automation/run/stream", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "text/event-stream",
+          "x-astra-client": "1",
+        },
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`ASTRA automation stream failed (${response.status})`);
+      }
+      if (!response.body) {
+        throw new Error("ASTRA automation streaming body is unavailable.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let result: AstraAutomationOccurrenceResult | null = null;
+
+      const handleBlock = (rawBlock: string) => {
+        const block = rawBlock.replace(/\r/g, "").trim();
+        if (!block) return;
+
+        let eventName = "message";
+        const dataLines: string[] = [];
+        for (const line of block.split("\n")) {
+          if (line.startsWith("event:")) {
+            eventName = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            dataLines.push(line.slice(5).trimStart());
+          }
+        }
+
+        if (dataLines.length === 0) return;
+        const payload = JSON.parse(dataLines.join("\n")) as unknown;
+
+        if (eventName === "brain") {
+          appendRuntimeBrainEvent(
+            payload as AstraBrainEvent,
+            requestSequence,
+          );
+          return;
+        }
+        if (eventName === "result") {
+          result = payload as AstraAutomationOccurrenceResult;
+          return;
+        }
+        if (eventName === "error") {
+          const errorPayload = payload as { message?: string };
+          throw new Error(
+            errorPayload.message || "ASTRA automation stream failed.",
+          );
+        }
+      };
+
+      while (true) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+
+        buffer += decoder
+          .decode(chunk.value, { stream: true })
+          .replace(/\r/g, "");
+
+        let boundary = buffer.indexOf("\n\n");
+        while (boundary >= 0) {
+          handleBlock(buffer.slice(0, boundary));
+          buffer = buffer.slice(boundary + 2);
+          boundary = buffer.indexOf("\n\n");
+        }
+      }
+
+      buffer += decoder.decode().replace(/\r/g, "");
+      if (buffer.trim()) handleBlock(buffer);
+
+      if (!result) {
+        throw new Error(
+          "ASTRA automation stream ended without a final result.",
+        );
+      }
+
+      const finalResult = result as AstraAutomationOccurrenceResult;
+      if (requestSequence !== requestSequenceRef.current) {
+        return finalResult;
+      }
+
+      requestControllerRef.current = null;
+      setBrainStreaming(false);
+      setAutomationStreaming(false);
+
+      if (finalResult.brain) {
+        setLastResponse(finalResult.brain);
+        setBrainProvider(finalResult.brain.brain.provider);
+      }
+
+      if (
+        finalResult.status === "completed" ||
+        finalResult.status === "waiting_occurrence_approval" ||
+        finalResult.status === "waiting_level3_approval"
+      ) {
+        setOrbState("idle");
+        setAvatarState("idle");
+        setActiveAgent(
+          finalResult.status === "completed" ? null : "Ops",
+        );
+      } else {
+        setOrbState("idle");
+        setAvatarState(
+          finalResult.status === "cancelled" ? "idle" : "error",
+        );
+        settleIdle(
+          finalResult.status === "cancelled" ? 120 : 1200,
+        );
+      }
+
+      return finalResult;
+    } catch (error) {
+      if (requestSequence !== requestSequenceRef.current) {
+        throw error;
+      }
+
+      requestControllerRef.current = null;
+      setBrainStreaming(false);
+      setAutomationStreaming(false);
+
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setOrbState("idle");
+        setAvatarState("idle");
+        setActiveAgent(null);
+        throw error;
+      }
+
+      setOrbState("idle");
+      setAvatarState("error");
+      setActiveAgent("Ops");
+      settleIdle(1500);
+      throw error;
+    }
+  }, [
+    appendRuntimeBrainEvent,
+    cancelSpeech,
+    clearResetTimer,
+    invalidateRecognition,
+    settleIdle,
+  ]);
 
   useEffect(() => {
     sendRef.current = (message: string, inputContext?: AstraInputContext) =>
@@ -760,6 +961,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setPlaybackActive(false);
     setActiveAgent(null);
     setBrainStreaming(false);
+    setAutomationStreaming(false);
   }, [cancelSpeech, clearResetTimer, invalidateRecognition]);
 
   const setVoiceEnabled = useCallback((enabled: boolean) => {
@@ -788,6 +990,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainEvents,
       brainTrace,
       brainStreaming,
+      automationStreaming,
+      runAutomationOccurrence,
       send,
       execute,
       approve,
@@ -814,6 +1018,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainEvents,
       brainTrace,
       brainStreaming,
+      automationStreaming,
+      runAutomationOccurrence,
       send,
       execute,
       approve,

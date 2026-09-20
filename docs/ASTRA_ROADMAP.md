@@ -855,3 +855,18 @@ Implemented on `astra/phase14d3a-automation-live-stream`:
 - no polling loop and no background scheduler are introduced.
 
 Frontend consumption is intentionally deferred to D3B. The existence of this endpoint alone does not mark automation activity in the UI.
+---
+
+## Phase 14D3B1 implementation checkpoint — shared Runtime automation stream
+
+Implemented on `astra/phase14d3b1-runtime-stream`:
+
+- `AstraRuntime` consumes the Phase 14D3A automation SSE endpoint;
+- automation `brain` frames append to the existing `brainEvents` list rather than a second event bus;
+- automation visual-node events update the existing `brainTrace`, so the Phase 14D1 Ops mapping can drive Command Center state;
+- automation execution uses the same `requestControllerRef` as chat/execute/voice, so a newer interaction or global STOP cancels the active automation stream;
+- `brainStreaming` reflects automation stream activity and a dedicated `automationStreaming` flag is exposed for the upcoming control UI;
+- final Brain result from an automation occurrence is retained in `lastResponse` when available;
+- the Runtime exposes `runAutomationOccurrence()` for the upcoming Automation panel.
+
+No new event bus or independent cancellation controller was introduced.
