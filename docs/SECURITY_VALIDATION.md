@@ -20,9 +20,9 @@
 | Codex malformed/failed child | Failed/blocked; child cleaned | REQUIRED Phase 15C | Optional target PC | TODO |
 | Optional cloud disabled | No cloud call | Existing policy coverage | Not required | PENDING REVIEW |
 | Cloud network/malformed response | Fail safely; no secret leakage | REQUIRED Phase 15C/E | Optional only if configured | TODO |
-| MCP discovery outage | Native runtime remains usable where possible; MCP not READY | REQUIRED Phase 15C | Only if MCP configured | TODO |
-| MCP malformed descriptor | Reject/skip malformed tool; no crash/fake READY | REQUIRED Phase 15C | Not required | TODO |
-| MCP tool call failure | Failed + unverified | REQUIRED Phase 15C | Optional | TODO |
+| MCP discovery outage | Native runtime remains usable where possible; MCP not READY | `tests/mcp-hardening.test.ts` | Only if MCP configured | PASS — AUTOMATED |
+| MCP malformed descriptor | Reject/skip malformed tool; no crash/fake READY | `tests/mcp-hardening.test.ts` | Not required | PASS — AUTOMATED |
+| MCP tool call failure | Failed + unverified | `tests/mcp-hardening.test.ts` + existing Tool Runtime tests | Optional | PASS — AUTOMATED |
 | Planner malformed output | No execution without valid bounded plan | Existing + re-verify | Not required | PENDING REVIEW |
 | Permission Level 2 denied | No local write/shell action | Existing | UI proof optional | PENDING REVIEW |
 | Permission Level 3 denied | No external action | Existing | UI proof required before release | PENDING REVIEW |
