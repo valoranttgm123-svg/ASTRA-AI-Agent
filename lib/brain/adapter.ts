@@ -1779,6 +1779,25 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           (toolRuntime.get("social.schedule")?.availability ?? "NOT_CONFIGURED") +
           ". Social drafting/Design briefing are reasoning skills; generation/edit/publish/schedule require a real provider and Level-3 approval.",
       },
+      computer: {
+        enabled: true,
+        available:
+          toolRuntime.get("computer.process.list")?.availability === "READY" ||
+          toolRuntime.get("computer.app.launch")?.availability === "READY",
+        state:
+          toolRuntime.get("computer.process.list")?.availability === "READY" ||
+          toolRuntime.get("computer.app.launch")?.availability === "READY"
+            ? "READY"
+            : toolRuntime.get("computer.process.list")?.availability === "OFFLINE"
+              ? "OFFLINE"
+              : "NOT_CONFIGURED",
+        detail:
+          "Computer process list=" +
+          (toolRuntime.get("computer.process.list")?.availability ?? "NOT_CONFIGURED") +
+          ", app launch=" +
+          (toolRuntime.get("computer.app.launch")?.availability ?? "NOT_CONFIGURED") +
+          ". Computer Agent is OFF by default, accepts no arbitrary command string, and app launch is restricted to a fixed allowlist.",
+      },
       tools: {
         enabled: true,
         available:
