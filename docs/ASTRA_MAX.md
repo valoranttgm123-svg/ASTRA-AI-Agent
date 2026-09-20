@@ -1064,6 +1064,31 @@ Improve installer/startup path:
 
 Verify Node/runtime, ASTRA build, Ollama, configured model, Codex availability, registered integrations, memory directory, and loopback binding.
 
+### Phase 19B — safe update/reinstall tooling
+
+Windows update:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\update-local.ps1
+```
+
+Windows reinstall/repair:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\reinstall-local.ps1
+```
+
+Repository rules:
+
+- update is Git fast-forward only;
+- tracked local changes block automatic pull;
+- no reset/clean;
+- project/model/private runtime data is not deleted;
+- successful update/reinstall ends with the read-only readiness self-check;
+- actual update/reinstall verification remains a target-PC gate.
+
+See `docs/WINDOWS_RELEASE.md`.
+
 ## Phase 20 — Final release
 
 Final release is allowed only when the Definition of Done below is met.
