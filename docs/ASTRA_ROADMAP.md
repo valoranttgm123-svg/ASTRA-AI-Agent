@@ -589,3 +589,25 @@ Implemented on `astra/phase7c-scoped-level3-approval`:
 - regression tests for scope, single-use, policy/availability, exact-step and Level-4 boundaries.
 
 After merge, Phase 7 requires real target-PC validation (gh auth + registered workspace + branch/edit/verify/commit/push/PR/CI). The next code milestone is a real Research/browser capability to close the remaining Phase 5 orchestration gap.
+
+
+---
+
+## Phase 5B / Research implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase5b-real-research-browser`:
+
+- native SSRF-resistant `browser.fetch`;
+- provider-neutral Research transport;
+- local SearXNG search provider with real health verification;
+- Level-1 `research.search` and source-backed `research.web`;
+- bounded S1/S2/S3 provenance;
+- untrusted-web evidence boundary;
+- bounded orchestrator Research step execution;
+- planner research/browser Level-1 contracts;
+- dynamic Researcher runtime status;
+- deterministic security/integration regression tests.
+
+After merge, the Phase 5 Researcher gap is closed at the architecture/tooling level. General web search still requires a real local SearXNG service on the target PC; without it ASTRA remains truthful and exposes only explicit-public-URL fetch.
+
+Next code milestone: Phase 8 Business Skills.
