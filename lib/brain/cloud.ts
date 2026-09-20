@@ -162,9 +162,12 @@ export async function getCloudStatus(
       endpoint,
       model: value.model,
       detail:
-        error instanceof Error
-          ? `Cloud provider is not reachable: ${error.message}`
-          : "Cloud provider is not reachable.",
+        "Cloud provider is not reachable: " +
+        safeErrorDetail(
+          error,
+          "unavailable",
+          500,
+        ),
     };
   }
 }
