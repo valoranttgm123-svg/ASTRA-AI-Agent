@@ -1597,3 +1597,32 @@ Release gates still pending outside repository cleanup:
 - real Sonor/Graphify/Obsidian MEM-X;
 - Phase 16 target measurements;
 - Phase 17 real execution evidence.
+
+---
+
+## Handoff update — Phase 19A readiness self-check
+
+Implemented on `astra/phase19a-readonly-self-check`:
+
+- `lib/release/readiness.ts`;
+- `lib/release/private-output.ts`;
+- `scripts/release/self-check.ts`;
+- `scripts/windows/self-check.ps1`;
+- `npm run release:self-check`.
+
+The self-check:
+
+- reads the running ASTRA Brain/Automation status only;
+- classifies READY/OFFLINE/NOT_CONFIGURED/ERROR/UNKNOWN conservatively;
+- checks Windows `ASTRA-Agent` + `ASTRA-Ollama` Scheduled Task presence/state without modifying them;
+- stores private evidence under `.astra/readiness/`;
+- does not read `.env` secrets;
+- does not start/stop services;
+- does not infer real Sonor readiness;
+- does not select a release status.
+
+Automated tests cover readiness classification and private output confinement.
+
+Truth boundary:
+
+**P19A provides tooling only. Phase 19 target-PC readiness remains unverified until the command is actually run on the target Windows system and the remaining install/reinstall/local gates are checked.**
