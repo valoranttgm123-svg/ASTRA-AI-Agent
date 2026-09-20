@@ -1,4 +1,5 @@
 import type { AstraAgent } from "@/lib/agent/types";
+import { isRecordPayload, isStructuredProviderPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_HERMES_URL = "http://127.0.0.1:8642";
@@ -15,11 +16,6 @@ export type HermesStatus = {
   detail: string;
 };
 
-type HermesChatCompletion = {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
   }>;
 };
 
@@ -128,18 +124,34 @@ export async function getHermesStatus(): Promise<HermesStatus> {
       };
     }
 
+    const payload = await readBoundedProviderJson(
+      response,
+      "Hermes capabilities",
+    );
+    if (!isStructuredProviderPayload(payload)) {
+      return {
+        enabled: true,
+        available: false,
+        endpoint,
+        model: config.model,
+        detail: "Hermes capabilities returned a malformed payload.",
+      };
+    }
+
     return {
       enabled: true,
       available: true,
       endpoint,
       model: config.model,
-      detail: "Hermes gateway is reachable and its API server is responding.",
+      detail: "Hermes gateway is reachable and its API server is responding with structured capabilities.",
     };
   } catch (error) {
     const detail =
       error instanceof DOMException && error.name === "AbortError"
         ? "Hermes gateway status check timed out."
-        : "Hermes gateway is not reachable.";
+        : error instanceof Error
+          ? error.message.slice(0, 500)
+          : "Hermes gateway is not reachable.";
 
     return {
       enabled: true,
@@ -206,8 +218,26 @@ export async function chatWithHermes({
     throw new Error(`Hermes chat failed (HTTP ${response.status}).`);
   }
 
-  const payload = (await response.json()) as HermesChatCompletion;
-  const message = payload.choices?.[0]?.message?.content?.trim();
+  const payload = await readBoundedProviderJson(
+    response,
+    "Hermes chat",
+  );
+  if (!isRecordPayload(payload)) {
+    throw new Error("Hermes returned a malformed chat payload.");
+  }
+
+  const choices = payload.choices;
+  const first =
+    Array.isArray(choices) && choices.length > 0
+      ? choices[0]
+      : undefined;
+  const rawMessage =
+    isRecordPayload(first) ? first.message : undefined;
+  const message =
+    isRecordPayload(rawMessage) &&
+    typeof rawMessage.content === "string"
+      ? rawMessage.content.trim()
+      : "";
 
   if (!message) {
     throw new Error("Hermes returned an empty chat response.");
