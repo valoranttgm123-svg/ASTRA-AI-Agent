@@ -73,12 +73,23 @@ const STATUS_LINE: Record<AstraCapabilityState, { color: string; text: string }>
 };
 
 /* ── AGENT OVERVIEW window - the site's template (the app opens live cockpits) ── */
-export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => void }) {
+export function AgentOverview({
+  sel,
+  onClose,
+  statusOverride,
+  statusDetail,
+}: {
+  sel: NodeSel;
+  onClose: () => void;
+  statusOverride?: AstraCapabilityState;
+  statusDetail?: string;
+}) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{ sx: number; sy: number } | null>(null);
   const info = INFO[sel.key] ?? { role: "Specialist", status: "NOT_CONFIGURED" as const, implementation: "planned" as const, caps: ["No registered ASTRA capability yet"] };
   const c = sel.color;
-  const status = STATUS_LINE[info.status];
+  const effectiveStatus = statusOverride ?? info.status;
+  const status = STATUS_LINE[effectiveStatus];
 
   useEffect(() => {
     setPos({ x: Math.max(8, window.innerWidth / 2 - 170), y: Math.max(90, window.innerHeight * 0.16) });
@@ -178,6 +189,11 @@ export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => v
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: status.color, boxShadow: `0 0 8px ${status.color}` }} />
           <span style={{ fontSize: 9.5, letterSpacing: "0.1em", color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>{status.text}</span>
         </div>
+        {statusDetail ? (
+          <div style={{ marginTop: -10, fontSize: 9, lineHeight: 1.45, color: "rgba(255,255,255,0.32)" }}>
+            {statusDetail}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -445,7 +461,22 @@ export default function ApexWorld() {
         </div>
       </aside>
 
-      {selected && <AgentOverview sel={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <AgentOverview
+          sel={selected}
+          onClose={() => setSelected(null)}
+          statusOverride={
+            selected.key === "researcher"
+              ? runtime.brainStatus?.features?.research?.state
+              : undefined
+          }
+          statusDetail={
+            selected.key === "researcher"
+              ? runtime.brainStatus?.features?.research?.detail
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 }

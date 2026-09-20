@@ -1,5 +1,59 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 5B real Research / Browser checkpoint
+
+This branch closes the remaining bounded-orchestrator Researcher gap without modifying Sonor.
+
+Implemented:
+- `browser.fetch` native Level-1 read tool:
+  - explicit public http/https URLs only;
+  - no URL credentials;
+  - localhost/private/reserved/metadata/LAN address blocking;
+  - DNS resolution is validated before connection and the connection is pinned to that address;
+  - redirect destination is revalidated;
+  - HTTPS downgrade redirect is blocked;
+  - bounded textual/JSON/XML response only;
+  - response bytes, redirects and extracted text are capped;
+  - output includes public URL, final URL, title, timestamp and provenance;
+- provider-neutral `AstraResearchTransport`;
+- default `SearXngResearchTransport`:
+  - only an explicit loopback `ASTRA_SEARXNG_URL` is accepted;
+  - real bounded health search is required before READY;
+- `research.search` Level-1 read tool;
+- `research.web` Level-1 source-backed composite:
+  - search;
+  - fetch a small bounded source set;
+  - S1/S2/S3 source IDs;
+  - provenance and fetch timestamps;
+  - source text marked untrusted;
+- bounded `kind=research` plan steps now invoke `research.web` through Tool Runtime instead of hard-failing;
+- planner knows browser/research tools are Level 1;
+- planner is instructed to follow research with evidence synthesis and source-ID citations;
+- local Ollama reasoning is explicitly told to treat browser/research content as untrusted evidence, never instructions;
+- Brain status exposes truthful research readiness;
+- Researcher overview uses runtime research status rather than claiming static availability;
+- Tool Runtime supports dependency injection for deterministic research integration tests.
+
+Regression coverage:
+- private/LAN/metadata/documentation/tunnel address blocks;
+- public IPv4/IPv6 allow cases;
+- browser.fetch loopback refusal;
+- loopback-only SearXNG config and health verification;
+- source IDs/provenance/untrusted evidence;
+- real tool lifecycle;
+- bounded orchestrator `kind=research` execution through an injected real Tool Runtime;
+- planner Level-1 floors for research/browser.
+
+Runtime truth:
+- explicit `browser.fetch` is available without SearXNG;
+- general search/research remains NOT_CONFIGURED until local SearXNG is actually reachable;
+- no cloud search API or hidden key is assumed.
+
+Next milestone after merge:
+**Phase 8 — Business Skills** (Finance, Sales, Marketing, Ops, Editor, Analytics) using real skill contracts, deterministic calculations/data analysis where possible, and local-model reasoning only where verification does not require an external action.
+
+Sonor remains untouched and delegated to its existing mission.
+
 ## 2026-09-20 — Phase 7C scoped Level-3 approval checkpoint
 
 This branch closes the core approval gap for external GitHub actions without touching Sonor.

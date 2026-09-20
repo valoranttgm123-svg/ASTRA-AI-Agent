@@ -406,3 +406,38 @@ If a later step also needs Level 3, execution stops there and ASTRA creates a ne
 Approval requests expose only safe scope metadata. File contents, PR bodies, auth tokens and other secrets are not included in the visible approval scope.
 
 When a scoped token is submitted, ASTRA skips model replanning and restores the exact challenged plan before execution.
+
+
+## Public research / browser runtime
+
+Phase 5B/6B closes the previous Researcher gap with two read-only layers:
+
+```text
+Researcher / Strategist
+        ↓
+research.web (Level 1)
+        ↓
+AstraResearchTransport
+        ↓
+local SearXNG search
+        ↓
+bounded search results
+        ↓
+browser public-page fetch
+        ↓
+S1 / S2 / S3 + URL + extracted evidence + provenance
+        ↓
+Ollama reasoning / final synthesis
+```
+
+Native `browser.fetch` is always registered as a Level-1 public read tool. It does not provide search; it only reads an explicit public URL.
+
+`research.search` and `research.web` are registered dynamically. The default provider is `SearXngResearchTransport`, and they become READY only when:
+1. `ASTRA_SEARXNG_URL` is an explicit loopback endpoint; and
+2. the endpoint answers a real bounded health search.
+
+`research.web` searches first and safely fetches only a small bounded source set. Each source carries a stable per-result source ID, public URL, fetch timestamp and provenance metadata. Page text is marked untrusted and is never authority for tool calls.
+
+The browser layer performs DNS resolution itself, rejects private/reserved addresses, pins the connection to the validated address, revalidates redirects and rejects HTTPS downgrade redirects. This prevents the Researcher from becoming a general LAN/localhost fetch primitive.
+
+Research plan steps run through the same executable Tool Runtime and emit real `tool.started/tool.completed/tool.failed` lifecycle events. Missing search configuration fails truthfully rather than fabricating research.

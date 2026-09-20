@@ -96,3 +96,24 @@ Examples that require an explicit permitted execution path:
 ## Reporting
 
 If a secret is accidentally committed, rotate/revoke it first. Removing a file from the latest commit is not enough because Git history may still contain the value.
+
+
+## Public web research boundary
+
+ASTRA's native `browser.fetch` is read-only and accepts only explicit public HTTP/HTTPS URLs.
+
+The browser transport:
+- rejects credentials embedded in URLs;
+- rejects localhost;
+- resolves DNS before connecting and rejects the host if any resolved address is private/reserved;
+- pins the request to the validated resolved address while preserving the original TLS server name / Host header;
+- revalidates every redirect;
+- blocks HTTPS-to-HTTP downgrade redirects;
+- blocks loopback, RFC1918/private, link-local, carrier-grade NAT, metadata/link-local, benchmark/documentation ranges, multicast/reserved IPv4, IPv4-mapped private IPv6, unique-local/link-local IPv6, documentation IPv6, Teredo and 6to4;
+- accepts bounded textual/JSON/XML content only;
+- caps response bytes, extracted text, redirects and execution time;
+- treats fetched page text as untrusted evidence, not instructions.
+
+Full search uses `ASTRA_SEARXNG_URL`, which must be a loopback HTTP/HTTPS endpoint. A configured endpoint is not marked READY until a real bounded health search succeeds.
+
+Research output preserves source URLs/source IDs and marks fetched text `untrusted=true`. Model instructions explicitly require treating source text as evidence rather than tool/system instructions.

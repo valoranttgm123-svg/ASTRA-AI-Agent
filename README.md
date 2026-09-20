@@ -10,7 +10,7 @@ ASTRA is a personal multi-agent AI project built on top of the open-source **APE
 
 - Chief — orchestration and approvals
 - Memory — durable context
-- Research — public research
+- Research — public-source research with provenance; explicit public-URL reading is built in, while search requires a configured local SearXNG transport
 - Developer — coding/debugging
 - Computer — approved desktop automation
 - Files — file/document work
@@ -55,6 +55,8 @@ still cannot exceed the server-side permission policy.
 ## Configuration
 
 Copy `.env.example` to `.env.local` and fill only the provider/integrations you choose.
+
+For full web search, point `ASTRA_SEARXNG_URL` at a loopback SearXNG JSON `/search` endpoint. ASTRA health-checks it before marking Researcher READY. Without SearXNG, `browser.fetch` can still read one explicit public URL, but ASTRA does not pretend general web search is configured.
 
 ```bash
 cp .env.example .env.local
