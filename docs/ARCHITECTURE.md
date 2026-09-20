@@ -441,3 +441,54 @@ Native `browser.fetch` is always registered as a Level-1 public read tool. It do
 The browser layer performs DNS resolution itself, rejects private/reserved addresses, pins the connection to the validated address, revalidates redirects and rejects HTTPS downgrade redirects. This prevents the Researcher from becoming a general LAN/localhost fetch primitive.
 
 Research plan steps run through the same executable Tool Runtime and emit real `tool.started/tool.completed/tool.failed` lifecycle events. Missing search configuration fails truthfully rather than fabricating research.
+
+
+## Business specialist runtime
+
+Phase 8 keeps one shared `business` execution agent but makes the visible Finance, Sales, Marketing, Ops, Editor and Analytics roles functional through input-selected skill contracts.
+
+```text
+user business goal
+      ↓
+Business route
+      ↓
+base business-analysis skill
+      +
+matching specialist skill
+      ├─ finance-analysis
+      ├─ sales-support
+      ├─ marketing-strategy
+      ├─ ops-workflow
+      ├─ editor-quality
+      └─ analytics-interpretation
+      ↓
+local reasoning / bounded plan
+      ↓
+deterministic tool when quantitative
+      ├─ business.finance.metrics
+      └─ analytics.summary
+```
+
+The specialist visual node is derived from the selected skill ID, so real skill lifecycle can light Finance/Marketing/Editor/etc rather than presenting all Business work as Ops.
+
+### Finance
+
+`business.finance.metrics` is a Level-1 read/no-side-effect tool. Its completion means ASTRA verified the arithmetic over supplied numbers. It does not mean the accounting inputs were audited.
+
+Missing COGS is not converted to zero. Metrics requiring COGS remain null. Optional fixed/other/tax costs omitted from input are explicitly disclosed when treated as zero for the requested arithmetic.
+
+### Analytics
+
+`analytics.summary` accepts bounded structured records and computes deterministic descriptive statistics. Source labels are preserved. Descriptive changes/trends are not treated as proof of cause.
+
+### Sales / Marketing / Ops / Editor
+
+These are implemented as local analysis/drafting skills. Their READY state never implies:
+- CRM mutation;
+- email/message sending;
+- ad/social publishing;
+- supplier actions;
+- database writes;
+- desktop automation.
+
+Those capabilities require separate registered integrations/tools and their own permission/approval paths.
