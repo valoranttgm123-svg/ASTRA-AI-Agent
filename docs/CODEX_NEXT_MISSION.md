@@ -24,31 +24,24 @@ External-only blockers must be recorded but must not stop unrelated repository w
 
 ## Current repository checkpoint
 
-Repository-complete and CI-verified through:
+Repository-complete and CI-verified:
 
-- P15A — Project path / filesystem hardening — PR #96;
-- P15B — Untrusted retrieved-context boundary — PR #97;
-- P15C — Provider + MCP failure isolation — PR #99/#100;
-- P15D — Cancellation / timeout / STOP settlement — PR #101/#102;
-- P15E — Secret / error / telemetry redaction — PR #103.
+- Phase 15A–15F security/failure hardening;
+- Phase 16A runtime performance measurement instrumentation — PR #105.
 
-Current branch gate:
+Still local/target-runtime gated:
 
-**P15F — final security regression matrix/report.**
+- Phase 14 target-PC Automation validation;
+- MEM-X real Sonor/Graphify/Obsidian validation;
+- Phase 16B/P16C target runtime/browser measurements.
 
-After P15F is green and merged:
+Current implementable repository task:
 
-- Phase 15 repository hardening is complete;
-- MEM-X remains required when real local Sonor access is available;
-- if MEM-X is externally blocked, continue Phase 16 repository-side performance instrumentation/preparation;
-- do not invent target-hardware benchmark values.
+**Phase 17A — safe full-system preflight evidence runner.**
 
-Durable history/recovery:
+The preflight runner must never be treated as Phase 17 PASS. Real scenario execution, approved side effects and emergency STOP remain target-runtime gates.
 
-- `docs/ASTRA_WORKLOG.md`
-- `docs/SESSION_RECOVERY.md`
-
-If this document's older task wording conflicts with the actual tracker/worklog, use current `main` + worklog/tracker as truth.
+If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer those repository truths.
 
 ---
 
