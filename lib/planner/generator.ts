@@ -76,7 +76,7 @@ const EXPLICIT_PLAN_WORDS = [
 
 function hasWord(text: string, word: string) {
   const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(\`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])\`, "i").test(text);
+  return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])`, "i").test(text);
 }
 
 export function shouldGeneratePlan(input: string): boolean {
@@ -176,7 +176,7 @@ function normalizeDraft(value: unknown, index: number): AstraPlanStepDraft | nul
     id:
       typeof value.id === "string" && value.id.trim()
         ? value.id.trim()
-        : \`step-${index + 1}\`,
+        : `step-${index + 1}`,
     title,
     kind: kind as AstraPlanStepKind,
     agent: normalizeAgent(value.agent),
@@ -246,13 +246,13 @@ export async function generateStrategistPlan({
     "Permission guidance: 0 reasoning only, 1 read, 2 safe local action, 3 external write/action, 4 high-impact.",
     "Never lower a risky action's permission to make it easier to run.",
     "Dependencies may reference only earlier step ids.",
-    context ? \`Bounded ASTRA context:\\n${context}\` : "",
+    context ? `Bounded ASTRA context:\\n${context}` : "",
   ]
     .filter(Boolean)
     .join("\\n");
 
   const result = await chatWithOllama({
-    input: \`ASTRA_PLAN_REQUEST\\nGoal: ${cleanGoal}\`,
+    input: `ASTRA_PLAN_REQUEST\\nGoal: ${cleanGoal}`,
     agent: ASTRA_AGENT_MAP.chief_of_staff,
     context: plannerInstructions,
     policyText:
