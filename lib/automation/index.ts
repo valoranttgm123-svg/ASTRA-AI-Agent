@@ -65,3 +65,15 @@ export {
   upsertAutomationDefinition,
 } from "./management";
 export { automationEventToBrainEvent } from "./telemetry";
+
+export type {
+  AstraAutomationOccurrenceRequest,
+  AstraAutomationOccurrenceResult,
+  AstraAutomationOccurrenceStatus,
+} from "./approval";
+
+export {
+  automationOccurrenceBrainInput,
+  executeApprovedAutomationOccurrence,
+} from "./approval";
+export { parseAutomationRunRequest } from "./http";

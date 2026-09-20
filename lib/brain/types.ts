@@ -75,6 +75,7 @@ export type AstraBrainRunOptions = {
   onEvent?: (event: AstraBrainEvent) => void;
   provider?: AstraProviderChoice;
   inputContext?: AstraInputContext;
+  requirePlan?: boolean;
   signal?: AbortSignal;
 };
 

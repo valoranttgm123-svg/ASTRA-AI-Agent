@@ -1239,6 +1239,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       };
     };
 
+    if (options?.requirePlan && !context.plan && !task.approvalToken) {
+      return blocked(
+        "Automation execution requires a bounded plan, but the Strategist did not produce one.",
+        "requirePlan is active; ASTRA will not fall through to a provider executor without a validated plan.",
+      );
+    }
+
     let approvedPermissionLevel: 0 | 1 | 2 | 3 | 4 =
       context.policy.requireApproval ? (task.approved ? 2 : 1) : 2;
     let approvedStepIds: string[] = [];

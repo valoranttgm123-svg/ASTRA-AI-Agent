@@ -823,3 +823,21 @@ Implemented on `astra/phase14d1-automation-api-telemetry`:
 - regression tests cover parser bounds, management, persistence preservation, concurrent mutation serialization, and Ops telemetry.
 
 Phase 14 is still incomplete. The API manages definitions only; it does not expose an always-on scheduler and it does not authorize Level 2/3 execution.
+---
+
+## Phase 14D2 implementation checkpoint — scoped approval-resume
+
+Implemented on `astra/phase14d2-automation-approval-resume`:
+
+- dedicated loopback `/api/automation/run` endpoint for exact scheduled occurrences;
+- Level 0/1 are rejected from this approval path and remain on the unattended read-only runner;
+- Level 2 requires explicit per-occurrence approval before claim/execution;
+- Level 3 reuses the existing ASTRA Brain Level-3 approval flow rather than introducing permanent trust or a second external-action approval system;
+- the Brain input contains trusted automation id + scheduled timestamp + project + permission ceiling, so existing single-use Level-3 token validation is bound to that exact occurrence input;
+- token resume is accepted only when the occurrence was already durably claimed;
+- automation execution now sets `requirePlan=true`; scheduled Level 2/3 work fails closed if the Strategist cannot produce a bounded plan;
+- generated plans may not exceed the automation definition's configured permission ceiling;
+- global request cancellation propagates into Brain execution;
+- tests cover per-run approval, exact resume input, permission ceiling, plan requirement and unclaimed-token rejection.
+
+Important behavior: claim-before-execute remains at-most-once. If planning/provider execution fails after claim, ASTRA does not silently retry the same occurrence.

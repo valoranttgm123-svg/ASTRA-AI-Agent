@@ -1084,3 +1084,24 @@ Next exact task:
 Do not invent permanent trust. A scheduled occurrence must be bound to a short-lived, single-use approval challenge for that exact automation id + scheduled occurrence + permission level. Level 2 may use the existing explicit safe-local approval semantics; Level 3 must retain the existing strong external-action checks and policy/provider availability. Level 4 remains unavailable.
 
 After approval-resume is validated, add an explicit runtime event stream/control path and only later an opt-in timer/service.
+## Handoff update — Phase 14D2 approval-resume
+
+Added:
+
+- `lib/automation/approval.ts`;
+- `app/api/automation/run/route.ts`;
+- bounded run-request parser;
+- exact occurrence Brain input;
+- `requirePlan` execution option;
+- Level 2 per-occurrence approval;
+- Level 3 reuse of the existing scoped Brain approval token;
+- permission-ceiling enforcement;
+- approval-resume regression tests.
+
+Next exact task:
+
+**Phase 14D3 — live automation stream + UI control integration.**
+
+Add an SSE path for automation occurrence lifecycle and underlying Brain events so Command Center can update live. Then add a minimal Automation panel using the existing loopback definition API: list status, create/edit paused definitions, enable/pause/disable, approve exact due Level 2/3 occurrence, show Level-3 scope, STOP active run.
+
+Do not start an always-on Windows timer/service until the live control/STOP path is proven.
