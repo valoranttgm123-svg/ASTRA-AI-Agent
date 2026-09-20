@@ -55,7 +55,13 @@ async function withTimeout<T>(
   const abort = () => controller.abort(externalSignal?.reason);
   if (externalSignal?.aborted) abort();
   else externalSignal?.addEventListener("abort", abort, { once: true });
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(
+    () =>
+      controller.abort(
+        new DOMException("Cloud request timed out.", "TimeoutError"),
+      ),
+    timeoutMs,
+  );
   try {
     return await run(controller.signal);
   } finally {
