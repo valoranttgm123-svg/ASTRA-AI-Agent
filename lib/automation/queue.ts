@@ -25,6 +25,7 @@ export type AstraAutomationTickPlan = {
 export type AstraAutomationLifecycleEventType =
   | "automation.due"
   | "automation.waiting_approval"
+  | "automation.claimed"
   | "automation.started"
   | "automation.completed"
   | "automation.failed"

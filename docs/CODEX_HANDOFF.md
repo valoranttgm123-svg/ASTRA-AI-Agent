@@ -1047,3 +1047,20 @@ Next exact task:
 **Phase 14C2 — real cancellable automation runner.**
 
 The runner must use validated store definitions and the queue planner, claim each occurrence durably before execution to avoid duplicate runs, invoke existing Brain/Planner/Tool Runtime through an injected boundary, propagate global AbortSignal/STOP, emit lifecycle events only around real work, and persist terminal occurrence state. Level 2/3 must resume only after the current occurrence receives valid scoped approval. Level 4 remains unavailable.
+## Handoff update — Phase 14C2 read-only runner
+
+Added:
+
+- `lib/automation/runner.ts`;
+- durable `claimAutomationOccurrence()`;
+- serial read-only runner tick;
+- per-job timeout;
+- global AbortSignal/STOP propagation;
+- real automation lifecycle emission;
+- regression coverage for duplicate claims and cancellation.
+
+Next exact task:
+
+**Phase 14D — approval-resume + runtime/API integration.**
+
+Bind Level 2/3 scheduled occurrences to the existing scoped approval machinery without permanent trust, expose safe loopback CRUD/status controls, connect real automation lifecycle into Brain/Command Center, and only then add an explicit local timer/service. Level 4 remains unavailable.

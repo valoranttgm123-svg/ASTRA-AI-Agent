@@ -13,7 +13,7 @@ import type {
   AstraAutomationSchedule,
   AstraAutomationStatus,
 } from "./contracts";
-import { validateAutomationDefinition } from "./scheduler";
+import { getAutomationDueState, validateAutomationDefinition } from "./scheduler";
 
 export const ASTRA_AUTOMATION_MAX_ENTRIES = 64;
 export const ASTRA_AUTOMATION_MAX_FILE_BYTES = 256 * 1024;
@@ -290,5 +290,80 @@ export async function saveAutomationStore(
   return {
     source,
     count: normalized.length,
+  };
+}
+
+export type AstraAutomationClaimResult = {
+  claimed: boolean;
+  automation?: AstraAutomationDefinition;
+  detail: string;
+};
+
+export async function claimAutomationOccurrence({
+  automationId,
+  scheduledFor,
+  now = new Date(),
+}: {
+  automationId: string;
+  scheduledFor: string;
+  now?: Date;
+}): Promise<AstraAutomationClaimResult> {
+  const scheduledMs = Date.parse(scheduledFor);
+  if (!Number.isFinite(scheduledMs)) {
+    throw new Error("Invalid automation scheduledFor timestamp.");
+  }
+  const normalizedScheduledFor = new Date(scheduledMs).toISOString();
+
+  if (!Number.isFinite(now.getTime())) {
+    throw new Error("Invalid automation claim time.");
+  }
+
+  const store = await loadAutomationStore();
+  if (!store.enabled || !store.available) {
+    throw new Error(store.detail);
+  }
+
+  const index = store.automations.findIndex(
+    (automation) =>
+      automation.id.toLowerCase() === automationId.trim().toLowerCase(),
+  );
+  if (index < 0) {
+    return {
+      claimed: false,
+      detail: "Automation definition was not found.",
+    };
+  }
+
+  const current = store.automations[index];
+  const due = getAutomationDueState(current, now);
+  if (due.kind !== "due") {
+    return {
+      claimed: false,
+      automation: current,
+      detail: "Automation occurrence is no longer due.",
+    };
+  }
+  if (due.scheduledFor !== normalizedScheduledFor) {
+    return {
+      claimed: false,
+      automation: current,
+      detail:
+        "Automation occurrence changed before it could be claimed.",
+    };
+  }
+
+  const updated: AstraAutomationDefinition = {
+    ...current,
+    lastRunAt: normalizedScheduledFor,
+    updatedAt: now.toISOString(),
+  };
+  const next = [...store.automations];
+  next[index] = updated;
+  await saveAutomationStore(next);
+
+  return {
+    claimed: true,
+    automation: updated,
+    detail: "Automation occurrence claimed for single-process execution.",
   };
 }

@@ -683,3 +683,24 @@ future cancellable runner
 ```
 
 The queue planner is intentionally pure and emits no runtime telemetry. Lifecycle event types are contracts only until a real runner performs work.
+## Read-only automation runner
+
+Phase 14C2 adds the first real execution boundary:
+
+```text
+private validated store
+      ↓
+bounded queue plan
+      ↓
+Level 0/1 only
+      ↓
+durable occurrence claim
+      ↓
+serial injected executor
+      ↓
+timeout / global STOP
+      ↓
+real automation.* lifecycle
+```
+
+The runner is manually invoked; it does not create a hidden scheduler service. Claim-before-execute intentionally prefers at-most-once behavior over automatic retry after a process crash. Approval-gated Level 2/3 jobs remain outside the executor path.
