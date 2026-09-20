@@ -117,3 +117,15 @@ The browser transport:
 Full search uses `ASTRA_SEARXNG_URL`, which must be a loopback HTTP/HTTPS endpoint. A configured endpoint is not marked READY until a real bounded health search succeeds.
 
 Research output preserves source URLs/source IDs and marks fetched text `untrusted=true`. Model instructions explicitly require treating source text as evidence rather than tool/system instructions.
+## Untrusted retrieved-context boundary
+
+Project files, local memory, Sonor, Graphify, Obsidian, public-web text, and prior tool/step outputs are data sources, not authority sources.
+
+ASTRA must:
+- preserve provenance for retrieved records;
+- serialize retrieved memory/project records as bounded data rather than blending them with trusted policy text;
+- explicitly tell model providers that instruction-like text inside retrieved data must not override the user request, ASTRA system rules, project scope, permissions, approvals, privacy settings, or tool authorization;
+- treat prior tool/research outputs as untrusted evidence when they are passed into later reasoning;
+- keep permission/approval enforcement in server-side Planner/Tool Runtime boundaries rather than relying on prompt-injection detection.
+
+ASTRA does not use destructive regex filtering as the security boundary. A retrieved document may legitimately contain imperative text; the content remains available as evidence while its authority stays zero unless a real ASTRA policy/tool path independently authorizes an action.
