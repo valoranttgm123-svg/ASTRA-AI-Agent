@@ -152,10 +152,12 @@ test("Phase 14C2 global STOP propagates into the active read-only executor", asy
   await withStore(async () => {
     await saveAutomationStore([fixture("cancellable")]);
     const controller = new AbortController();
+    const events: string[] = [];
 
     const resultPromise = runAutomationTickFromStore({
       now: new Date("2026-09-20T10:30:00.000Z"),
       signal: controller.signal,
+      onEvent: (event) => events.push(event.type),
       async execute(_automation, context) {
         await new Promise<void>((resolve, reject) => {
           const timer = setTimeout(resolve, 500);
@@ -191,5 +193,8 @@ test("Phase 14C2 global STOP propagates into the active read-only executor", asy
     assert.equal(result.stopped, true);
     assert.equal(result.runs.length, 1);
     assert.equal(result.runs[0].status, "cancelled");
+    assert.ok(events.includes("automation.started"));
+    assert.ok(events.includes("automation.cancelled"));
+    assert.equal(events.includes("automation.completed"), false);
   });
 });
