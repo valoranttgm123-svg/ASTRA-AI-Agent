@@ -21,10 +21,23 @@ export type AstraAgent = {
   capabilities: string[];
 };
 
+export type AstraApprovalRequest = {
+  token: string;
+  level: 3;
+  planId: string;
+  stepId: string;
+  title: string;
+  toolId: string;
+  projectId?: string;
+  scope: Record<string, string | number | boolean>;
+  expiresAt: string;
+};
+
 export type AgentRequest = {
   message: string;
   mode?: "chat" | "execute";
   approved?: boolean;
+  approvalToken?: string;
   provider?: AstraProviderChoice;
 };
 
@@ -35,4 +48,5 @@ export type AgentResponse = {
   state: "completed" | "needs_provider" | "blocked" | "error";
   message: string;
   requiresApproval?: boolean;
+  approvalRequest?: AstraApprovalRequest;
 };
