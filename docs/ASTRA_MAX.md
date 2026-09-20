@@ -1814,3 +1814,10 @@ Current guarantees:
 - regression tests verify due-time and permission invariants.
 
 This is foundation only. Phase 14 remains incomplete until durable private storage, the cancellable scheduler worker, runtime telemetry, approval binding, API/UI controls, and target-PC verification exist.
+## Phase 14B — durable local automation store
+
+A second incremental slice adds fail-closed private persistence for validated automation definitions.
+
+The default location is `.astra/automations.json`. Invalid or corrupted store data does not partially load: the automation store becomes unavailable with zero runnable definitions. Entry count and file size are bounded, duplicate IDs are rejected, and the existing Phase 14A permission/schedule validator remains authoritative.
+
+This still does not create a background worker or execute scheduled tasks. Runtime execution remains deferred to the next bounded/cancellable Phase 14 slice.
