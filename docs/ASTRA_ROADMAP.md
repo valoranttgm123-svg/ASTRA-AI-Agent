@@ -889,3 +889,19 @@ Implemented on `astra/phase14d3b2-automation-panel`:
 - responsive panel styling does not change Humanoid rendering.
 
 The interactive control/approval/STOP path is now present. The remaining Phase 14 implementation task is the explicit opt-in local timer/service for unattended Level 0/1 work plus final target-PC validation.
+---
+
+## Phase 14E1 implementation checkpoint — hard read-only Brain ceiling
+
+Implemented on `astra/phase14e1-readonly-brain-ceiling`:
+
+- trusted internal `AstraBrainRunOptions.permissionCeiling` was added; it is not accepted by the public agent request body;
+- unattended execution is allowed only when `requirePlan=true`, no scoped approval token is present, and the hard ceiling is Level 0/1;
+- the existing normal manual approval behavior remains unchanged when no ceiling is supplied;
+- scoped Level-3 approval cannot override a lower internal permission ceiling;
+- `executeReadOnlyAutomationWithBrain()` forces local Ollama + bounded planning + Level 0/1 ceiling;
+- the read-only executor rejects Level 2+ definitions before Brain execution;
+- returned plans above the configured automation ceiling are treated as failure;
+- regression tests lock the permission resolver and executor contract.
+
+This slice creates no timer. Phase 14E2 adds the explicit opt-in local service over this read-only executor.
