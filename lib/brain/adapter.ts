@@ -1677,6 +1677,19 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         endpoint: codex.endpoint,
         model: codex.model ?? undefined,
       },
+      research: {
+        enabled: true,
+        available:
+          toolRuntime.get("research.web")?.availability === "READY",
+        detail:
+          "research.web=" +
+          (toolRuntime.get("research.web")?.availability ?? "NOT_CONFIGURED") +
+          ", research.search=" +
+          (toolRuntime.get("research.search")?.availability ?? "NOT_CONFIGURED") +
+          ", browser.fetch=" +
+          (toolRuntime.get("browser.fetch")?.availability ?? "OFFLINE") +
+          ". Full source-backed search requires a READY research transport; explicit public-URL fetch remains separately available when browser.fetch is READY.",
+      },
       tools: {
         enabled: true,
         available:
