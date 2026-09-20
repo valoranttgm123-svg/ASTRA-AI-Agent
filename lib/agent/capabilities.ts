@@ -102,8 +102,9 @@ export const ASTRA_CAPABILITY_NODES: readonly AstraCapabilityNode[] = [
     role: "Plans milestones, priorities, dependencies, and risk",
     capabilities: ["roadmaps", "prioritization", "dependency planning"],
     examples: ["Build a roadmap", "What should we do next?"],
+    executionAgent: "strategist",
     permissionLevel: 1,
-    implementation: "planned",
+    implementation: "partial",
     defaultState: "NOT_CONFIGURED",
     requiresConfiguration: true,
     color: CYAN,
@@ -360,6 +361,7 @@ export const ASTRA_REASONING_ROSTER = ASTRA_CAPABILITY_NODES.map((node) => [
 const VISUAL_NODE_BY_AGENT: Record<AstraAgentKey, AstraCapabilityNodeKey> = {
   chief_of_staff: "chief_of_staff",
   memory: "memory",
+  strategist: "strategist",
   researcher: "researcher",
   developer: "developer",
   computer: "ops",
