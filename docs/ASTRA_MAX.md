@@ -1776,3 +1776,13 @@ The user must remain able to see and control what ASTRA can hear, see, remember,
 - Process read is Level 1; application launch is Level 2 and requires shell policy permission.
 - In-flight actions are cancellable; completed application launches are not automatically rolled back.
 - Real Windows target validation remains required.
+
+
+## Phase 12 checkpoint
+
+- **Phase 12 — Voice + Multimodal input unification: IMPLEMENTED ON CURRENT FEATURE BRANCH.**
+- Text and voice transcript turns carry trusted source/trigger/modality/consent metadata.
+- Gesture-open-palm voice turns are distinguishable from ordinary microphone turns.
+- Camera remains local to gesture tracking; no visual pixels enter Brain context.
+- Image/screen payloads remain NOT_CONFIGURED and are rejected by the request parser.
+- Brain responses expose the input envelope for observability.

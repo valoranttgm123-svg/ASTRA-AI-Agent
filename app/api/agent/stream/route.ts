@@ -59,6 +59,7 @@ export async function POST(request: Request) {
 
       const options: AstraBrainRunOptions = {
         provider: body.provider,
+        inputContext: body.inputContext,
         signal: request.signal,
         onEvent: (event) => send("brain", event),
       };

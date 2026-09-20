@@ -1,5 +1,45 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 12 Voice + Multimodal input unification
+
+Implemented on `astra/phase12-multimodal-input-envelope`:
+
+- one bounded trusted input metadata contract for ASTRA Runtime → API → Brain;
+- current accepted message sources:
+  - text;
+  - voice transcript;
+- trusted triggers:
+  - keyboard;
+  - microphone;
+  - gesture_open_palm;
+  - api;
+- bounded modalities enum:
+  - text;
+  - voice;
+  - gesture;
+  - camera;
+  - image;
+  - screen;
+- explicit consent booleans for microphone/camera/image/screen;
+- `visualContentProvided` is forced to `false` in Phase 12;
+- image/screen modalities are rejected by the HTTP parser because no real visual payload/provider path exists yet;
+- gesture-open-palm voice input requires voice + gesture + camera metadata and microphone/camera consent;
+- normal typed chat is tagged text/keyboard;
+- microphone chat is tagged voice/microphone;
+- open-palm-triggered microphone chat is tagged voice/gesture/camera with `gesture_open_palm`;
+- no webcam frame, image pixel, or screen pixel is sent to the Brain;
+- trusted input metadata is injected into provider context with an explicit instruction not to infer unseen visual content;
+- input metadata is preserved in `brain.context.input` for observability;
+- Brain status exposes a truthful `multimodal` feature;
+- Command Center exposes an MM status chip;
+- regression tests cover text metadata, gesture-triggered voice metadata, consent consistency, rejection of visual payload claims, Brain envelope propagation, and feature status.
+
+Important truth:
+Phase 12 unifies input provenance/consent. It does **not** add visual understanding. Camera remains local for gesture tracking/control. Image and screen understanding remain NOT_CONFIGURED until an explicit visual payload, consent, and provider/tool path is implemented.
+
+Next milestone after merge:
+Follow the current ASTRA roadmap from `main`; do not recreate existing voice/gesture/camera foundations.
+
 ## 2026-09-20 — Phase 11 controlled Computer Agent checkpoint
 
 Implemented on `astra/phase11-controlled-computer-agent`:

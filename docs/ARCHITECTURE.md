@@ -563,3 +563,28 @@ The adapter is OFF by default. `computer.process.list` is Level 1/read. `compute
 The app-launch allowlist is fixed in code. Arbitrary paths and command strings are rejected by design.
 
 The global AbortSignal cancels in-flight Computer operations. A successfully completed app launch is not automatically reversed; STOP is cancellation, not transactional rollback.
+
+
+## Multimodal input provenance boundary
+
+Phase 12 unifies provenance and consent metadata without adding hidden visual capture.
+
+```text
+typed text / browser voice / gesture-triggered voice
+              ↓
+        AstraRuntime
+              ↓
+trusted enum/boolean inputContext
+              ↓
+      loopback API parser
+              ↓
+          Brain context
+              ↓
+provider sees source metadata + explicit NO VISUAL PIXELS boundary
+```
+
+Accepted message sources are currently `text` and `voice`. Gesture and camera are metadata describing the local control path when open-palm starts the microphone. No camera frame is serialized.
+
+`visualContentProvided` must be false. Image/screen modalities are rejected until a real visual payload contract and explicitly configured provider/tool exist.
+
+This prevents metadata from becoming a prompt-injection channel: fields are bounded enums/booleans rather than free-form strings.

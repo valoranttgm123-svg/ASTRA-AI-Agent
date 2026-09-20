@@ -696,7 +696,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         return;
       }
       setLastGestureAction("OPEN PALM → LISTENING");
-      runtime.beginListening();
+      runtime.beginListening("gesture_open_palm");
       return;
     }
 

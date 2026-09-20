@@ -2,6 +2,35 @@ export type AstraOrbState = "idle" | "thinking" | "speaking";
 
 export type AstraProviderChoice = "auto" | "ollama" | "codex";
 
+export type AstraInputSource = "text" | "voice";
+
+export type AstraInputTrigger =
+  | "keyboard"
+  | "microphone"
+  | "gesture_open_palm"
+  | "api";
+
+export type AstraInputModality =
+  | "text"
+  | "voice"
+  | "gesture"
+  | "camera"
+  | "image"
+  | "screen";
+
+export type AstraInputContext = {
+  source: AstraInputSource;
+  trigger: AstraInputTrigger;
+  modalities: AstraInputModality[];
+  consent: {
+    microphone: boolean;
+    camera: boolean;
+    image: boolean;
+    screen: boolean;
+  };
+  visualContentProvided: false;
+};
+
 export type AstraAgentKey =
   | "chief_of_staff"
   | "memory"
@@ -39,6 +68,7 @@ export type AgentRequest = {
   approved?: boolean;
   approvalToken?: string;
   provider?: AstraProviderChoice;
+  inputContext?: AstraInputContext;
 };
 
 export type AgentResponse = {

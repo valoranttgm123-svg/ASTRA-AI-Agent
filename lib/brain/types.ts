@@ -2,6 +2,7 @@ import type {
   AgentResponse,
   AstraAgentKey,
   AstraProviderChoice,
+  AstraInputContext,
 } from "@/lib/agent/types";
 import type { AstraMemorySourceType } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
@@ -62,6 +63,7 @@ export type AstraBrainEvent = {
 export type AstraBrainRunOptions = {
   onEvent?: (event: AstraBrainEvent) => void;
   provider?: AstraProviderChoice;
+  inputContext?: AstraInputContext;
   signal?: AbortSignal;
 };
 
@@ -99,6 +101,7 @@ export type AstraBrainEnvelope = {
       reason: "id" | "name" | "alias" | "recent";
     };
     skills: string[];
+    input?: AstraInputContext;
   };
   permissions?: AstraBrainPermissionSnapshot;
 };
@@ -125,6 +128,7 @@ export type AstraBrainStatus = {
     integrations: AstraBrainFeatureStatus;
     creative: AstraBrainFeatureStatus;
     computer: AstraBrainFeatureStatus;
+    multimodal: AstraBrainFeatureStatus;
     tools: AstraBrainFeatureStatus;
     cloud: AstraBrainFeatureStatus;
   };
