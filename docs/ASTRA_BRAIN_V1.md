@@ -1,18 +1,6 @@
 # ASTRA Brain V1 — Architecture Decision
 
-Status: **B1–B8 foundation implemented; live providers remain capability-detected and opt-in**
-
-## Completion snapshot — 2026-09-19
-
-- Ollama is the automatic local inference route and supports a user-selected installed model plus allowlisted read-only tool calls.
-- Hermes is detected but cannot run its agent loop until `ASTRA_HERMES_AGENT_APPROVAL=true`; every Hermes task still receives a single-use UI confirmation because ASTRA cannot enforce permissions inside the gateway.
-- Codex uses an explicitly configured CLI, `codex exec --json`, an existing ChatGPT login, `--ignore-user-config`, ephemeral sessions, disabled apps/MCP, no network in the workspace sandbox, and read-only mode by default. ASTRA never falls back to an API key. A real read-only task was verified through this adapter on 2026-09-19.
-- Project memory is bounded retrieval from allowlisted text plus explicit `memory.save`; ASTRA does not store transcripts automatically.
-- MCP servers and tools use a server-owned allowlist. Remote MCP requires HTTPS and an explicit opt-in. Non-read-only tools require a one-use approval and remain globally disabled until external actions are enabled.
-- `/api/agent` accepts only same-origin loopback requests, limits body/concurrency/output, streams actual lifecycle events, and exposes cancellation by request ID.
-- The Command Center shows current-task states and a real event timeline; unavailable integrations stay grey.
-- The Humanoid consumes the same request lifecycle. Raw reasoning is never sent to the browser.
-- Sonor Workflow memory is deliberately deferred to the next stage.
+Status: **Brain V1 implementation complete — Brain Adapter + Event Bus + Command Center trace + Hermes/Ollama + durable local Memory/Skills + Codex engineering specialist + permission policy + explicit optional cloud guard**
 
 ## Goal
 
@@ -142,9 +130,10 @@ ASTRA owns a stable adapter boundary:
 
 ```ts
 interface AstraBrain {
-  chat(request: BrainRequest, options?: BrainOptions): Promise<AstraBrainChatResult>;
-  execute(request: BrainRequest, options?: BrainOptions): Promise<AstraBrainChatResult>;
-  status(): Promise<AstraBrainStatus>;
+  chat(input: string): Promise<unknown>;
+  execute(task: unknown): Promise<unknown>;
+  cancel(): Promise<void>;
+  status(): Promise<unknown>;
 }
 ```
 
@@ -240,11 +229,11 @@ Hermes unavailable + Ollama unavailable
   -> routing_only / needs_provider
 ```
 
-Important boundary:
-- Ollama receives only allowlisted read-only tools automatically;
-- write/external tools are never placed in Ollama's automatic tool set;
-- direct write/external calls require the UI approval flow and server opt-in;
-- ASTRA explicitly instructs models not to claim actions without actual tool evidence.
+Important limitation:
+- Ollama fallback currently provides local model reasoning/chat only;
+- it does not yet own GitHub, shell, email, files, or MCP tools;
+- tool execution remains planned for Hermes/Codex/MCP phases;
+- ASTRA explicitly instructs the Ollama fallback not to claim external actions occurred.
 
 ## Routing policy
 
@@ -287,11 +276,163 @@ Required before paid cloud integration:
 4. ✅ Add Brain Event Bus and Command Center trace integration.
 5. ✅ Add Hermes local service/adapter.
 6. ✅ Connect Ollama as the automatic local model fallback.
-7. ✅ Add bounded project memory and retrieval events.
-8. ✅ Add Codex engineering adapter and explicit approval route.
-9. ✅ Add MCP/tools, real lifecycle events and permission controls.
-10. ➡️ Connect Sonor workflow/memory after ASTRA stabilizes.
-11. ◻️ Paid cloud providers remain a future opt-in non-goal.
+7. ✅ Add durable local memory retrieval and skills.
+8. ✅ Add Codex CLI as the engineering specialist.
+9. ✅ Add ASTRA permission policy for tools/side effects.
+10. ✅ Add paid cloud as an explicit disabled-by-default optional route.
+
+## Brain V1 completion details
+
+### Durable local Memory
+
+Implemented in `lib/brain/memory.ts`.
+
+Default private file:
+
+```text
+.astra/memory.json
+```
+
+The `.astra/` directory is gitignored. ASTRA never commits the user's private memory database.
+
+Memory format:
+
+```json
+[
+  {
+    "id": "project-note",
+    "text": "Private project context to retrieve when relevant.",
+    "tags": ["project", "context"],
+    "updatedAt": "2026-09-19"
+  }
+]
+```
+
+Retrieval is local keyword relevance ranking with entry/character caps. No vector database or paid embedding API is required for V1.
+
+### Skills
+
+Implemented in `lib/brain/skills.ts`.
+
+V1 includes built-in route-specific skills for:
+- orchestration;
+- engineering/repository work;
+- research;
+- memory retrieval;
+- files;
+- computer operations;
+- communication;
+- business;
+- trading safety.
+
+Optional private/local custom skills can be stored in:
+
+```text
+.astra/skills.json
+```
+
+They are loaded only for the matching routed specialist.
+
+### Codex engineering specialist
+
+Implemented in `lib/brain/codex.ts`.
+
+Engineering/GitHub routes now try the locally authenticated Codex CLI before Hermes/Ollama.
+
+Default execution:
+
+```text
+codex exec --json --ephemeral --skip-git-repo-check --sandbox read-only --cd <workspace>
+```
+
+Properties:
+- uses the existing local Codex/ChatGPT authentication;
+- does not require an OpenAI API key in ASTRA;
+- defaults to read-only;
+- workspace writes require `ASTRA_ALLOW_FILE_WRITE=true` and a writable Codex sandbox; managed installs that require `danger-full-access` also need the separate danger opt-in and shell permission;
+- ASTRA watches the JSONL stream for the final `agent_message` / `turn.completed`;
+- private ASTRA memory is excluded from Codex by default and requires `ASTRA_CODEX_INCLUDE_MEMORY=true`.
+
+### Permission policy
+
+Implemented in `lib/brain/policy.ts`.
+
+Central flags:
+
+```env
+ASTRA_REQUIRE_APPROVAL=true
+ASTRA_ALLOW_SHELL=false
+ASTRA_ALLOW_FILE_WRITE=false
+ASTRA_ALLOW_EXTERNAL_ACTIONS=false
+ASTRA_ALLOW_PAID_CLOUD=false
+```
+
+The policy is:
+- injected into provider instructions;
+- hard-applied to Codex sandbox selection;
+- hard-applied to paid-cloud eligibility;
+- surfaced in Brain status/Command Center.
+
+Hermes can host its own MCP/tool loop. ASTRA does not fabricate tool-level events that Hermes does not expose. Side-effect enforcement inside Hermes must also be configured on the Hermes/MCP side.
+
+### Optional cloud
+
+Implemented in `lib/brain/cloud.ts`.
+
+Cloud is not part of the normal default path. It runs only when:
+
+```env
+ASTRA_CLOUD_ENABLED=true
+ASTRA_ALLOW_PAID_CLOUD=true
+```
+
+and URL/key/model are all configured.
+
+Private local memory is not sent to cloud unless:
+
+```env
+ASTRA_CLOUD_INCLUDE_MEMORY=true
+```
+
+### Provider order
+
+For engineering/GitHub tasks:
+
+```text
+Codex CLI
+  -> Hermes
+  -> Ollama
+  -> explicit cloud opt-in
+  -> routing_only
+```
+
+For other tasks:
+
+```text
+Hermes
+  -> Ollama
+  -> explicit cloud opt-in
+  -> routing_only
+```
+
+### Command Center telemetry
+
+The real event path now includes:
+- `request.received`;
+- `router.selected`;
+- `memory.loaded`;
+- `skill.selected`;
+- `policy.applied`;
+- `provider.selected`;
+- `provider.unavailable`;
+- `agent.started`;
+- `agent.completed`;
+- `agent.blocked`;
+- `response.ready`.
+
+The Command Center displays provider state and feature readiness for Memory, Skills, Codex, Tools, and Cloud.
+
+Tool-level `tool.started/tool.completed` events are intentionally not fabricated. They can be added when the execution provider exposes trustworthy tool telemetry.
 
 ## Non-goals for V1
 
@@ -299,3 +440,186 @@ Required before paid cloud integration:
 - No browser-side provider secrets.
 - No dependency on a single model vendor.
 - No requirement for Claude/OpenAI API billing to make ASTRA useful.
+
+## Execution Mode V1
+
+ASTRA now distinguishes reasoning/chat from real task execution.
+
+UI semantics:
+
+```text
+SEND
+  -> chat / analysis / planning
+  -> does not grant write approval
+
+EXECUTE TASK
+  -> explicit per-request approval
+  -> Brain Adapter calls the execution path
+  -> local workspace tasks prefer Codex CLI in workspace-write mode
+  -> non-local tool tasks can use Hermes when its tools/MCP are available
+```
+
+API request envelope:
+
+```json
+{
+  "message": "fix the failing build",
+  "mode": "execute",
+  "approved": true,
+  "provider": "codex"
+}
+```
+
+Provider values are `auto`, `ollama`, and `codex`. An explicit provider is
+never silently replaced with another provider. Ollama is chat/reasoning-only;
+real execution uses a permitted Codex or Hermes path.
+
+The approval flag is not enough by itself. Server-side permission policy remains the hard boundary.
+
+If a managed Codex installation rejects `workspace-write`, ASTRA can use
+`danger-full-access` only through the additional local opt-in
+`ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS=true`. This removes the OS-enforced
+workspace boundary and therefore remains off in the committed defaults.
+
+For local repo/file execution, the effective Codex sandbox must be writable. The repository includes a helper for the safer `workspace-write` mode:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\enable-local-execution.ps1
+```
+
+On managed installations that explicitly reject `workspace-write`, use the
+additional `-DangerFullAccess` switch only after accepting that the OS workspace
+boundary is removed:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\enable-local-execution.ps1 -DangerFullAccess
+```
+
+The helper updates only local `.env.local` and enables:
+
+```env
+ASTRA_CODEX_ENABLED=true
+ASTRA_CODEX_WORKDIR=<current ASTRA repo>
+ASTRA_CODEX_SANDBOX=workspace-write
+
+ASTRA_REQUIRE_APPROVAL=true
+ASTRA_ALLOW_FILE_WRITE=true
+ASTRA_ALLOW_SHELL=true
+ASTRA_ALLOW_EXTERNAL_ACTIONS=false
+ASTRA_ALLOW_PAID_CLOUD=false
+```
+
+This means:
+- code/file changes inside the configured ASTRA workspace can run after the user presses `EXECUTE TASK`;
+- shell commands used for local verification/builds are allowed;
+- remote/external actions remain blocked;
+- paid cloud remains blocked;
+- `SEND` remains the normal safe chat path.
+
+Disable local execution again with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\enable-local-execution.ps1 -Disable
+```
+
+### Execution routing
+
+Local workspace routes:
+
+```text
+developer / github / files / computer
+  -> Codex CLI writable sandbox selected by local policy
+  -> verify actual completion
+  -> return executed result
+```
+
+If Codex is unavailable, ASTRA can attempt Hermes. For non-local actions, Hermes requires its own real tools/MCP configuration and ASTRA policy permission.
+
+Ollama remains a reasoning/chat fallback and is intentionally not treated as an action executor because no external tools are attached to the Ollama fallback.
+
+ASTRA returns `brain.execution = blocked` instead of pretending execution happened when:
+- per-request approval is missing;
+- Codex is read-only;
+- required shell permission is disabled;
+- no execution-capable provider is available.
+
+The Command Center and Humanoid can surface `CHAT / EXECUTE` request mode and `EXECUTED / BLOCKED` state from the real Brain response.
+
+## Humanoid event link
+
+V14 connects the fullscreen Humanoid to the same Brain Event Bus already consumed by Command Center.
+
+Shared source of truth:
+
+```text
+/api/agent
+   |
+   v
+ASTRA Brain Adapter
+   |
+   +--> Brain lifecycle events
+            |
+            +--> ASTRA Runtime
+                    |
+                    +--> Command Center trace/nodes
+                    |
+                    +--> Humanoid Brain HUD + GPU event pulse
+```
+
+Humanoid visual events are derived only from real `AstraBrainEvent` records already present in the runtime. No tool-level telemetry is fabricated. When a provider returns lifecycle events only with its final response, the Humanoid displays those events after they are actually received instead of pretending they streamed during execution.
+
+This preserves one event model for:
+- provider selection;
+- routing;
+- memory retrieval;
+- skills;
+- policy;
+- agent lifecycle;
+- blocked/unavailable states;
+- response readiness.
+
+A future streaming telemetry stage can transport trustworthy incremental backend events through SSE/WebSocket without changing the Brain Event type contract.
+
+## Real-time telemetry transport (V15)
+
+V15 removes the V14 limitation where Brain lifecycle information was normally visible only after the request/response envelope completed.
+
+Server path:
+
+```text
+ASTRA Runtime
+    |
+    | POST /api/agent/stream
+    | Accept: text/event-stream
+    v
+ASTRA Brain Adapter
+    |
+    +--> onEvent(request.received)
+    +--> onEvent(router.selected)
+    +--> memory + skills + policy
+    +--> onEvent(provider.selected)
+    +--> onEvent(agent.started)
+    +--> provider call
+    |      |
+    |      +--> unavailable -> live fallback event
+    |      +--> completed   -> live completion event
+    |
+    +--> onEvent(response.ready)
+    |
+    +--> final AstraBrainChatResult
+```
+
+The Browser receives:
+- `event: brain` as each trustworthy lifecycle point happens;
+- `event: result` once the final Brain result exists;
+- `event: error` for failures.
+
+The same runtime event bus continues to feed:
+- Command Center nodes/traces;
+- Command Center Brain activity list;
+- Humanoid Brain HUD;
+- Humanoid GPU Brain pulses.
+
+Provider-level lifecycle can now be live because ASTRA itself knows when it selects/starts/completes/fails a provider attempt. Tool-level lifecycle is still not synthesized. If Hermes/Codex later exposes reliable incremental tool events, those can extend the existing `AstraBrainEvent` contract without changing the transport.
+
+The non-streaming `POST /api/agent` route remains available for compatibility and diagnostics.

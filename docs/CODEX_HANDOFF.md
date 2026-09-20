@@ -4,8 +4,8 @@
 
 - B1–B8 implementation is complete in `astra/brain-v1-complete`.
 - Production UI was verified at `http://127.0.0.1:3017` with zero browser console errors.
-- Ollama `0.34.2` + `qwen3.5:4b` completed both a short chat and a real allowlisted file-read tool turn. Extended thinking is disabled by default for responsive chat; project context is retrieved only for context-bearing requests.
-- Codex CLI `0.155.0`, using the existing ChatGPT login, completed a read-only project query after a single-use UI approval.
+- Ollama `0.34.2` + `qwen3.5:4b` completed a short local chat. Extended thinking is disabled by default for responsive chat. Ollama tool execution remains intentionally unavailable until trustworthy provider telemetry exists.
+- Codex CLI `0.155.0`, using the existing ChatGPT login, completed both a read-only project query and a per-request approved write with exact content verification. This PC's managed requirements reject `workspace-write`, so local execution uses the explicit danger-mode opt-in while external actions/cloud remain disabled.
 - Hidden logon tasks `ASTRA-Agent` and `ASTRA-Ollama` plus an `ASTRA` desktop shortcut were installed and verified. Both services remain loopback-only.
 - Sonor/Graphify/Obsidian integration is intentionally the next stage. Hermes remains disabled. Physical microphone input was not verified by browser automation.
 
@@ -18,20 +18,20 @@ Last updated: 2026-09-19
 Brain V1 foundation B1–B8 is implemented on feature branch `astra/brain-v1-complete`:
 - cancellable streaming API and real event bus;
 - Hermes guarded by gateway review and one-use approval;
-- Ollama model selection and read-only tool loop;
+- explicit Ollama/Codex selection with exact Ollama model enforcement;
 - Codex CLI engineering adapter, disabled until an allowed CLI/login is verified;
 - bounded project memory and explicit save;
-- allowlisted MCP tools and permission gates;
+- Codex/Hermes execution delegation and permission gates;
 - real Command Center status/timeline;
 - shared Humanoid/Brain lifecycle;
-- 21 security/integration tests plus build/typecheck/lint/audit CI.
+- 12 security/integration tests plus build/typecheck/lint/audit CI.
 
 Runtime facts must remain distinct from code readiness. On 2026-09-19, the Codex desktop binary could not be launched directly from WindowsApps. An isolated official Codex CLI 0.155.0 was then installed under `D:\ASTRA-Tools`; its existing ChatGPT login and one read-only ASTRA task were verified. This machine-level path is intentionally not committed. Sonor memory integration is the next stage after this branch is stable.
 
 Repository:
 - `valoranttgm123-svg/ASTRA-AI-Agent`
 
-Current stable main:
+Current stable architecture:
 - ASTRA Humanoid V13
 - gesture control: PINCH / OPEN PALM / FIST
 - loud synthesized shockwave SFX + presence layer
@@ -40,6 +40,13 @@ Current stable main:
 - real mic/speech state wiring
 - camera index-finger head tracking
 - runtime `stopInteraction()` for real cancellation
+- ASTRA Brain Adapter + real event trace
+- Hermes primary local gateway + Ollama fallback
+- local durable Memory/Skills
+- Codex CLI engineering specialist
+- central tool/side-effect permission policy
+- optional paid cloud guard, OFF by default
+- Command Center provider/feature telemetry
 
 V13:
 - PR #41 merged to `main`
@@ -159,7 +166,17 @@ Command Center real-time events
 Paid cloud:
 - optional;
 - OFF by default;
+- requires both `ASTRA_CLOUD_ENABLED=true` and `ASTRA_ALLOW_PAID_CLOUD=true`;
 - never silently used.
+
+Brain provider order:
+- engineering/GitHub: Codex → Hermes → Ollama → explicit cloud → routing-only;
+- other routes: Hermes → Ollama → explicit cloud → routing-only.
+
+Private memory:
+- default file `.astra/memory.json`;
+- gitignored;
+- not sent to Codex/cloud unless explicitly enabled.
 
 ## Command Center rule
 
@@ -212,18 +229,19 @@ Optimize architecture before lowering HIGH quality.
 - prefer local/free components before paid cloud;
 - direct implementation is preferred over lengthy speculation.
 
-## Next work after V13
+## Next work after Brain V1
 
-1. validate/tune V13 gesture thresholds on the target camera if needed;
-2. ASTRA Brain Adapter;
-3. Hermes adapter/service;
-4. Ollama local default;
-5. route `/api/agent` through Brain;
-6. durable Memory/Skills;
-7. Codex engineering specialist;
-8. MCP/tools permissions;
-9. Brain/runtime event bus;
-10. Command Center real event visualization.
+Brain V1 architecture is implemented. Do not rebuild these layers from scratch.
+
+Next work:
+1. validate/tune V13 gesture thresholds on the target camera only if real camera tests need it;
+2. configure local `.astra/memory.json` / `.astra/skills.json` when private context is desired;
+3. verify Codex CLI availability/auth on the target Windows machine;
+4. configure Hermes-side MCP/tool permissions to match ASTRA's policy flags;
+5. add provider-native `tool.started/tool.completed` telemetry only when Hermes/Codex exposes trustworthy events;
+6. add explicit UI approval flows before enabling destructive side effects;
+7. keep paid cloud OFF unless the user deliberately opts in;
+8. continue performance/UX work without degrading HIGH Humanoid quality.
 
 ## Local validation
 

@@ -1,67 +1,136 @@
 # ASTRA Architecture
 
-ASTRA keeps the original APEX-UI visual layer and adds a real agent runtime behind it.
+ASTRA is one integrated AI operating environment. The Humanoid, Brain, and Command Center are different views of the same runtime, not disconnected demos.
 
 ## Layers
 
-1. **Interface** — Next.js / React UI, orb, reasoning graph, command console.
-2. **Runtime** — client state for idle, thinking, and speaking.
-3. **Agent API** — loopback-only `/api/agent` validates, streams and cancels requests.
-4. **Brain adapter** — chooses a specialist, retrieves context, selects an available provider and emits real events.
-5. **Agents** — focused specialists such as Developer, Research, Files, GitHub, Business, and Trading.
-6. **Tools** — built-in bounded read tools plus explicitly allowlisted MCP tools. Side effects use single-use approvals.
-7. **Memory** — bounded documentation retrieval and opt-in private `.astra/memory/notes.jsonl`; never committed.
+1. **Interface / Humanoid** — Next.js / React UI, GPU particle Humanoid, chat, microphone, gesture input, voice playback.
+2. **Runtime / Event Bus** — real interaction state, request cancellation, Brain provider/events/trace.
+3. **Agent API** — `/api/agent` validates requests and delegates to the stable Brain Adapter.
+4. **ASTRA Brain Adapter** — routing, context assembly, provider selection, permission policy, fallback behavior.
+5. **Providers** — Hermes, Ollama, Codex CLI specialist, optional cloud.
+6. **Memory / Skills** — local private memory plus built-in/private route skills.
+7. **Tools / MCP** — execution delegated to permitted provider capabilities; side effects are policy-gated.
+8. **Command Center** — visualizes real Brain/runtime events only.
 
 ## Current V1 flow
 
 ```text
-User command
-   ↓
-AstraConsole
-   ↓
+USER
+  ↓
+Humanoid / Chat / Mic / Gesture
+  ↓
+ASTRA Runtime
+  ↓
 POST /api/agent
-   ↓
-Brain adapter
-   ↓
-specialist router + bounded memory
-   ↓
-Hermes / Ollama / Codex / direct tool
-   ↓
-NDJSON events + structured result
-```
+  ↓
+ASTRA Brain Adapter
+  ├─ keyword specialist router
+  ├─ local Memory retrieval
+  ├─ route Skills
+  ├─ permission policy
+  └─ provider selection
+        ↓
+   engineering/GitHub:
+   Codex → Hermes → Ollama → explicit cloud → routing_only
 
-The client runtime also advances the existing orb visual from idle → thinking → speaking so the interface reacts to a real request lifecycle.
+   other routes:
+   Hermes → Ollama → explicit cloud → routing_only
+        ↓
+Brain lifecycle events
+  ├─ Runtime high-level state → Humanoid
+  └─ detailed trace → Command Center
+```
 
 ## Provider boundary
 
-V1 contains no embedded secrets or automatic paid provider. Hermes and Ollama are loopback-only; Codex uses an already authenticated CLI and explicit per-task approval. A missing provider becomes `routing_only`, not a fake success.
+The frontend never contains provider secrets.
 
-Implemented structure:
+Server-side provider modules:
 
 ```text
 lib/brain/
-  adapter.ts       provider and lifecycle coordinator
-  hermes.ts        reviewed local gateway adapter
-  ollama.ts        local model and read-only tool loop
-  codex.ts         isolated Codex engineering adapter
-  memory.ts        bounded retrieval and opt-in notes
-  tools.ts         built-ins and MCP allowlist
-  approvals.ts     single-use, task-bound approvals
-  http.ts          local API boundary and validation
+  adapter.ts
+  types.ts
+  policy.ts
+  memory.ts
+  skills.ts
+  hermes.ts
+  ollama.ts
+  codex.ts
+  cloud.ts
 ```
 
-## Approval model
+### Hermes
 
-Read-only actions may run automatically when enabled. External or destructive actions should require explicit approval, including:
+Primary local gateway/orchestrator. It can own its own tool/MCP loop. ASTRA passes the current permission policy in provider instructions, but Hermes-side MCP permissions must also be configured to enforce side effects inside Hermes.
 
-- sending email
-- deleting or overwriting files
-- shell/PowerShell commands with side effects
-- Git push / merge
-- database writes
-- placing or closing trades
-- shutting down or controlling a computer
+### Ollama
 
-The `.env.example` defaults these capabilities to disabled until configured.
+Automatic local model fallback. It is a reasoning/chat path and must not claim external actions occurred when no tools are attached.
 
-The browser never receives provider keys, local filesystem roots, private memory paths, raw process errors, or model reasoning. Sonor integration is not part of this stage.
+### Codex
+
+Engineering/GitHub specialist using the local authenticated Codex CLI.
+
+Default sandbox is read-only. Workspace writes are permitted only when file
+write is enabled and a writable Codex sandbox is configured. Managed installs
+that reject `workspace-write` may use `danger-full-access` only with the
+additional `ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS=true` opt-in and shell
+permission. Danger mode has no OS-enforced workspace boundary.
+
+### Optional cloud
+
+Disabled by default. It runs only when:
+- `ASTRA_CLOUD_ENABLED=true`; and
+- `ASTRA_ALLOW_PAID_CLOUD=true`; and
+- URL/key/model are configured.
+
+No silent paid escalation.
+
+## Memory and Skills
+
+Private runtime data lives outside Git:
+
+```text
+.astra/memory.json
+.astra/skills.json
+```
+
+The entire `.astra/` directory is gitignored.
+
+Memory is retrieved by lightweight local relevance scoring with strict size caps. Skills include committed built-ins plus optional private local extensions.
+
+Private memory is excluded from Codex/cloud by default.
+
+## Real event rule
+
+Command Center must never animate fake work.
+
+Current real Brain events include:
+- `request.received`
+- `router.selected`
+- `memory.loaded`
+- `skill.selected`
+- `policy.applied`
+- `provider.selected`
+- `provider.unavailable`
+- `agent.started`
+- `agent.completed`
+- `agent.blocked`
+- `response.ready`
+
+Tool-level events are added only when an execution provider exposes trustworthy tool telemetry.
+
+## Approval / permission model
+
+Read-only reasoning/inspection is the safe default.
+
+Configured policy flags:
+- `ASTRA_REQUIRE_APPROVAL`
+- `ASTRA_ALLOW_SHELL`
+- `ASTRA_ALLOW_FILE_WRITE`
+- `ASTRA_ALLOW_EXTERNAL_ACTIONS`
+- `ASTRA_ALLOW_PAID_CLOUD`
+
+Meaningful side effects such as external messages, file writes/deletes, repository pushes/merges, database writes, remote control, and trade execution must remain disabled unless an explicit permitted path exists.

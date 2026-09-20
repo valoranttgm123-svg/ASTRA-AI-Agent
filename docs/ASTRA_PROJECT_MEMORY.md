@@ -4,7 +4,7 @@
 
 - Local UI: `http://127.0.0.1:3017` (loopback only).
 - Local model: Ollama `0.34.2`, `qwen3.5:4b`, stored under `D:\AI-Models\Ollama`.
-- Engineering provider: Codex CLI `0.155.0` using existing ChatGPT login, read-only by default and one-time approval gated.
+- Engineering provider: Codex CLI `0.155.0` using existing ChatGPT login. Committed defaults remain read-only; this managed PC uses explicit `danger-full-access` plus per-request approval because its Codex requirements reject `workspace-write`.
 - Startup: hidden `ASTRA-Agent` and `ASTRA-Ollama` user logon tasks; desktop `ASTRA.url` shortcut.
 - Sonor/Graphify/Obsidian bridge: next stage, not part of Brain V1.
 - Physical microphone/headset capture: not verified in automated testing.

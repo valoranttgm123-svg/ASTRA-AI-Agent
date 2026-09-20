@@ -1,17 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { AstraOrbState } from "@/lib/agent/types";
+import type { AstraOrbState, AstraProviderChoice } from "@/lib/agent/types";
 import type { AstraAvatarState } from "@/lib/avatar/types";
 import type {
   AstraBrainChatResult,
   AstraBrainEvent,
   AstraBrainProvider,
   AstraBrainStatus,
-  BrainRequest, ProviderChoice,
 } from "@/lib/brain/types";
-
-import { readBrainStream } from "@/lib/brain/client-stream";
 
 type SpeechRecognitionAlternativeLike = {
   transcript: string;
@@ -74,19 +71,19 @@ type AstraRuntimeValue = {
   brainStatus: AstraBrainStatus | null;
   brainEvents: AstraBrainEvent[];
   brainTrace: ReasoningTrace | null;
-  providerChoice: ProviderChoice;
-  codexMode: "read-only" | "workspace-write";
-  setCodexMode: (mode: "read-only" | "workspace-write") => void;
-  selectedModel: string;
-  projectId: string;
-  pendingRequest: BrainRequest | null;
-  setProviderChoice: (provider: ProviderChoice) => void;
-  setSelectedModel: (model: string) => void;
-  setProjectId: (id: string) => void;
-  refreshStatus: () => Promise<void>;
-  approveRequest: () => Promise<void>;
-  dismissApproval: () => void;
-  send: (message: string, overrides?: Partial<BrainRequest>) => Promise<AstraBrainChatResult>;
+  brainStreaming: boolean;
+  send: (
+    message: string,
+    options?: {
+      mode?: "chat" | "execute";
+      approved?: boolean;
+      provider?: AstraProviderChoice;
+    },
+  ) => Promise<AstraBrainChatResult>;
+  execute: (
+    message: string,
+    provider?: AstraProviderChoice,
+  ) => Promise<AstraBrainChatResult>;
   beginListening: () => void;
   endListening: () => void;
   stopInteraction: () => void;
@@ -143,25 +140,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [brainStatus, setBrainStatus] = useState<AstraBrainStatus | null>(null);
   const [brainEvents, setBrainEvents] = useState<AstraBrainEvent[]>([]);
   const [brainTrace, setBrainTrace] = useState<ReasoningTrace | null>(null);
-
-  const [providerChoice, setProviderChoice] = useState<ProviderChoice>("auto");
-  const [codexMode, setCodexMode] = useState<"read-only" | "workspace-write">("read-only");
-  const [selectedModel, setSelectedModel] = useState("");
-  const [projectId, setProjectId] = useState("astra");
-  const [pendingRequest, setPendingRequest] = useState<BrainRequest | null>(null);
-  const activeRequestId = useRef<string | null>(null);
-  const refreshStatus = useCallback(async () => {
-    const res = await fetch("/api/agent", { cache: "no-store" });
-    if (!res.ok) throw new Error("Status Brain tidak dapat dibaca.");
-    const status = await res.json() as AstraBrainStatus;
-    setBrainStatus(status); setBrainProvider(status.provider);
-    setProjectId(current => status.projects.some(p => p.id === current) ? current : status.projects[0]?.id || "astra");
-  }, []);
-  const abortRequest = useCallback(() => {
-    const id = activeRequestId.current;
-    if (id) void fetch("/api/agent", { method: "DELETE", headers: { "content-type": "application/json", "x-astra-client": "1" }, body: JSON.stringify({ requestId: id }), keepalive: true }).catch(() => {});
-    activeRequestId.current = null;
-  }, []);
+  const [brainStreaming, setBrainStreaming] = useState(false);
 
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -206,17 +185,36 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setMicSupported(Boolean(getSpeechRecognitionConstructor()));
   }, []);
 
-  useEffect(() => { void refreshStatus().catch(() => {}); }, [refreshStatus]);
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetch("/api/agent", { method: "GET", cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as AstraBrainStatus;
+      })
+      .then((status) => {
+        if (cancelled || !status) return;
+        setBrainStatus(status);
+        setBrainProvider(status.provider);
+      })
+      .catch(() => {
+        // Chat still has routing-only fallback if the status request itself fails.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => () => {
     clearResetTimer();
     requestSequenceRef.current += 1;
-    abortRequest();
     requestControllerRef.current?.abort();
     requestControllerRef.current = null;
     invalidateRecognition();
     cancelSpeech();
-  }, [abortRequest, cancelSpeech, clearResetTimer, invalidateRecognition]);
+  }, [cancelSpeech, clearResetTimer, invalidateRecognition]);
 
   const settleIdle = useCallback((delay = 500) => {
     clearResetTimer();
@@ -247,15 +245,6 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
     window.speechSynthesis.cancel();
 
-    let finished = false;
-    const finishPlayback = (delay: number) => {
-      if (finished || speechSequence !== speechSequenceRef.current) return;
-      finished = true;
-      clearTimeout(startTimer); clearTimeout(endTimer);
-      setPlaybackActive(false); setSpeechLevel(0); settleIdle(delay);
-    };
-    const startTimer = setTimeout(() => finishPlayback(120), 1800);
-    const endTimer = setTimeout(() => finishPlayback(120), Math.min(120000, Math.max(12000, text.length * 95)));
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "id-ID";
     utterance.rate = 1.02;
@@ -289,18 +278,29 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
     utterance.onend = () => {
       if (speechSequence !== speechSequenceRef.current) return;
-      finishPlayback(350);
+      setPlaybackActive(false);
+      setSpeechLevel(0);
+      settleIdle(350);
     };
 
     utterance.onerror = () => {
       if (speechSequence !== speechSequenceRef.current) return;
-      finishPlayback(500);
+      setPlaybackActive(false);
+      setSpeechLevel(0);
+      settleIdle(500);
     };
 
     window.speechSynthesis.speak(utterance);
   }, [clearResetTimer, settleIdle, voiceEnabledState]);
 
-  const send = useCallback(async (message: string, overrides: Partial<BrainRequest> = {}) => {
+  const send = useCallback(async (
+    message: string,
+    options?: {
+      mode?: "chat" | "execute";
+      approved?: boolean;
+      provider?: AstraProviderChoice;
+    },
+  ) => {
     const value = message.trim();
     if (!value) throw new Error("ASTRA message is empty.");
 
@@ -309,10 +309,6 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     cancelSpeech();
 
     const requestSequence = ++requestSequenceRef.current;
-    abortRequest();
-    const requestId = crypto.randomUUID(); activeRequestId.current = requestId;
-    const input: BrainRequest = { message: value, projectId, provider: providerChoice, codexMode, ...(selectedModel ? { model: selectedModel } : {}), ...overrides };
-    setPendingRequest(null);
     requestControllerRef.current?.abort();
     const controller = new AbortController();
     requestControllerRef.current = controller;
@@ -324,57 +320,207 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setPlaybackActive(false);
     setActiveAgent("Chief");
 
-    const receiveEvent = (event: AstraBrainEvent) => {
+    let streamedEventCount = 0;
+
+    const appendBrainEvent = (event: AstraBrainEvent) => {
       if (requestSequence !== requestSequenceRef.current) return;
-      setBrainEvents(current => [...current, event].slice(-240));
-      setBrainTrace({ n: ++brainTraceSequenceRef.current, trace: [{ helper: event.visualNode || "chief_of_staff", type: event.type, at: event.at }] });
-      if (event.type === "agent.started") setActiveAgent(event.agent || "Chief");
+      streamedEventCount += 1;
+
+      setBrainEvents((current) => {
+        if (current.some((item) => item.id === event.id)) return current;
+        return [...current, event].slice(-24);
+      });
+
+      if (event.provider) {
+        setBrainProvider(event.provider);
+      }
+
+      if (event.agent) {
+        setActiveAgent(
+          event.agent
+            .split("_")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" "),
+        );
+      }
+
+      if (event.visualNode) {
+        setBrainTrace({
+          n: ++brainTraceSequenceRef.current,
+          trace: [{
+            helper: event.visualNode,
+            type: event.type,
+            at: event.at,
+          }],
+        });
+      }
     };
 
     try {
-      const response = await fetch("/api/agent", {
+      setBrainStreaming(true);
+      const response = await fetch("/api/agent/stream", {
         method: "POST",
-        headers: { "content-type": "application/json", "x-astra-client": "1", accept: "application/x-ndjson" },
-        body: JSON.stringify({ ...input, requestId }),
+        headers: {
+          "content-type": "application/json",
+          accept: "text/event-stream",
+          "x-astra-client": "1",
+        },
+        body: JSON.stringify({
+          message: value,
+          mode: options?.mode ?? "chat",
+          approved: Boolean(options?.approved),
+          provider: options?.provider ?? "auto",
+        }),
         signal: controller.signal,
       });
 
       if (!response.ok) {
-        throw new Error(`ASTRA request failed (${response.status})`);
+        throw new Error(`ASTRA stream failed (${response.status})`);
       }
 
-      const result = await readBrainStream(response, receiveEvent);
+      if (!response.body) {
+        throw new Error("ASTRA streaming response body is unavailable.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      const streamState: { result: AstraBrainChatResult | null } = {
+        result: null,
+      };
+
+      const handleBlock = (rawBlock: string) => {
+        const block = rawBlock.replace(/\r/g, "").trim();
+        if (!block) return;
+
+        let eventName = "message";
+        const dataLines: string[] = [];
+
+        for (const line of block.split("\n")) {
+          if (line.startsWith("event:")) {
+            eventName = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            dataLines.push(line.slice(5).trimStart());
+          }
+        }
+
+        if (dataLines.length === 0) return;
+        const payload = JSON.parse(dataLines.join("\n")) as unknown;
+
+        if (eventName === "brain") {
+          appendBrainEvent(payload as AstraBrainEvent);
+          return;
+        }
+
+        if (eventName === "result") {
+          streamState.result = payload as AstraBrainChatResult;
+          return;
+        }
+
+        if (eventName === "error") {
+          const errorPayload = payload as { message?: string };
+          throw new Error(errorPayload.message || "ASTRA Brain stream failed.");
+        }
+      };
+
+      while (true) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+
+        buffer += decoder.decode(chunk.value, { stream: true }).replace(/\r/g, "");
+        let boundary = buffer.indexOf("\n\n");
+
+        while (boundary >= 0) {
+          const block = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          handleBlock(block);
+          boundary = buffer.indexOf("\n\n");
+        }
+      }
+
+      buffer += decoder.decode().replace(/\r/g, "");
+      if (buffer.trim()) handleBlock(buffer);
+
+      const finalResult = streamState.result;
+      if (!finalResult) {
+        throw new Error("ASTRA stream ended without a final result.");
+      }
 
       if (requestSequence !== requestSequenceRef.current) {
-        return result;
+        return finalResult;
       }
 
       requestControllerRef.current = null;
-      activeRequestId.current = null;
-      setMicTranscript("");
-      setLastResponse(result);
-      setActiveAgent(result.agentName);
-      setBrainProvider(result.brain.provider);
-      if (result.brain.approval) {
-        setPendingRequest({ ...input, approvalId: result.brain.approval.id });
-        settleIdle(0);
-      } else if (result.state === "error") {
-        setAvatarState("error"); setOrbState("idle"); settleIdle(1500);
+      setBrainStreaming(false);
+      setLastResponse(finalResult);
+      setActiveAgent(finalResult.agentName);
+      setBrainProvider(finalResult.brain.provider);
+
+      // V15 normally receives lifecycle events live. If a provider/path emits
+      // no streaming callbacks, retain V14 compatibility by applying the final
+      // event envelope only after the real response arrives.
+      if (streamedEventCount === 0) {
+        setBrainEvents((current) => [...current, ...finalResult.brain.events].slice(-24));
+        const eventTrace = finalResult.brain.events
+          .filter((event) => Boolean(event.visualNode))
+          .map((event) => ({
+            helper: event.visualNode as string,
+            type: event.type,
+            at: event.at,
+          }));
+
+        if (eventTrace.length > 0) {
+          setBrainTrace({
+            n: ++brainTraceSequenceRef.current,
+            trace: eventTrace,
+          });
+        }
       }
-      setBrainStatus(current => current ? { ...current, provider: result.brain.provider,
-        model: result.brain.model,
-        mode: result.brain.provider === "codex" ? "cloud" : ["hermes", "ollama", "tools"].includes(result.brain.provider) ? "local" : "routing_only",
-        detail: result.requiresApproval ? "Menunggu persetujuan." : result.state === "completed" ? "Permintaan terakhir selesai." : result.message,
-      } : current);
-      if (input.tool) settleIdle(200);
-      else if (!result.requiresApproval && result.state !== "error") speak(result.message);
-      return result;
+
+      setBrainStatus((current) => {
+        const provider = finalResult.brain.provider;
+        const mode =
+          provider === "cloud"
+            ? "cloud"
+            : provider === "routing_only"
+              ? "routing_only"
+              : "local";
+
+        const providerName =
+          provider === "routing_only"
+            ? "Routing-only fallback"
+            : provider === "ollama"
+              ? "Ollama"
+              : provider === "codex"
+                ? "Codex"
+                : provider === "hermes"
+                  ? "Hermes"
+                  : "Cloud";
+
+        return {
+          ready: true,
+          provider,
+          mode,
+          detail:
+            provider === "routing_only"
+              ? "ASTRA used routing-only fallback for the latest request."
+              : `${providerName} handled the latest ASTRA request via live telemetry.`,
+          endpoint: current?.endpoint,
+          model: current?.model,
+          fallback: current?.fallback ?? "routing_only",
+          permissions: finalResult.brain.permissions ?? current?.permissions,
+          features: current?.features,
+        };
+      });
+      speak(finalResult.message);
+      return finalResult;
     } catch (error) {
       if (requestSequence !== requestSequenceRef.current) {
         throw error;
       }
 
       requestControllerRef.current = null;
+      setBrainStreaming(false);
       if (error instanceof DOMException && error.name === "AbortError") {
         setOrbState("idle");
         setAvatarState("idle");
@@ -389,17 +535,16 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       settleIdle(1500);
       throw error;
     }
-  }, [abortRequest, cancelSpeech, clearResetTimer, invalidateRecognition, settleIdle, speak, projectId, providerChoice, selectedModel, codexMode]);
+  }, [cancelSpeech, clearResetTimer, invalidateRecognition, settleIdle, speak]);
 
-  const approveRequest = useCallback(async () => {
-    if (!pendingRequest) return;
-    const bound = pendingRequest; setPendingRequest(null);
-    await send(bound.message, bound);
-  }, [pendingRequest, send]);
-  const dismissApproval = useCallback(() => { setPendingRequest(null); setLastResponse(null); }, []);
+  const execute = useCallback(
+    (message: string, provider: AstraProviderChoice = "auto") =>
+      send(message, { mode: "execute", approved: true, provider }),
+    [send],
+  );
 
   useEffect(() => {
-    sendRef.current = send;
+    sendRef.current = (message: string) => send(message);
   }, [send]);
 
   const beginListening = useCallback(() => {
@@ -413,7 +558,6 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     clearResetTimer();
 
     // Voice input is the newest interaction and therefore wins over stale work.
-    abortRequest();
     requestSequenceRef.current += 1;
     requestControllerRef.current?.abort();
     requestControllerRef.current = null;
@@ -505,7 +649,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       setAvatarState("error");
       settleIdle(1200);
     }
-  }, [abortRequest, cancelSpeech, clearResetTimer, invalidateRecognition, settleIdle]);
+  }, [cancelSpeech, clearResetTimer, invalidateRecognition, settleIdle]);
 
   const endListening = useCallback(() => {
     clearResetTimer();
@@ -528,10 +672,6 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
   const stopInteraction = useCallback(() => {
     clearResetTimer();
-    const requestId = activeRequestId.current;
-    abortRequest();
-    setPendingRequest(null);
-    if (requestId) setBrainEvents(current => [...current, { id: crypto.randomUUID(), requestId, at: Date.now(), type: "request.cancelled", label: "Pembatalan diminta", visualNode: "chief_of_staff" } as AstraBrainEvent].slice(-240));
 
     requestSequenceRef.current += 1;
     requestControllerRef.current?.abort();
@@ -547,15 +687,16 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setSpeechLevel(0);
     setPlaybackActive(false);
     setActiveAgent(null);
-  }, [abortRequest, cancelSpeech, clearResetTimer, invalidateRecognition]);
+    setBrainStreaming(false);
+  }, [cancelSpeech, clearResetTimer, invalidateRecognition]);
 
   const setVoiceEnabled = useCallback((enabled: boolean) => {
     setVoiceEnabledState(enabled);
     if (!enabled) {
       cancelSpeech();
-      if (orbState !== "thinking") settleIdle(120);
+      settleIdle(120);
     }
-  }, [cancelSpeech, settleIdle, orbState]);
+  }, [cancelSpeech, settleIdle]);
 
   const value = useMemo(
     () => ({
@@ -574,9 +715,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainStatus,
       brainEvents,
       brainTrace,
-      providerChoice, selectedModel, projectId, pendingRequest, codexMode, setCodexMode,
-      setProviderChoice, setSelectedModel, setProjectId, refreshStatus, approveRequest, dismissApproval,
+      brainStreaming,
       send,
+      execute,
       beginListening,
       endListening,
       stopInteraction,
@@ -599,8 +740,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainStatus,
       brainEvents,
       brainTrace,
-      providerChoice, selectedModel, projectId, pendingRequest, refreshStatus, approveRequest, dismissApproval, codexMode,
+      brainStreaming,
       send,
+      execute,
       beginListening,
       endListening,
       stopInteraction,

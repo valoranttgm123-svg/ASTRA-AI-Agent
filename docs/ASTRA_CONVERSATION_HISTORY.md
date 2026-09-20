@@ -2,7 +2,7 @@
 
 ## 2026-09-19 — Brain V1 completion and local installation
 
-The user asked to complete the GitHub roadmap until ASTRA could be used as a Jarvis-style assistant, while deferring the Sonor workflow connection. Brain B1–B8 was implemented, secured, tested, and installed locally. Live browser tests verified Ollama chat, an Ollama file-reading tool turn, and a gated Codex read-only task. Windows logon tasks and a desktop shortcut were added. Sonor remains explicitly deferred to the next stage.
+The user asked to complete the GitHub roadmap until ASTRA could be used as a Jarvis-style assistant, while deferring the Sonor workflow connection. Brain B1–B8 was implemented, secured, tested, and installed locally. Live browser tests verified Ollama chat, Codex read-only inspection, and a per-request approved Codex file write with exact content verification. The managed Codex policy on this PC rejects `workspace-write`, so local execution uses the separately opted-in `danger-full-access` mode; external actions and paid cloud remain disabled. Windows logon tasks and a desktop shortcut were added. Ollama remains chat/reasoning-only until trustworthy tool telemetry exists. Sonor remains explicitly deferred to the next stage.
 
 ## 2026-09-19 — Brain V1 B1–B8 completion decision
 
@@ -734,3 +734,82 @@ When future Codex/ChatGPT work changes:
 - user-approved decisions;
 
 update this file or `docs/CODEX_HANDOFF.md` so the next session can resume from GitHub.
+
+---
+
+## 25. Brain V1 completion
+
+After V13, the user explicitly asked to:
+- save all current ASTRA work in GitHub;
+- continue the project until the next major stage was complete.
+
+The repository was treated as the durable source of truth.
+
+Brain V1 completion added:
+
+### Local Memory
+- `lib/brain/memory.ts`;
+- private default file `.astra/memory.json`;
+- local relevance retrieval with entry/character caps;
+- no automatic commit of private memory.
+
+### Skills
+- `lib/brain/skills.ts`;
+- built-in specialist skills;
+- optional private `.astra/skills.json`.
+
+### Codex engineering specialist
+- `lib/brain/codex.ts`;
+- uses local authenticated Codex CLI;
+- engineering/GitHub routes prefer Codex;
+- JSONL `codex exec --json` completion parsing;
+- ephemeral sessions;
+- read-only sandbox by default;
+- workspace writes require explicit file-write permission;
+- private memory excluded from Codex by default.
+
+### Permission policy
+- `lib/brain/policy.ts`;
+- approval/shell/file-write/external-action/paid-cloud flags;
+- policy exposed through Brain status;
+- Codex sandbox and cloud eligibility are hard-gated.
+
+### Optional cloud
+- `lib/brain/cloud.ts`;
+- generic OpenAI-compatible fallback;
+- OFF by default;
+- requires both cloud enablement and paid-cloud permission;
+- private memory excluded by default.
+
+### Provider order
+
+Engineering/GitHub:
+
+```text
+Codex
+  → Hermes
+  → Ollama
+  → explicitly opted-in cloud
+  → routing_only
+```
+
+Other routes:
+
+```text
+Hermes
+  → Ollama
+  → explicitly opted-in cloud
+  → routing_only
+```
+
+### Command Center
+- provider colors/status now distinguish Hermes, Ollama, Codex, Cloud, and routing-only;
+- feature readiness shows Memory, Skills, Codex, Tools, and Cloud;
+- real lifecycle events include memory/skills/policy/provider/agent/response events;
+- no fake tool-level activity is emitted when provider telemetry is unavailable.
+
+### Privacy
+- `.astra/` remains gitignored;
+- no keys/auth files are committed;
+- paid cloud remains disabled by default;
+- Codex uses the user's local authenticated CLI rather than embedding API credentials in ASTRA.

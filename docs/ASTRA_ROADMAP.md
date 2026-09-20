@@ -170,14 +170,14 @@ V13 preserves:
 The repository now implements the complete B1–B8 foundation. Runtime provider availability is reported honestly: a configured local Ollama, reviewed Hermes gateway, or authenticated Codex CLI is still required for model inference.
 
 Completed in this stage:
-- cancellable NDJSON event stream and real task IDs;
-- explicit provider, project and Ollama model controls;
-- bounded project-context retrieval plus opt-in local memory;
-- read-only project and Git tools, allowlisted MCP tools, and single-use approvals;
-- Codex engineering adapter using `codex exec --json`, an existing ChatGPT login, isolated config and read-only default;
+- cancellable SSE lifecycle stream with live provider telemetry;
+- explicit `AUTO`, `OLLAMA`, and `CHATGPT / CODEX` provider controls;
+- bounded opt-in local memory and route-specific skills;
+- server-side permission policy plus per-request execution approval;
+- Codex engineering adapter using `codex exec --json`, an existing ChatGPT login, and read-only default;
 - Command Center node states and timelines derived from real events;
 - Humanoid `LISTENING → THINKING → SPEAKING → IDLE` lifecycle tied to the same runtime;
-- loopback/origin/API limits, traversal/symlink/secret guards, redaction, cancellation and child-process cleanup;
+- loopback/origin/content-type/body limits, cancellation propagation, local-provider URL guards, and child-process cleanup;
 - automated tests, typecheck, lint, dependency audit and production build in CI.
 
 Deferred by product decision:
@@ -186,8 +186,8 @@ Deferred by product decision:
 
 Verified local deployment on 2026-09-19:
 - Ollama `0.34.2` and `qwen3.5:4b` are installed; model storage is on `D:\AI-Models\Ollama`;
-- short local chat and a real `project.read_file` tool turn completed through the production browser UI;
-- Codex CLI `0.155.0` completed a read-only project task after a single-use UI approval;
+- short local chat completed through the production browser UI; Ollama tool execution remains intentionally unavailable;
+- Codex CLI `0.155.0` completed a read-only project query and a per-request approved file write whose exact content was verified; the temporary proof file was removed afterward;
 - hidden user-logon tasks `ASTRA-Agent` and `ASTRA-Ollama` start the loopback services, and the desktop shortcut opens `http://127.0.0.1:3017`;
 - browser console validation has zero errors. The remaining Three.js deprecation warning is upstream/non-blocking;
 - physical microphone capture was not automated and remains a device/browser-permission check, not a claimed release proof.
@@ -309,7 +309,7 @@ No node may appear active unless a real event supports that state.
 ### B3 — Ollama local provider ✅
 - local/free default model;
 - provider health/status;
-- user-selectable model.
+- exact configured model plus explicit UI provider selection.
 
 ### B4 — Codex engineering specialist ✅ adapter and read-only live verification
 - engineering routing;
@@ -321,9 +321,9 @@ No node may appear active unless a real event supports that state.
 - task context;
 - retrieval events visible in Command Center.
 
-### B6 — Tool/MCP execution ✅ bounded allowlist and approval gates
-- real tool started/completed/error events;
-- permissions and failure handling.
+### B6 — Tool/execution policy ✅ real Codex/Hermes delegation and approval gates
+- real provider lifecycle events; tool events are shown only when a provider exposes trustworthy telemetry;
+- server-side permissions, approval, cancellation, and failure handling.
 
 ### B7 — Command Center live event map ✅
 - node state driven by Brain events;

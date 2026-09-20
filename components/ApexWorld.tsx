@@ -16,14 +16,12 @@ import ReasoningWebJs from "./ReasoningWeb";
 import ShaderBackgroundJs from "./ShaderBackground";
 import OrbStatusBar from "./OrbStatusBar";
 import { useAstraRuntime } from "./AstraRuntime";
-import { graphStates } from "@/lib/brain/graph-state";
 
 export type NodeSel = { name: string; key: string; color: string };
 
 // the copied .jsx defaults onSelect to null, which TS infers as `null | undefined`
 const ReasoningWeb = ReasoningWebJs as unknown as React.ComponentType<{
   state?: string; trace?: unknown; mode?: string; coreless?: boolean;
-  liveStates?: Record<string, string>;
   onSelect?: (n: NodeSel) => void; light?: boolean;
 }>;
 const ShaderBackground = ShaderBackgroundJs as unknown as React.ComponentType<{
@@ -114,15 +112,19 @@ export const INFO: Record<string, AgentInfo> = {
     caps: ["Reads and files documents", "Connected and in use"] },
 };
 
+const STATUS_LINE: Record<AgentInfo["status"], { color: string; text: string }> = {
+  online: { color: "#34d399", text: "Online - Apex routes work to it automatically" },
+  standby: { color: "#c9a84c", text: "Standby - in active development" },
+  integration: { color: "#7f9bb3", text: "Integration - wired into the core" },
+};
+
 /* ── AGENT OVERVIEW window - the site's template (the app opens live cockpits) ── */
 export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => void }) {
-  const runtime = useAstraRuntime();
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{ sx: number; sy: number } | null>(null);
   const info = INFO[sel.key] ?? { role: "Specialist", status: "online" as const, caps: ["Part of the Apex core"] };
   const c = sel.color;
-  const live = graphStates(runtime.brainEvents, runtime.brainStatus)[sel.key] || "unavailable";
-  const status = { color: live === "running" ? "#f5a623" : live === "completed" ? "#78dbab" : live === "error" ? "#ef9696" : live === "ready" ? "#00e5ff" : "#7f9bb3", text: live === "unavailable" ? "Belum terhubung / belum diimplementasikan" : "Status runtime: " + live };
+  const status = STATUS_LINE[info.status];
 
   useEffect(() => {
     setPos({ x: Math.max(8, window.innerWidth / 2 - 170), y: Math.max(90, window.innerHeight * 0.16) });
@@ -193,7 +195,7 @@ export function AgentOverview({ sel, onClose }: { sel: NodeSel; onClose: () => v
 
       <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
         <div>
-          <div style={{ fontSize: 9, letterSpacing: "0.14em", color: `${c}99`, marginBottom: 8, fontFamily: "var(--font-mono)" }}>LINGKUP PERAN · BUKAN BUKTI INTEGRASI</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.14em", color: `${c}99`, marginBottom: 8, fontFamily: "var(--font-mono)" }}>WHAT IT HANDLES</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {info.caps.map((cap) => (
               <div key={cap} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
@@ -233,8 +235,26 @@ export default function ApexWorld() {
   const [selected, setSelected] = useState<NodeSel | null>(null);
   const [reduced, setReduced] = useState(false);
 
-  const orbState: OrbState = runtime.orbState;
-  const boost = () => { document.querySelector<HTMLInputElement>('[aria-label="Perintah ASTRA"]')?.focus(); };
+  // A tap cycles idle → thinking → speaking → idle. That state drives the
+  // backdrop, the light-cast and the reasoning web's activity level.
+  const [showState, setShowState] = useState<OrbState>("idle");
+  const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const orbState: OrbState = runtime.orbState !== "idle" ? runtime.orbState : showState;
+
+  const boost = () => {
+    const next: OrbState = showState === "idle" ? "thinking" : showState === "thinking" ? "speaking" : "idle";
+    setShowState(next);
+    if (showTimer.current) clearTimeout(showTimer.current);
+    showTimer.current = setTimeout(() => setShowState("idle"), 8000);
+  };
+  useEffect(() => () => { if (showTimer.current) clearTimeout(showTimer.current); }, []);
+
+  useEffect(() => {
+    if (runtime.orbState === "idle") return;
+    if (showTimer.current) clearTimeout(showTimer.current);
+    showTimer.current = null;
+    setShowState("idle");
+  }, [runtime.orbState]);
 
   // Single entry point for opening an agent, shared by the SVG graph and the
   // hidden accessible list, so both routes behave identically.
@@ -290,7 +310,6 @@ export default function ApexWorld() {
         <ReasoningWeb
           state={webState}
           trace={runtime.brainTrace}
-          liveStates={graphStates(runtime.brainEvents, runtime.brainStatus)}
           mode="full"
           coreless
           onSelect={(n: NodeSel) => { openAgent(n); }}
@@ -320,7 +339,7 @@ export default function ApexWorld() {
       <div
         role="button"
         tabIndex={0}
-        aria-label="ASTRA core - fokus ke perintah"
+        aria-label="Apex core - tap to energize"
         onClick={boost}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); boost(); } }}
         onMouseDown={(e) => e.preventDefault()}
@@ -361,9 +380,15 @@ export default function ApexWorld() {
               color:
                 runtime.brainProvider === "hermes"
                   ? "#8ef6b8"
-                  : runtime.brainProvider === "routing_only"
-                    ? "#ffbf69"
-                    : "rgba(255,255,255,.34)",
+                  : runtime.brainProvider === "ollama"
+                    ? "#63eaff"
+                    : runtime.brainProvider === "codex"
+                      ? "#d7a2ff"
+                      : runtime.brainProvider === "cloud"
+                        ? "#ffb96b"
+                        : runtime.brainProvider === "routing_only"
+                          ? "#ffbf69"
+                          : "rgba(255,255,255,.34)",
             }}
           >
             {(runtime.brainProvider ?? "standby").toUpperCase()}
@@ -371,7 +396,7 @@ export default function ApexWorld() {
         </div>
         <div
           style={{
-            marginBottom: 8,
+            marginBottom: 5,
             color: "rgba(215,244,250,.42)",
             fontSize: 8.5,
             letterSpacing: ".07em",
@@ -380,7 +405,45 @@ export default function ApexWorld() {
           {runtime.brainStatus
             ? `${runtime.brainStatus.mode.toUpperCase()} · ${runtime.brainStatus.model ?? "ROUTER"}`
             : "CHECKING LOCAL BRAIN..."}
+          {" · "}
+          <span style={{ color: runtime.brainStreaming ? "#83ffbc" : "rgba(215,244,250,.34)" }}>
+            SSE {runtime.brainStreaming ? "LIVE" : "IDLE"}
+          </span>
         </div>
+        {runtime.brainStatus?.features && (
+          <div
+            style={{
+              marginBottom: 8,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "3px 7px",
+              color: "rgba(215,244,250,.34)",
+              fontSize: 7.8,
+              letterSpacing: ".06em",
+            }}
+          >
+            {([
+              ["MEM", runtime.brainStatus.features.memory],
+              ["SKILL", runtime.brainStatus.features.skills],
+              ["CODEX", runtime.brainStatus.features.codex],
+              ["TOOLS", runtime.brainStatus.features.tools],
+              ["CLOUD", runtime.brainStatus.features.cloud],
+            ] as const).map(([label, feature]) => (
+              <span
+                key={label}
+                style={{
+                  color: feature.available
+                    ? "#83ffbc"
+                    : feature.enabled
+                      ? "#ffbf69"
+                      : "rgba(215,244,250,.28)",
+                }}
+              >
+                {label}:{feature.available ? "READY" : feature.enabled ? "WAIT" : "OFF"}
+              </span>
+            ))}
+          </div>
+        )}
         <div style={{ display: "grid", gap: 5 }}>
           {runtime.brainEvents.length === 0 ? (
             <div style={{ color: "rgba(220,244,250,.38)" }}>No brain events yet.</div>
@@ -406,9 +469,13 @@ export default function ApexWorld() {
                         ? "#ff9d66"
                         : event.type === "agent.completed" || event.type === "response.ready"
                           ? "#83ffbc"
-                          : event.type === "provider.selected"
+                          : event.type === "provider.selected" || event.type === "skill.selected"
                             ? "#d7a2ff"
-                            : "#63eaff",
+                            : event.type === "memory.loaded"
+                              ? "#6fffd4"
+                              : event.type === "policy.applied"
+                                ? "#9aaeb8"
+                                : "#63eaff",
                   }}
                 />
                 <span>

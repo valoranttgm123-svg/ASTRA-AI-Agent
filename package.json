@@ -8,13 +8,12 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "lint": "eslint lib/brain app/api/agent components/BrainControls.tsx components/AstraConsole.tsx components/AstraRuntime.tsx",
+    "lint": "eslint lib/brain app/api/agent components/AstraConsole.tsx components/AstraRuntime.tsx",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test --test-concurrency=1 tests/*.test.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.0.1",
-    "@modelcontextprotocol/sdk": "^1.30.0",
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
     "lucide-react": "^0.511.0",

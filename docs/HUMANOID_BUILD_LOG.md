@@ -706,3 +706,122 @@ Verification required:
 - GESTURES OFF: head tracking still works but gesture actions do not execute;
 - verify LOW/AUTO quality remains responsive.
 
+## Stage 6 — Brain ↔ Humanoid Event Link (V14)
+
+Goal:
+- close the loop between Humanoid, ASTRA Runtime, Brain V1, and Command Center using the same real Brain event stream.
+
+Implemented:
+- Humanoid reads the existing `runtime.brainEvents`, `brainProvider`, `lastResponse.brain.execution`, and request mode already used by Command Center;
+- no second Brain state store is introduced;
+- the latest genuine Brain event is converted to a short visual signal;
+- event classes map to distinct pulse strength/tone:
+  - request/router → cyan;
+  - memory → cyan-green;
+  - skill/provider → green-violet/provider tone;
+  - agent started → stronger provider-colored pulse;
+  - completed/response ready → completion green;
+  - provider unavailable/blocked → warm alert;
+- GPU shader receives only small Brain uniforms and keeps the same two particle draw passes;
+- Brain pulses decay automatically and do not add CPU particle-buffer work;
+- Humanoid HUD now displays real Brain provider, latest event, agent, CHAT/EXECUTE request mode, and execution state;
+- Humanoid console displays current Brain provider and latest event;
+- Technical details show Brain event count, provider, execution mode, memory entry count, selected skills, and latest event/agent;
+- existing V13 gestures, V12.1 shockwave/SFX, voice, mic, camera, assembly, and particle quality remain intact.
+
+Truthfulness rule:
+- Humanoid reacts only to runtime/backend Brain events that ASTRA actually received;
+- ASTRA does not invent `tool.started` / `tool.completed` events when Hermes/Codex/provider telemetry does not expose them;
+- backend Brain V1 remains the source of truth;
+- Command Center and Humanoid now visualize the same event model.
+
+Current limitation:
+- Brain provider responses are still returned through the current request/response API envelope;
+- backend sub-step events that only become available with the final response are visualized after receipt, not falsely presented as streamed live telemetry;
+- a later streaming telemetry stage can add real-time SSE/WebSocket delivery when the backend exposes trustworthy incremental events.
+
+Performance:
+- no extra WebGL canvas;
+- no additional particle draw pass;
+- no additional MediaPipe model;
+- Brain event pulses reuse the existing GPU particle shader.
+
+Verification required:
+- production CI build;
+- send a normal chat request and confirm Humanoid HUD shows the real provider and latest Brain event;
+- execute an approved local task and confirm CHAT/EXECUTE + EXECUTED/BLOCKED status matches the Brain response;
+- trigger a memory/skill/provider route and confirm a short particle pulse occurs;
+- confirm Command Center and Humanoid show consistent provider/agent/event information;
+- confirm no regression in V13 gestures or V12.1 SFX/shockwave;
+- confirm draw passes remain 2.
+
+## Stage 7 — Real-time Brain Telemetry (V15)
+
+Goal:
+- make Command Center and Humanoid react to Brain lifecycle events while the backend is actually reaching those stages, instead of waiting for the final response envelope.
+
+Transport:
+- new `POST /api/agent/stream` endpoint uses Server-Sent Events (SSE);
+- browser request remains POST so chat/execute payloads and explicit approval flags are preserved;
+- SSE event names:
+  - `brain` for one real `AstraBrainEvent`;
+  - `result` for the final `AstraBrainChatResult`;
+  - `error` for transport/execution failure;
+- response uses `text/event-stream`, no-cache/no-transform, and buffering disabled where supported.
+
+Truthful live lifecycle:
+- Brain Adapter accepts an optional `onEvent` callback;
+- events are emitted when the backend actually reaches each known lifecycle point:
+  - request accepted;
+  - route selected;
+  - memory loaded;
+  - skill selected;
+  - permission policy applied;
+  - provider selected;
+  - agent/provider attempt started;
+  - provider unavailable/fallback;
+  - agent completed;
+  - response ready;
+  - execution blocked;
+- provider failures are emitted when they actually happen, so Codex → Hermes → Ollama/cloud fallback can be seen live;
+- no `tool.started` / `tool.completed` events are invented when provider internals do not expose them.
+
+Runtime:
+- ASTRA Runtime reads the SSE response incrementally through `ReadableStream.getReader()`;
+- each incoming Brain event is appended immediately to the shared runtime event bus;
+- Command Center reasoning-web trace fires one live node event at a time;
+- Humanoid V15 receives the same event immediately and drives its existing GPU Brain pulse;
+- `brainProvider` updates live from provider-bearing lifecycle events;
+- `brainStreaming` exposes SSE LIVE/IDLE state;
+- final response still becomes `lastResponse`, controls speech output, and updates the durable provider/status summary;
+- V14 final-envelope behavior remains as compatibility fallback if a path emits zero live callbacks.
+
+Cancellation:
+- existing client AbortController cancels the SSE request/reader;
+- UI returns to IDLE on stop/abort;
+- request-scoped provider calls retain their existing backend cancellation limitations;
+- closed clients stop receiving telemetry and the SSE writer does not fabricate completion.
+
+UI:
+- Humanoid label: `ASTRA MAX // HUMANOID V15`;
+- subtitle: `REAL-TIME BRAIN TELEMETRY // SSE`;
+- Humanoid Brain HUD shows `LIVE` while the SSE stream is active;
+- Technical details show `Brain transport: SSE / LIVE|IDLE`;
+- Command Center Brain panel shows `SSE LIVE|IDLE`.
+
+Preserved:
+- V14 shared event model and GPU pulse;
+- V13 gesture control;
+- V12 shockwave/SFX;
+- two GPU particle draw passes;
+- local-first Hermes/Ollama/Codex routing and permission policy.
+
+Verification required:
+- production CI build;
+- send chat and observe request → route → context → provider → agent → response events appearing before the final answer;
+- force an unavailable provider and confirm fallback/unavailable event appears before the next provider starts;
+- confirm Command Center and Humanoid show the same current lifecycle;
+- stop a request and confirm SSE LIVE returns to IDLE;
+- execute a blocked task and confirm agent.blocked arrives live;
+- confirm no duplicate live/final events in the runtime event list.
+

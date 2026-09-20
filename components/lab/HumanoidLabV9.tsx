@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAstraRuntime } from "@/components/AstraRuntime";
 import type { AstraAvatarState } from "@/lib/avatar/types";
+import type { AstraBrainEvent, AstraBrainProvider } from "@/lib/brain/types";
 import AstraGpuParticles from "./AstraGpuParticles";
 import { useFingerTracking, type FingerTrackingTarget } from "./useFingerTracking";
 
@@ -219,6 +220,47 @@ type GpuInfo = {
   software: boolean;
 };
 
+type BrainVisualSignal = {
+  eventId: string | null;
+  activity: number;
+  tone: number;
+};
+
+function providerTone(provider: AstraBrainProvider | null): number {
+  switch (provider) {
+    case "hermes": return 0.36;
+    case "ollama": return 0.08;
+    case "codex": return 0.62;
+    case "cloud": return 0.88;
+    case "routing_only": return 0.94;
+    default: return 0.05;
+  }
+}
+
+function brainSignalFor(
+  event: AstraBrainEvent | null,
+  provider: AstraBrainProvider | null,
+): BrainVisualSignal {
+  if (!event) return { eventId: null, activity: 0, tone: providerTone(provider) };
+
+  let activity = 0.45;
+  let tone = providerTone(provider);
+  switch (event.type) {
+    case "request.received": activity = 0.52; tone = 0.05; break;
+    case "router.selected": activity = 0.64; tone = 0.10; break;
+    case "memory.loaded": activity = 0.58; tone = 0.34; break;
+    case "skill.selected": activity = 0.64; tone = 0.58; break;
+    case "policy.applied": activity = 0.36; tone = 0.48; break;
+    case "provider.selected": activity = 0.78; tone = providerTone(provider); break;
+    case "agent.started": activity = 0.92; tone = providerTone(provider); break;
+    case "agent.completed": activity = 0.68; tone = 0.34; break;
+    case "provider.unavailable":
+    case "agent.blocked": activity = 0.98; tone = 1.0; break;
+    case "response.ready": activity = 0.62; tone = 0.30; break;
+  }
+  return { eventId: event.id, activity, tone };
+}
+
 function ParticleScene({
   data,
   state,
@@ -229,6 +271,9 @@ function ParticleScene({
   trackingTarget,
   assemblyRun,
   assemblySkipped,
+  brainEventId,
+  brainActivity,
+  brainTone,
   onAssemblyComplete,
   onShockwaveChange,
   onGpuInfo,
@@ -242,6 +287,9 @@ function ParticleScene({
   trackingTarget: { current: FingerTrackingTarget };
   assemblyRun: number;
   assemblySkipped: boolean;
+  brainEventId: string | null;
+  brainActivity: number;
+  brainTone: number;
   onAssemblyComplete: () => void;
   onShockwaveChange: (active: boolean) => void;
   onGpuInfo: (info: GpuInfo) => void;
@@ -288,6 +336,9 @@ function ParticleScene({
         trackingTarget={trackingTarget}
         assemblyRun={assemblyRun}
         assemblySkipped={assemblySkipped}
+        brainEventId={brainEventId}
+        brainActivity={brainActivity}
+        brainTone={brainTone}
         onAssemblyComplete={onAssemblyComplete}
         onShockwaveChange={onShockwaveChange}
       />
@@ -545,6 +596,13 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
 
   const state = runtime.avatarState;
   const runtimeBusy = busy || runtime.orbState === "thinking";
+  const latestBrainEvent =
+    runtime.brainEvents.length > 0
+      ? runtime.brainEvents[runtime.brainEvents.length - 1]
+      : null;
+  const brainSignal = brainSignalFor(latestBrainEvent, runtime.brainProvider);
+  const brainExecution = runtime.lastResponse?.brain.execution ?? "routing_only";
+  const brainRequestedMode = runtime.lastResponse?.brain.requestedMode ?? "chat";
   const resolvedQuality: RenderQuality =
     qualityMode === "auto" ? (autoLow ? "low" : "high") : qualityMode;
   const tracking = useFingerTracking(resolvedQuality);
@@ -662,6 +720,25 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     }
   };
 
+  const executeTask = async () => {
+    const value = message.trim();
+    if (!value || runtimeBusy) return;
+    setBusy(true);
+    const started = performance.now();
+    try {
+      await runtime.execute(value);
+      setLatency(Math.round(performance.now() - started));
+      setMessage("");
+    } catch (error) {
+      setLatency(Math.round(performance.now() - started));
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        // Runtime owns the visible error state; keep the lab responsive.
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const exit = () => {
     tracking.stop();
     if (onExit) onExit();
@@ -743,6 +820,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               trackingTarget={tracking.targetRef}
               assemblyRun={assemblyRun}
               assemblySkipped={assemblySkipped}
+              brainEventId={brainSignal.eventId}
+              brainActivity={brainSignal.activity}
+              brainTone={brainSignal.tone}
               onAssemblyComplete={() => setAssemblyActive(false)}
               onShockwaveChange={handleShockwaveChange}
               onGpuInfo={setGpuInfo}
@@ -782,11 +862,38 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       )}
 
       <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
-        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V13</div>
+        <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V15</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
-          GESTURE CONTROL // PINCH + OPEN PALM + FIST
+          REAL-TIME BRAIN TELEMETRY // SSE
         </div>
       </header>
+
+      <aside
+        aria-label="ASTRA Brain link status"
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 92,
+          zIndex: 20,
+          minWidth: 210,
+          padding: "8px 10px",
+          border: "1px solid rgba(87,231,248,.2)",
+          borderRadius: 10,
+          background: "rgba(0,7,11,.86)",
+          textAlign: "right",
+          pointerEvents: "none",
+        }}
+      >
+        <div style={{ color: "#69edff", fontSize: 8.5, letterSpacing: ".17em" }}>
+          {`BRAIN LINK // ${runtime.brainStreaming ? "LIVE" : "READY"} // ${(runtime.brainProvider ?? "standby").toUpperCase()}`}
+        </div>
+        <div style={{ marginTop: 4, color: "rgba(229,250,255,.72)", fontSize: 9 }}>
+          {latestBrainEvent?.label ?? "No Brain event yet"}
+        </div>
+        <div style={{ marginTop: 2, color: "rgba(217,244,250,.42)", fontSize: 8 }}>
+          {(latestBrainEvent?.agent ?? "chief_of_staff").replace(/_/g, " ")} · {brainRequestedMode.toUpperCase()} · {brainExecution.toUpperCase()}
+        </div>
+      </aside>
 
       <button onClick={exit} style={exitStyle}>EXIT</button>
 
@@ -945,7 +1052,16 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         <div style={consoleStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 9, letterSpacing: ".18em", color: "#65eafb" }}>
             <span>{runtime.activeAgent ?? "ASTRA CORE"}</span>
-            <span>{state.toUpperCase()}</span>
+            <span>
+              {(runtime.brainProvider ?? "standby").toUpperCase()} · {
+                runtime.lastResponse?.brain.requestedMode === "execute"
+                  ? runtime.lastResponse.brain.execution.toUpperCase()
+                  : state.toUpperCase()
+              }
+            </span>
+          </div>
+          <div style={{ marginTop: 5, color: "rgba(198,240,247,.42)", fontSize: 8.5, letterSpacing: ".05em" }}>
+            BRAIN EVENT: {latestBrainEvent ? latestBrainEvent.type + " · " + latestBrainEvent.label : "standby"}
           </div>
           <div style={{ minHeight: 42, marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
             {runtime.micActive
@@ -959,6 +1075,15 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               placeholder="Ketik perintah ASTRA..."
               style={inputStyle}
             />
+            <button
+              disabled={runtimeBusy || !message.trim()}
+              type="button"
+              onClick={() => void executeTask()}
+              style={{ ...buttonStyle(true), opacity: runtimeBusy ? 0.55 : 1 }}
+              title="Approve and execute this task with permitted local tools"
+            >
+              {runtimeBusy ? "RUN" : "EXECUTE"}
+            </button>
             <button
               disabled={runtimeBusy || !message.trim()}
               type="submit"
@@ -987,6 +1112,16 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Voice core samples: {data?.voiceCore.length ?? "loading"}</div>
           <div>State radial zones: {data?.zones.length ?? "loading"}</div>
           <div>State transition: 680 ms radial face-out</div>
+          <div>Brain provider: {(runtime.brainProvider ?? "standby").toUpperCase()}</div>
+          <div>Brain transport: SSE / {runtime.brainStreaming ? "LIVE" : "IDLE"}</div>
+          <div>Brain mode: {brainRequestedMode.toUpperCase()} / {brainExecution.toUpperCase()}</div>
+          <div>Brain event count: {runtime.brainEvents.length}</div>
+          <div>Brain latest event: {latestBrainEvent ? latestBrainEvent.type + " / " + latestBrainEvent.label : "NONE"}</div>
+          <div>Brain latest agent: {latestBrainEvent?.agent ?? "—"}</div>
+          <div>Brain visual pulse: truthful runtime/backend events only</div>
+          <div>Brain tool telemetry: not fabricated when provider does not expose it</div>
+          <div>Brain context memory: {runtime.lastResponse?.brain.context?.memoryEntries ?? 0} entries</div>
+          <div>Brain context skills: {runtime.lastResponse?.brain.context?.skills.join(", ") || "—"}</div>
           <div>Assembly duration: {ASSEMBLY_DURATION_SECONDS.toFixed(1)} s</div>
           <div>Assembly order: head → neck → shoulders → core</div>
           <div>Assembly source: single left-side particle stream</div>
@@ -1034,6 +1169,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Inference: {tracking.processingMs === null ? "..." : `${tracking.processingMs} ms`}</div>
           <div>Tracking privacy: frames processed locally; no recording/upload by ASTRA.</div>
           <div>Last request latency: {latency === null ? "not measured" : `${latency} ms`}</div>
+          <div>Brain request mode: {runtime.lastResponse?.brain.requestedMode?.toUpperCase() ?? "CHAT"}</div>
+          <div>Brain execution: {runtime.lastResponse?.brain.execution.toUpperCase() ?? "STANDBY"}</div>
           <div>Brain provider: {(runtime.brainProvider ?? "standby").toUpperCase()}</div>
           <div>
             Brain event: {runtime.brainEvents.length
@@ -1049,7 +1186,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Color: sRGB input/output, NoToneMapping</div>
           {loadError && <div style={{ marginTop: 8, color: "#ffb35f" }}>Load error: {loadError}</div>}
           <div style={{ marginTop: 9, color: "rgba(255,190,90,.8)" }}>
-            V13 upgrades the existing local MediaPipe camera pipeline from index-finger tracking to real gesture control. PINCH replays assembly, OPEN PALM starts listening, and FIST stops the current ASTRA interaction. Gestures require three stable inference frames, must return to neutral before retriggering, and use a cooldown to prevent repeated accidental actions. No new model or cloud service is added.
+            V15 upgrades the shared Brain Event Bus to real-time SSE delivery. Humanoid and Command Center now receive request, route, context, provider, fallback, agent, blocked, and response lifecycle events as the backend reaches those stages. GPU Brain pulses still use the same two draw passes, and tool-level telemetry is still not fabricated when a provider does not expose it.
           </div>
         </aside>
       )}

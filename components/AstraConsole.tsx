@@ -1,8 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import type { AstraProviderChoice } from "@/lib/agent/types";
 import { useAstraRuntime } from "./AstraRuntime";
-import BrainControls from "./BrainControls";
 
 export default function AstraConsole() {
   const {
@@ -10,6 +10,7 @@ export default function AstraConsole() {
     activeAgent,
     lastResponse,
     send,
+    execute,
     beginListening,
     endListening,
     micSupported,
@@ -18,12 +19,12 @@ export default function AstraConsole() {
     micError,
     voiceEnabled,
     setVoiceEnabled,
-    stopInteraction,
   } = useAstraRuntime();
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [provider, setProvider] = useState<AstraProviderChoice>("auto");
 
   const runtimeBusy = busy || orbState === "thinking";
 
@@ -36,10 +37,27 @@ export default function AstraConsole() {
     setError(null);
     setMessage("");
     try {
-      await send(value);
+      await send(value, { provider });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "ASTRA request failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const executeTask = async () => {
+    const value = message.trim();
+    if (!value || runtimeBusy) return;
+
+    setBusy(true);
+    setError(null);
+    setMessage("");
+    try {
+      await execute(value, provider);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : "ASTRA execution failed");
     } finally {
       setBusy(false);
     }
@@ -76,7 +94,9 @@ export default function AstraConsole() {
           </>
         ) : lastResponse ? (
           <>
-            <div className="astra-console__agent">{lastResponse.agentName}</div>
+            <div className="astra-console__agent">
+              {lastResponse.agentName} · {lastResponse.brain.execution.toUpperCase()}
+            </div>
             <p>{lastResponse.message}</p>
           </>
         ) : (
@@ -84,7 +104,6 @@ export default function AstraConsole() {
         )}
       </div>
 
-      <BrainControls />
       <form onSubmit={submit} className="astra-console__form">
         <input
           value={message}
@@ -94,6 +113,17 @@ export default function AstraConsole() {
           maxLength={4000}
           autoComplete="off"
         />
+
+        <select
+          value={provider}
+          onChange={(event) => setProvider(event.target.value as AstraProviderChoice)}
+          aria-label="Provider AI"
+          title="Auto memilih rute terbaik; Ollama lokal untuk chat privat; Codex untuk tugas engineering"
+        >
+          <option value="auto">AUTO</option>
+          <option value="ollama">OLLAMA</option>
+          <option value="codex">CHATGPT / CODEX</option>
+        </select>
 
         <button
           type="button"
@@ -114,10 +144,18 @@ export default function AstraConsole() {
           {voiceEnabled ? "VOICE ON" : "VOICE OFF"}
         </button>
 
+        <button
+          type="button"
+          onClick={() => void executeTask()}
+          disabled={runtimeBusy || !message.trim()}
+          title="Approve and execute this task with permitted local tools"
+        >
+          {runtimeBusy ? "RUNNING" : "EXECUTE TASK"}
+        </button>
+
         <button type="submit" disabled={runtimeBusy || !message.trim()}>
           {runtimeBusy ? "RUNNING" : "SEND"}
         </button>
-        <button type="button" onClick={stopInteraction}>STOP</button>
       </form>
     </section>
   );

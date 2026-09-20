@@ -99,6 +99,8 @@ uniform float uVoice;
 uniform float uEffects;
 uniform float uShockwaveActive;
 uniform float uShockwaveProgress;
+uniform float uBrainActivity;
+uniform float uBrainTone;
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -175,17 +177,52 @@ void main() {
     shockRing * (1.0 - travel) * 0.16;
   float voiceEnergy = (aVoiceFace * 0.85 + aVoiceCore * 0.60) * uVoice;
   float zoneEnergy = aZone * uStateZone;
-  float energy = (cyanEnergy + warmEnergy + voiceEnergy + zoneEnergy) * uEffects;
+
+  float brainRhythm =
+    0.74 +
+    0.26 * sin(uTime * 6.4 + aSeed * 6.2831853);
+  float brainPulse =
+    uBrainActivity *
+    (0.38 + aZone * 0.62) *
+    brainRhythm *
+    uEffects;
+
+  float energy =
+    (cyanEnergy + warmEnergy + voiceEnergy + zoneEnergy + brainPulse * 0.42) *
+    uEffects;
 
   vec3 cyan = vec3(0.37, 0.96, 1.0);
+  vec3 green = vec3(0.43, 1.0, 0.68);
+  vec3 violet = vec3(0.72, 0.46, 1.0);
   vec3 warm = vec3(1.0, 0.58, 0.18);
+
+  float brainTone = clamp(uBrainTone, 0.0, 1.0);
+  vec3 brainColor;
+  if (brainTone < 0.3333) {
+    brainColor = mix(cyan, green, brainTone * 3.0);
+  } else if (brainTone < 0.6666) {
+    brainColor = mix(green, violet, (brainTone - 0.3333) * 3.0);
+  } else {
+    brainColor = mix(violet, warm, (brainTone - 0.6666) * 3.0);
+  }
+
   vec3 stateTint = mix(cyan, warm, clamp(uStateTone, 0.0, 1.0));
 
   if (uGlowPass > 0.5) {
     float glowEnergy = clamp(energy, 0.0, 1.25);
-    vColor = mix(stateTint, color, 0.34) * (0.56 + glowEnergy * 0.82);
-    vAlpha = clamp(0.032 + glowEnergy * 0.16, 0.0, 0.28);
-    gl_PointSize = uPointSize * (1.0 + glowEnergy * 0.08 + shockEnergy * 0.14);
+    vec3 glowBase = mix(stateTint, color, 0.34);
+    vColor = mix(
+      glowBase,
+      brainColor,
+      clamp(brainPulse * 0.34, 0.0, 0.42)
+    ) * (0.56 + glowEnergy * 0.82);
+    vAlpha = clamp(0.032 + glowEnergy * 0.16 + brainPulse * 0.035, 0.0, 0.31);
+    gl_PointSize = uPointSize * (
+      1.0 +
+      glowEnergy * 0.08 +
+      shockEnergy * 0.14 +
+      brainPulse * 0.06
+    );
   } else {
     vec3 liftedSource = pow(max(color, vec3(0.0)), vec3(0.72));
     float sourceLuma = dot(liftedSource, vec3(0.2126, 0.7152, 0.0722));
@@ -195,7 +232,8 @@ void main() {
       liftedSource * 1.20 +
       vec3(darkLift) +
       cyan * cyanEnergy * 0.15 +
-      warm * (warmEnergy + voiceEnergy) * 0.16;
+      warm * (warmEnergy + voiceEnergy) * 0.16 +
+      brainColor * brainPulse * 0.16;
 
     float peak = max(boosted.r, max(boosted.g, boosted.b));
     if (peak > 1.0) {
@@ -204,7 +242,11 @@ void main() {
 
     vColor = clamp(boosted, 0.0, 1.0);
     vAlpha = 1.0;
-    gl_PointSize = uPointSize * (1.0 + shockEnergy * 0.10);
+    gl_PointSize = uPointSize * (
+      1.0 +
+      shockEnergy * 0.10 +
+      brainPulse * 0.035
+    );
   }
 
   vGlowPass = uGlowPass;
@@ -247,6 +289,9 @@ export default function AstraGpuParticles({
   trackingTarget,
   assemblyRun,
   assemblySkipped,
+  brainEventId,
+  brainActivity,
+  brainTone,
   onAssemblyComplete,
   onShockwaveChange,
 }: {
@@ -259,12 +304,16 @@ export default function AstraGpuParticles({
   trackingTarget: { current: FingerTrackingTarget };
   assemblyRun: number;
   assemblySkipped: boolean;
+  brainEventId: string | null;
+  brainActivity: number;
+  brainTone: number;
   onAssemblyComplete: () => void;
   onShockwaveChange: (active: boolean) => void;
 }) {
   const target = useRef({ yaw: 0, pitch: 0 });
   const current = useRef({ yaw: 0, pitch: 0 });
   const playbackEnvelope = useRef(0);
+  const brainEnvelope = useRef(0);
   const currentProfile = useRef<StateProfile>({ ...profileForState(state) });
   const transition = useRef({
     progress: 1,
@@ -344,6 +393,8 @@ export default function AstraGpuParticles({
     uEffects: { value: 1 },
     uShockwaveActive: { value: 0 },
     uShockwaveProgress: { value: 1 },
+    uBrainActivity: { value: 0 },
+    uBrainTone: { value: 0 },
   }), []);
 
   const glowUniforms = useMemo(() => {
@@ -376,6 +427,11 @@ export default function AstraGpuParticles({
     blending: THREE.AdditiveBlending,
     toneMapped: false,
   }), [glowUniforms]);
+
+  useEffect(() => {
+    if (!brainEventId) return;
+    brainEnvelope.current = 1;
+  }, [brainEventId]);
 
   useEffect(() => {
     transition.current = {
@@ -472,6 +528,13 @@ export default function AstraGpuParticles({
         Math.pow((Math.sin(t * 9.8 + 0.9) + 1) * 0.5, 2.2) * 0.10;
     const voice = playbackEnvelope.current * visualRhythm;
 
+    const brainDecay = reducedMotion ? 1.8 : 0.72;
+    brainEnvelope.current = Math.max(0, brainEnvelope.current - dt * brainDecay);
+    const brainLevel =
+      (effects ? 1 : 0) *
+      THREE.MathUtils.clamp(brainActivity, 0, 1) *
+      brainEnvelope.current;
+
     let assemblyProgress = 1;
     let assemblyEnabled = 0;
     if (effects && !reducedMotion && !assemblySkipped) {
@@ -546,6 +609,8 @@ export default function AstraGpuParticles({
       targetUniforms.uEffects.value = effects ? 1 : 0;
       targetUniforms.uShockwaveActive.value = shockwaveActive;
       targetUniforms.uShockwaveProgress.value = shockwaveProgress;
+      targetUniforms.uBrainActivity.value = brainLevel;
+      targetUniforms.uBrainTone.value = THREE.MathUtils.clamp(brainTone, 0, 1);
     };
 
     writeUniforms(uniforms, false);

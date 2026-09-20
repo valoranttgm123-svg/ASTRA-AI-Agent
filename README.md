@@ -1,12 +1,10 @@
 # ASTRA AI Agent
 
-ASTRA is a personal multi-agent AI project built on top of the open-source **APEX-UI** visual foundation. The repository keeps the orb, particle core, shader background, and reasoning graph while adding an agent runtime, command console, API route, routing layer, security defaults, and a path toward real tools and memory.
+ASTRA is a personal multi-agent AI project built on top of the open-source **APEX-UI** visual foundation. The repository keeps the orb, particle core, shader background, and reasoning graph while adding a real runtime, GPU Humanoid, local-first Brain Adapter, Memory/Skills, provider routing, Codex engineering specialization, permission controls, and Command Center telemetry.
 
 ## Current status
 
-**Brain V1 B1–B8 is implemented.** ASTRA supports local Ollama, a reviewed Hermes gateway, an existing-login Codex engineering adapter, bounded project memory, allowlisted MCP tools, single-use approvals, real task events, cancellation, a live Command Center timeline, voice input/output, gestures, and the approved GPU Humanoid. Missing providers are shown as unavailable; no cloud AI secret or paid fallback is embedded.
-
-Sonor Workflow memory is the next integration stage and is not silently coupled to this release.
+**Brain V1 architecture is implemented.** The UI accepts text/mic/gesture input, drives the real interaction lifecycle, routes requests through the ASTRA Brain Adapter, loads local Memory/Skills, chooses a permitted provider, and streams real Brain lifecycle events into the Command Center. Hermes and Ollama are local-first paths; Codex is the engineering specialist; optional paid cloud is disabled by default.
 
 ## Included agents
 
@@ -28,28 +26,31 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000`. The Brain API intentionally rejects non-loopback hosts.
+Open `http://localhost:3000`.
 
-### Windows local installation
-
-After setting `.env.local`, install the production build, hidden logon tasks, and the `ASTRA` desktop shortcut with:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\install-local.ps1
-```
-
-The installer keeps both HTTP services on loopback: ASTRA at `http://127.0.0.1:3017` and Ollama at `http://127.0.0.1:11434`. It does not expose either service to the LAN or internet. To remove only the autostart tasks and shortcut without deleting project data or models, run `scripts\windows\uninstall-local.ps1`.
-
-For full validation:
+For production validation:
 
 ```bash
 npm run build
-npm test
-npm run typecheck
-npm run lint
-npm audit --audit-level=high
 npm start
 ```
+
+On Windows, the production installer builds ASTRA, installs hidden user-logon
+tasks for ASTRA and Ollama, creates an `ASTRA.url` desktop shortcut, and verifies
+both loopback services:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\install-local.ps1
+```
+
+The command console has three explicit provider modes:
+
+- `AUTO` uses ASTRA routing (Codex first for engineering, otherwise local paths);
+- `OLLAMA` forces the configured local model and never silently changes models;
+- `CHATGPT / CODEX` forces the authenticated local Codex CLI.
+
+`SEND` is chat/read-only reasoning. `EXECUTE TASK` is a per-request approval and
+still cannot exceed the server-side permission policy.
 
 ## Configuration
 
@@ -60,14 +61,6 @@ cp .env.example .env.local
 ```
 
 Do **not** commit `.env.local`, tokens, passwords, SSH keys, broker credentials, OAuth secrets, or private memory databases.
-
-Provider rules:
-- Ollama is local-first; choose only a model shown as installed.
-- Ollama extended thinking is off by default for responsive voice/chat; it can be enabled explicitly for harder tasks.
-- Hermes agent execution requires server opt-in and per-task approval.
-- Codex uses an existing ChatGPT CLI login, is read-only by default, and always asks before sending a task.
-- MCP tools must be explicitly allowlisted. Non-read-only tools also require server opt-in and a single-use approval.
-- paid provider fallback is not implemented.
 
 ## Codex project context
 
@@ -89,18 +82,29 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the runtime design and ap
 High-level flow:
 
 ```text
-ASTRA UI
+Humanoid / Chat / Mic / Gesture
    ↓
-Command Console
+ASTRA Runtime / Event Bus
    ↓
 /api/agent
    ↓
-Orchestrator
+ASTRA Brain Adapter
+   ├─ Memory / Skills / Permission Policy
+   ├─ Hermes
+   ├─ Ollama
+   ├─ Codex engineering specialist
+   └─ optional cloud (explicit opt-in only)
    ↓
-Specialist Agent
-   ↓
-Provider / Tool Adapter
+real Brain events
+   ├─ Humanoid high-level state
+   └─ Command Center detailed trace
 ```
+
+Private local context belongs in `.astra/`, which is gitignored. See `.env.example` and `docs/ASTRA_BRAIN_V1.md` for provider and safety configuration.
+
+The agent API is loopback-only, enforces same-origin requests, caps request
+bodies, and propagates browser cancellation to active provider work. This local
+security boundary is intentional; do not expose the port publicly.
 
 ## Repository safety
 
