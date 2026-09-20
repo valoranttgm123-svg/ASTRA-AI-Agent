@@ -1723,6 +1723,37 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           (toolRuntime.get("analytics.summary")?.availability ?? "OFFLINE") +
           ". Sales/Marketing/Ops/Editor are analysis/drafting skills only; external CRM/send/publish actions remain separate integrations.",
       },
+      integrations: {
+        enabled: true,
+        available: [
+          "crm.search",
+          "calendar.list",
+          "email.search",
+          "drive.search",
+        ].some(
+          (id) => toolRuntime.get(id)?.availability === "READY",
+        ),
+        state: [
+          "crm.search",
+          "calendar.list",
+          "email.search",
+          "drive.search",
+        ].some(
+          (id) => toolRuntime.get(id)?.availability === "READY",
+        )
+          ? "READY"
+          : "NOT_CONFIGURED",
+        detail:
+          "CRM=" +
+          (toolRuntime.get("crm.search")?.availability ?? "NOT_CONFIGURED") +
+          ", Calendar=" +
+          (toolRuntime.get("calendar.list")?.availability ?? "NOT_CONFIGURED") +
+          ", Email=" +
+          (toolRuntime.get("email.search")?.availability ?? "NOT_CONFIGURED") +
+          ", Drive=" +
+          (toolRuntime.get("drive.search")?.availability ?? "NOT_CONFIGURED") +
+          ". Read capabilities are Level 1. Account/cloud mutations remain Level 3 external actions with scoped approval.",
+      },
       tools: {
         enabled: true,
         available:
