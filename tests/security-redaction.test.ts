@@ -17,6 +17,7 @@ import {
 import {
   redactSensitiveText,
   safeErrorDetail,
+  safePublicUrl,
 } from "../lib/security/redaction";
 
 const FAKE_BEARER =
@@ -83,6 +84,17 @@ test("Phase 15E shared redaction removes credentials URL tokens and local paths 
 
   assert.match(detail, /Provider failed/i);
   assertRedacted(detail);
+});
+
+test("Phase 15E public provider URLs hide embedded credentials and sensitive query parameters", () => {
+  const safe = safePublicUrl(
+    "https://alice:secret-pass@example.test/v1?token=fake-url-token&ok=1",
+  );
+
+  assert.doesNotMatch(safe, /secret-pass/i);
+  assert.doesNotMatch(safe, /fake-url-token/i);
+  assert.match(safe, /redacted/i);
+  assert.match(safe, /ok=1/);
 });
 
 test("Phase 15E redaction bounds public detail size", () => {
