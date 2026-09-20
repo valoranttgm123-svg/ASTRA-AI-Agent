@@ -3,6 +3,7 @@ import type {
   AstraInputContext,
 } from "@/lib/agent/types";
 import type { AstraBrain, AstraBrainChatResult, AstraBrainEvent } from "@/lib/brain/types";
+import { safeErrorDetail } from "@/lib/security/redaction";
 import type { AstraAutomationDefinition } from "./contracts";
 import type { AstraAutomationLifecycleEvent } from "./queue";
 import { getAutomationDueState } from "./scheduler";
