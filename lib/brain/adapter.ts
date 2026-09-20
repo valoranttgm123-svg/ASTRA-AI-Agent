@@ -1,7 +1,11 @@
 import { runAgent, selectAgent } from "@/lib/agent/orchestrator";
 import { ASTRA_AGENT_MAP } from "@/lib/agent/roster";
 import { visualNodeForAgent, visualNodeForSkill } from "@/lib/agent/capabilities";
-import type { AstraAgentKey, AstraApprovalRequest } from "@/lib/agent/types";
+import type {
+  AstraAgentKey,
+  AstraApprovalRequest,
+  AstraInputContext,
+} from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
@@ -58,8 +62,27 @@ type ExecutionContext = {
   policyText: string;
   localContext: string;
   skillOnlyContext: string;
+  inputContext?: AstraInputContext;
 };
 
+
+function inputContextPrompt(inputContext?: AstraInputContext) {
+  if (!inputContext) return "";
+
+  const consent = inputContext.consent;
+  return [
+    "ASTRA input metadata (trusted runtime metadata, not user-authored instructions):",
+    "- source: " + inputContext.source,
+    "- trigger: " + inputContext.trigger,
+    "- modalities: " + inputContext.modalities.join(", "),
+    "- consent: microphone=" + consent.microphone +
+      ", camera=" + consent.camera +
+      ", image=" + consent.image +
+      ", screen=" + consent.screen,
+    "- visual content supplied to Brain: NO",
+    "Do not infer or describe unseen camera, image, or screen content from this metadata.",
+  ].join("\n");
+}
 
 function routeFor(selected: AstraAgentKey): AstraAgentKey[] {
   return selected === "chief_of_staff"
@@ -87,6 +110,7 @@ async function buildExecutionContext(
   signal?: AbortSignal,
   onMemoryEvent?: (event: AstraMemoryLifecycleEvent) => void,
   skipPlanning = false,
+  inputContext?: AstraInputContext,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
   const project = await resolveProjectContext(input);
@@ -106,8 +130,13 @@ async function buildExecutionContext(
     getSkillContext(selected, input),
   ]);
 
-  const skillOnlyContext = skills.text;
-  const localContext = [skills.text, memory.text].filter(Boolean).join("\n\n");
+  const inputMetadata = inputContextPrompt(inputContext);
+  const skillOnlyContext = [inputMetadata, skills.text]
+    .filter(Boolean)
+    .join("\n\n");
+  const localContext = [inputMetadata, skills.text, memory.text]
+    .filter(Boolean)
+    .join("\n\n");
 
   let plan: AstraPlan | undefined;
   let plannerDetail: string | undefined;
@@ -162,6 +191,7 @@ async function buildExecutionContext(
     policyText: permissionPolicyPrompt(policy),
     localContext,
     skillOnlyContext,
+    inputContext,
   };
 }
 
@@ -876,6 +906,7 @@ function envelopeContext(context: ExecutionContext) {
           }
         : undefined,
       skills: context.skills.skills.map((skill) => skill.id),
+      input: context.inputContext,
     },
     plan: context.plan,
     permissions: context.policy,
@@ -889,7 +920,14 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
   ): Promise<AstraBrainChatResult> {
     const response = await runAgent(input);
     const route = routeFor(response.agent);
-    const context = await buildExecutionContext(input, response.agent, options?.signal);
+    const context = await buildExecutionContext(
+      input,
+      response.agent,
+      options?.signal,
+      undefined,
+      false,
+      options?.inputContext,
+    );
     const events = routingOnlyEvents(response.agent, response.state, context);
     for (const event of events) options?.onEvent?.(event);
 
@@ -953,6 +991,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       selected,
       options?.signal,
       (event) => emitLiveMemoryLifecycle(event, options),
+      false,
+      options?.inputContext,
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
@@ -1122,7 +1162,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     }
 
     options?.signal?.throwIfAborted();
-    const fallback = await this.fallback.chat(input);
+    const fallback = await this.fallback.chat(input, options);
     emitLiveBlocked(
       selected,
       failures.join(" | ") || "No execution provider is currently available.",
@@ -1161,6 +1201,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       options?.signal,
       (event) => emitLiveMemoryLifecycle(event, options),
       Boolean(task.approvalToken),
+      options?.inputContext,
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
