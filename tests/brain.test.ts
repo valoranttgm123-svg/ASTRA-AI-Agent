@@ -812,10 +812,13 @@ test("planner exposes only dependency-satisfied pending steps", () => {
 });
 
 test("Phase 15F planner parser fails closed on malformed JSON", () => {
-  assert.deepEqual(parsePlannerDraft("{not-json"), []);
-  assert.deepEqual(
-    parsePlannerDraft(JSON.stringify({ steps: "not-an-array" })),
-    [],
+  assert.throws(
+    () => parsePlannerDraft("{not-json"),
+    /did not return a JSON object|invalid JSON/i,
+  );
+  assert.throws(
+    () => parsePlannerDraft(JSON.stringify({ steps: "not-an-array" })),
+    /steps array/i,
   );
 });
 
