@@ -46,6 +46,10 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 
 ## Phase 16 — Performance
 
+- [x] P16A — repository runtime measurement harness implemented — current PR
+- [ ] P16B — target-PC runtime measurements captured
+- [ ] P16C — browser/Humanoid HIGH measurements captured
+- [ ] P16D — evidence-based bottleneck fixes and re-measurement
 - [ ] real hardware/browser environment recorded
 - [ ] Humanoid HIGH baseline measured
 - [ ] runtime/provider/memory latency measured
@@ -53,7 +57,7 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 - [ ] no release-blocking console error
 - [ ] `docs/PERFORMANCE_BASELINE.md` filled with real measurements
 
-Phase 16 result: **PENDING**
+Phase 16 result: **IN PROGRESS — instrumentation only; no target-PC measurements claimed**
 
 ## Phase 17 — Full-system validation
 
