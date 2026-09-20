@@ -114,3 +114,12 @@ The next major implementation mission is defined in `docs/ASTRA_MAX.md`.
 Do not stop after Memory, MCP, or one integration and wait for a new roadmap. Work milestone-by-milestone through the ASTRA MAX roadmap, preserving recoverable commits and validation gates, until the Definition of Done is reached or progress is genuinely blocked by an external action that requires the user.
 
 The 18 ReasoningWeb nodes must become truthful capabilities or truthful unavailable states. A node must never be presented as READY/ONLINE simply because it exists visually.
+
+
+## JARVIS-Class continuation
+
+`docs/ASTRA_MAX.md` now continues through Phase 30.
+
+Phase 20 is an ASTRA MAX core release checkpoint, not the terminal stop. Once the core release is stable, continue Phase 21–30 automatically unless a genuine external/user action blocks progress.
+
+Do not treat “JARVIS-Class” as permission for fictional claims or unsafe autonomy. The target is a practical always-available assistant experience with truthful always-on voice, opt-in situational awareness, proactive events, episodic memory, durable background work, secure multi-device presence, self-diagnostics, skill/device expansion, verification and user control.
