@@ -704,3 +704,36 @@ real automation.* lifecycle
 ```
 
 The runner is manually invoked; it does not create a hidden scheduler service. Claim-before-execute intentionally prefers at-most-once behavior over automatic retry after a process crash. Approval-gated Level 2/3 jobs remain outside the executor path.
+## Automation loopback control plane
+
+Phase 14D1 adds a local control plane without creating a public service:
+
+```text
+ASTRA UI / trusted local client
+        ↓
+/api/automation
+        ↓
+existing loopback/origin/sec-fetch guard
+        ↓
+x-astra-client + JSON for mutations
+        ↓
+bounded mutation parser
+        ↓
+serialized private store mutation
+```
+
+The server owns durable timestamps and preserves `lastRunAt` when a definition is edited. New definitions default to paused unless explicitly enabled.
+
+Automation lifecycle contracts also bridge into the existing Brain event model:
+
+```text
+real automation lifecycle
+        ↓
+automationEventToBrainEvent()
+        ↓
+visualNode = Ops
+        ↓
+Command Center runtime overlay
+```
+
+No telemetry is fabricated merely because a definition exists. Only emitted runtime events may change the Ops node transient state.
