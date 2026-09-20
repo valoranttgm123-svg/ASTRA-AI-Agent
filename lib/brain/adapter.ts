@@ -5,6 +5,7 @@ import type { AstraAgentKey } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
 import type { AstraMemoryLifecycleEvent } from "@/lib/memory/contracts";
 import type { AstraPlan } from "@/lib/planner/contracts";
+import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
 import { generateStrategistPlan, shouldGeneratePlan } from "@/lib/planner/generator";
 import {
   chatWithCodex,
@@ -26,6 +27,7 @@ import {
   toolsPolicyDetail,
 } from "./policy";
 import { getSkillContext, type AstraSkillContext } from "./skills";
+import { executeBrainPlan } from "./plan-executor";
 import type {
   AstraBrain,
   AstraBrainChatResult,
@@ -702,6 +704,66 @@ function routingOnlyEvents(
   return events;
 }
 
+function planExecutionEventFields(
+  event: AstraPlanExecutionEvent,
+): Omit<AstraBrainEvent, "id" | "at"> {
+  const agent = event.agent ?? "chief_of_staff";
+  const provider =
+    event.provider === "codex" ||
+    event.provider === "ollama" ||
+    event.provider === "hermes" ||
+    event.provider === "cloud"
+      ? event.provider
+      : undefined;
+
+  const visualNode =
+    event.type === "plan.completed" || event.type === "plan.cancelled"
+      ? "strategist"
+      : visualNodeForAgent(agent);
+
+  const label =
+    event.type === "plan.step.started"
+      ? "Plan step started"
+      : event.type === "plan.step.progress"
+        ? "Plan step progress"
+        : event.type === "plan.step.completed"
+          ? "Plan step completed"
+          : event.type === "plan.step.failed"
+            ? "Plan step failed"
+            : event.type === "plan.completed"
+              ? "Plan completed"
+              : "Plan cancelled";
+
+  return {
+    type: event.type,
+    agent,
+    visualNode,
+    provider,
+    label,
+    detail: event.detail,
+  };
+}
+
+function providerFromPlanEvents(events: AstraBrainEvent[]): AstraBrainProvider {
+  if (events.some((event) => event.provider === "codex")) return "codex";
+  if (events.some((event) => event.provider === "hermes")) return "hermes";
+  if (events.some((event) => event.provider === "ollama")) return "ollama";
+  if (events.some((event) => event.provider === "cloud")) return "cloud";
+  return "routing_only";
+}
+
+function routeFromPlan(
+  selected: AstraAgentKey,
+  plan: AstraPlan,
+): AstraAgentKey[] {
+  const route: AstraAgentKey[] = ["chief_of_staff"];
+  if (selected !== "chief_of_staff") route.push(selected);
+  for (const step of plan.steps) {
+    if (step.agent && !route.includes(step.agent)) route.push(step.agent);
+  }
+  return route;
+}
+
 function envelopeContext(context: ExecutionContext) {
   return {
     context: {
@@ -1035,6 +1097,141 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         "Execution mode requested without explicit user approval.",
         true,
       );
+    }
+
+    if (context.plan) {
+      const maxPermission = Math.max(
+        ...context.plan.steps.map((step) => step.permissionLevel),
+      );
+
+      if (preferredProvider === "ollama" && maxPermission > 1) {
+        return blocked(
+          "Plan ini memiliki langkah aksi nyata. Ollama hanya dapat menjalankan reasoning/read-only; gunakan Auto atau Codex untuk langkah aksi.",
+          "Explicit Ollama mode cannot execute plan steps above permission level 1.",
+        );
+      }
+
+      const planEvents: AstraBrainEvent[] = [];
+      const result = await executeBrainPlan({
+        plan: context.plan,
+        project: context.project.match?.project,
+        baseContext: context.localContext,
+        policy: context.policy,
+        providerChoice: preferredProvider,
+        approvedPermissionLevel:
+          context.policy.requireApproval && !task.approved ? 1 : 2,
+        signal: options?.signal,
+        onEvent: (event) => {
+          const live = emitLiveEvent(options, planExecutionEventFields(event));
+          planEvents.push(live);
+        },
+      });
+
+      context.plan = result.plan;
+      const planRoute = routeFromPlan(selected, result.plan);
+      const provider = providerFromPlanEvents(planEvents);
+      const now = Date.now();
+      const trace = [
+        ...baseEvents(selected, now),
+        ...contextEvents(selected, context, now),
+        ...planEvents,
+      ];
+
+      const outputSummary = Object.values(result.outputs)
+        .slice(-3)
+        .join("\n\n")
+        .slice(0, 6000);
+
+      if (result.outcome === "completed") {
+        const message = [
+          "ASTRA menyelesaikan plan " +
+            result.plan.steps.length +
+            " langkah dengan bounded orchestrator.",
+          outputSummary,
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        const responseEvent = emitLiveEvent(options, {
+          type: "response.ready",
+          provider: provider === "routing_only" ? undefined : provider,
+          agent: selected,
+          visualNode: "chief_of_staff",
+          label: "Response ready",
+          detail: "Bounded plan execution completed and returned to ASTRA Runtime.",
+        });
+        trace.push(responseEvent);
+
+        return {
+          ok: true,
+          agent: selected,
+          agentName: agent.name,
+          state: "completed",
+          message,
+          requiresApproval: false,
+          brain: {
+            provider,
+            execution: "executed",
+            requestedMode: "execute",
+            route: planRoute,
+            visualNodes: planRoute.map(visualNodeForAgent),
+            events: trace,
+            ...envelopeContext(context),
+          },
+        };
+      }
+
+      const needsApproval = result.outcome === "waiting_approval";
+      const detail =
+        result.detail +
+        (result.blockedStepId
+          ? " Blocked at " + result.blockedStepId + "."
+          : "");
+
+      const blockedEvent = emitLiveEvent(options, {
+        type: "agent.blocked",
+        agent: selected,
+        visualNode:
+          result.blockedStepId
+            ? visualNodeForAgent(
+                result.plan.steps.find(
+                  (step) => step.id === result.blockedStepId,
+                )?.agent ?? selected,
+              )
+            : visualNodeForAgent(selected),
+        label: needsApproval ? "Plan waiting approval" : "Plan execution failed",
+        detail,
+      });
+      trace.push(blockedEvent);
+
+      const responseEvent = emitLiveEvent(options, {
+        type: "response.ready",
+        agent: selected,
+        visualNode: "chief_of_staff",
+        label: "Response ready",
+        detail: needsApproval
+          ? "ASTRA returned a plan that is waiting for stronger approval."
+          : "ASTRA returned a truthful plan execution failure.",
+      });
+      trace.push(responseEvent);
+
+      return {
+        ok: false,
+        agent: selected,
+        agentName: agent.name,
+        state: needsApproval ? "blocked" : "error",
+        message: detail,
+        requiresApproval: needsApproval,
+        brain: {
+          provider,
+          execution: "blocked",
+          requestedMode: "execute",
+          route: planRoute,
+          visualNodes: planRoute.map(visualNodeForAgent),
+          events: trace,
+          ...envelopeContext(context),
+        },
+      };
     }
 
     if (preferredProvider === "ollama") {
