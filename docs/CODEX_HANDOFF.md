@@ -1013,3 +1013,21 @@ Next exact task after this branch is validated/merged:
 Implement a private local automation store under `.astra/`, a bounded cancellable queue/worker, real lifecycle telemetry, and per-run approval binding into the existing Brain/Planner/Tool Runtime. Do not execute Level 2/3 work merely because a job exists. Level 4 must remain unavailable to scheduled automation.
 
 External/target-PC validation is still required before Phase 14 is complete.
+## Handoff update — Phase 14B private automation store
+
+Added on stacked branch `astra/phase14b-automation-store`:
+
+- `lib/automation/store.ts`;
+- `tests/automation-store.test.ts`;
+- private `.astra/automations.json` default;
+- strict/fail-closed parsing;
+- bounded entries and file bytes;
+- duplicate-ID rejection;
+- automation enable kill switch;
+- symlink-target rejection.
+
+Next exact task:
+
+**Phase 14C — bounded scheduler worker + runtime integration.**
+
+The worker must load only validated definitions, execute at most one bounded occurrence per job window, propagate AbortSignal/global STOP, never bypass Planner/Tool Runtime, emit real automation lifecycle events, and pause Level 2/3 occurrences at the existing approval boundary. Do not introduce permanent approval or Level-4 scheduling.

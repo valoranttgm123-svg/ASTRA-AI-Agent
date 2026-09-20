@@ -754,3 +754,21 @@ Next implementation slice:
 4. per-run approval binding through the existing approval model;
 5. loopback-only CRUD/status API and minimal UI;
 6. real local validation before Phase 14 can be marked complete.
+---
+
+## Phase 14B implementation checkpoint — private automation store
+
+Implemented on `astra/phase14b-automation-store`:
+
+- private local store defaults to `.astra/automations.json`;
+- optional `ASTRA_AUTOMATION_FILE` override and `ASTRA_AUTOMATION_ENABLED` kill switch;
+- strict schema normalization before any stored definition is accepted;
+- store fails closed: malformed/corrupt content yields zero runnable automations;
+- maximum 64 definitions and 256 KiB store size;
+- duplicate automation IDs are rejected;
+- Level-4 definitions remain rejected by the shared scheduler validator;
+- direct symbolic-link targets are rejected;
+- private directory/file modes are requested when creating local storage;
+- regression tests cover empty store, round-trip persistence, malformed data, duplicate IDs, Level 4 and disabled state.
+
+Phase 14 still does **not** execute background tasks. Next is Phase 14C: bounded scheduler worker/queue, global STOP integration, real runtime telemetry and per-run approval binding.
