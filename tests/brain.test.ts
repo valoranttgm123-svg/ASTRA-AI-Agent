@@ -27,6 +27,11 @@ import {
   normalizeProjects,
   resolveProject,
 } from "../lib/projects/registry";
+import {
+  createBoundedPlan,
+  runnablePlanSteps,
+  updatePlanStepStatus,
+} from "../lib/planner/planner";
 
 let root = "";
 let fixture: Server;
@@ -506,4 +511,52 @@ test("Brain exposes truthful registered project selection and event", async () =
   assert.equal(result.brain.context?.project?.id, "alurka");
   assert.equal(result.brain.context?.project?.name, "ALURKA");
   assert.ok(events.some((event) => event.type === "project.selected"));
+});
+
+
+test("planner bounds steps, retries, timeouts, permissions, and dependencies", () => {
+  const drafts = Array.from({ length: 20 }, (_, index) => ({
+    id: "step-" + (index + 1),
+    title: "Step " + (index + 1),
+    kind: "inspect" as const,
+    permissionLevel: index === 0 ? (4 as const) : (1 as const),
+    timeoutMs: 999999,
+    maxRetries: 99,
+    dependsOn: index === 0 ? ["future-step"] : ["step-" + index, "missing"],
+  }));
+
+  const plan = createBoundedPlan("Bounded task", drafts, {
+    id: "fixture-plan",
+    projectId: "astra",
+    createdAt: "2026-09-20T10:00:00Z",
+  });
+
+  assert.equal(plan.steps.length, 12);
+  assert.equal(plan.steps[0].permissionLevel, 4);
+  assert.equal(plan.steps[0].timeoutMs, 120000);
+  assert.equal(plan.steps[0].maxRetries, 2);
+  assert.deepEqual(plan.steps[0].dependsOn, []);
+  assert.deepEqual(plan.steps[1].dependsOn, ["step-1"]);
+  assert.equal(plan.projectId, "astra");
+});
+
+test("planner exposes only dependency-satisfied pending steps", () => {
+  const initial = createBoundedPlan("Dependency task", [
+    { id: "inspect", title: "Inspect", kind: "inspect" },
+    { id: "verify", title: "Verify", kind: "verify", dependsOn: ["inspect"] },
+  ]);
+
+  assert.deepEqual(runnablePlanSteps(initial).map((step) => step.id), ["inspect"]);
+  const progressed = updatePlanStepStatus(initial, "inspect", "completed");
+  assert.deepEqual(runnablePlanSteps(progressed).map((step) => step.id), ["verify"]);
+  assert.throws(() => updatePlanStepStatus(initial, "missing", "completed"));
+});
+
+test("planner rejects empty goals and plans without valid steps", () => {
+  assert.throws(() =>
+    createBoundedPlan("", [{ title: "Inspect", kind: "inspect" }]),
+  );
+  assert.throws(() =>
+    createBoundedPlan("Goal", [{ title: "   ", kind: "inspect" }]),
+  );
 });
