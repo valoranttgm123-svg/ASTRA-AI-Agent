@@ -8,10 +8,10 @@
 | Cross-site request | Request rejected | Existing guard coverage; re-verify | Browser devtools optional | PENDING REVIEW |
 | Oversized request body | HTTP 413 / bounded rejection | Existing parser coverage; re-verify | Not required | PENDING REVIEW |
 | Malformed JSON | Bounded validation error; no execution | Existing parser coverage; expand if needed | Not required | PENDING REVIEW |
-| Invalid project traversal `../` | No path returned/read/written | REQUIRED Phase 15A | Not required | TODO |
-| Absolute path outside workspace | No path returned/read/written | REQUIRED Phase 15A | Not required | TODO |
-| Symlink escape from workspace | No path returned/read/written | REQUIRED Phase 15A | Platform-specific test if needed | TODO |
-| Sensitive file path | Refused | REQUIRED Phase 15A | Not required | TODO |
+| Invalid project traversal `../` | No path returned/read/written | `tests/security-paths.test.ts` | Not required | PASS — AUTOMATED |
+| Absolute path outside workspace | No path returned/read/written | `tests/security-paths.test.ts` | Not required | PASS — AUTOMATED |
+| Symlink escape from workspace | No path returned/read/written | `tests/security-paths.test.ts` | Platform-specific symlink support | PASS — AUTOMATED |
+| Sensitive file path | Refused | `tests/security-paths.test.ts` | Not required | PASS — AUTOMATED |
 | Retrieved prompt injection | Treated as untrusted evidence; no privilege increase | REQUIRED Phase 15B | Optional live provider test | TODO |
 | Ollama unavailable | Truthful OFFLINE/failure; no fake response | Existing + expand Phase 15C | Target PC outage proof | TODO |
 | Ollama malformed response | Fail safely | REQUIRED Phase 15C | Not required | TODO |
