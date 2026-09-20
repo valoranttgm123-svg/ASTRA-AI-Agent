@@ -4,9 +4,10 @@ import type {
 } from "./contracts";
 import { getProjectRegistry } from "@/lib/projects/registry";
 import { createProjectContextMemorySource } from "@/lib/projects/context";
+import { FILE_TOOL_DEFINITIONS, FILE_TOOL_HANDLERS } from "./files";
+import { LOCAL_GIT_TOOL_DEFINITIONS, LOCAL_GIT_TOOL_HANDLERS } from "./local-git";
 
-export const NATIVE_TOOL_DEFINITIONS: readonly AstraToolDefinition[] = [
-  {
+const PROJECT_CONTEXT_TOOL_DEFINITION: AstraToolDefinition = {
     id: "project.context.search",
     name: "Project Context Search",
     category: "filesystem",
@@ -35,7 +36,12 @@ export const NATIVE_TOOL_DEFINITIONS: readonly AstraToolDefinition[] = [
         detail: { type: "string" },
       },
     },
-  },
+  };
+
+export const NATIVE_TOOL_DEFINITIONS: readonly AstraToolDefinition[] = [
+  PROJECT_CONTEXT_TOOL_DEFINITION,
+  ...FILE_TOOL_DEFINITIONS,
+  ...LOCAL_GIT_TOOL_DEFINITIONS,
 ];
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -135,4 +141,6 @@ const projectContextSearch: AstraToolHandler = async (input, context) => {
 
 export const NATIVE_TOOL_HANDLERS: Readonly<Record<string, AstraToolHandler>> = {
   "project.context.search": projectContextSearch,
+  ...FILE_TOOL_HANDLERS,
+  ...LOCAL_GIT_TOOL_HANDLERS,
 };
