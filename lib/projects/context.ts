@@ -1,6 +1,6 @@
 import { realpath, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import type { AstraMemorySource } from "@/lib/memory/contracts";
+import type { AstraMemoryRecord, AstraMemorySource } from "@/lib/memory/contracts";
 import type { AstraProjectRecord } from "./contracts";
 
 const ALLOWED_EXTENSIONS = new Set([
@@ -106,7 +106,7 @@ function isSensitive(relativePath: string) {
     .split("/")
     .map((segment) => segment.trim().toLowerCase())
     .filter(Boolean);
-  const base = segments.at(-1) ?? "";
+  const base = segments.length > 0 ? segments[segments.length - 1] : "";
 
   if (SENSITIVE_NAMES.has(base)) return true;
   if (/^\.env(?:\.|$)/i.test(base)) return true;
@@ -205,7 +205,7 @@ export function createProjectContextMemorySource(
       const configured = [...new Set([...project.docs, ...project.importantFiles])]
         .slice(0, maxFiles);
 
-      const records = [];
+      const records: AstraMemoryRecord[] = [];
 
       for (const configuredPath of configured) {
         query.signal?.throwIfAborted();
