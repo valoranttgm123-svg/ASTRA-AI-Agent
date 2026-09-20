@@ -4,6 +4,24 @@
 >
 > Do not reconstruct project history from chat. Start from current `main`, read the files listed below, verify the repository state, then execute this mission sequentially.
 
+## One-line resume behavior
+
+The repository owner may intentionally give only:
+
+`lanjutkan yang belum selesai`
+
+That is a complete continuation instruction.
+
+On that command, use repository state instead of asking for the roadmap again:
+
+`main → AGENTS.md → CODEX_PROGRESS_TRACKER.md → CODEX_HANDOFF.md → this file`
+
+Then select the first implementable unfinished task, satisfy its exit gate, validate it, PR/CI/merge it, update the tracker/handoff, and continue.
+
+External-only blockers must be recorded but must not stop unrelated repository work.
+
+---
+
 ## Current verified baseline
 
 Current core milestone:
