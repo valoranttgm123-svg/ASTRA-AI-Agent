@@ -594,13 +594,20 @@ export default function ApexWorld() {
                     borderRadius: "50%",
                     marginTop: 3,
                     background:
-                      event.type === "agent.blocked" || event.type === "plan.cancelled"
+                      event.type === "agent.blocked" ||
+                      event.type === "plan.cancelled" ||
+                      event.type === "automation.cancelled"
                         ? "#ff9d66"
-                        : event.type === "tool.failed" || event.type === "plan.step.failed"
+                        : event.type === "tool.failed" ||
+                            event.type === "plan.step.failed" ||
+                            event.type === "automation.failed"
                           ? "#ff5f6d"
-                          : event.type === "approval.requested"
+                          : event.type === "approval.requested" ||
+                              event.type === "automation.waiting_approval"
                             ? "#f5b942"
-                            : event.type === "agent.completed" || event.type === "response.ready"
+                            : event.type === "agent.completed" ||
+                                event.type === "response.ready" ||
+                                event.type === "automation.completed"
                               ? "#83ffbc"
                               : event.type === "provider.selected" || event.type === "skill.selected"
                                 ? "#d7a2ff"
