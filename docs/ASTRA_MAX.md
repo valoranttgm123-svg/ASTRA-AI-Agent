@@ -1796,3 +1796,21 @@ The user must remain able to see and control what ASTRA can hear, see, remember,
 - ReasoningWeb no longer treats inherited static live flags as operational truth.
 - The Brain panel shows real input provenance, plan steps, approval state, and timeline.
 - Engineering remains NOT_CONFIGURED until its own capability contract exists.
+---
+
+## Phase 14A — Automation safety foundation — implementation checkpoint 2026-09-20
+
+The first safe scheduling slice is implemented on feature branch `astra/phase14a-automation-safety-foundation`.
+
+Current guarantees:
+
+- schedules are deterministic `once` or bounded `interval` definitions;
+- interval automation cannot run more frequently than once per hour;
+- each scheduled definition has a bounded runtime;
+- unattended execution is capped at Permission Level 1;
+- Level 2/3 work requires approval for the current run and does not inherit permanent trust;
+- Level 4 work is rejected from scheduled registration;
+- paused/disabled definitions do not become runnable;
+- regression tests verify due-time and permission invariants.
+
+This is foundation only. Phase 14 remains incomplete until durable private storage, the cancellable scheduler worker, runtime telemetry, approval binding, API/UI controls, and target-PC verification exist.
