@@ -9,7 +9,7 @@ ASTRA is one integrated AI operating environment. The Humanoid, Brain, and Comma
 3. **Agent API** — `/api/agent` validates requests and delegates to the stable Brain Adapter.
 4. **ASTRA Brain Adapter** — routing, context assembly, provider selection, permission policy, fallback behavior.
 5. **Providers** — Hermes, Ollama, Codex CLI specialist, optional cloud.
-6. **Memory / Skills** — local private memory plus built-in/private route skills.
+6. **Memory / Skills** — local private memory plus built-in/private route skills; Phase 2 adds provider-neutral memory sources and a Sonor bridge to the user's existing local Graphify/Obsidian workflow graph.
 7. **Tools / MCP** — execution delegated to permitted provider capabilities; side effects are policy-gated.
 8. **Command Center** — visualizes real Brain/runtime events only.
 
@@ -102,6 +102,26 @@ The entire `.astra/` directory is gitignored.
 Memory is retrieved by lightweight local relevance scoring with strict size caps. Skills include committed built-ins plus optional private local extensions.
 
 Private memory is excluded from Codex/cloud by default.
+
+### Existing Sonor knowledge/workflow graph
+
+The user already runs Sonor locally at `http://127.0.0.1:55127/#graph`. Sonor is the existing aggregation layer for project/workflow context, Graphify relationships, Obsidian-linked notes, and related project/conversation context.
+
+ASTRA must not rebuild a duplicate Graphify/Obsidian stack. Instead:
+
+```text
+Graphify / Obsidian / Projects / Conversations
+                    ↓
+                  Sonor
+                    ↓
+               SonorBridge
+                    ↓
+            ASTRA Memory Manager
+                    ↓
+                 Brain
+```
+
+The bridge remains loopback-only by default. Its live request/response schema must be implemented only after the real local Sonor endpoint contract is inspected. See `docs/SONOR_BRIDGE.md`.
 
 ## Real event rule
 
