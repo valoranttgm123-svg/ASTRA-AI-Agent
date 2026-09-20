@@ -1,5 +1,44 @@
 # ASTRA Codex Handoff
 
+## 2026-09-20 — Phase 13 Command Center MAX
+
+Implemented on `astra/phase13-command-center-max`:
+
+- Brain status now publishes a truthful per-node runtime snapshot for all 18 Command Center nodes;
+- snapshot status is derived from real provider/tool availability, not legacy visual flags;
+- CRM / Calendar / Email are evaluated independently from their exact read tools;
+- Drive reflects registered local file capability separately from optional cloud Drive;
+- Developer reflects Codex availability;
+- Strategist reflects local Ollama planner availability;
+- Researcher reflects real Research runtime availability;
+- Engineering remains honestly NOT_CONFIGURED until a separate specialist contract exists;
+- Design status distinguishes working brief reasoning from optional image-generation/edit providers;
+- new pure runtime overlay maps real SSE lifecycle events to node states:
+  - ACTIVE;
+  - WAITING_APPROVAL;
+  - BLOCKED;
+  - ERROR;
+  - reset to server base state after completion/response;
+- provider-unavailable alone does not fabricate terminal failure because fallback may still succeed;
+- ReasoningWeb accepts real node state as part of its roster and colors/dims nodes accordingly;
+- static legacy `live=true/false` is no longer the Command Center truth source;
+- selected Agent Overview uses the same per-node runtime state/detail;
+- accessible capability list includes real status labels;
+- new request clears stale prior response/plan before streaming starts;
+- Brain panel now shows:
+  - provider + feature readiness;
+  - trusted input source/trigger;
+  - current/last returned plan and step statuses;
+  - scoped approval request;
+  - expanded live event timeline;
+- tests cover all 18 node snapshots, lifecycle overlays, reset behavior, and provider fallback truth.
+
+Important truth:
+The visual web still uses the existing SVG design, but its operational state is now driven by Brain status + real SSE events. A node appearing in the graph does not imply a capability is configured.
+
+Next milestone:
+**Phase 14 — Automation**: safe scheduled workflows under the same Tool Runtime permission, approval, cancellation, and verification model.
+
 ## 2026-09-20 — Phase 12 Voice + Multimodal input unification
 
 Implemented on `astra/phase12-multimodal-input-envelope`:
