@@ -492,3 +492,26 @@ These are implemented as local analysis/drafting skills. Their READY state never
 - desktop automation.
 
 Those capabilities require separate registered integrations/tools and their own permission/approval paths.
+
+
+## Communication and cloud-file integration boundary
+
+Phase 9 routes external account services through `AstraIntegrationTransport`.
+
+```text
+Planner / Chief
+   ↓
+canonical integration tool id
+   ↓
+Tool Runtime
+   ↓
+permission + policy gate
+   ↓
+AstraIntegrationTransport
+   ↓
+real provider (only when configured)
+```
+
+Default runtime state is `NOT_CONFIGURED`. A provider may expose only the exact capabilities it actually supports. Reads are Level 1. CRM writes, calendar mutation, email draft/send, and Drive upload are Level 3 external writes and therefore require the existing scoped approval path.
+
+A provider result must include verified completion. An unverified success claim is rejected by ASTRA.
