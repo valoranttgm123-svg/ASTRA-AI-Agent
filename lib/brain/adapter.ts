@@ -1246,8 +1246,22 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       );
     }
 
+    const unattendedReadOnly =
+      options?.requirePlan === true &&
+      options.permissionCeiling !== undefined &&
+      options.permissionCeiling <= 1 &&
+      !task.approvalToken;
+
     let approvedPermissionLevel: 0 | 1 | 2 | 3 | 4 =
       context.policy.requireApproval ? (task.approved ? 2 : 1) : 2;
+
+    if (options?.permissionCeiling !== undefined) {
+      approvedPermissionLevel = Math.min(
+        approvedPermissionLevel,
+        options.permissionCeiling,
+      ) as 0 | 1 | 2 | 3 | 4;
+    }
+
     let approvedStepIds: string[] = [];
     let usedScopedApproval = false;
 
@@ -1276,7 +1290,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
 
       context.plan = grant.plan;
-      approvedPermissionLevel = 2;
+      approvedPermissionLevel = Math.min(
+        2,
+        options?.permissionCeiling ?? 2,
+      ) as 0 | 1 | 2 | 3 | 4;
       approvedStepIds = [grant.request.stepId];
       usedScopedApproval = true;
 
@@ -1296,7 +1313,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
 
     if (
       context.policy.requireApproval &&
-      approvedPermissionLevel < 2
+      approvedPermissionLevel < 2 &&
+      !unattendedReadOnly
     ) {
       return blocked(
         "ASTRA siap menjalankan tugas ini, tetapi eksekusi lokal membutuhkan approval eksplisit. Gunakan EXECUTE TASK untuk menyetujui Level-2 local execution.",
