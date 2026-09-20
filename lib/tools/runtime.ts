@@ -90,7 +90,7 @@ export async function createToolRuntime(options?: {
   for (const transport of options?.integrationTransports ?? []) {
     const integration = await createIntegrationToolRegistrations(
       transport,
-      options.signal,
+      options?.signal,
     );
     const integrationIds = new Set(
       integration.definitions.map((definition) => definition.id),
