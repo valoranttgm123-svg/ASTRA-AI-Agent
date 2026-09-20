@@ -820,6 +820,7 @@ test("Sonor source plugs into the existing multi-source memory manager without s
 
 
 test("Brain context can consume Sonor/Graphify through the unified memory manager", async () => {
+  process.env.ASTRA_MEMORY_MAX_ENTRIES = "3";
   process.env.ASTRA_SONOR_ENABLED = "true";
   process.env.ASTRA_SONOR_URL = base;
   process.env.ASTRA_SONOR_SEARCH_PATH = "/sonor/search";
