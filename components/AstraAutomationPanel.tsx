@@ -32,7 +32,7 @@ type FormState = {
   scheduleKind: "once" | "interval";
   scheduleAt: string;
   everyMinutes: string;
-  permissionLevel: "1" | "2" | "3";
+  permissionLevel: "0" | "1" | "2" | "3";
   runtimeSeconds: string;
 };
 
@@ -822,6 +822,7 @@ export default function AstraAutomationPanel() {
               }
               aria-label="Permission level"
             >
+              <option value="0">LEVEL 0 · REASON</option>
               <option value="1">LEVEL 1 · READ</option>
               <option value="2">LEVEL 2 · SAFE LOCAL</option>
               <option value="3">LEVEL 3 · EXTERNAL</option>
