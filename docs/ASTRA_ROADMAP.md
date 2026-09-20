@@ -709,3 +709,21 @@ Implemented on `astra/phase12-multimodal-input-envelope`:
 - regression coverage for parser, consent, envelope and status.
 
 Next milestone: inspect current `main` roadmap after merge and continue the next unfinished ASTRA MAX capability without duplicating existing foundations.
+
+
+---
+
+## Phase 13 implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase13-command-center-max`:
+
+- server-side runtime snapshot for all 18 nodes;
+- node-specific provider/tool readiness;
+- real SSE lifecycle overlays;
+- dynamic ReasoningWeb live/dormant/error/approval state;
+- real Agent Overview status/detail;
+- input provenance, plan, approval and expanded timeline in Brain panel;
+- stale prior result cleared on new turns;
+- regression coverage for snapshot completeness and lifecycle truth.
+
+Next: Phase 14 safe Automation under the same permission/approval/cancellation/verification model.
