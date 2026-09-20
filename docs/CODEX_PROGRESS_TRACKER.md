@@ -19,14 +19,14 @@ Current truthful status:
 
 - [x] P15A — project path / filesystem hardening
 - [x] P15B — untrusted retrieved-context / prompt-injection boundary
-- [ ] P15C — provider + MCP failure isolation
+- [x] P15C — provider + MCP failure isolation
   - [x] P15C1 — MCP discovery/descriptor/call isolation — PR #99
-  - [ ] P15C2 — Ollama/Hermes/Codex/Cloud outage + malformed-response matrix
+  - [x] P15C2 — Ollama/Hermes/Codex/Cloud outage + malformed-response matrix — PR #100
 - [ ] P15D — cancellation / timeout / network failure matrix
 - [ ] P15E — secret / error / telemetry leakage hardening
 - [ ] P15F — security regression matrix + report
 
-Phase 15 result: **IN PROGRESS — P15A/P15B complete; next P15C**
+Phase 15 result: **IN PROGRESS — P15A/P15B/P15C complete; next P15D**
 
 ## Memory integration gate
 
