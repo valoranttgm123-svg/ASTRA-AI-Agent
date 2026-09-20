@@ -47,6 +47,11 @@ import { astraNativeToolRuntime, createToolRuntime } from "../lib/tools/runtime"
 import type { AstraMcpTransport } from "../lib/tools/mcp";
 import type { AstraGitHubTransport } from "../lib/tools/github";
 import {
+  createComputerToolRegistrations,
+  WindowsComputerTransport,
+  type AstraComputerTransport,
+} from "../lib/tools/computer";
+import {
   createCreativeToolRegistrations,
   type AstraCreativeTransport,
 } from "../lib/tools/creative";
@@ -3541,4 +3546,253 @@ test("Phase 10 capability truth separates ready Social drafting from configured 
   assert.equal(design.implementation, "partial");
   assert.equal(design.defaultState, "NOT_CONFIGURED");
   assert.equal(design.requiresConfiguration, true);
+});
+
+
+test("Phase 11 controlled Computer Agent is OFF by default", async () => {
+  const previous = process.env.ASTRA_COMPUTER_ENABLED;
+  delete process.env.ASTRA_COMPUTER_ENABLED;
+
+  try {
+    const status = await new WindowsComputerTransport().status();
+    assert.equal(status.configured, false);
+    assert.equal(status.available, false);
+
+    const runtime = await createToolRuntime({
+      computerTransport: new WindowsComputerTransport(),
+    });
+    assert.equal(
+      runtime.get("computer.process.list")?.availability,
+      "NOT_CONFIGURED",
+    );
+    assert.equal(
+      runtime.get("computer.app.launch")?.availability,
+      "NOT_CONFIGURED",
+    );
+  } finally {
+    if (previous === undefined) {
+      delete process.env.ASTRA_COMPUTER_ENABLED;
+    } else {
+      process.env.ASTRA_COMPUTER_ENABLED = previous;
+    }
+  }
+});
+
+test("Phase 11 fixture Computer transport obeys Level-1 read and Level-2 shell-gated launch", async () => {
+  const calls: string[] = [];
+  const transport: AstraComputerTransport = {
+    provider: "fixture-computer",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-computer",
+        detail: "fixture computer ready",
+        capabilities: [
+          "computer.process.list",
+          "computer.app.launch",
+        ],
+      };
+    },
+    async call(capability, input) {
+      calls.push(capability);
+      return {
+        ok: true,
+        verified: true,
+        detail: "verified " + capability,
+        output: { capability, input },
+      };
+    },
+  };
+
+  const runtime = await createToolRuntime({
+    computerTransport: transport,
+  });
+
+  const read = await runtime.execute(
+    "computer.process.list",
+    {},
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(read.status, "completed");
+
+  const low = await runtime.execute(
+    "computer.app.launch",
+    { appId: "notepad" },
+    {
+      approvedPermissionLevel: 1,
+      policy: {
+        allowShell: true,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(low.status, "blocked");
+
+  const shellBlocked = await runtime.execute(
+    "computer.app.launch",
+    { appId: "notepad" },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: false,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(shellBlocked.status, "blocked");
+
+  const launched = await runtime.execute(
+    "computer.app.launch",
+    { appId: "notepad" },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: true,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+    },
+  );
+  assert.equal(launched.status, "completed");
+  assert.equal(launched.verified, true);
+  assert.deepEqual(calls, [
+    "computer.process.list",
+    "computer.app.launch",
+  ]);
+});
+
+test("Phase 11 Computer transport exposes only declared capabilities", async () => {
+  const transport: AstraComputerTransport = {
+    provider: "fixture-readonly-computer",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-readonly-computer",
+        detail: "read-only fixture",
+        capabilities: ["computer.process.list"],
+      };
+    },
+    async call(capability) {
+      return {
+        ok: true,
+        verified: true,
+        detail: "verified " + capability,
+      };
+    },
+  };
+
+  const registrations = await createComputerToolRegistrations(
+    transport,
+  );
+  const runtime = createExecutableToolRegistry(
+    registrations.definitions,
+    registrations.handlers,
+  );
+
+  assert.equal(
+    runtime.get("computer.process.list")?.availability,
+    "READY",
+  );
+  assert.equal(
+    runtime.get("computer.app.launch")?.availability,
+    "NOT_CONFIGURED",
+  );
+});
+
+test("Phase 11 Computer execution is cancellable through the shared Tool Runtime signal", async () => {
+  const transport: AstraComputerTransport = {
+    provider: "fixture-cancellable-computer",
+    async status() {
+      return {
+        configured: true,
+        available: true,
+        provider: "fixture-cancellable-computer",
+        detail: "fixture ready",
+        capabilities: ["computer.app.launch"],
+      };
+    },
+    async call(_capability, _input, signal) {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(resolve, 2000);
+        const onAbort = () => {
+          clearTimeout(timer);
+          reject(
+            signal.reason instanceof Error
+              ? signal.reason
+              : new DOMException("cancelled", "AbortError"),
+          );
+        };
+        if (signal.aborted) onAbort();
+        else signal.addEventListener("abort", onAbort, { once: true });
+      });
+      return {
+        ok: true,
+        verified: true,
+        detail: "must not complete after cancellation",
+      };
+    },
+  };
+
+  const runtime = await createToolRuntime({
+    computerTransport: transport,
+  });
+  const controller = new AbortController();
+
+  const promise = runtime.execute(
+    "computer.app.launch",
+    { appId: "notepad" },
+    {
+      approvedPermissionLevel: 2,
+      policy: {
+        allowShell: true,
+        allowFileWrite: false,
+        allowExternalActions: false,
+      },
+      signal: controller.signal,
+    },
+  );
+
+  controller.abort(new DOMException("global stop", "AbortError"));
+  await assert.rejects(promise, /global stop|cancelled/i);
+});
+
+test("Phase 11 planner floors Computer read at Level 1 and launch at Level 2", () => {
+  const steps = parsePlannerDraft(
+    JSON.stringify({
+      steps: [
+        {
+          id: "processes",
+          title: "List processes",
+          kind: "tool",
+          agent: "computer",
+          permissionLevel: 0,
+          toolId: "computer.process.list",
+        },
+        {
+          id: "launch",
+          title: "Launch notepad",
+          kind: "tool",
+          agent: "computer",
+          permissionLevel: 0,
+          toolId: "computer.app.launch",
+          toolInput: { appId: "notepad" },
+          dependsOn: ["processes"],
+        },
+      ],
+    }),
+  );
+
+  assert.equal(steps[0].permissionLevel, 1);
+  assert.equal(steps[1].permissionLevel, 2);
 });
