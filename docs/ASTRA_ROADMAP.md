@@ -630,3 +630,22 @@ Implemented on `astra/phase8-business-skills`:
 - regression coverage for finance arithmetic, analytics statistics, skill selection, routing, planner floors and visual-node truth.
 
 Next: Phase 9 provider-neutral CRM / Calendar / Email / Drive integration contracts and real connected transports where available.
+
+
+---
+
+## Phase 9 implementation checkpoint — 2026-09-20
+
+Implemented on `astra/phase9-communication-cloud-integrations`:
+
+- provider-neutral CRM / Calendar / Email / Drive transport contract;
+- canonical truthful tool IDs;
+- Level-1 read vs Level-3 external-write separation;
+- selective READY exposure by real provider capability;
+- verified-completion requirement;
+- planner permission floors;
+- live Brain + Command Center integration readiness;
+- nodes marked partial/NOT_CONFIGURED until provider auth exists;
+- regression coverage for permission, policy, verification and capability truth.
+
+Next: Phase 10 Design + Social provider-neutral creative/publishing workflow.
