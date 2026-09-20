@@ -124,6 +124,22 @@ const BUILTIN_SKILLS: AstraSkill[] = [
     source: "builtin",
   },
   {
+    id: "social-content",
+    agents: ["business"],
+    triggers: ["social","sosial","caption","instagram","tiktok","facebook","reel","reels","konten","content calendar","hashtag","postingan"],
+    instructions:
+      "Act as the Social specialist for content preparation. Produce platform-aware captions, content calendars, hooks, reel/video scripts, CTA options, and publishing-ready copy from known context. Drafting is not publishing. Never claim a post was published or scheduled unless a real approved social tool reports verified completion.",
+    source: "builtin",
+  },
+  {
+    id: "design-brief",
+    agents: ["business"],
+    triggers: ["design","desain","visual","poster","banner","thumbnail","gambar","image","creative brief","visual brief"],
+    instructions:
+      "Act as the Design briefing specialist. Convert the goal into a concrete visual brief: purpose, audience, composition, hierarchy, copy, dimensions/aspect ratio, visual direction, required assets, and acceptance criteria. A brief is not an image. Only claim image generation/editing when a configured design tool returns verified completion.",
+    source: "builtin",
+  },
+  {
     id: "trading-readonly",
     agents: ["trading"],
     instructions:
