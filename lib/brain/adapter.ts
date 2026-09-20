@@ -86,6 +86,7 @@ async function buildExecutionContext(
   selected: AstraAgentKey,
   signal?: AbortSignal,
   onMemoryEvent?: (event: AstraMemoryLifecycleEvent) => void,
+  skipPlanning = false,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
   const project = await resolveProjectContext(input);
@@ -111,15 +112,18 @@ async function buildExecutionContext(
   let plan: AstraPlan | undefined;
   let plannerDetail: string | undefined;
   let tools: readonly AstraToolDefinition[] = astraNativeToolRuntime.list();
+  const planningRequested = shouldGeneratePlan(input);
 
-  if (shouldGeneratePlan(input)) {
+  if (planningRequested || skipPlanning) {
     try {
       const runtime = await createDefaultToolRuntime(signal);
       tools = runtime.list();
     } catch {
       tools = astraNativeToolRuntime.list();
     }
+  }
 
+  if (planningRequested && !skipPlanning) {
     try {
       const generated = await generateStrategistPlan({
         goal: input,
@@ -1149,6 +1153,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       selected,
       options?.signal,
       (event) => emitLiveMemoryLifecycle(event, options),
+      Boolean(task.approvalToken),
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
