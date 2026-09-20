@@ -1681,6 +1681,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         enabled: true,
         available:
           toolRuntime.get("research.web")?.availability === "READY",
+        state:
+          toolRuntime.get("research.web")?.availability ?? "NOT_CONFIGURED",
         detail:
           "research.web=" +
           (toolRuntime.get("research.web")?.availability ?? "NOT_CONFIGURED") +
