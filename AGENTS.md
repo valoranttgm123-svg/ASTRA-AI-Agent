@@ -62,6 +62,45 @@ When target-PC access is unavailable, the first repository task is:
 
 Do not rebuild or redesign completed Phase 14 work.
 
+## User shortcut command — autonomous resume
+
+When the user says any short continuation command such as:
+
+- `lanjutkan yang belum selesai`
+- `lanjutkan`
+- `teruskan`
+- `kerjakan yang tersisa`
+
+treat it as an instruction to resume the repository mission automatically.
+
+Do **not** ask the user to restate the roadmap or choose a phase when the repository already contains enough state.
+
+Resume protocol:
+
+1. read current `main`;
+2. read `docs/CODEX_PROGRESS_TRACKER.md`;
+3. read the latest section of `docs/CODEX_HANDOFF.md`;
+4. read `docs/CODEX_NEXT_MISSION.md`;
+5. identify the first task that is not PASS/complete and is implementable in the current environment;
+6. if an earlier task is blocked only by target-PC access, login, Sonor access, camera/mic or another external-only action, record the blocker and continue the next independent repository task;
+7. create a focused feature branch;
+8. implement the task completely enough to satisfy its exit gate;
+9. add/update regression tests;
+10. run build, tests, typecheck, lint and audit;
+11. open a PR;
+12. merge only after green CI;
+13. update `CODEX_HANDOFF.md`, `CODEX_PROGRESS_TRACKER.md` and any relevant validation document;
+14. continue automatically to the next implementable unfinished task.
+
+Stop only when:
+
+- all currently implementable mission tasks are complete, or
+- every remaining task genuinely requires external/user-only access or a high-impact approval.
+
+When stopping, report the exact completed PR/commit(s), remaining blockers, and the next task to resume.
+
+The short user command `lanjutkan yang belum selesai` is therefore sufficient. Do not require the user to paste detailed instructions again.
+
 ## Project intent
 
 ASTRA should become one integrated AI operating environment:
