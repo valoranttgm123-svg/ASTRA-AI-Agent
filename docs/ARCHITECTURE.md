@@ -134,3 +134,26 @@ Configured policy flags:
 - `ASTRA_ALLOW_PAID_CLOUD`
 
 Meaningful side effects such as external messages, file writes/deletes, repository pushes/merges, database writes, remote control, and trade execution must remain disabled unless an explicit permitted path exists.
+
+
+## Sonor workflow graph bridge
+
+The user already has a local Sonor workflow/project graph at `http://127.0.0.1:55127/#graph`.
+
+Sonor is treated as the existing aggregation layer for Graphify, Obsidian, projects/files, and conversation-derived context:
+
+```text
+Graphify / Obsidian / Projects / Chats
+                  ↓
+                Sonor
+                  ↓
+        AstraMemorySource (sonor)
+                  ↓
+           Memory Manager
+                  ↓
+                Brain
+```
+
+ASTRA uses `lib/memory/sonor.ts` and `lib/brain/unified-memory.ts`. Sonor is disabled by default and restricted to loopback. The real local Sonor endpoint must implement or adapt to the provenance-aware contract documented in `docs/SONOR_BRIDGE.md`.
+
+Do not use the Sonor visual graph DOM as the primary data interface if a server-side data source is available.

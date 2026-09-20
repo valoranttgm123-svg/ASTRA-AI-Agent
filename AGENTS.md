@@ -5,7 +5,7 @@ This repository is the working source of truth for the ASTRA AI Agent project.
 Before changing ASTRA, read these files in order:
 
 1. `docs/CODEX_HANDOFF.md` — current architecture, active state, constraints, next work.
-2. `docs/ASTRA_MAX.md` — approved production roadmap from current Brain V1/V15 state through ready-to-use final release. Continue its phases sequentially unless genuinely blocked by an external user action.
+2. `docs/ASTRA_MAX.md` — approved production roadmap from current Brain V1/V15 state through ready-to-use final release.\n3. `docs/SONOR_BRIDGE.md` — existing local Sonor/Graphify/Obsidian workflow graph and ASTRA bridge contract. Continue its phases sequentially unless genuinely blocked by an external user action.
 3. `docs/ASTRA_CONVERSATION_HISTORY.md` — conversation-derived project history and user decisions.
 4. `docs/HUMANOID_BUILD_LOG.md` — detailed Humanoid implementation history.
 5. `docs/ASTRA_BRAIN_V1.md` — approved Brain architecture direction.
@@ -123,3 +123,10 @@ The 18 ReasoningWeb nodes must become truthful capabilities or truthful unavaila
 Phase 20 is an ASTRA MAX core release checkpoint, not the terminal stop. Once the core release is stable, continue Phase 21–30 automatically unless a genuine external/user action blocks progress.
 
 Do not treat “JARVIS-Class” as permission for fictional claims or unsafe autonomy. The target is a practical always-available assistant experience with truthful always-on voice, opt-in situational awareness, proactive events, episodic memory, durable background work, secure multi-device presence, self-diagnostics, skill/device expansion, verification and user control.
+
+
+## Existing Sonor graph
+
+A local Sonor workflow graph already exists on the user's target PC at `127.0.0.1:55127`. Reuse it. Do not build a duplicate Graphify/Obsidian system inside ASTRA.
+
+When local PC access is available, inspect Sonor's real server/API implementation and connect the existing `lib/memory/sonor.ts` adapter using the contract in `docs/SONOR_BRIDGE.md`. Do not guess endpoint paths and do not claim READY until the real end-to-end check passes.

@@ -23,6 +23,11 @@ import type { AstraBrainEvent } from "../lib/brain/types";
 import { searchMemorySources } from "../lib/memory/manager";
 import type { AstraMemorySource } from "../lib/memory/contracts";
 import {
+  getSonorBridgeConfig,
+  parseSonorBridgeResponse,
+  sonorMemorySource,
+} from "../lib/memory/sonor";
+import {
   getProjectRegistry,
   normalizeProjects,
   resolveProject,
@@ -83,6 +88,38 @@ before(async () => {
       return;
     }
 
+    if (request.url === "/sonor/search") {
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) chunks.push(Buffer.from(chunk));
+      const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+        query?: string;
+        project?: string;
+      };
+      response.setHeader("content-type", "application/json");
+      response.end(
+        JSON.stringify({
+          records: [
+            {
+              id: "sonor-1",
+              content: "ALURKA workflow graph context from Sonor",
+              tags: ["alurka", "workflow"],
+              relevance: body.query?.toLowerCase().includes("alurka") ? 0.95 : 0.5,
+              confidence: 0.9,
+              provenance: {
+                source: "sonor-workflow-graph",
+                sourceType: "graphify",
+                project: body.project ?? "ALURKA",
+                timestamp: "2026-09-20T08:45:00Z",
+                privacy: "project_local",
+                reference: "sonor:workflow:alurka",
+              },
+            },
+          ],
+        }),
+      );
+      return;
+    }
+
     if (request.url === "/api/chat") {
       chatCalls += 1;
       const chunks: Buffer[] = [];
@@ -139,6 +176,10 @@ beforeEach(() => {
   delete process.env.ASTRA_ALLOW_FILE_WRITE;
   delete process.env.ASTRA_ALLOW_SHELL;
   delete process.env.ASTRA_ALLOW_EXTERNAL_ACTIONS;
+  process.env.ASTRA_SONOR_ENABLED = "false";
+  delete process.env.ASTRA_SONOR_URL;
+  delete process.env.ASTRA_SONOR_SEARCH_PATH;
+  delete process.env.ASTRA_SONOR_TIMEOUT_MS;
   chatCalls = 0;
   chatBodies = [];
 });
@@ -656,4 +697,112 @@ test("Tool Registry rejects duplicate normalized IDs", () => {
       },
     ]),
   );
+});
+
+
+test("Sonor bridge defaults to the existing loopback service and refuses LAN URLs", () => {
+  delete process.env.ASTRA_SONOR_URL;
+  const config = getSonorBridgeConfig();
+  assert.equal(config.baseUrl, "http://127.0.0.1:55127");
+  assert.equal(config.enabled, false);
+
+  process.env.ASTRA_SONOR_URL = "http://192.168.1.54:55127";
+  assert.throws(() => getSonorBridgeConfig(), /loopback URL/);
+});
+
+test("Sonor bridge parser requires provenance-aware ASTRA memory records", () => {
+  const records = parseSonorBridgeResponse({
+    records: [
+      {
+        id: "one",
+        content: "Graph context",
+        relevance: 4,
+        confidence: -1,
+        provenance: {
+          source: "sonor",
+          sourceType: "graphify",
+          project: "ASTRA",
+          privacy: "project_local",
+          reference: "sonor:one",
+        },
+      },
+    ],
+  });
+
+  assert.equal(records.length, 1);
+  assert.equal(records[0].relevance, 1);
+  assert.equal(records[0].confidence, 0);
+  assert.equal(records[0].provenance.sourceType, "graphify");
+  assert.throws(
+    () =>
+      parseSonorBridgeResponse({
+        records: [{ id: "bad", content: "missing provenance" }],
+      }),
+    /Invalid Sonor bridge response/,
+  );
+});
+
+test("Sonor memory source uses only an explicitly configured verified-compatible endpoint", async () => {
+  process.env.ASTRA_SONOR_ENABLED = "true";
+  process.env.ASTRA_SONOR_URL = base;
+  delete process.env.ASTRA_SONOR_SEARCH_PATH;
+
+  const unavailable = await sonorMemorySource.search({
+    input: "ALURKA",
+    project: "ALURKA",
+    limit: 5,
+    maxChars: 2000,
+  });
+  assert.equal(unavailable.available, false);
+  assert.equal(unavailable.records.length, 0);
+
+  process.env.ASTRA_SONOR_SEARCH_PATH = "/sonor/search";
+  const result = await sonorMemorySource.search({
+    input: "ALURKA workflow",
+    project: "ALURKA",
+    limit: 5,
+    maxChars: 2000,
+  });
+
+  assert.equal(result.available, true);
+  assert.equal(result.records.length, 1);
+  assert.equal(result.records[0].provenance.reference, "sonor:workflow:alurka");
+  assert.equal(result.records[0].provenance.sourceType, "graphify");
+  assert.equal(result.records[0].provenance.project, "ALURKA");
+});
+
+test("Sonor source plugs into the existing multi-source memory manager without special casing", async () => {
+  process.env.ASTRA_SONOR_ENABLED = "true";
+  process.env.ASTRA_SONOR_URL = base;
+  process.env.ASTRA_SONOR_SEARCH_PATH = "/sonor/search";
+
+  const result = await searchMemorySources(
+    {
+      input: "ALURKA workflow",
+      project: "ALURKA",
+      limit: 3,
+      maxChars: 2000,
+    },
+    [sonorMemorySource],
+  );
+
+  assert.equal(result.records.length, 1);
+  assert.equal(result.records[0].provenance.sourceType, "graphify");
+  assert.equal(result.sources[0].sourceType, "sonor");
+  assert.equal(result.sources[0].available, true);
+});
+
+
+test("Brain context can consume Sonor/Graphify through the unified memory manager", async () => {
+  process.env.ASTRA_SONOR_ENABLED = "true";
+  process.env.ASTRA_SONOR_URL = base;
+  process.env.ASTRA_SONOR_SEARCH_PATH = "/sonor/search";
+
+  const result = await astraBrain.chat("lanjutkan ALURKA workflow", {
+    provider: "ollama",
+  });
+
+  assert.equal(result.brain.context?.project?.id, "alurka");
+  assert.ok(result.brain.context?.memorySources?.includes("graphify"));
+  assert.equal(result.state, "completed");
 });

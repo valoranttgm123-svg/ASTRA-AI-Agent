@@ -14,7 +14,8 @@ import {
   getCloudStatus,
 } from "./cloud";
 import { chatWithHermes, getHermesStatus } from "./hermes";
-import { getMemoryContext, type AstraMemoryContext } from "./memory";
+import type { AstraMemoryContext } from "./memory";
+import { getUnifiedMemoryContext } from "./unified-memory";
 import { chatWithOllama, getOllamaStatus } from "./ollama";
 import {
   getPermissionPolicy,
@@ -67,12 +68,19 @@ function isLocalExecutionRoute(selected: AstraAgentKey) {
 async function buildExecutionContext(
   input: string,
   selected: AstraAgentKey,
+  signal?: AbortSignal,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
-  const [memory, skills, project] = await Promise.all([
-    getMemoryContext(input),
+  const project = await resolveProjectContext(input);
+  signal?.throwIfAborted();
+
+  const [memory, skills] = await Promise.all([
+    getUnifiedMemoryContext(
+      input,
+      project.match?.project.name,
+      signal,
+    ),
     getSkillContext(selected),
-    resolveProjectContext(input),
   ]);
 
   const skillOnlyContext = skills.text;
@@ -150,7 +158,7 @@ function contextEvents(
       agent: "memory",
       visualNode: "memory",
       label: "Memory loaded",
-      detail: `Retrieved ${context.memory.entries.length} relevant local memory entr${context.memory.entries.length === 1 ? "y" : "ies"}.`,
+      detail: `Retrieved ${context.memory.records.length} relevant memory record${context.memory.records.length === 1 ? "" : "s"}.`,
     });
     offset += 1;
   }
@@ -260,7 +268,7 @@ function emitLiveContext(
       agent: "memory",
       visualNode: "memory",
       label: "Memory loaded",
-      detail: `Retrieved ${context.memory.entries.length} relevant local memory entr${context.memory.entries.length === 1 ? "y" : "ies"}.`,
+      detail: `Retrieved ${context.memory.records.length} relevant memory record${context.memory.records.length === 1 ? "" : "s"}.`,
     });
   }
 
@@ -519,7 +527,7 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
   ): Promise<AstraBrainChatResult> {
     const response = await runAgent(input);
     const route = routeFor(response.agent);
-    const context = await buildExecutionContext(input, response.agent);
+    const context = await buildExecutionContext(input, response.agent, options?.signal);
     const events = routingOnlyEvents(response.agent, response.state, context);
     for (const event of events) options?.onEvent?.(event);
 
@@ -578,7 +586,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     emitLiveStart(selected, options);
-    const context = await buildExecutionContext(input, selected);
+    const context = await buildExecutionContext(input, selected, options?.signal);
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
     const preferredProvider = options?.provider ?? "auto";
@@ -780,7 +788,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     emitLiveStart(selected, options);
-    const context = await buildExecutionContext(input, selected);
+    const context = await buildExecutionContext(input, selected, options?.signal);
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
     const preferredProvider = options?.provider ?? "auto";
@@ -969,7 +977,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       getOllamaStatus(),
       getCodexStatus(policy),
       getCloudStatus(policy),
-      getMemoryContext("ASTRA status"),
+      getUnifiedMemoryContext("ASTRA status"),
       getSkillContext("chief_of_staff"),
     ]);
 
