@@ -76,6 +76,7 @@ export type AstraBrainPermissionSnapshot = {
 export type AstraBrainFeatureStatus = {
   enabled: boolean;
   available: boolean;
+  state?: "READY" | "OFFLINE" | "NOT_CONFIGURED" | "ERROR";
   detail: string;
   model?: string;
   endpoint?: string;
