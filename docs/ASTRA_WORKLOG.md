@@ -180,13 +180,20 @@ Never mark local/physical verification PASS from repository inspection alone.
 - truth boundary: no target-PC/browser benchmark value is claimed.
 - P16B/P16C remain local target-runtime gates.
 
-## In-flight checkpoint — Phase 17A
+## Phase 17A — safe full-system preflight
 
-- PR: **#106**;
-- branch: `astra/phase17a-full-system-preflight`;
-- scope: privacy-preserving chat-mode preflight evidence runner for scenarios A–D;
-- output is confined to gitignored `.astra/validation/`;
-- no response text, approval token/scope, plan title/goal or tool input is persisted;
-- no external action is approved or executed by the runner;
-- Phase 17 scenario PASS remains a target-runtime/manual gate;
-- completion rule: P17A repository preparation counts complete only after CI is green and the PR is merged.
+- PR: **#106**
+- merge commit: `308406518db695f85554fbbf993a09c34fda606b`
+- CI: **SUCCESS**
+- result: privacy-preserving chat-mode preflight evidence runner for scenarios A–D merged.
+- truth boundary: no Phase 17 scenario PASS is claimed; target-runtime real execution remains required.
+
+## Repository cleanup — PR #51 audit
+
+- audit PR: **#107**;
+- compared `astra/v15-brain-streaming-telemetry` against current `main`;
+- old branch: 16 commits ahead of its historic base, 621 commits behind current `main`;
+- no unique unsuperseded production behavior/test identified;
+- old NDJSON/`AsyncLocalStorage` telemetry is superseded by SSE/`onEvent`;
+- audit: `docs/PR51_TELEMETRY_AUDIT.md`;
+- next: merge audit documentation, then close PR #51 as superseded.
