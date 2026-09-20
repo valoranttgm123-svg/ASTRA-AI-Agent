@@ -159,7 +159,8 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "project.git.create-branch" ||
     toolId === "project.git.stage-files" ||
     toolId === "project.git.commit" ||
-    toolId === "project.verify.npm-script"
+    toolId === "project.verify.npm-script" ||
+    toolId === "computer.app.launch"
   ) {
     return 2;
   }
@@ -179,7 +180,8 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "email.search" ||
     toolId === "email.read" ||
     toolId === "drive.search" ||
-    toolId === "drive.read"
+    toolId === "drive.read" ||
+    toolId === "computer.process.list"
   ) {
     return 1;
   }

@@ -1765,3 +1765,14 @@ The user must remain able to see and control what ASTRA can hear, see, remember,
 - Design briefing is implemented.
 - Actual image generation/editing and social publishing/scheduling use a provider-neutral transport and remain `NOT_CONFIGURED` until a real provider is connected.
 - Every provider-backed creative action is Level 3 and requires scoped external-action approval.
+
+
+## Phase 11 checkpoint
+
+- **Phase 11 — Controlled Computer Agent: IMPLEMENTED ON CURRENT FEATURE BRANCH.**
+- Computer Agent is OFF by default.
+- Only bounded process inspection and fixed-allowlist application launch are implemented.
+- No arbitrary shell string or arbitrary executable path is accepted.
+- Process read is Level 1; application launch is Level 2 and requires shell policy permission.
+- In-flight actions are cancellable; completed application launches are not automatically rolled back.
+- Real Windows target validation remains required.

@@ -17,6 +17,12 @@ import type { AstraResearchTransport } from "./research";
 import { createResearchToolRegistrations, SearXngResearchTransport } from "./research";
 import type { AstraIntegrationTransport } from "./integrations";
 import type { AstraCreativeTransport } from "./creative";
+import type { AstraComputerTransport } from "./computer";
+import {
+  COMPUTER_TOOL_DEFINITIONS,
+  createComputerToolRegistrations,
+  WindowsComputerTransport,
+} from "./computer";
 import {
   createCreativeToolRegistrations,
   CREATIVE_TOOL_DEFINITIONS,
@@ -33,6 +39,7 @@ export function createNativeToolRuntime(): AstraExecutableToolRegistry {
       ...BROWSER_TOOL_DEFINITIONS,
       ...INTEGRATION_TOOL_DEFINITIONS,
       ...CREATIVE_TOOL_DEFINITIONS,
+      ...COMPUTER_TOOL_DEFINITIONS,
     ],
     {
       ...NATIVE_TOOL_HANDLERS,
@@ -47,6 +54,7 @@ export async function createToolRuntime(options?: {
   researchTransport?: AstraResearchTransport;
   integrationTransports?: readonly AstraIntegrationTransport[];
   creativeTransports?: readonly AstraCreativeTransport[];
+  computerTransport?: AstraComputerTransport;
   signal?: AbortSignal;
 }): Promise<AstraExecutableToolRegistry> {
   let definitions: AstraToolDefinition[] = [
@@ -54,6 +62,7 @@ export async function createToolRuntime(options?: {
     ...BROWSER_TOOL_DEFINITIONS,
     ...INTEGRATION_TOOL_DEFINITIONS,
     ...CREATIVE_TOOL_DEFINITIONS,
+    ...COMPUTER_TOOL_DEFINITIONS,
   ];
   const handlers: Record<string, AstraToolHandler> = {
     ...NATIVE_TOOL_HANDLERS,
@@ -133,6 +142,25 @@ export async function createToolRuntime(options?: {
     }
   }
 
+  if (options?.computerTransport) {
+    const computer = await createComputerToolRegistrations(
+      options.computerTransport,
+      options?.signal,
+    );
+    const computerIds = new Set(
+      computer.definitions.map((definition) => definition.id),
+    );
+
+    definitions = definitions.filter(
+      (definition) => !computerIds.has(definition.id),
+    );
+    definitions.push(...computer.definitions);
+
+    for (const [id, handler] of Object.entries(computer.handlers)) {
+      handlers[id] = handler;
+    }
+  }
+
   for (const transport of options?.mcpTransports ?? []) {
     const registrations = await discoverMcpToolRegistrations(
       transport,
@@ -154,6 +182,7 @@ export async function createDefaultToolRuntime(
   return createToolRuntime({
     githubTransport: new GhCliGitHubTransport(),
     researchTransport: new SearXngResearchTransport(),
+    computerTransport: new WindowsComputerTransport(),
     signal,
   });
 }

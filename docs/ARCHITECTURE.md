@@ -538,3 +538,28 @@ Business specialist skill
 ```
 
 `design.image.generate`, `design.image.edit`, `social.publish`, and `social.schedule` are Level-3 external actions. They remain `NOT_CONFIGURED` without a provider and may not claim success without verified provider evidence.
+
+
+## Controlled Computer Agent boundary
+
+Phase 11 deliberately does not expose arbitrary shell execution.
+
+```text
+Computer intent
+   ↓
+Planner
+   ↓
+canonical Computer tool
+   ↓
+Tool Runtime permission/policy gate
+   ↓
+WindowsComputerTransport
+   ├─ tasklist read
+   └─ fixed-allowlist app launch
+```
+
+The adapter is OFF by default. `computer.process.list` is Level 1/read. `computer.app.launch` is Level 2/local-write and also requires the shell policy allow flag because it starts a local process.
+
+The app-launch allowlist is fixed in code. Arbitrary paths and command strings are rejected by design.
+
+The global AbortSignal cancels in-flight Computer operations. A successfully completed app launch is not automatically reversed; STOP is cancellation, not transactional rollback.
