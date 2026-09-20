@@ -15,6 +15,7 @@ const INPUT_TRIGGERS = new Set<AstraInputTrigger>([
   "microphone",
   "gesture_open_palm",
   "api",
+  "automation",
 ]);
 const INPUT_MODALITIES = new Set<AstraInputModality>([
   "text",
