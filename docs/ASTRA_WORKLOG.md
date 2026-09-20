@@ -162,11 +162,11 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: shared public error/status/telemetry redaction boundary merged; fake-secret regression coverage passes.
 - next: **P15F final security regression matrix/report**.
-## In-flight checkpoint — Phase 15F
+## Phase 15F — final security regression/report
 
-- PR: **#104**;
-- branch: `astra/phase15f-final-security-report`;
-- scope: final matrix closure + hardening report + roadmap/handoff truth;
-- completion rule: Phase 15 becomes repository-complete only after this PR is green and merged;
-- local gates remain target-PC Automation and real Sonor validation;
-- next implementable work if local access is unavailable: **Phase 16 performance instrumentation/preparation**.
+- PR: **#104**
+- merge commit: `d5e0b27e35584aa0ccd9ffb69f16e82134ac0eb2`
+- CI: **SUCCESS**
+- result: Phase 15 repository hardening complete; final matrix/report merged.
+- truthful status: `PHASE 15 REPOSITORY HARDENING COMPLETE / CI VERIFIED / LOCAL RELEASE GATES REMAIN`
+- next implementable repository work while MEM-X is externally blocked: **Phase 16 performance instrumentation/preparation**.
