@@ -162,3 +162,10 @@ Never mark local/physical verification PASS from repository inspection alone.
 - CI: **SUCCESS**
 - result: shared public error/status/telemetry redaction boundary merged; fake-secret regression coverage passes.
 - next: **P15F final security regression matrix/report**.
+## In-flight checkpoint — Phase 15F
+
+- branch: `astra/phase15f-final-security-report`;
+- scope: final matrix closure + hardening report + roadmap/handoff truth;
+- completion rule: Phase 15 becomes repository-complete only after this PR is green and merged;
+- local gates remain target-PC Automation and real Sonor validation;
+- next implementable work if local access is unavailable: **Phase 16 performance instrumentation/preparation**.
