@@ -29,6 +29,7 @@ type BrainPlanExecutorOptions = {
   policy: AstraBrainPermissionSnapshot;
   providerChoice: AstraProviderChoice;
   approvedPermissionLevel: 0 | 1 | 2 | 3 | 4;
+  approvedStepIds?: readonly string[];
   signal?: AbortSignal;
   onEvent?: (event: AstraPlanExecutionEvent) => void;
   onToolEvent?: (event: AstraToolLifecycleEvent) => void;
@@ -502,6 +503,7 @@ export async function executeBrainPlan(
 ): Promise<AstraPlanExecutionResult> {
   return executeBoundedPlan(options.plan, {
     approvedPermissionLevel: options.approvedPermissionLevel,
+    approvedStepIds: options.approvedStepIds,
     signal: options.signal,
     onEvent: options.onEvent,
     executeStep: async (step, stepContext) => {
