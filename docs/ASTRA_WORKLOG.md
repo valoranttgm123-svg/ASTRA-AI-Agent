@@ -182,6 +182,7 @@ Never mark local/physical verification PASS from repository inspection alone.
 
 ## In-flight checkpoint — Phase 17A
 
+- PR: **#106**;
 - branch: `astra/phase17a-full-system-preflight`;
 - scope: privacy-preserving chat-mode preflight evidence runner for scenarios A–D;
 - output is confined to gitignored `.astra/validation/`;
