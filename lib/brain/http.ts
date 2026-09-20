@@ -169,12 +169,25 @@ function parseInputContext(value: unknown): AstraInputContext | undefined {
   if (record.source === "voice" && !modalities.includes("voice")) {
     throw new RequestError("Input voice harus menyertakan modality voice.");
   }
-  if (
-    (modalities.includes("image") || modalities.includes("screen")) &&
-    !consentRecord.image &&
-    !consentRecord.screen
-  ) {
-    throw new RequestError("Modality visual memerlukan consent eksplisit.");
+  if (modalities.includes("image") || modalities.includes("screen")) {
+    throw new RequestError(
+      "Image/screen input belum dikonfigurasi pada Phase 12.",
+    );
+  }
+  if (record.source === "voice" && consentRecord.microphone !== true) {
+    throw new RequestError("Voice input memerlukan consent mikrofon.");
+  }
+  if (record.trigger === "gesture_open_palm") {
+    if (
+      record.source !== "voice" ||
+      !modalities.includes("gesture") ||
+      !modalities.includes("camera") ||
+      consentRecord.camera !== true
+    ) {
+      throw new RequestError(
+        "Gesture voice input memerlukan modality gesture/camera dan consent kamera.",
+      );
+    }
   }
 
   return {
