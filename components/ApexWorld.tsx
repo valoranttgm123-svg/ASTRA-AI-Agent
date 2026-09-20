@@ -468,12 +468,16 @@ export default function ApexWorld() {
           statusOverride={
             selected.key === "researcher"
               ? runtime.brainStatus?.features?.research?.state
-              : undefined
+              : ["finance", "editor", "sales", "marketing", "ops", "analytics"].includes(selected.key)
+                ? runtime.brainStatus?.features?.business?.state
+                : undefined
           }
           statusDetail={
             selected.key === "researcher"
               ? runtime.brainStatus?.features?.research?.detail
-              : undefined
+              : ["finance", "editor", "sales", "marketing", "ops", "analytics"].includes(selected.key)
+                ? runtime.brainStatus?.features?.business?.detail
+                : undefined
           }
         />
       )}
