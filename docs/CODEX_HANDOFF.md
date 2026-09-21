@@ -1833,3 +1833,47 @@ Remaining work is still real target-runtime evidence:
 Continue from:
 
 `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
+
+---
+
+## 2026-09-21 — repository-side work exhausted through PR #145
+
+Latest implementation checkpoint before this documentation handoff:
+
+`03073fe8a95b7064b059aadcd4b9ff933c8c73e8`
+
+New merged hardening:
+
+- PR #142 — running-build attestation embedded in the ASTRA production bundle and exposed through `/api/agent`;
+- PR #143 — target-PC evidence persists verified runtime identity; Phase 20 rejects stale/dirty runtime identity, duplicate checks and any recorded non-PASS check;
+- PR #144 — target-PC, runtime-performance and Phase 17 preflight capture verify the same clean runtime build at start and completion;
+- PR #145 — Humanoid/browser HIGH capture verifies the runtime before and after sampling; the server rejects runtime/checkout mismatch; the release bundle rejects stale or unverified browser captures.
+
+CI for PRs #142–#145 passed production build, unit/integration tests, typecheck, lint, dependency audit and PR diff checks.
+
+Repository audit conclusion:
+
+**No additional concrete independently implementable release-evidence defect is known at this checkpoint.**
+
+Do not manufacture speculative hardening merely to avoid real validation. The remaining work requires the target environment or user/external interaction:
+
+1. Phase 14 — real Automation Level-2/3 approval + STOP proof.
+2. MEM-X — inspect/preserve/audit the existing Sonor, verify its real API, Graphify + Obsidian provenance, degradation and cancellation.
+3. Phase 16 — run runtime measurements and six HIGH Humanoid/browser captures on the real target browser; fix/re-measure only if real evidence identifies a bottleneck.
+4. Phase 17 — execute A–D on the target runtime, approved real actions where configured, failure variants, and Scenario E emergency STOP.
+5. Phase 19 — real install/startup/update/reinstall, loopback, Ollama/model, Codex, Automation, private runtime and bounded health verification.
+6. Phase 20 — record only evidence-backed manual gates/context and run `release:core-report`; keep `BLOCKED` until every required gate is real.
+7. Only after Phase 20 is stable, continue Phase 21–30.
+
+Recommended target-PC start:
+
+```powershell
+git switch main
+git pull --ff-only
+npm run release:repo-gate
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1 -IncludePerformance -IncludeChatPreflight -Provider auto
+```
+
+Then follow `docs/BROWSER_PERFORMANCE_EVIDENCE.md`, `docs/AUTOMATION_VALIDATION.md`, `docs/SONOR_CODEX_MISSION.md`, `docs/FULL_SYSTEM_VALIDATION.md`, `docs/MANUAL_RELEASE_EVIDENCE.md`, and `docs/CORE_RELEASE_REPORT.md`.
+
+Truth boundary: repository CI is not target-PC proof. Do not mark READY, Sonor connected, physical STOP PASS, Windows release PASS, or browser performance PASS without the corresponding real private evidence.

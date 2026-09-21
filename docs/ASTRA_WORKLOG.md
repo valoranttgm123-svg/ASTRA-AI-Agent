@@ -375,3 +375,44 @@ Next real work:
   - Phase 20 final evidence-backed verdict.
 - exact next task:
   - use the target PC to collect real evidence; if target-PC access is unavailable, continue only newly discovered concrete repository defects and do not fabricate PASS/READY.
+
+## 2026-09-21 — runtime/build provenance hardening through PR #145
+
+### PR #142 — bind evidence to the running ASTRA build
+- merge commit: `ac386507bb8709031a56d3a88d44021afa6a2d22`;
+- CI: **SUCCESS**;
+- embeds clean Git commit/build state in the production bundle and exposes it through `/api/agent`;
+- runtime-performance, Phase 17 preflight and target-PC collection reject a stale/dirty ASTRA build.
+
+### PR #143 — persist target-PC runtime attestation
+- merge commit: `35275bcdae68950244f8993684e62079d908b222`;
+- CI: **SUCCESS**;
+- persists structured runtime identity in private target-PC evidence;
+- Phase 20 rejects stale/dirty target runtime, duplicate check names and any recorded non-PASS check.
+
+### PR #144 — verify runtime identity across evidence capture
+- merge commit: `8ca527ebccd8a702094eb799721dc2d9165c41c2`;
+- CI: **SUCCESS**;
+- runtime-performance and Phase 17 preflight verify the same clean running build before and after capture;
+- target-PC collector adds a final runtime-build attestation and Phase 20 requires both start/completion provenance.
+
+### PR #145 — bind browser/Humanoid evidence to the running build
+- merge commit: `03073fe8a95b7064b059aadcd4b9ff933c8c73e8`;
+- CI: **SUCCESS**;
+- browser capture verifies `/api/agent` runtime identity before and after sampling;
+- save endpoint rejects stale/dirty runtime or repository mismatch;
+- browser release bundle rejects captures without current clean start/end runtime provenance.
+
+Repository audit result after PR #145:
+
+`NO KNOWN INDEPENDENT REPOSITORY RELEASE-EVIDENCE TASK REMAINS / REAL TARGET-PC GATES REQUIRED`
+
+Still not proven:
+- Phase 14 Automation approval/STOP;
+- MEM-X Sonor/Graphify/Obsidian;
+- Phase 16 real target/browser measurements;
+- Phase 17 approved full-system actions + emergency STOP;
+- Phase 19 Windows install/update/reinstall/startup;
+- Phase 20 final evidence-backed verdict.
+
+Exact next task: continue on the real target PC using `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`. If target-PC access is unavailable, change repository code only for a newly reproducible concrete defect; do not fabricate evidence or start Phase 21–30 as a substitute.

@@ -149,6 +149,10 @@ Repository/report tooling:
   - runtime evidence requires valid timestamp + real samples for all required status endpoints;
   - chat preflight requires completed A–D scenarios with structured evidence;
   - evidence inputs must resolve to regular files inside the real `.astra/` root; symlink escapes/directories fail closed.
+- [x] running ASTRA build identity embedded and required by evidence capture — PR #142
+- [x] target-PC evidence persists runtime identity and rejects duplicate/non-PASS checks — PR #143
+- [x] runtime/performance/preflight evidence verifies the same clean build at capture start + completion — PR #144
+- [x] browser/Humanoid HIGH evidence verifies start/end runtime identity and rejects stale browser/server builds — PR #145
 - [ ] run repository gate and collect real private evidence on target environment
 - [ ] generate final core release report from real evidence
 
@@ -171,7 +175,7 @@ Allowed release status:
 - `READY WITH EXTERNAL CONFIGURATION REQUIRED`
 - `BLOCKED`
 
-Phase 20 result: **REPORT/EVIDENCE TOOLING READY / FINAL VERDICT BLOCKED UNTIL REAL EVIDENCE EXISTS**
+Phase 20 result: **REPOSITORY-SIDE REPORT/EVIDENCE HARDENING COMPLETE THROUGH PR #145 / FINAL VERDICT BLOCKED UNTIL REAL TARGET-PC EVIDENCE EXISTS**
 
 ---
 

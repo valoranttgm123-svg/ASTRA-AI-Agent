@@ -37,11 +37,15 @@ Repository-complete / merged on current `main`:
 - Phase 20 conservative core report generator — PR #123;
 - Phase 20 manual gate recorder — PR #125;
 - Phase 20 report context recorder — PR #126;
-- Phase 20 evidence-shape/private-path hardening — PR #129.
+- Phase 20 evidence-shape/private-path hardening — PR #129;
+- running-build identity embedded and required for release evidence — PR #142;
+- target-PC evidence persists structured runtime identity and rejects duplicate/non-PASS checks — PR #143;
+- target-PC/runtime/preflight capture verifies the same clean running build at start and completion — PR #144;
+- browser/Humanoid HIGH capture verifies start/end runtime identity, server checkout/runtime agreement, and release-bundle provenance — PR #145.
 
-Current repository checkpoint:
+Latest implementation checkpoint before the final docs-only handoff:
 
-`e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`
+`03073fe8a95b7064b059aadcd4b9ff933c8c73e8`
 
 Stale/diverged PR #111 is closed as superseded by PR #119.
 
@@ -62,10 +66,12 @@ Current execution rule:
 - run `release:core-report` repeatedly; any `BLOCKED` result identifies evidence still missing;
 - if target-PC/local access is unavailable, read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`, then continue only concrete repository audits, regression coverage, hardening, documentation synchronization or real defect fixes;
 - do not invent benchmark values, Sonor state, physical STOP results, external-action success, Windows install proof or READY status;
-- do not reimplement PR #123–#126 tooling or PR #129 evidence-shape/path hardening unless a new concrete defect is found;
+- do not reimplement PR #123–#126, #129, or #142–#145 release/evidence hardening unless a new concrete defect is demonstrated;
 - do not begin Phase 21–30 as a substitute for unfinished Phase 18–20 core evidence.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
+
+Repository saturation note (2026-09-21): after PR #145, the latest audit found no additional concrete repository-only release-evidence defect to implement. Until a new defect is demonstrated, the next meaningful work is the real target-PC/Sonor/browser/approval evidence below; do not create speculative hardening merely to avoid those gates.
 
 ---
 
