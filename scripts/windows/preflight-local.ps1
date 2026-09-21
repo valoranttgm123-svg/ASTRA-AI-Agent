@@ -35,7 +35,7 @@ if (-not (Test-Path -LiteralPath $packageJson -PathType Leaf)) {
 if (-not (Test-Path -LiteralPath $packageLock -PathType Leaf)) {
   throw "package-lock.json tidak ditemukan di repository ASTRA."
 }
-if (-not (Test-Path -LiteralPath $gitDir -PathType Container)) {
+if (-not (Test-Path -LiteralPath $gitDir)) {
   throw "Metadata .git tidak ditemukan. Jalankan installer dari checkout ASTRA yang valid."
 }
 
