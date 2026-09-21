@@ -7,7 +7,8 @@ ASTRA is a personal multi-agent AI project built on top of the open-source **APE
 ASTRA MAX repository work is CI-verified through:
 
 - Phase 15 security/failure hardening;
-- Phase 16A performance measurement instrumentation;
+- Phase 16A runtime performance instrumentation;
+- Phase 16 private browser/Humanoid HIGH evidence capture tooling;
 - Phase 17A safe full-system preflight instrumentation;
 - pre-RC repository cleanup;
 - Phase 19A read-only readiness self-check;
@@ -18,7 +19,7 @@ ASTRA MAX repository work is CI-verified through:
 - Phase 19F ASTRA loopback runtime hardening;
 - Phase 19G bounded startup health gate.
 
-Phase 18A repository RC gate automation is merged as PR #119. The repository gate is necessary but not sufficient for release; real target-runtime gates remain.
+Phase 18A repository RC gate automation is merged as PR #119. Phase 20 now also has conservative evidence/report tooling (PRs #123, #125, #126), while PR #124 adds private browser/Humanoid performance capture. These tools are necessary but not sufficient for release; real target-runtime gates remain.
 
 Current truthful release state:
 
@@ -89,6 +90,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\reinstall-local.ps1
 
 # Read-only target-PC evidence bundle (never selects READY)
 powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1
+
+# Repository release gate + private Phase 20 report
+npm run release:repo-gate
+npm run release:core-report
 ```
 
 See `docs/WINDOWS_RELEASE.md` for the safety model and target-PC verification boundary.
