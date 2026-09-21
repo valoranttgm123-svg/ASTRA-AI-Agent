@@ -139,13 +139,17 @@ export function validateManualReleaseEvidence(
       );
     }
 
-    if (
-      gate.status === "PASS" &&
-      (!gate.observedAt || !gate.evidencePath)
-    ) {
-      throw new Error(
-        `PASS manual gate ${gate.id} requires observedAt and evidencePath.`,
-      );
+    if (gate.status === "PASS") {
+      if (!gate.observedAt || !gate.evidencePath) {
+        throw new Error(
+          `PASS manual gate ${gate.id} requires observedAt and evidencePath.`,
+        );
+      }
+      if (Number.isNaN(Date.parse(gate.observedAt))) {
+        throw new Error(
+          `PASS manual gate ${gate.id} has an invalid observedAt timestamp.`,
+        );
+      }
     }
   }
 }
