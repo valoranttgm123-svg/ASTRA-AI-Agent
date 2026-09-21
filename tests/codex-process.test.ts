@@ -15,6 +15,10 @@ import {
   getCodexStatus,
 } from "../lib/brain/codex";
 import type { AstraBrainPermissionSnapshot } from "../lib/brain/types";
+import {
+  shouldDetachOwnedProcess,
+  windowsTaskkillArgs,
+} from "../lib/process-tree";
 
 let root = "";
 let execFile = "";
@@ -127,6 +131,21 @@ beforeEach(async () => {
   process.env.ASTRA_FAKE_CODEX_DESC_PID_FILE = descendantPidFile;
   delete process.env.ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS;
   delete process.env.ASTRA_CODEX_MODEL;
+});
+
+test("owned process termination strategy uses Windows tree kill and POSIX process groups", () => {
+  assert.deepEqual(
+    windowsTaskkillArgs(4321),
+    ["/PID", "4321", "/T", "/F"],
+  );
+  assert.equal(
+    shouldDetachOwnedProcess("win32"),
+    false,
+  );
+  assert.equal(
+    shouldDetachOwnedProcess("linux"),
+    true,
+  );
 });
 
 test("Phase 15D2 fake Codex fixture exercises the real child-process path", async () => {
