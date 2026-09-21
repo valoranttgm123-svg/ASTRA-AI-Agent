@@ -16,13 +16,18 @@ ASTRA MAX repository work is CI-verified through:
 - Phase 19D read-only release validator;
 - Phase 19E Ollama loopback hardening;
 - Phase 19F ASTRA loopback runtime hardening;
-- Phase 19G bounded startup health gate.
+- Phase 19G bounded startup health gate;
+- target-PC read-only evidence collector — PR #121;
+- Phase 20 core release report tooling — PR #123;
+- browser/Humanoid HIGH evidence capture — PR #124;
+- manual release-gate recorder — PR #125;
+- release-report context recorder — PR #126.
 
-Phase 18A repository RC gate automation is merged as PR #119. The repository gate is necessary but not sufficient for release; real target-runtime gates remain.
+Phase 18A repository RC gate automation is merged as PR #119. Phase 20 now has conservative evidence/report tooling, but the repository gate and report tooling are necessary rather than sufficient for release; real target-runtime gates remain.
 
 Current truthful release state:
 
-`CORE IMPLEMENTATION ADVANCED / REPOSITORY CI VERIFIED / TARGET-PC RELEASE GATES REMAIN`
+`CORE IMPLEMENTATION ADVANCED / PHASE 20 REPORT TOOLING MERGED / TARGET-PC RELEASE GATES REMAIN`
 
 Still requiring real target-runtime evidence:
 
