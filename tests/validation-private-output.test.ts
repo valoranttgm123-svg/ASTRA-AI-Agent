@@ -4,6 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import {
+  prepareValidationEvidencePath,
   resolveValidationEvidencePath,
   validationEvidenceRoot,
 } from "../lib/validation/private-output";
@@ -43,6 +44,25 @@ test("Phase 17A validation evidence refuses output outside .astra/validation", (
   );
 });
 
+test("Phase 17A validation writer prepares only private output", () => {
+  const safe = path.join(
+    validationEvidenceRoot(),
+    "prepared.json",
+  );
+
+  assert.equal(
+    prepareValidationEvidencePath(safe),
+    path.resolve(safe),
+  );
+
+  assert.throws(
+    () =>
+      prepareValidationEvidencePath(
+        path.resolve("docs", "validation.json"),
+      ),
+    /must stay inside/i,
+  );
+});
 
 test("Phase 17 preflight stamps evidence with the current Git commit", () => {
   const source = readFileSync(
