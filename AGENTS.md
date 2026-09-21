@@ -39,8 +39,8 @@ Read these only when the active task needs their historical/detail context:
 - Repository cleanup before RC is complete.
 - Phase 19A–19G Windows repository tooling/hardening is merged through PR #117.
 - Current `main` after P19G: `42657c7affc776057178416c5e777de388b98787`.
-- Draft PR #111 contains Phase 18A repository RC gate automation with successful historical branch CI, but it predates later Phase 19 merges.
-- Current implementable repository task: **reconcile/refresh PR #111 against current `main`, rerun CI, and merge only if still correct**.
+- Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
+- Current repository-only release preparation is complete through Phase 18A and Phase 19G; remaining core release gates require real local/target evidence unless a new non-fabricated repository preparation task is identified.
 - MEM-X still requires real local Sonor access.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
@@ -69,9 +69,9 @@ Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
 When target-PC access is unavailable, continue from the first unchecked implementable tracker item.
 
-At the current checkpoint, first reconcile **draft PR #111 — Phase 18A repository RC gate automation** against current `main`. It predates P19C–P19G, so do not merge it blindly. Preserve the newest Windows/release tooling, rerun CI, and only then merge/update the repository-owned handoff.
+At the current checkpoint, Phase 18A is already merged on current `main`.
 
-Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates.
+Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates. When those are unavailable, continue only work that is independently useful and does not fabricate local evidence.
 
 Do not rebuild or redesign completed Phase 14 work.
 
@@ -181,12 +181,12 @@ Before merging meaningful changes:
 
 ## Local commands
 
-Development:
+Development (run from the actual ASTRA repository root; do not assume a fixed Windows path):
 
 ```powershell
-cd C:\WINDOWS\system32\ASTRA-AI-Agent
-git checkout main
-git pull origin main
+git rev-parse --show-toplevel
+git switch main
+git pull --ff-only
 Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
 npm run dev
 ```

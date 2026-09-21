@@ -18,7 +18,7 @@ ASTRA MAX repository work is CI-verified through:
 - Phase 19F ASTRA loopback runtime hardening;
 - Phase 19G bounded startup health gate.
 
-Phase 18A repository RC gate automation exists as draft PR #111 and must be reconciled against current `main` before merge.
+Phase 18A repository RC gate automation is merged as PR #119. The repository gate is necessary but not sufficient for release; real target-runtime gates remain.
 
 Current truthful release state:
 

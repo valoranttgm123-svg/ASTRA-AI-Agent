@@ -1702,3 +1702,34 @@ Local-only work still requiring the real target PC:
 - Phase 16 performance/browser measurements;
 - Phase 17 real scenario execution;
 - Phase 19 install/update/reinstall/startup evidence.
+
+
+---
+
+## 2026-09-21 — Phase 18A repository RC gate merged on current main
+
+Merged:
+
+- PR #119;
+- merge commit `6ac2b98e6f99be68b75769654e78200f54d25fac`;
+- `npm run release:repo-gate`;
+- deterministic test → typecheck → lint → build → high-audit → diff-check gate;
+- CI full-history checkout;
+- PR/push range `git diff --check`;
+- regression coverage for command completeness, Windows npm executable selection and non-destructive Git behavior.
+
+Superseded:
+
+- draft/diverged PR #111 was closed without merge.
+
+Truth status:
+
+`PHASE 18A REPOSITORY GATE IMPLEMENTED / LOCAL PROGRAM GATES REMAIN`
+
+Remaining release evidence still requires the real target environment:
+
+- Phase 14 Automation approval/STOP;
+- MEM-X Sonor/Graphify/Obsidian;
+- Phase 16 target performance/browser measurements;
+- Phase 17 real scenarios;
+- Phase 19 Windows install/update/reinstall/startup proof.

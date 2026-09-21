@@ -16,7 +16,7 @@ Current `main` checkpoint:
 - repository cleanup before RC: **complete**;
 - Phase 19A–19G Windows repository tooling/hardening: **merged through PR #117**;
 - current `main` merge commit after P19G: `42657c7affc776057178416c5e777de388b98787`;
-- Phase 18A repository RC gate exists as draft PR #111 with successful branch CI, but must be reconciled against current `main` before merge;
+- Phase 18A repository RC gate: **merged as PR #119**; stale PR #111 closed as superseded;
 - Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
 - real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**;
@@ -102,14 +102,13 @@ Follow `docs/SONOR_CODEX_MISSION.md`.
 
 ## Next exact repository work
 
-1. reconcile and refresh draft PR #111 (Phase 18A repository RC gate) against current `main`; rerun CI and merge only after the gate remains correct;
-2. update tracker/handoff/worklog after that merge;
-3. when target-PC access is available, execute the real Phase 14 Automation validation and Phase 19 Windows evidence commands;
-4. audit/validate the real existing Sonor / Graphify / Obsidian stack exactly as documented; do not rebuild or fake it;
-5. run Phase 16 target-PC/browser measurements and record real evidence;
-6. run Phase 17 real full-system scenarios including STOP;
-7. complete Phase 18 RC only after all required repository and local gates are truthful;
-8. complete Phase 20 core release gate, then continue Phase 21–30.
+1. when target-PC access is available, execute the real Phase 14 Automation validation and Phase 19 Windows evidence commands;
+2. audit/validate the real existing Sonor / Graphify / Obsidian stack exactly as documented; do not rebuild or fake it;
+3. run Phase 16 target-PC/browser measurements and record real evidence;
+4. run Phase 17 real full-system scenarios including STOP;
+5. complete Phase 18 RC only after all required repository and local gates are truthful;
+6. prepare/fill the Phase 20 report only from real evidence;
+7. continue Phase 21–30 after the core gate is stable.
 
 ## Worklog update rule
 
@@ -259,3 +258,16 @@ Truth boundary:
 Open repository work:
 
 - draft PR #111 (Phase 18A repository RC gate) has successful branch CI but predates later Phase 19 merges; reconcile it against current `main` before merging.
+
+
+## 2026-09-21 — Phase 18A current-main repository RC gate
+
+- PR: **#119**
+- merge commit: `6ac2b98e6f99be68b75769654e78200f54d25fac`
+- CI: **SUCCESS**
+- added `npm run release:repo-gate`;
+- gate runs tests, typecheck, lint, build, high-severity dependency audit and `git diff --check`;
+- GitHub CI now uses full history and enforces PR/push diff checks;
+- gate command set is explicitly non-destructive;
+- stale/diverged PR #111 was closed as superseded rather than merged.
+- truth boundary: this completes the repository RC gate implementation only; Phase 16/17/19 target-runtime evidence and Phase 14/MEM-X local validation remain open.
