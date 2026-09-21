@@ -25,7 +25,7 @@ Required gate IDs:
 npm run release:record-gate -- --gate browser-humanoid-performance --status PASS --evidence ".astra/performance/browser-idle-<timestamp>.json" --note "Reviewed HIGH-quality browser evidence and console state."
 ```
 
-PASS is rejected unless the referenced evidence file exists under `.astra/`.
+PASS is rejected unless the referenced evidence is a non-empty regular file inside the real `.astra/` tree. The recorder stores its SHA-256, byte size, observation timestamp, and current Git commit. If the file changes afterward, `release:core-report` rejects the PASS until it is reviewed and recorded again.
 
 ## FAIL example
 
@@ -66,5 +66,7 @@ Supported fields:
 - whether external configuration remains required.
 
 These values are bounded labels only. Secret-like material is scrubbed before it is written to the private manifest.
+
+The recorder also stamps the context with the current Git commit and timestamp. Phase 20 will not use stale context from another commit. On first context recording, external configuration defaults conservatively to `true` unless explicitly set to `false`.
 
 The command still does **not** choose the final release status.
