@@ -62,6 +62,7 @@ export type CoreReleaseEvidence = {
     completedAt?: string;
     environment?: unknown;
     statusMeasurements?: unknown;
+    runtime?: unknown;
   } | null;
   validation?: {
     schemaVersion?: number;
@@ -70,6 +71,7 @@ export type CoreReleaseEvidence = {
     workingTreeClean?: boolean;
     mode?: string;
     scenarios?: unknown[];
+    runtime?: unknown;
   } | null;
   manual?: ManualReleaseEvidence | null;
 };
@@ -149,6 +151,7 @@ const REQUIRED_REPOSITORY_GATE_STEPS = [
 ] as const;
 
 const REQUIRED_TARGET_PC_CHECKS = [
+  "runtime-build-attestation",
   "windows-preflight",
   "runtime-self-check",
   "windows-release-validator",
@@ -317,7 +320,10 @@ function hasRuntimePerformanceEvidence(
       performance.environment.commit,
       expectedCommit,
     ) ||
-    performance.environment.workingTreeClean !== true
+    performance.environment.workingTreeClean !== true ||
+    !isRecord(performance.runtime) ||
+    !sameCommit(performance.runtime.commit, expectedCommit) ||
+    performance.runtime.workingTreeClean !== true
   ) {
     return false;
   }
@@ -363,7 +369,10 @@ function hasChatPreflightEvidence(
     validation.mode !== "chat-preflight-only" ||
     !isValidTimestamp(validation.capturedAt) ||
     validation.workingTreeClean !== true ||
-    !sameCommit(validation.commit, expectedCommit)
+    !sameCommit(validation.commit, expectedCommit) ||
+    !isRecord(validation.runtime) ||
+    !sameCommit(validation.runtime.commit, expectedCommit) ||
+    validation.runtime.workingTreeClean !== true
   ) {
     return false;
   }
