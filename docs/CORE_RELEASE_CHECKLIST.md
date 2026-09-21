@@ -65,6 +65,15 @@ Windows status: **PENDING**
 
 ## Phase 20 — ASTRA MAX Core Release Gate
 
+### Repository tooling
+
+- [x] core release report generator — PR #123
+- [x] browser/Humanoid HIGH evidence capture — PR #124
+- [x] manual release-gate recorder — PR #125
+- [x] release context recorder — PR #126
+- [ ] six real manual gates recorded from target/runtime evidence
+- [ ] final core report generated after evidence review
+
 Final report must contain:
 
 ### COMPLETED
@@ -102,7 +111,7 @@ Choose exactly one after evidence exists:
 - READY WITH EXTERNAL CONFIGURATION REQUIRED
 - BLOCKED
 
-Current status: **PENDING**
+Current status: **REPORT TOOLING READY / REAL EVIDENCE NOT YET COMPLETE**
 
 ---
 
