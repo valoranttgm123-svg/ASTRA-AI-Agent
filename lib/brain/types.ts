@@ -16,6 +16,7 @@ export type AstraBrainProvider =
   | "ollama"
   | "codex"
   | "hermes"
+  | "nvidia"
   | "cloud";
 
 export type AstraBrainEventType =
@@ -149,6 +150,7 @@ export type AstraBrainStatus = {
     memory: AstraBrainFeatureStatus;
     skills: AstraBrainFeatureStatus;
     codex: AstraBrainFeatureStatus;
+    nvidia: AstraBrainFeatureStatus;
     research: AstraBrainFeatureStatus;
     business: AstraBrainFeatureStatus;
     integrations: AstraBrainFeatureStatus;
