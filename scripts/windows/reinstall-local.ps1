@@ -8,6 +8,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$preflight = Join-Path $PSScriptRoot "preflight-local.ps1"
+& $preflight -Port $Port | Out-Null
+
 $uninstaller = Join-Path $PSScriptRoot "uninstall-local.ps1"
 $installer = Join-Path $PSScriptRoot "install-local.ps1"
 $selfCheck = Join-Path $PSScriptRoot "self-check.ps1"

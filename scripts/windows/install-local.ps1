@@ -7,6 +7,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$preflight = Join-Path $PSScriptRoot "preflight-local.ps1"
+& $preflight -Port $Port | Out-Null
+
 $npm = (Get-Command npm.cmd -ErrorAction Stop).Source
 $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 

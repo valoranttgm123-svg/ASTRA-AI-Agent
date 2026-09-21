@@ -19,6 +19,30 @@ Windows release scripts must preserve these rules:
 - self-check is read-only;
 - Sonor is never guessed READY without MEM-X.
 
+## Read-only install preflight
+
+Before install/update/reinstall, the Windows wrappers now run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\preflight-local.ps1
+```
+
+The preflight is read-only and verifies:
+
+- Node.js is available and major version is **20 or newer** (matching the current CI baseline minimum);
+- `npm.cmd` is available;
+- `git.exe` is available;
+- `package.json` and `package-lock.json` exist;
+- the checkout has `.git` metadata, including Git worktree pointer files;
+- loopback port state is reported;
+- current elevation state is reported;
+- ASTRA does **not** declare administrator privilege as a requirement;
+- existing `.env.local` / `.astra` presence is reported without reading their contents.
+
+The preflight does not register/start/stop tasks, run `npm ci`, run a build, pull Git, delete files, or change configuration.
+
+`install-local.ps1`, `update-local.ps1`, and `reinstall-local.ps1` invoke this preflight before their first mutating operation.
+
 ## Install
 
 From the repository root:
