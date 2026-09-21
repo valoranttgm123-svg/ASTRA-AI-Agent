@@ -5,6 +5,8 @@ The Phase 20 report generator converts **real private evidence** into the exact 
 It is conservative by design:
 
 - missing evidence => `BLOCKED`;
+- runtime performance evidence is accepted only when all required ASTRA status endpoints contain real samples;
+- chat-mode preflight evidence is accepted only when scenarios A–D are all captured as completed;
 - chat-mode preflight alone is not full-system validation;
 - runtime timing alone is not browser/Humanoid performance proof;
 - manual physical gates cannot be marked PASS without:
