@@ -18,6 +18,10 @@ test("Phase 19D Windows validator checks tasks shortcut loopback and self-check"
   assert.match(source, /run-astra\.ps1/i);
   assert.match(source, /run-ollama\.ps1/i);
   assert.match(source, /RunLevel[\s\S]*Limited/i);
+  assert.match(source, /powershell\.exe/i);
+  assert.match(source, /expectedAstraScript/i);
+  assert.match(source, /expectedOllamaScript/i);
+  assert.match(source, /State[\s\S]*Disabled/i);
   assert.match(source, /ASTRA\.url/i);
   assert.match(source, /127\.0\.0\.1/);
   assert.match(source, /Get-NetTCPConnection/i);
