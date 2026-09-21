@@ -9,7 +9,7 @@ import type {
 import { safePublicDetail } from "@/lib/security/redaction";
 
 const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
-const PROVIDERS = new Set<AstraProviderChoice>(["auto", "ollama", "codex"]);
+const PROVIDERS = new Set<AstraProviderChoice>(["auto", "ollama", "codex", "nvidia"]);
 const INPUT_SOURCES = new Set<AstraInputSource>(["text", "voice"]);
 const INPUT_TRIGGERS = new Set<AstraInputTrigger>([
   "keyboard",
