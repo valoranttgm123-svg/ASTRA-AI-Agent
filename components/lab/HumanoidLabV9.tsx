@@ -8,6 +8,7 @@ import type { AstraAvatarState } from "@/lib/avatar/types";
 import type { AstraBrainEvent, AstraBrainProvider } from "@/lib/brain/types";
 import AstraGpuParticles from "./AstraGpuParticles";
 import { useFingerTracking, type FingerTrackingTarget } from "./useFingerTracking";
+import { useHumanoidPerformanceCapture } from "./useHumanoidPerformanceCapture";
 
 const ARTWORK = "/assets/astra-humanoid/astra-idle-v1.webp";
 const SAMPLE_W = 320;
@@ -371,6 +372,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [latency, setLatency] = useState<number | null>(null);
   const [fps, setFps] = useState<number | null>(null);
+  const performanceCapture = useHumanoidPerformanceCapture();
   const fpsFrame = useRef({ frames: 0, started: 0 });
   const preCameraFpsRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -606,6 +608,30 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const resolvedQuality: RenderQuality =
     qualityMode === "auto" ? (autoLow ? "low" : "high") : qualityMode;
   const tracking = useFingerTracking(resolvedQuality);
+
+  const capturePerformanceEvidence = async () => {
+    const dynamicWindow =
+      assemblyActive || shockwaveActive;
+    try {
+      await performanceCapture.capture(
+        {
+          state,
+          quality: resolvedQuality,
+          effects,
+          particleCount: data?.count ?? null,
+          reducedMotion,
+          cameraEnabled: tracking.enabled,
+          assemblyActive,
+          shockwaveActive,
+          gpu: gpuInfo,
+        },
+        dynamicWindow ? 2_300 : 10_000,
+      );
+    } catch {
+      // The capture hook exposes a bounded status string in the UI.
+    }
+  };
+
   const showReferenceOnly = view === "reference" || !effects;
   const showParticles = view !== "reference" && effects;
   const referenceOpacity = showReferenceOnly
@@ -1048,6 +1074,31 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             >
               ● {assemblyActive ? "ASSEMBLING" : shockwaveActive ? "CORE SHOCKWAVE" : "ASSEMBLY READY"}
             </span>
+            <button
+              onClick={() => void capturePerformanceEvidence()}
+              disabled={
+                performanceCapture.capturing ||
+                resolvedQuality !== "high" ||
+                !data
+              }
+              title={
+                resolvedQuality !== "high"
+                  ? "Set QUALITY HIGH before performance capture"
+                  : "Capture private browser/Humanoid performance evidence"
+              }
+              style={{
+                ...buttonStyle(performanceCapture.capturing),
+                opacity:
+                  resolvedQuality === "high" &&
+                  data
+                    ? 1
+                    : 0.45,
+              }}
+            >
+              {performanceCapture.capturing
+                ? "PERF CAPTURING"
+                : "PERF CAPTURE"}
+            </button>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
             </button>
@@ -1169,6 +1220,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Particle sprite: GPU gl_PointCoord round mask</div>
           <div>Assembly easing: quintic smootherstep / deterministic curve</div>
           <div>FPS: {fps ?? "..."}</div>
+          <div>Performance evidence: {performanceCapture.status}</div>
+          <div>Performance capture rule: HIGH quality only; private structured telemetry; no response/log text persisted</div>
           <div>Pre-camera FPS: {preCameraFpsRef.current ?? "not measured"}</div>
           <div>Camera: {tracking.enabled ? "ON" : "OFF"} / {tracking.status.toUpperCase()}</div>
           <div>Hand: {tracking.handFound ? "FOUND" : "NOT FOUND"}</div>
