@@ -6,33 +6,36 @@ import {
   upsertManualGate,
 } from "../lib/release/manual-evidence";
 
+const COMMIT = "a".repeat(40);
+const SHA256 = "b".repeat(64);
+
 test("manual gate recorder recognizes only the six Phase 20 manual gates", () => {
   assert.equal(
-    isManualGateId(
-      "emergency-stop",
-    ),
+    isManualGateId("emergency-stop"),
     true,
   );
   assert.equal(
-    isManualGateId(
-      "fake-ready-gate",
-    ),
+    isManualGateId("fake-ready-gate"),
     false,
   );
 });
 
-test("manual gate recorder refuses PASS without real evidence metadata", () => {
+test("manual gate recorder refuses PASS without integrity and commit metadata", () => {
   assert.throws(
     () =>
       upsertManualGate(null, {
         gate: "emergency-stop",
         status: "PASS",
+        observedAt:
+          "2026-09-21T08:10:00.000Z",
+        evidencePath:
+          ".astra/validation/stop-pass.json",
       }),
-    /PASS requires observedAt and evidencePath/,
+    /evidenceSha256|evidenceBytes|commit/,
   );
 });
 
-test("manual gate recorder upserts one gate without duplicating other evidence", () => {
+test("manual gate recorder upserts one gate with immutable evidence metadata", () => {
   const first = upsertManualGate(
     null,
     {
@@ -55,14 +58,14 @@ test("manual gate recorder upserts one gate without duplicating other evidence",
         "2026-09-21T08:10:00.000Z",
       evidencePath:
         ".astra/validation/stop-pass.json",
+      evidenceSha256: SHA256,
+      evidenceBytes: 128,
+      commit: COMMIT,
       note: "Retest passed.",
     },
   );
 
-  assert.equal(
-    second.gates.length,
-    1,
-  );
+  assert.equal(second.gates.length, 1);
   assert.equal(
     second.gates[0].status,
     "PASS",
@@ -72,7 +75,49 @@ test("manual gate recorder upserts one gate without duplicating other evidence",
     "Retest passed.",
   );
   assert.equal(
-    second.externalConfigurationRequired,
-    true,
+    second.gates[0].evidenceSha256,
+    SHA256,
+  );
+  assert.equal(
+    second.gates[0].evidenceBytes,
+    128,
+  );
+  assert.equal(
+    second.gates[0].commit,
+    COMMIT,
+  );
+});
+
+test("manual gate validation rejects malformed integrity metadata", () => {
+  assert.throws(
+    () =>
+      upsertManualGate(null, {
+        gate: "emergency-stop",
+        status: "PASS",
+        observedAt:
+          "2026-09-21T08:10:00.000Z",
+        evidencePath:
+          ".astra/validation/stop-pass.json",
+        evidenceSha256: "not-a-hash",
+        evidenceBytes: 128,
+        commit: COMMIT,
+      }),
+    /SHA-256/,
+  );
+
+  assert.throws(
+    () =>
+      upsertManualGate(null, {
+        gate: "emergency-stop",
+        status: "PASS",
+        observedAt:
+          "2026-09-21T08:10:00.000Z",
+        evidencePath:
+          ".astra/validation/stop-pass.json",
+        evidenceSha256: SHA256,
+        evidenceBytes: 0,
+        commit: COMMIT,
+      }),
+    /byte size/,
   );
 });
