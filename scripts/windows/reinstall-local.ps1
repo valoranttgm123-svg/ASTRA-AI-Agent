@@ -16,18 +16,43 @@ $installer = Join-Path $PSScriptRoot "install-local.ps1"
 $selfCheck = Join-Path $PSScriptRoot "self-check.ps1"
 $envLocal = Join-Path $repoRoot ".env.local"
 $privateRuntime = Join-Path $repoRoot ".astra"
+$npm = (Get-Command npm.cmd -ErrorAction Stop).Source
 
 $hadEnvLocal = Test-Path -LiteralPath $envLocal -PathType Leaf
 $hadPrivateRuntime = Test-Path -LiteralPath $privateRuntime -PathType Container
 
-& $uninstaller
+function Invoke-Native {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$FilePath,
 
-if ($SkipBuild) {
-  & $installer -Port $Port -SkipBuild
+    [Parameter(Mandatory = $true)]
+    [string[]]$Arguments,
+
+    [string]$FailureMessage = "Native command failed."
+  )
+
+  & $FilePath @Arguments
+  if ($LASTEXITCODE -ne 0) {
+    throw "$FailureMessage Exit code: $LASTEXITCODE"
+  }
 }
-else {
-  & $installer -Port $Port
+
+# Build first while the existing ASTRA startup integration is still intact.
+# A dependency/build failure must not uninstall a currently usable registration.
+if (-not $SkipBuild) {
+  Push-Location -LiteralPath $repoRoot
+  try {
+    Invoke-Native -FilePath $npm -Arguments @("ci") -FailureMessage "npm ci gagal sebelum reinstall."
+    Invoke-Native -FilePath $npm -Arguments @("run", "build") -FailureMessage "npm run build gagal sebelum reinstall."
+  }
+  finally {
+    Pop-Location
+  }
 }
+
+& $uninstaller
+& $installer -Port $Port -SkipBuild
 
 if ($hadEnvLocal -and -not (Test-Path -LiteralPath $envLocal -PathType Leaf)) {
   throw ".env.local ada sebelum reinstall tetapi tidak ditemukan setelah reinstall."
