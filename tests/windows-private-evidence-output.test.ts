@@ -33,6 +33,10 @@ test("Windows private evidence helper rejects reparse-point directories and outp
     helper,
     /ValidatePattern/,
   );
+  assert.match(
+    helper,
+    /must not already exist/,
+  );
 });
 
 test("direct Windows evidence writers use the guarded output helper", () => {
