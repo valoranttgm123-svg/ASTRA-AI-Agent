@@ -1877,3 +1877,46 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evi
 Then follow `docs/BROWSER_PERFORMANCE_EVIDENCE.md`, `docs/AUTOMATION_VALIDATION.md`, `docs/SONOR_CODEX_MISSION.md`, `docs/FULL_SYSTEM_VALIDATION.md`, `docs/MANUAL_RELEASE_EVIDENCE.md`, and `docs/CORE_RELEASE_REPORT.md`.
 
 Truth boundary: repository CI is not target-PC proof. Do not mark READY, Sonor connected, physical STOP PASS, Windows release PASS, or browser performance PASS without the corresponding real private evidence.
+
+
+---
+
+## 2026-09-21 — final repository audit complete through PR #150
+
+The earlier PR #145 saturation checkpoint was intentionally re-audited from the repository foundations before target-PC handoff. Four additional concrete defects were found and fixed:
+
+- PR #147 / `5338f3f184ab84102f635dfb89255e090b43dba9` — browser release scenario runtime commits are independently bound to current clean HEAD;
+- PR #148 / `95b2d6e8d82dae4da85650609650e72a5a14c8ef` — remote optional-cloud traffic carrying an API key must use HTTPS and URLs cannot embed credentials;
+- PR #149 / `542e5f7494c23b525eccf38a503adf330b7a7cfc` — GitHub push verifies the exact `github.com` host rather than a substring;
+- PR #150 / `32f3f8f340a6bfc4004c5b4eeedd116682dae854` — STOP/timeout now terminates the full owned subprocess tree, including Windows descendants.
+
+All four PRs passed ASTRA CI before merge.
+
+Detailed audit:
+
+`docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md`
+
+Repository-side conclusion after PR #150:
+
+**No additional concrete independently implementable defect was identified in the audited release/security scope.**
+
+Remaining work is genuinely target-PC/local/external:
+
+1. Phase 14 real Automation Level-2/3 approvals + STOP;
+2. MEM-X real Sonor/Graphify/Obsidian;
+3. Phase 16 real runtime/browser/Humanoid HIGH evidence;
+4. Phase 17 real scenarios A–E + failure variants + emergency STOP;
+5. Phase 19 real Windows install/startup/update/reinstall;
+6. Phase 20 final evidence-backed report;
+7. Phase 21–30 only after Phase 20 is stable.
+
+First target-PC sequence:
+
+```powershell
+git switch main
+git pull --ff-only
+npm run release:repo-gate
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1 -IncludePerformance -IncludeChatPreflight -Provider auto
+```
+
+GitHub governance note: branch `main` was unprotected and no repository ruleset existed at audit time. Recommended manual administrator action is to require PR + ASTRA CI and block force-push/deletion. This is not a substitute for target-PC evidence and cannot be configured with the available connector.

@@ -153,6 +153,10 @@ Repository/report tooling:
 - [x] target-PC evidence persists runtime identity and rejects duplicate/non-PASS checks — PR #143
 - [x] runtime/performance/preflight evidence verifies the same clean build at capture start + completion — PR #144
 - [x] browser/Humanoid HIGH evidence verifies start/end runtime identity and rejects stale browser/server builds — PR #145
+- [x] browser release bundle binds every scenario to current runtime commit — PR #147
+- [x] optional cloud remote transport requires HTTPS and rejects embedded credentials — PR #148
+- [x] GitHub external push validates exact `github.com` remote host — PR #149
+- [x] STOP/timeout terminates full owned subprocess trees — PR #150
 - [ ] run repository gate and collect real private evidence on target environment
 - [ ] generate final core release report from real evidence
 
@@ -175,7 +179,7 @@ Allowed release status:
 - `READY WITH EXTERNAL CONFIGURATION REQUIRED`
 - `BLOCKED`
 
-Phase 20 result: **REPOSITORY-SIDE REPORT/EVIDENCE HARDENING COMPLETE THROUGH PR #145 / FINAL VERDICT BLOCKED UNTIL REAL TARGET-PC EVIDENCE EXISTS**
+Phase 20 result: **REPOSITORY-SIDE RELEASE/SECURITY AUDIT COMPLETE THROUGH PR #150 / FINAL VERDICT BLOCKED UNTIL REAL TARGET-PC EVIDENCE EXISTS**
 
 ---
 

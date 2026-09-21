@@ -416,3 +416,46 @@ Still not proven:
 - Phase 20 final evidence-backed verdict.
 
 Exact next task: continue on the real target PC using `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`. If target-PC access is unavailable, change repository code only for a newly reproducible concrete defect; do not fabricate evidence or start Phase 21–30 as a substitute.
+
+
+## 2026-09-21 — final repository audit after PR #145
+
+A fresh end-to-end repository audit was run before target-PC handoff. It found four additional concrete defects beyond the earlier saturation checkpoint.
+
+### PR #147 — nested browser runtime provenance
+- merge commit: `5338f3f184ab84102f635dfb89255e090b43dba9`;
+- CI: **SUCCESS**;
+- every browser release scenario now independently matches the expected clean runtime commit.
+
+### PR #148 — secure optional-cloud transport
+- merge commit: `95b2d6e8d82dae4da85650609650e72a5a14c8ef`;
+- CI: **SUCCESS**;
+- non-loopback cloud endpoints require HTTPS;
+- credential-bearing provider URLs fail closed.
+
+### PR #149 — exact GitHub remote host
+- merge commit: `542e5f7494c23b525eccf38a503adf330b7a7cfc`;
+- CI: **SUCCESS**;
+- external GitHub push accepts only verified exact `github.com` remotes.
+
+### PR #150 — owned process-tree STOP
+- merge commit: `32f3f8f340a6bfc4004c5b4eeedd116682dae854`;
+- CI: **SUCCESS**;
+- Windows STOP uses process-tree termination rather than direct-child-only cleanup;
+- POSIX uses owned process groups;
+- descendant termination is covered by regression tests.
+
+Additional audit conclusions:
+- tracked secret/private-runtime scan clean;
+- API mutation guards remain loopback/same-origin/bounded;
+- filesystem/private evidence confinement remains fail-closed;
+- CI uses read-only repository permissions and full verification;
+- `main` branch protection is OFF and repository rulesets are empty; this is a manual GitHub governance recommendation because the available connector cannot configure repository protection.
+
+Final repository-side audit status:
+
+`REPOSITORY AUDIT COMPLETE THROUGH PR #150 / CI VERIFIED / NO ADDITIONAL CONCRETE REPOSITORY DEFECT IDENTIFIED IN THE AUDITED RELEASE-SECURITY SCOPE / REAL TARGET-PC GATES REMAIN`
+
+Detailed audit: `docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md`.
+
+Exact next task: continue on the real target PC with Phase 14, MEM-X, Phase 16, Phase 17, Phase 19 and then Phase 20 evidence/reporting. Do not mark any of those gates PASS from repository CI alone.
