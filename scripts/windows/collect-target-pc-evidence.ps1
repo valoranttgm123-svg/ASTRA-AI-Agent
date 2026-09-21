@@ -83,8 +83,6 @@ if (-not $repositoryStart.WorkingTreeClean) {
   throw "Target-PC evidence requires a clean Git working tree."
 }
 
-New-Item -ItemType Directory -Path $privateRoot -Force | Out-Null
-
 Push-Location -LiteralPath $repoRoot
 try {
   Invoke-EvidenceCheck -Name "windows-preflight" -Action {
@@ -168,7 +166,7 @@ $workingTreeClean = $repositoryStable
 $failed = @($results | Where-Object { $_.Status -ne "PASS" })
 $collectionPassed = ($failed.Count -eq 0 -and $workingTreeClean)
 $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH-mm-ssZ")
-$evidencePath = Join-Path $privateRoot "target-pc-evidence-$timestamp.json"
+$evidencePath = Get-AstraPrivateReadinessEvidencePath -RepoRoot $repoRoot -FileName "target-pc-evidence-$timestamp.json"
 
 $evidence = [ordered]@{
   SchemaVersion = 1
