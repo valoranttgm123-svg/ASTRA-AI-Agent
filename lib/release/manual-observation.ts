@@ -94,6 +94,9 @@ export function validateManualGateObservation(
   value: unknown,
   expectedGate: ManualObservationGateId,
   expectedCommit: string,
+  options: {
+    requireAllPass?: boolean;
+  } = {},
 ) {
   if (!isRecord(value)) {
     throw new Error(
@@ -162,7 +165,10 @@ export function validateManualGateObservation(
       check.status !== "PASS",
   );
 
-  if (failed.length > 0) {
+  if (
+    options.requireAllPass !== false &&
+    failed.length > 0
+  ) {
     throw new Error(
       `Manual gate observation for ${expectedGate} is not all PASS.`,
     );
