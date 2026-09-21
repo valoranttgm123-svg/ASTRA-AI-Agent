@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 
 $node = Get-Command node.exe -ErrorAction Stop
 $npm = Get-Command npm.cmd -ErrorAction Stop
@@ -16,7 +16,7 @@ if ($LASTEXITCODE -ne 0) {
   throw "Tidak dapat membaca versi Node.js."
 }
 
-if ($nodeVersionText -notmatch '^v(?<major>\\d+)\\.') {
+if ($nodeVersionText -notmatch '^v(?<major>\d+)\.') {
   throw "Format versi Node.js tidak dikenali: $nodeVersionText"
 }
 
