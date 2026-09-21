@@ -4,6 +4,10 @@ import type { AstraAgent } from "@/lib/agent/types";
 import type { AstraBrainPermissionSnapshot } from "./types";
 import { safeErrorDetail, safePublicDetail } from "@/lib/security/redaction";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
+import {
+  shouldDetachOwnedProcess,
+  terminateOwnedProcessTree,
+} from "@/lib/process-tree";
 
 const DEFAULT_TIMEOUT_MS = 180000;
 const DEFAULT_STATUS_TIMEOUT_MS = 2500;
@@ -73,17 +77,14 @@ async function versionProbe(command: string, timeoutMs: number) {
     const child = spawn(command, ["--version"], {
       shell: false,
       windowsHide: true,
+      detached: shouldDetachOwnedProcess(),
       stdio: ["ignore", "pipe", "pipe"],
     });
 
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      try {
-        child.kill();
-      } catch {
-        // Ignore shutdown errors.
-      }
+      terminateOwnedProcessTree(child);
       reject(new Error("Codex CLI status check timed out."));
     }, timeoutMs);
 
@@ -261,6 +262,7 @@ export async function chatWithCodex({
       cwd: config.workdir,
       shell: false,
       windowsHide: true,
+      detached: shouldDetachOwnedProcess(),
       stdio: ["ignore", "pipe", "pipe"],
       env: process.env,
     });
@@ -270,11 +272,7 @@ export async function chatWithCodex({
       settled = true;
       clearTimeout(timer);
       signal?.removeEventListener("abort", abort);
-      try {
-        if (!child.killed) child.kill();
-      } catch {
-        // Ignore cleanup errors after a completed turn.
-      }
+      terminateOwnedProcessTree(child);
 
       if (error) {
         reject(error);

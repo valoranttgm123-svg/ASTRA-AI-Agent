@@ -15,10 +15,15 @@ import {
   getCodexStatus,
 } from "../lib/brain/codex";
 import type { AstraBrainPermissionSnapshot } from "../lib/brain/types";
+import {
+  shouldDetachOwnedProcess,
+  windowsTaskkillArgs,
+} from "../lib/process-tree";
 
 let root = "";
 let execFile = "";
 let pidFile = "";
+let descendantPidFile = "";
 
 const readOnlyPolicy: AstraBrainPermissionSnapshot = {
   requireApproval: true,
@@ -64,6 +69,7 @@ before(async () => {
   root = await mkdtemp(path.join(os.tmpdir(), "astra-codex-process-"));
   execFile = path.join(root, "exec");
   pidFile = path.join(root, "fake-codex.pid");
+  descendantPidFile = path.join(root, "fake-codex-descendant.pid");
 
   await writeFile(
     execFile,
@@ -90,7 +96,13 @@ before(async () => {
       '  console.error("Authorization: Bearer fake_codex_secret_1234567890 api_key=sk-proj-FAKECODEXSECRET1234567890 approvalToken=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee https://example.test/?token=fake-codex-query C:\\\\Users\\\\alice\\\\ASTRA\\\\auth.json");',
       '  process.exit(9);',
       '}',
-      'if (mode === "hang") {',
+      'if (mode === "hang-tree") {',
+      '  const { spawn } = require("node:child_process");',
+      '  const descendant = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });',
+      '  const descendantPidFile = process.env.ASTRA_FAKE_CODEX_DESC_PID_FILE;',
+      '  if (descendantPidFile) fs.writeFileSync(descendantPidFile, String(descendant.pid));',
+      '  setInterval(() => {}, 1000);',
+      '} else if (mode === "hang") {',
       '  setInterval(() => {}, 1000);',
       '} else {',
       '  process.exit(0);',
@@ -107,6 +119,7 @@ after(async () => {
 
 beforeEach(async () => {
   await rm(pidFile, { force: true });
+  await rm(descendantPidFile, { force: true });
   process.env.ASTRA_CODEX_ENABLED = "true";
   process.env.ASTRA_CODEX_COMMAND = process.execPath;
   process.env.ASTRA_CODEX_WORKDIR = root;
@@ -115,8 +128,24 @@ beforeEach(async () => {
   process.env.ASTRA_CODEX_STATUS_TIMEOUT_MS = "1000";
   process.env.ASTRA_FAKE_CODEX_MODE = "success";
   process.env.ASTRA_FAKE_CODEX_PID_FILE = pidFile;
+  process.env.ASTRA_FAKE_CODEX_DESC_PID_FILE = descendantPidFile;
   delete process.env.ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS;
   delete process.env.ASTRA_CODEX_MODEL;
+});
+
+test("owned process termination strategy uses Windows tree kill and POSIX process groups", () => {
+  assert.deepEqual(
+    windowsTaskkillArgs(4321),
+    ["/PID", "4321", "/T", "/F"],
+  );
+  assert.equal(
+    shouldDetachOwnedProcess("win32"),
+    false,
+  );
+  assert.equal(
+    shouldDetachOwnedProcess("linux"),
+    true,
+  );
 });
 
 test("Phase 15D2 fake Codex fixture exercises the real child-process path", async () => {
@@ -194,6 +223,30 @@ test("Phase 15D2 Codex timeout kills the owned child process", async () => {
 
   await assert.rejects(pending, /timed out/i);
   assert.equal(await waitForExit(pid), true);
+});
+
+test("Phase 15D2 global STOP kills the full owned Codex process tree", async () => {
+  process.env.ASTRA_FAKE_CODEX_MODE = "hang-tree";
+  process.env.ASTRA_CODEX_TIMEOUT_MS = "5000";
+
+  const controller = new AbortController();
+  const pending = chatWithCodex({
+    input: "inspect fixture",
+    agent: ASTRA_AGENT_MAP.developer,
+    policy: readOnlyPolicy,
+    signal: controller.signal,
+  });
+
+  const parentPid = await waitForPid(pidFile);
+  const descendantPid = await waitForPid(descendantPidFile);
+
+  controller.abort(
+    new DOMException("global stop", "AbortError"),
+  );
+
+  await assert.rejects(pending, { name: "AbortError" });
+  assert.equal(await waitForExit(parentPid), true);
+  assert.equal(await waitForExit(descendantPid), true);
 });
 
 test("Phase 15D2 global STOP cancels Codex and kills the owned child process", async () => {

@@ -1,4 +1,8 @@
 import { spawn } from "node:child_process";
+import {
+  shouldDetachOwnedProcess,
+  terminateOwnedProcessTree,
+} from "../process-tree";
 
 const MAX_PROCESS_OUTPUT = 64_000;
 
@@ -29,6 +33,7 @@ export async function runBoundedProcess({
       env: env ?? process.env,
       shell: false,
       windowsHide: true,
+      detached: shouldDetachOwnedProcess(),
       stdio: ["ignore", "pipe", "pipe"],
     });
 
@@ -48,7 +53,7 @@ export async function runBoundedProcess({
     };
 
     const killForOverflow = () => {
-      child.kill();
+      terminateOwnedProcessTree(child);
       const error = new Error("Process output exceeded the ASTRA safety limit.");
       error.name = "OutputLimitError";
       finish(error);
@@ -81,7 +86,7 @@ export async function runBoundedProcess({
     });
 
     const onAbort = () => {
-      child.kill();
+      terminateOwnedProcessTree(child);
       const reason =
         signal.reason instanceof Error
           ? signal.reason
