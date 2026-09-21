@@ -1,3 +1,7 @@
+import {
+  realpathSync,
+  statSync,
+} from "node:fs";
 import path from "node:path";
 
 export function readinessEvidenceRoot() {
@@ -88,4 +92,45 @@ export function assertPrivateAstraEvidencePath(
   }
 
   return resolved;
+}
+
+
+export function assertExistingPrivateAstraEvidenceFile(
+  candidate: string,
+) {
+  const lexicalPath =
+    assertPrivateAstraEvidencePath(candidate);
+  const privateRoot = path.resolve(".astra");
+
+  let realRoot: string;
+  let realCandidate: string;
+  try {
+    realRoot = realpathSync(privateRoot);
+    realCandidate = realpathSync(lexicalPath);
+  } catch {
+    throw new Error(
+      "Release evidence input must exist inside .astra/.",
+    );
+  }
+
+  const relative = path.relative(
+    realRoot,
+    realCandidate,
+  );
+  if (
+    relative.startsWith("..") ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(
+      "Release evidence input resolved outside .astra/.",
+    );
+  }
+
+  if (!statSync(realCandidate).isFile()) {
+    throw new Error(
+      "Release evidence input must be a regular file.",
+    );
+  }
+
+  return realCandidate;
 }
