@@ -4,6 +4,7 @@
 
 ### Repository gate
 
+- [x] Repository gate automation implemented and merged — PR #119
 - [ ] `npm test`
 - [ ] `npm run typecheck`
 - [ ] `npm run lint`
