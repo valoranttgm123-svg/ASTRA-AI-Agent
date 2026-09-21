@@ -17,6 +17,7 @@ Windows release scripts must preserve these rules:
 - update is fast-forward only;
 - tracked local modifications block automatic pull;
 - self-check is read-only;
+- private readiness/release evidence writers reject symbolic-link/junction/reparse-point redirects under `.astra/`;
 - Sonor is never guessed READY without MEM-X.
 
 ## Read-only install preflight

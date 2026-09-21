@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $selfCheck = Join-Path $PSScriptRoot "self-check.ps1"
-$privateRoot = Join-Path $repoRoot ".astra\readiness"
+. (Join-Path $PSScriptRoot "private-evidence-output.ps1")
 
 function Assert-True {
   param(
@@ -64,9 +64,9 @@ Assert-True -Condition ($nonLoopback.Count -eq 0) -Message "Ditemukan listener n
 
 & $selfCheck -BaseUrl "http://127.0.0.1:$Port" | Out-Null
 
-New-Item -ItemType Directory -Path $privateRoot -Force | Out-Null
+$privateRoot = Initialize-AstraPrivateEvidenceDirectory -RepoRoot $repoRoot -Area "readiness"
 $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH-mm-ssZ")
-$evidencePath = Join-Path $privateRoot "windows-release-validation-$timestamp.json"
+$evidencePath = Resolve-AstraPrivateEvidenceFile -RepoRoot $repoRoot -Area "readiness" -FileName "windows-release-validation-$timestamp.json"
 
 $evidence = [ordered]@{
   SchemaVersion = 1

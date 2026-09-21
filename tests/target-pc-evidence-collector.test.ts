@@ -10,7 +10,8 @@ const script = readFileSync(
 
 test("target-PC evidence collector stays read-only and never selects a release verdict", () => {
   assert.match(script, /ReleaseVerdict\s*=\s*"NOT_EVALUATED"/);
-  assert.match(script, /\.astra\\readiness/);
+  assert.match(script, /private-evidence-output\.ps1/);
+  assert.match(script, /Resolve-AstraPrivateEvidenceFile/);
   assert.match(script, /preflight-local\.ps1/);
   assert.match(script, /self-check\.ps1/);
   assert.match(script, /validate-windows-release\.ps1/);

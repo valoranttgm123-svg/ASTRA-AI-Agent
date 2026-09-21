@@ -23,6 +23,8 @@ The collector writes only private evidence under:
 
 `.astra/readiness/`
 
+Before writing, the Windows private-output guard rejects `.astra`, `.astra/readiness`, or an existing evidence target when it is a symbolic link, junction, or other reparse point. Evidence collection fails closed instead of following redirected private-storage paths.
+
 Its summary always keeps:
 
 `ReleaseVerdict = NOT_EVALUATED`
