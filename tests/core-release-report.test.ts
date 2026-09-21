@@ -44,6 +44,7 @@ const targetPcEvidence = {
   },
   Checks: [
     "runtime-build-attestation",
+    "runtime-build-attestation-final",
     "windows-preflight",
     "runtime-self-check",
     "windows-release-validator",
@@ -361,6 +362,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         Runtime: {
           Commit: OTHER_COMMIT,
           WorkingTreeClean: true,
+          VerifiedAtStart: true,
+          VerifiedAtCompletion: true,
         },
       },
     },
@@ -371,6 +374,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         Runtime: {
           Commit: COMMIT,
           WorkingTreeClean: false,
+          VerifiedAtStart: true,
+          VerifiedAtCompletion: true,
         },
       },
     },
@@ -381,6 +386,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         runtime: {
           commit: OTHER_COMMIT,
           workingTreeClean: true,
+          verifiedAtStart: true,
+          verifiedAtCompletion: true,
         },
       },
     },
@@ -391,6 +398,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         runtime: {
           commit: COMMIT,
           workingTreeClean: false,
+          verifiedAtStart: true,
+          verifiedAtCompletion: true,
         },
       },
     },
