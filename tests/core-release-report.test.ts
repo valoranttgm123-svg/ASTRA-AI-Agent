@@ -251,7 +251,7 @@ test("Phase 20 report script requires PASS manual evidence files to exist under 
   );
   assert.match(
     script,
-    /existsSync\\(referencedCandidate\\)/,
+    /existsSync\(referencedCandidate\)/,
   );
   assert.match(
     script,
