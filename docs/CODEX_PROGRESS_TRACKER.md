@@ -86,9 +86,9 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 
 ## Phase 18 — Release Candidate
 
-- [ ] P18A — repository RC gate automation merged
-  - PR #111 exists and CI succeeded on its branch, but it remains draft/open and predates later Phase 19 merges.
-  - Codex must refresh/reconcile it against current `main`, rerun CI, and merge only if the gate remains correct.
+- [x] P18A — repository RC gate automation merged — PR #119
+  - stale/diverged PR #111 closed as superseded;
+  - current-main implementation adds `npm run release:repo-gate` plus CI diff checks.
 - [ ] npm test
 - [ ] npm run typecheck
 - [ ] npm run lint
@@ -101,7 +101,7 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 - [ ] target-PC Automation result known
 - [ ] Sonor result known truthfully
 
-Phase 18 result: **PENDING — repository gate PR exists; program/local gates remain open**
+Phase 18 result: **REPOSITORY GATE IMPLEMENTED / PROGRAM + LOCAL RELEASE GATES REMAIN**
 
 ## Phase 19 — Windows ready-to-use release
 
