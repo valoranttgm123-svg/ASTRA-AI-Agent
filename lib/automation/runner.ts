@@ -90,22 +90,43 @@ async function runWithTimeout<T>(
     });
   }
 
-  try {
-    const result = await run(controller.signal);
+  let removeControllerAbort = () => {};
+
+  const aborted = new Promise<never>((_resolve, reject) => {
+    const rejectAbort = () => {
+      const reason = controller.signal.reason;
+      reject(
+        reason instanceof Error
+          ? reason
+          : abortError(),
+      );
+    };
 
     if (controller.signal.aborted) {
-      const reason = controller.signal.reason;
-      if (reason instanceof Error) {
-        throw reason;
-      }
-      throw abortError(
-        "Automation run completed after cancellation.",
-      );
+      rejectAbort();
+      return;
     }
 
-    return result;
+    controller.signal.addEventListener(
+      "abort",
+      rejectAbort,
+      { once: true },
+    );
+    removeControllerAbort = () =>
+      controller.signal.removeEventListener(
+        "abort",
+        rejectAbort,
+      );
+  });
+
+  try {
+    return await Promise.race([
+      run(controller.signal),
+      aborted,
+    ]);
   } finally {
     clearTimeout(timeout);
+    removeControllerAbort();
     externalSignal?.removeEventListener("abort", onExternalAbort);
   }
 }
