@@ -29,6 +29,8 @@ export type ManualGateRecord = {
 export type ManualReleaseEvidence = {
   schemaVersion: 1;
   gates: ManualGateRecord[];
+  contextRecordedAt?: string;
+  contextCommit?: string;
   connected?: string[];
   requiresUserLogin?: string[];
   notImplemented?: string[];
@@ -96,6 +98,7 @@ export type CoreReleaseReport = {
     targetPcReadOnly: boolean;
     runtimePerformanceCaptured: boolean;
     chatPreflightCaptured: boolean;
+    releaseContextRecorded: boolean;
     manualCommitAligned: boolean;
     manual: Record<ManualGateId, ManualGateStatus>;
   };
@@ -251,17 +254,41 @@ function hasTargetPcEvidence(
     return false;
   }
 
+  const checks = targetPc.Checks;
+
   return REQUIRED_TARGET_PC_CHECKS.every(
-    (name) =>
-      targetPc.Checks?.some((check) => {
-        if (!isRecord(check)) {
-          return false;
-        }
-        return (
-          check.Name === name &&
-          check.Status === "PASS"
-        );
-      }) === true,
+    (name) => {
+      const matches = checks.filter(
+        (check) =>
+          isRecord(check) &&
+          check.Name === name,
+      );
+      return (
+        matches.length === 1 &&
+        isRecord(matches[0]) &&
+        matches[0].Status === "PASS"
+      );
+    },
+  );
+}
+
+function hasReleaseContext(
+  manual: ManualReleaseEvidence | null | undefined,
+  expectedCommit: string | null,
+) {
+  return (
+    manual !== null &&
+    manual !== undefined &&
+    isValidTimestamp(manual.contextRecordedAt) &&
+    sameCommit(
+      manual.contextCommit,
+      expectedCommit,
+    ) &&
+    Array.isArray(manual.connected) &&
+    Array.isArray(manual.requiresUserLogin) &&
+    Array.isArray(manual.notImplemented) &&
+    typeof manual.externalConfigurationRequired ===
+      "boolean"
   );
 }
 
@@ -460,32 +487,49 @@ export function evaluateCoreRelease(
       repositoryCommit,
     );
 
+  const manualPassForCommit =
+    Object.fromEntries(
+      REQUIRED_MANUAL_GATE_IDS.map(
+        (id) => [
+          id,
+          evidence.manual?.gates.some(
+            (gate) =>
+              gate.id === id &&
+              gate.status === "PASS" &&
+              sameCommit(
+                gate.commit,
+                repositoryCommit,
+              ),
+          ) === true,
+        ],
+      ),
+    ) as Record<ManualGateId, boolean>;
+
   const manualCommitAligned =
     repositoryCommit !== null &&
     REQUIRED_MANUAL_GATE_IDS.every(
-      (id) =>
-        evidence.manual?.gates.some(
-          (gate) =>
-            gate.id === id &&
-            gate.status === "PASS" &&
-            sameCommit(
-              gate.commit,
-              repositoryCommit,
-            ),
-        ) === true,
+      (id) => manualPassForCommit[id],
     );
 
   const manualAllPass =
     REQUIRED_MANUAL_GATE_IDS.every(
-      (id) => manual[id] === "PASS",
-    ) &&
-    manualCommitAligned;
+      (id) =>
+        manual[id] === "PASS" &&
+        manualPassForCommit[id],
+    );
+
+  const releaseContextRecorded =
+    hasReleaseContext(
+      evidence.manual,
+      repositoryCommit,
+    );
 
   const releasePrerequisitesPass =
     repositoryGate &&
     targetPcReadOnly &&
     runtimePerformanceCaptured &&
     chatPreflightCaptured &&
+    releaseContextRecorded &&
     manualAllPass;
 
   const releaseStatus: CoreReleaseStatus =
@@ -496,7 +540,11 @@ export function evaluateCoreRelease(
       : "BLOCKED";
 
   const requiresPhysical = REQUIRED_MANUAL_GATE_IDS
-    .filter((id) => manual[id] !== "PASS")
+    .filter(
+      (id) =>
+        manual[id] !== "PASS" ||
+        !manualPassForCommit[id],
+    )
     .map((id) => id);
 
   const completed = [
@@ -527,8 +575,13 @@ export function evaluateCoreRelease(
       "Phase 17 chat-mode preflight evidence is captured.",
     );
   }
+  if (releaseContextRecorded) {
+    verified.push(
+      "Phase 20 release context is recorded for the repository commit.",
+    );
+  }
   for (const id of REQUIRED_MANUAL_GATE_IDS) {
-    if (manual[id] === "PASS") {
+    if (manualPassForCommit[id]) {
       verified.push(`Manual gate PASS: ${id}`);
     }
   }
@@ -539,19 +592,28 @@ export function evaluateCoreRelease(
     sections: {
       COMPLETED: completed,
       VERIFIED: verified,
-      CONNECTED: evidence.manual?.connected ?? [],
+      CONNECTED:
+        releaseContextRecorded
+          ? evidence.manual?.connected ?? []
+          : [],
       REQUIRES_USER_LOGIN:
-        evidence.manual?.requiresUserLogin ?? [],
+        releaseContextRecorded
+          ? evidence.manual?.requiresUserLogin ?? []
+          : [],
       REQUIRES_PHYSICAL_TEST: requiresPhysical,
       NOT_IMPLEMENTED:
-        evidence.manual?.notImplemented ?? [],
+        releaseContextRecorded
+          ? evidence.manual?.notImplemented ?? []
+          : [],
       SECURITY_STATUS:
         repositoryGate
           ? "Repository security and RC gate evidence present; local security-sensitive gates still depend on the manual gate matrix."
           : "Repository RC gate execution evidence is missing.",
       PERFORMANCE_STATUS:
         runtimePerformanceCaptured &&
-        manual["browser-humanoid-performance"] === "PASS"
+        manualPassForCommit[
+          "browser-humanoid-performance"
+        ]
           ? "Runtime and browser/Humanoid performance evidence are present."
           : runtimePerformanceCaptured
             ? "Runtime performance evidence is present; browser/Humanoid performance proof is still pending."
@@ -568,6 +630,7 @@ export function evaluateCoreRelease(
       targetPcReadOnly,
       runtimePerformanceCaptured,
       chatPreflightCaptured,
+      releaseContextRecorded,
       manualCommitAligned,
       manual,
     },
