@@ -43,7 +43,7 @@ Read these only when the active task needs their historical/detail context:
 - Phase 17A safe full-system preflight tooling is merged and CI-verified.
 - Repository cleanup before RC is complete.
 - Phase 19A–19G Windows repository tooling/hardening is merged through PR #117.
-- Current repository checkpoint after runtime/evidence provenance hardening: `03073fe8a95b7064b059aadcd4b9ff933c8c73e8`.
+- Latest implementation checkpoint before the final docs-only handoff: `03073fe8a95b7064b059aadcd4b9ff933c8c73e8`.
 - Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
 - Repository-only release preparation includes target-PC evidence collection, Humanoid/browser capture, conservative Phase 20 report generation, evidence-backed manual gate recording, final-report context recording, strict evidence-shape/private-path validation, runtime-build attestation, end-to-end capture provenance, and stale-browser rejection (PRs #121, #123–#126, #129, #142–#145).
 - MEM-X still requires real local Sonor access.
