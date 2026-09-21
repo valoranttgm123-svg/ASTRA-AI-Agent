@@ -11,17 +11,36 @@ if (-not (Test-Path -LiteralPath $nextCli -PathType Leaf)) {
   throw "ASTRA belum dibangun. Jalankan scripts\windows\install-local.ps1."
 }
 
-$existing = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-if ($existing) {
+$listeners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
+$nonLoopback = @($listeners | Where-Object {
+  $_.LocalAddress -ne '127.0.0.1' -and
+  $_.LocalAddress -ne '::1'
+})
+
+if ($nonLoopback.Count -gt 0) {
+  throw "Port $Port memiliki listener non-loopback. ASTRA menolak berjalan pada port yang terekspos jaringan."
+}
+
+$ipv4Loopback = @($listeners | Where-Object {
+  $_.LocalAddress -eq '127.0.0.1'
+})
+
+if ($ipv4Loopback.Count -gt 0) {
   try {
-    $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$Port/" -TimeoutSec 3
-    if ($response.StatusCode -eq 200 -and $response.Content -match 'ASTRA') {
+    $status = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/agent" -TimeoutSec 3
+    if (
+      $status.ready -eq $true -and
+      $null -ne $status.capabilities -and
+      $null -ne $status.features
+    ) {
       exit 0
     }
-  } catch {
-    throw "Port $Port sudah dipakai proses lain. ASTRA tidak dijalankan."
   }
-  throw "Port $Port sudah dipakai layanan yang bukan ASTRA."
+  catch {
+    # The listener exists but is not a healthy ASTRA status endpoint.
+  }
+
+  throw "Port $Port sudah dipakai listener loopback yang bukan ASTRA sehat."
 }
 
 $env:PORT = $Port.ToString()
