@@ -210,6 +210,20 @@ export function createBrowserReleaseBundle(
             `Browser release bundle source ${scenario} is not HIGH quality.`,
           );
         }
+        if (
+          source.evidence.runtime.commit !==
+            commit.toLowerCase() ||
+          source.evidence.runtime.workingTreeClean !==
+            true ||
+          source.evidence.runtime.verifiedAtStart !==
+            true ||
+          source.evidence.runtime.verifiedAtCompletion !==
+            true
+        ) {
+          throw new Error(
+            `Browser release bundle source ${scenario} does not match the clean running ASTRA build.`,
+          );
+        }
 
         return [
           scenario,
@@ -284,7 +298,12 @@ export function validateBrowserReleaseBundle(
       evidence.scenario !== scenario ||
       evidence.humanoid.quality !== "high" ||
       evidence.releaseVerdict !==
-        "NOT_EVALUATED"
+        "NOT_EVALUATED" ||
+      evidence.runtime.commit !==
+        expectedCommit.toLowerCase() ||
+      evidence.runtime.workingTreeClean !== true ||
+      evidence.runtime.verifiedAtStart !== true ||
+      evidence.runtime.verifiedAtCompletion !== true
     ) {
       throw new Error(
         `Browser release bundle scenario ${scenario} is invalid.`,
