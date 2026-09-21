@@ -21,6 +21,7 @@ $baseUrl = "http://127.0.0.1:$Port"
 $git = (Get-Command git.exe -ErrorAction Stop).Source
 $npm = (Get-Command npm.cmd -ErrorAction Stop).Source
 $results = [System.Collections.Generic.List[object]]::new()
+$runtimeIdentity = $null
 
 function Get-RepositorySnapshot {
   $commit = (& $git -C $repoRoot rev-parse HEAD 2>$null).Trim()
@@ -100,6 +101,11 @@ try {
       $status.runtime.workingTreeClean -ne $true
     ) {
       throw "Running ASTRA build does not match the clean repository commit."
+    }
+
+    $script:runtimeIdentity = [ordered]@{
+      Commit = ([string]$status.runtime.commit).ToLowerInvariant()
+      WorkingTreeClean = $true
     }
   }
 
@@ -195,6 +201,7 @@ $evidence = [ordered]@{
   Port = $Port
   ReadOnlyCollectionPassed = $collectionPassed
   ReleaseVerdict = "NOT_EVALUATED"
+  Runtime = $runtimeIdentity
   Checks = @($results)
   OptionalChecks = [ordered]@{
     PerformanceIncluded = [bool]$IncludePerformance

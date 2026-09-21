@@ -55,6 +55,7 @@ export type CoreReleaseEvidence = {
     Port?: number;
     ReadOnlyCollectionPassed?: boolean;
     ReleaseVerdict?: string;
+    Runtime?: unknown;
     Checks?: unknown;
   } | null;
   performance?: {
@@ -255,26 +256,35 @@ function hasTargetPcEvidence(
     (targetPc.Port ?? 0) > 65535 ||
     targetPc.BaseUrl !==
       `http://127.0.0.1:${targetPc.Port}` ||
+    !isRecord(targetPc.Runtime) ||
+    !sameCommit(
+      targetPc.Runtime.Commit,
+      expectedCommit,
+    ) ||
+    targetPc.Runtime.WorkingTreeClean !== true ||
     !Array.isArray(targetPc.Checks)
   ) {
     return false;
   }
 
   const checks = targetPc.Checks;
+  const checkNames = new Set<string>();
+
+  for (const check of checks) {
+    if (
+      !isRecord(check) ||
+      typeof check.Name !== "string" ||
+      check.Name.length === 0 ||
+      check.Status !== "PASS" ||
+      checkNames.has(check.Name)
+    ) {
+      return false;
+    }
+    checkNames.add(check.Name);
+  }
 
   return REQUIRED_TARGET_PC_CHECKS.every(
-    (name) => {
-      const matches = checks.filter(
-        (check) =>
-          isRecord(check) &&
-          check.Name === name,
-      );
-      return (
-        matches.length === 1 &&
-        isRecord(matches[0]) &&
-        matches[0].Status === "PASS"
-      );
-    },
+    (name) => checkNames.has(name),
   );
 }
 
