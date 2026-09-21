@@ -133,6 +133,29 @@ async function main() {
       "manual-gates.json",
     );
 
+  const manual =
+    await readJson<ManualReleaseEvidence>(
+      manualPath,
+    );
+
+  for (const gate of manual?.gates ?? []) {
+    if (gate.status !== "PASS") continue;
+    if (!gate.evidencePath) {
+      throw new Error(
+        `PASS manual gate ${gate.id} is missing evidencePath.`,
+      );
+    }
+    const referencedEvidence =
+      assertPrivateAstraEvidencePath(
+        gate.evidencePath,
+      );
+    if (!existsSync(referencedEvidence)) {
+      throw new Error(
+        `PASS manual gate ${gate.id} references missing evidence: ${gate.evidencePath}`,
+      );
+    }
+  }
+
   const evidence: CoreReleaseEvidence = {
     repositoryGate:
       await readJson(repositoryGatePath),
@@ -142,10 +165,7 @@ async function main() {
       await readJson(performancePath),
     validation:
       await readJson(validationPath),
-    manual:
-      await readJson<ManualReleaseEvidence>(
-        manualPath,
-      ),
+    manual,
   };
 
   const report = evaluateCoreRelease(evidence);
