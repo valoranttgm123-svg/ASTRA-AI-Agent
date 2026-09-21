@@ -758,3 +758,25 @@ The objective is not feature count.
 The objective is:
 
 `truthful + safe + recoverable + fast + useful + ready for daily use`.
+
+
+---
+
+## 2026-09-21 — final repository audit through PR #150
+
+A fresh audit after the earlier PR #145 saturation checkpoint found four additional concrete repository defects. They are now fixed and CI-verified:
+
+- PR #147 / `5338f3f184ab84102f635dfb89255e090b43dba9` — every browser bundle scenario is bound to the expected clean runtime commit;
+- PR #148 / `95b2d6e8d82dae4da85650609650e72a5a14c8ef` — optional remote cloud endpoints require HTTPS and embedded-credential URLs are rejected;
+- PR #149 / `542e5f7494c23b525eccf38a503adf330b7a7cfc` — GitHub remote verification requires the exact `github.com` host;
+- PR #150 / `32f3f8f340a6bfc4004c5b4eeedd116682dae854` — STOP/timeout termination covers the full owned subprocess tree, including Windows descendants.
+
+Read `docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md` before starting new repository hardening.
+
+Current repository audit conclusion:
+
+`REPOSITORY AUDIT COMPLETE THROUGH PR #150 / CI VERIFIED / REAL TARGET-PC GATES REQUIRED`
+
+Do not reimplement PRs #147–#150 without a new reproducible defect. The next meaningful execution is the real target-PC sequence already documented below. Do not start Phase 21–30 as a substitute for unfinished Phase 14/MEM-X/16/17/19/20 gates.
+
+Repository governance note: `main` was not protected and no repository ruleset existed at audit time. Enabling PR-required branch protection + ASTRA CI is recommended as a manual GitHub administrator setting; it is not a runtime release PASS and the available connector cannot configure it.
