@@ -31,11 +31,16 @@ Repository-complete / merged on current `main`:
 - Phase 17A safe full-system preflight instrumentation — PR #106;
 - repository cleanup before RC;
 - Phase 18A repository RC gate automation — PR #119;
-- Phase 19A–19G Windows repository tooling/hardening — PRs #109, #110, #115, #113, #114, #116, #117.
+- Phase 19A–19G Windows repository tooling/hardening — PRs #109, #110, #115, #113, #114, #116, #117;
+- target-PC read-only evidence collector — PR #121;
+- conservative Phase 20 core release report tooling — PR #123;
+- browser/Humanoid HIGH evidence capture — PR #124;
+- safe manual release-gate recorder — PR #125;
+- release-report context recorder — PR #126.
 
-Current merged RC-gate checkpoint:
+Current merged checkpoint:
 
-`6ac2b98e6f99be68b75769654e78200f54d25fac`
+`b687fd0588e96f7fa3e0a60d6e45811797be4fff`
 
 Stale/diverged PR #111 has been closed as superseded by PR #119.
 
@@ -50,7 +55,8 @@ Still local/target-runtime gated:
 Current execution rule:
 
 - if target-PC/local access is available, first run `scripts/windows/collect-target-pc-evidence.ps1` to capture the safe read-only baseline, then perform the earliest remaining real/manual validation gate above and record evidence;
-- if target-PC/local access is unavailable, continue only repository/report preparation that does not invent measurements, integration state, or PASS/READY claims;
+- if target-PC/local access is unavailable, read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` and continue only concrete repository audits, regression coverage, hardening, documentation synchronization, or defect fixes that do not invent measurements, integration state, or PASS/READY claims;
+- do not reimplement PR #123–#126 tooling unless a concrete defect is found;
 - do not start Phase 21–30 as a substitute for unfinished Phase 18–20 core release evidence.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
@@ -85,7 +91,11 @@ Read before coding:
 3. `docs/CODEX_HANDOFF.md`
 4. `docs/AUTOMATION_VALIDATION.md`
 5. `docs/SONOR_CODEX_MISSION.md`
-6. `SECURITY.md`
+6. `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
+7. `docs/CORE_RELEASE_REPORT.md`
+8. `docs/MANUAL_RELEASE_EVIDENCE.md`
+9. `docs/BROWSER_PERFORMANCE_EVIDENCE.md`
+10. `SECURITY.md`
 
 ---
 
