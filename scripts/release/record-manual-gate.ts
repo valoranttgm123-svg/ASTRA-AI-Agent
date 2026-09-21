@@ -19,6 +19,10 @@ import {
   validateBrowserReleaseBundle,
 } from "../../lib/performance/browser-release";
 import {
+  isManualObservationGateId,
+  validateManualGateObservation,
+} from "../../lib/release/manual-observation";
+import {
   assertExistingPrivateAstraEvidenceFile,
   assertPrivateAstraEvidencePath,
   prepareReleaseEvidencePath,
@@ -178,18 +182,34 @@ async function main() {
     );
     commit = repository.commit;
 
+    const rawEvidence = JSON.parse(
+      await readFile(
+        evidencePath,
+        "utf8",
+      ),
+    ) as unknown;
+
     if (
       options.gate ===
       "browser-humanoid-performance"
     ) {
-      const rawBundle = JSON.parse(
-        await readFile(
-          evidencePath,
-          "utf8",
-        ),
-      ) as unknown;
       validateBrowserReleaseBundle(
-        rawBundle,
+        rawEvidence,
+        commit,
+      );
+    } else {
+      if (
+        !isManualObservationGateId(
+          options.gate,
+        )
+      ) {
+        throw new Error(
+          "Manual gate has no structured evidence validator.",
+        );
+      }
+      validateManualGateObservation(
+        rawEvidence,
+        options.gate,
         commit,
       );
     }
