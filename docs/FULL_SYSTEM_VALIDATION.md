@@ -22,7 +22,8 @@ It:
 - does not send email;
 - does not modify calendar;
 - does not run Scenario E STOP automatically;
-- stores metadata-only evidence in gitignored `.astra/validation/`.
+- stores metadata-only evidence in gitignored `.astra/validation/`;
+- requires a clean Git working tree at capture start and completion, with the same `HEAD`, and records `workingTreeClean: true` only under that invariant.
 
 Captured evidence may include:
 
