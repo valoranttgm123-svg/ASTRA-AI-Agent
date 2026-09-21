@@ -459,3 +459,31 @@ Final repository-side audit status:
 Detailed audit: `docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md`.
 
 Exact next task: continue on the real target PC with Phase 14, MEM-X, Phase 16, Phase 17, Phase 19 and then Phase 20 evidence/reporting. Do not mark any of those gates PASS from repository CI alone.
+
+
+## 2026-09-21 — NVIDIA Nemotron Ultra provider
+
+- PR: **#152**
+- merge commit: `c151d9d044829e14f66be84a70d56aaf163ea09c`
+- CI: **SUCCESS**
+- default model: `nvidia/nemotron-3-ultra-550b-a55b`
+- hosted endpoint: `https://integrate.api.nvidia.com/v1`
+- integration:
+  - explicit `nvidia` provider in ASTRA API/UI;
+  - NVIDIA remains OFF by default;
+  - AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`;
+  - private local/Sonor/project memory remains excluded unless `ASTRA_NVIDIA_INCLUDE_MEMORY=true`;
+  - hosted NVIDIA traffic is restricted to the exact NVIDIA HTTPS endpoint; loopback HTTP/HTTPS remains available for self-hosted NIM;
+  - NVIDIA reasoning cannot execute side effects or bypass ASTRA Tool Runtime/Codex approval gates;
+  - runtime status validates the configured model through `/models`.
+- regression coverage:
+  - local OpenAI-compatible NIM fixture;
+  - explicit NVIDIA routing without silent Ollama/Hermes/Codex substitution;
+  - memory/AUTO fallback opt-ins;
+  - missing hosted API key;
+  - lookalike host / embedded credential rejection;
+  - explicit NVIDIA execution remains blocked.
+- truth boundary:
+  - repository integration is CI verified;
+  - real hosted NVIDIA readiness remains **NOT VERIFIED** until a valid `NVIDIA_API_KEY` is added only to target-PC `.env.local` and live runtime status succeeds.
+- documentation: `docs/NVIDIA_NIM.md`.
