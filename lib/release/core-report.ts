@@ -104,6 +104,111 @@ function manualGateMap(
   return result;
 }
 
+const REQUIRED_RUNTIME_STATUS_ENDPOINTS = [
+  "/api/agent",
+  "/api/automation",
+  "/api/automation/service",
+] as const;
+
+const REQUIRED_CHAT_PREFLIGHT_SCENARIOS = [
+  "A",
+  "B",
+  "C",
+  "D",
+] as const;
+
+function isRecord(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  );
+}
+
+function isValidTimestamp(value: unknown) {
+  return (
+    typeof value === "string" &&
+    !Number.isNaN(Date.parse(value))
+  );
+}
+
+function hasRuntimePerformanceEvidence(
+  performance:
+    | CoreReleaseEvidence["performance"]
+    | undefined,
+) {
+  if (
+    performance?.schemaVersion !== 1 ||
+    !isValidTimestamp(performance.completedAt)
+  ) {
+    return false;
+  }
+
+  const statusMeasurements =
+    performance.statusMeasurements;
+  if (!isRecord(statusMeasurements)) {
+    return false;
+  }
+
+  return REQUIRED_RUNTIME_STATUS_ENDPOINTS.every(
+    (endpoint) => {
+      const measurement =
+        statusMeasurements[endpoint];
+
+      if (!isRecord(measurement)) {
+        return false;
+      }
+
+      const samples = measurement.samplesMs;
+      return (
+        Array.isArray(samples) &&
+        samples.length > 0 &&
+        samples.every(
+          (sample) =>
+            typeof sample === "number" &&
+            Number.isFinite(sample) &&
+            sample >= 0,
+        )
+      );
+    },
+  );
+}
+
+function hasChatPreflightEvidence(
+  validation:
+    | CoreReleaseEvidence["validation"]
+    | undefined,
+) {
+  if (
+    validation?.schemaVersion !== 1 ||
+    validation.mode !== "chat-preflight-only"
+  ) {
+    return false;
+  }
+
+  const scenarios = validation.scenarios;
+  if (!Array.isArray(scenarios)) {
+    return false;
+  }
+
+  return REQUIRED_CHAT_PREFLIGHT_SCENARIOS.every(
+    (scenarioId) =>
+      scenarios.some((scenario) => {
+        if (!isRecord(scenario)) {
+          return false;
+        }
+
+        return (
+          scenario.id === scenarioId &&
+          scenario.captureStatus === "completed" &&
+          isRecord(scenario.evidence)
+        );
+      }),
+  );
+}
+
 export function validateManualReleaseEvidence(
   manual: ManualReleaseEvidence,
 ) {
@@ -168,14 +273,13 @@ export function evaluateCoreRelease(
   const targetPcReadOnly =
     evidence.targetPc?.ReadOnlyCollectionPassed === true;
   const runtimePerformanceCaptured =
-    evidence.performance?.schemaVersion === 1 &&
-    typeof evidence.performance.completedAt === "string" &&
-    typeof evidence.performance.statusMeasurements === "object";
+    hasRuntimePerformanceEvidence(
+      evidence.performance,
+    );
   const chatPreflightCaptured =
-    evidence.validation?.schemaVersion === 1 &&
-    evidence.validation.mode === "chat-preflight-only" &&
-    Array.isArray(evidence.validation.scenarios) &&
-    evidence.validation.scenarios.length > 0;
+    hasChatPreflightEvidence(
+      evidence.validation,
+    );
 
   const manualAllPass =
     REQUIRED_MANUAL_GATE_IDS.every(

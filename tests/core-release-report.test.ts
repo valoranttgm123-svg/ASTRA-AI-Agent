@@ -31,6 +31,36 @@ const allManualPass = {
   })),
 };
 
+const runtimePerformanceEvidence = {
+  schemaVersion: 1,
+  completedAt: "2026-09-21T00:00:00.000Z",
+  statusMeasurements: {
+    "/api/agent": {
+      samplesMs: [10, 11],
+    },
+    "/api/automation": {
+      samplesMs: [8, 9],
+    },
+    "/api/automation/service": {
+      samplesMs: [7, 8],
+    },
+  },
+};
+
+const fullChatPreflightEvidence = {
+  schemaVersion: 1,
+  mode: "chat-preflight-only",
+  scenarios: ["A", "B", "C", "D"].map(
+    (id) => ({
+      id,
+      captureStatus: "completed",
+      evidence: {
+        provider: "ollama",
+      },
+    }),
+  ),
+};
+
 test("Phase 20 report fails closed when evidence is absent", () => {
   const report = evaluateCoreRelease({}, new Date("2026-09-21T00:00:00.000Z"));
 
@@ -48,21 +78,21 @@ test("Phase 20 report never treats chat preflight or runtime timing alone as fin
   const report = evaluateCoreRelease({
     repositoryGate: { passed: true },
     targetPc: { ReadOnlyCollectionPassed: true },
-    performance: {
-      schemaVersion: 1,
-      completedAt: "2026-09-21T00:00:00.000Z",
-      statusMeasurements: {},
-    },
-    validation: {
-      schemaVersion: 1,
-      mode: "chat-preflight-only",
-      scenarios: [{ id: "A" }],
-    },
+    performance: runtimePerformanceEvidence,
+    validation: fullChatPreflightEvidence,
   });
 
   assert.equal(
     report.sections.RELEASE_STATUS,
     "BLOCKED",
+  );
+  assert.equal(
+    report.gates.runtimePerformanceCaptured,
+    true,
+  );
+  assert.equal(
+    report.gates.chatPreflightCaptured,
+    true,
   );
   assert.match(
     report.sections.PERFORMANCE_STATUS,
@@ -74,16 +104,8 @@ test("Phase 20 report may become READY only when every evidence class and manual
   const report = evaluateCoreRelease({
     repositoryGate: { passed: true },
     targetPc: { ReadOnlyCollectionPassed: true },
-    performance: {
-      schemaVersion: 1,
-      completedAt: "2026-09-21T00:00:00.000Z",
-      statusMeasurements: {},
-    },
-    validation: {
-      schemaVersion: 1,
-      mode: "chat-preflight-only",
-      scenarios: [{ id: "A" }],
-    },
+    performance: runtimePerformanceEvidence,
+    validation: fullChatPreflightEvidence,
     manual: allManualPass,
   });
 
@@ -107,6 +129,94 @@ test("Phase 20 report may become READY only when every evidence class and manual
   ]) {
     assert.match(markdown, new RegExp(`## ${heading}`));
   }
+});
+
+test("Phase 20 report rejects malformed runtime performance evidence", () => {
+  for (const statusMeasurements of [
+    null,
+    {},
+    {
+      "/api/agent": {
+        samplesMs: [10],
+      },
+    },
+  ]) {
+    const report = evaluateCoreRelease({
+      performance: {
+        schemaVersion: 1,
+        completedAt:
+          "2026-09-21T00:00:00.000Z",
+        statusMeasurements,
+      },
+    });
+
+    assert.equal(
+      report.gates.runtimePerformanceCaptured,
+      false,
+    );
+  }
+});
+
+test("Phase 20 report requires completed chat preflight scenarios A through D", () => {
+  const partial = evaluateCoreRelease({
+    validation: {
+      schemaVersion: 1,
+      mode: "chat-preflight-only",
+      scenarios: [{
+        id: "A",
+        captureStatus: "completed",
+        evidence: {},
+      }],
+    },
+  });
+
+  assert.equal(
+    partial.gates.chatPreflightCaptured,
+    false,
+  );
+
+  const malformed = evaluateCoreRelease({
+    validation: {
+      schemaVersion: 1,
+      mode: "chat-preflight-only",
+      scenarios: [
+        {
+          id: "A",
+          captureStatus: "completed",
+          evidence: {},
+        },
+        {
+          id: "B",
+          captureStatus: "completed",
+          evidence: {},
+        },
+        {
+          id: "C",
+          captureStatus: "completed",
+          evidence: {},
+        },
+        {
+          id: "D",
+          captureStatus: "failed",
+          evidence: {},
+        },
+      ],
+    },
+  });
+
+  assert.equal(
+    malformed.gates.chatPreflightCaptured,
+    false,
+  );
+
+  const complete = evaluateCoreRelease({
+    validation: fullChatPreflightEvidence,
+  });
+
+  assert.equal(
+    complete.gates.chatPreflightCaptured,
+    true,
+  );
 });
 
 test("manual PASS gates require timestamp and private evidence path reference", () => {
@@ -141,6 +251,10 @@ test("Phase 20 report script requires PASS manual evidence files to exist under 
   );
   assert.match(
     script,
-    /existsSync\(referencedEvidence\)/,
+    /existsSync\(referencedCandidate\)/,
+  );
+  assert.match(
+    script,
+    /assertExistingPrivateAstraEvidenceFile/,
   );
 });
