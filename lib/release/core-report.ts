@@ -20,6 +20,9 @@ export type ManualGateRecord = {
   status: ManualGateStatus;
   observedAt?: string;
   evidencePath?: string;
+  evidenceSha256?: string;
+  evidenceBytes?: number;
+  commit?: string;
   note?: string;
 };
 
@@ -34,21 +37,33 @@ export type ManualReleaseEvidence = {
 
 export type CoreReleaseEvidence = {
   repositoryGate?: {
+    schemaVersion?: number;
     passed?: boolean;
+    workingTreeClean?: boolean;
     capturedAt?: string;
     commit?: string;
+    steps?: unknown;
   } | null;
   targetPc?: {
+    SchemaVersion?: number;
+    CapturedAt?: string;
+    Commit?: string;
+    BaseUrl?: string;
+    Port?: number;
     ReadOnlyCollectionPassed?: boolean;
     ReleaseVerdict?: string;
+    Checks?: unknown;
   } | null;
   performance?: {
     schemaVersion?: number;
     completedAt?: string;
+    environment?: unknown;
     statusMeasurements?: unknown;
   } | null;
   validation?: {
     schemaVersion?: number;
+    capturedAt?: string;
+    commit?: string;
     mode?: string;
     scenarios?: unknown[];
   } | null;
@@ -77,9 +92,11 @@ export type CoreReleaseReport = {
   };
   gates: {
     repositoryGate: boolean;
+    repositoryCommit: string | null;
     targetPcReadOnly: boolean;
     runtimePerformanceCaptured: boolean;
     chatPreflightCaptured: boolean;
+    manualCommitAligned: boolean;
     manual: Record<ManualGateId, ManualGateStatus>;
   };
 };
@@ -117,6 +134,22 @@ const REQUIRED_CHAT_PREFLIGHT_SCENARIOS = [
   "D",
 ] as const;
 
+const REQUIRED_REPOSITORY_GATE_STEPS = [
+  "test",
+  "typecheck",
+  "lint",
+  "build",
+  "audit",
+  "diff-check",
+] as const;
+
+const REQUIRED_TARGET_PC_CHECKS = [
+  "windows-preflight",
+  "runtime-self-check",
+  "windows-release-validator",
+  "automation-readonly-status",
+] as const;
+
 function isRecord(
   value: unknown,
 ): value is Record<string, unknown> {
@@ -134,14 +167,104 @@ function isValidTimestamp(value: unknown) {
   );
 }
 
+function isGitCommit(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{40}$/i.test(value)
+  );
+}
+
+function sameCommit(
+  value: unknown,
+  expected: string | null,
+) {
+  return (
+    expected !== null &&
+    isGitCommit(value) &&
+    value.toLowerCase() === expected.toLowerCase()
+  );
+}
+
+function repositoryGateCommit(
+  repositoryGate:
+    | CoreReleaseEvidence["repositoryGate"]
+    | undefined,
+) {
+  if (
+    repositoryGate?.schemaVersion !== 1 ||
+    repositoryGate.passed !== true ||
+    repositoryGate.workingTreeClean !== true ||
+    !isValidTimestamp(repositoryGate.capturedAt) ||
+    !isGitCommit(repositoryGate.commit) ||
+    !Array.isArray(repositoryGate.steps)
+  ) {
+    return null;
+  }
+
+  const steps = repositoryGate.steps;
+  if (
+    steps.length !==
+      REQUIRED_REPOSITORY_GATE_STEPS.length ||
+    !REQUIRED_REPOSITORY_GATE_STEPS.every(
+      (step) => steps.includes(step),
+    )
+  ) {
+    return null;
+  }
+
+  return repositoryGate.commit.toLowerCase();
+}
+
+function hasTargetPcEvidence(
+  targetPc:
+    | CoreReleaseEvidence["targetPc"]
+    | undefined,
+  expectedCommit: string | null,
+) {
+  if (
+    targetPc?.SchemaVersion !== 1 ||
+    targetPc.ReadOnlyCollectionPassed !== true ||
+    targetPc.ReleaseVerdict !== "NOT_EVALUATED" ||
+    !isValidTimestamp(targetPc.CapturedAt) ||
+    !sameCommit(targetPc.Commit, expectedCommit) ||
+    !Number.isInteger(targetPc.Port) ||
+    (targetPc.Port ?? 0) < 1024 ||
+    (targetPc.Port ?? 0) > 65535 ||
+    targetPc.BaseUrl !==
+      `http://127.0.0.1:${targetPc.Port}` ||
+    !Array.isArray(targetPc.Checks)
+  ) {
+    return false;
+  }
+
+  return REQUIRED_TARGET_PC_CHECKS.every(
+    (name) =>
+      targetPc.Checks?.some((check) => {
+        if (!isRecord(check)) {
+          return false;
+        }
+        return (
+          check.Name === name &&
+          check.Status === "PASS"
+        );
+      }) === true,
+  );
+}
+
 function hasRuntimePerformanceEvidence(
   performance:
     | CoreReleaseEvidence["performance"]
     | undefined,
+  expectedCommit: string | null,
 ) {
   if (
     performance?.schemaVersion !== 1 ||
-    !isValidTimestamp(performance.completedAt)
+    !isValidTimestamp(performance.completedAt) ||
+    !isRecord(performance.environment) ||
+    !sameCommit(
+      performance.environment.commit,
+      expectedCommit,
+    )
   ) {
     return false;
   }
@@ -180,10 +303,13 @@ function hasChatPreflightEvidence(
   validation:
     | CoreReleaseEvidence["validation"]
     | undefined,
+  expectedCommit: string | null,
 ) {
   if (
     validation?.schemaVersion !== 1 ||
-    validation.mode !== "chat-preflight-only"
+    validation.mode !== "chat-preflight-only" ||
+    !isValidTimestamp(validation.capturedAt) ||
+    !sameCommit(validation.commit, expectedCommit)
   ) {
     return false;
   }
@@ -245,14 +371,42 @@ export function validateManualReleaseEvidence(
     }
 
     if (gate.status === "PASS") {
-      if (!gate.observedAt || !gate.evidencePath) {
+      if (
+        !gate.observedAt ||
+        !gate.evidencePath ||
+        !gate.evidenceSha256 ||
+        gate.evidenceBytes === undefined ||
+        !gate.commit
+      ) {
         throw new Error(
-          `PASS manual gate ${gate.id} requires observedAt and evidencePath.`,
+          `PASS manual gate ${gate.id} requires timestamp, evidence path, SHA-256, byte size, and commit metadata.`,
         );
       }
       if (Number.isNaN(Date.parse(gate.observedAt))) {
         throw new Error(
           `PASS manual gate ${gate.id} has an invalid observedAt timestamp.`,
+        );
+      }
+      if (
+        !/^[0-9a-f]{64}$/i.test(
+          gate.evidenceSha256,
+        )
+      ) {
+        throw new Error(
+          `PASS manual gate ${gate.id} has an invalid evidence SHA-256.`,
+        );
+      }
+      if (
+        !Number.isInteger(gate.evidenceBytes) ||
+        gate.evidenceBytes <= 0
+      ) {
+        throw new Error(
+          `PASS manual gate ${gate.id} has an invalid evidence byte size.`,
+        );
+      }
+      if (!isGitCommit(gate.commit)) {
+        throw new Error(
+          `PASS manual gate ${gate.id} has an invalid commit.`,
         );
       }
     }
@@ -268,23 +422,48 @@ export function evaluateCoreRelease(
   }
 
   const manual = manualGateMap(evidence.manual);
+  const repositoryCommit =
+    repositoryGateCommit(
+      evidence.repositoryGate,
+    );
   const repositoryGate =
-    evidence.repositoryGate?.passed === true;
+    repositoryCommit !== null;
   const targetPcReadOnly =
-    evidence.targetPc?.ReadOnlyCollectionPassed === true;
+    hasTargetPcEvidence(
+      evidence.targetPc,
+      repositoryCommit,
+    );
   const runtimePerformanceCaptured =
     hasRuntimePerformanceEvidence(
       evidence.performance,
+      repositoryCommit,
     );
   const chatPreflightCaptured =
     hasChatPreflightEvidence(
       evidence.validation,
+      repositoryCommit,
+    );
+
+  const manualCommitAligned =
+    repositoryCommit !== null &&
+    REQUIRED_MANUAL_GATE_IDS.every(
+      (id) =>
+        evidence.manual?.gates.some(
+          (gate) =>
+            gate.id === id &&
+            gate.status === "PASS" &&
+            sameCommit(
+              gate.commit,
+              repositoryCommit,
+            ),
+        ) === true,
     );
 
   const manualAllPass =
     REQUIRED_MANUAL_GATE_IDS.every(
       (id) => manual[id] === "PASS",
-    );
+    ) &&
+    manualCommitAligned;
 
   const releasePrerequisitesPass =
     repositoryGate &&
@@ -369,9 +548,11 @@ export function evaluateCoreRelease(
     },
     gates: {
       repositoryGate,
+      repositoryCommit,
       targetPcReadOnly,
       runtimePerformanceCaptured,
       chatPreflightCaptured,
+      manualCommitAligned,
       manual,
     },
   };
