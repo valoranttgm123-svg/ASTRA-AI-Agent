@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
-  mkdir,
   readFile,
   readdir,
   writeFile,
@@ -17,6 +16,7 @@ import {
 } from "../../lib/performance/browser-release";
 import {
   browserPerformanceRoot,
+  prepareBrowserBundlePath,
 } from "../../lib/performance/private-output";
 import {
   assertExistingPrivateAstraEvidenceFile,
@@ -145,17 +145,8 @@ async function main() {
       commit,
     );
 
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, "-");
-  const outputPath = path.join(
-    browserPerformanceRoot(),
-    `browser-release-bundle-${timestamp}.json`,
-  );
-
-  await mkdir(path.dirname(outputPath), {
-    recursive: true,
-  });
+  const outputPath =
+    prepareBrowserBundlePath();
   await writeFile(
     outputPath,
     JSON.stringify(bundle, null, 2) + "\n",

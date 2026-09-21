@@ -33,10 +33,10 @@ Optional flags:
 --samples <1-100>
 --timeout-ms <250-120000>
 --ollama-turns <0-20>
---output <json-path>
+--output <path-under-.astra/performance>
 ```
 
-The harness rejects non-loopback URLs. It does not execute tools, external actions, paid cloud, shell actions, or file writes through ASTRA.
+The harness rejects non-loopback URLs. Runtime evidence output is also confined to `.astra/performance/`: absolute or relative `--output` paths that escape that private directory are rejected, and symlinked private output directories/files are refused. It does not execute tools, external actions, paid cloud, shell actions, or file writes through ASTRA.
 
 Ollama measurement records timing only:
 

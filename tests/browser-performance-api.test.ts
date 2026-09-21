@@ -33,7 +33,7 @@ test("browser performance endpoint is local guarded and writes only private evid
   );
   assert.match(
     route,
-    /resolveBrowserPerformancePath/,
+    /prepareBrowserPerformancePath/,
   );
   assert.match(
     output,

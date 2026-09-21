@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import os from "node:os";
-import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import {
@@ -14,6 +13,9 @@ import {
 } from "../../lib/performance/sse";
 import { safeErrorDetail } from "../../lib/security/redaction";
 import { normalizeLoopbackBase } from "../../lib/performance/loopback";
+import {
+  prepareRuntimePerformancePath,
+} from "../../lib/performance/private-output";
 
 type Options = {
   baseUrl: string;
@@ -428,17 +430,10 @@ async function main() {
     );
   }
 
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, "-");
-  const outputPath = path.resolve(
-    options.output ||
-      path.join(
-        ".astra",
-        "performance",
-        `runtime-${timestamp}.json`,
-      ),
-  );
+  const outputPath =
+    prepareRuntimePerformancePath(
+      options.output,
+    );
 
   const result = {
     schemaVersion: 1,
@@ -487,9 +482,6 @@ async function main() {
           },
   };
 
-  await mkdir(path.dirname(outputPath), {
-    recursive: true,
-  });
   await writeFile(
     outputPath,
     JSON.stringify(result, null, 2) + "\n",

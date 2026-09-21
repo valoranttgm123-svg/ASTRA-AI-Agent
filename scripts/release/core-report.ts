@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
-  mkdir,
   readFile,
   readdir,
   writeFile,
@@ -18,7 +17,7 @@ import {
 import {
   assertExistingPrivateAstraEvidenceFile,
   assertPrivateAstraEvidencePath,
-  resolveReleaseEvidencePath,
+  prepareReleaseEvidencePath,
 } from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
 
@@ -251,20 +250,18 @@ async function main() {
     new Date(),
     currentCommit,
   );
-  const jsonPath = resolveReleaseEvidencePath(
-    options.outputJson,
-    "core-release-report",
-    "json",
-  );
-  const mdPath = resolveReleaseEvidencePath(
-    options.outputMd,
-    "core-release-report",
-    "md",
-  );
-
-  await mkdir(path.dirname(jsonPath), {
-    recursive: true,
-  });
+  const jsonPath =
+    prepareReleaseEvidencePath(
+      options.outputJson,
+      "core-release-report",
+      "json",
+    );
+  const mdPath =
+    prepareReleaseEvidencePath(
+      options.outputMd,
+      "core-release-report",
+      "md",
+    );
   await writeFile(
     jsonPath,
     JSON.stringify(report, null, 2) + "\n",

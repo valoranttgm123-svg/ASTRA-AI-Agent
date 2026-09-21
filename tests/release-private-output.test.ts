@@ -3,6 +3,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import {
+  prepareReadinessEvidencePath,
   readinessEvidenceRoot,
   resolveReadinessEvidencePath,
 } from "../lib/release/private-output";
@@ -39,5 +40,25 @@ test("Phase 19A readiness evidence refuses tracked output locations", () => {
   assert.equal(
     resolveReadinessEvidencePath(safe),
     path.resolve(safe),
+  );
+});
+
+test("Phase 19A readiness writer prepares only private output", () => {
+  const safe = path.join(
+    readinessEvidenceRoot(),
+    "prepared.json",
+  );
+
+  assert.equal(
+    prepareReadinessEvidencePath(safe),
+    path.resolve(safe),
+  );
+
+  assert.throws(
+    () =>
+      prepareReadinessEvidencePath(
+        path.resolve("docs", "readiness.json"),
+      ),
+    /must stay inside/i,
   );
 });

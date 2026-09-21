@@ -1,8 +1,9 @@
-import {
-  realpathSync,
-  statSync,
-} from "node:fs";
 import path from "node:path";
+
+import {
+  assertExistingPrivateAstraFile,
+  preparePrivateAstraOutputFile,
+} from "../security/private-output";
 
 export function readinessEvidenceRoot() {
   return path.resolve(".astra", "readiness");
@@ -36,6 +37,19 @@ export function resolveReadinessEvidencePath(
   }
 
   return candidate;
+}
+
+export function prepareReadinessEvidencePath(
+  raw?: string,
+  now = new Date(),
+) {
+  return preparePrivateAstraOutputFile(
+    resolveReadinessEvidencePath(
+      raw,
+      now,
+    ),
+    readinessEvidenceRoot(),
+  );
 }
 
 
@@ -75,6 +89,23 @@ export function resolveReleaseEvidencePath(
   return candidate;
 }
 
+export function prepareReleaseEvidencePath(
+  raw: string | undefined,
+  prefix: string,
+  extension: "json" | "md" = "json",
+  now = new Date(),
+) {
+  return preparePrivateAstraOutputFile(
+    resolveReleaseEvidencePath(
+      raw,
+      prefix,
+      extension,
+      now,
+    ),
+    releaseEvidenceRoot(),
+  );
+}
+
 export function assertPrivateAstraEvidencePath(
   candidate: string,
 ) {
@@ -100,37 +131,16 @@ export function assertExistingPrivateAstraEvidenceFile(
 ) {
   const lexicalPath =
     assertPrivateAstraEvidencePath(candidate);
-  const privateRoot = path.resolve(".astra");
 
-  let realRoot: string;
-  let realCandidate: string;
   try {
-    realRoot = realpathSync(privateRoot);
-    realCandidate = realpathSync(lexicalPath);
-  } catch {
+    return assertExistingPrivateAstraFile(
+      lexicalPath,
+    );
+  } catch (error) {
     throw new Error(
-      "Release evidence input must exist inside .astra/.",
+      error instanceof Error
+        ? `Release evidence input invalid: ${error.message}`
+        : "Release evidence input invalid.",
     );
   }
-
-  const relative = path.relative(
-    realRoot,
-    realCandidate,
-  );
-  if (
-    relative.startsWith("..") ||
-    path.isAbsolute(relative)
-  ) {
-    throw new Error(
-      "Release evidence input resolved outside .astra/.",
-    );
-  }
-
-  if (!statSync(realCandidate).isFile()) {
-    throw new Error(
-      "Release evidence input must be a regular file.",
-    );
-  }
-
-  return realCandidate;
 }
