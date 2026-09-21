@@ -7,7 +7,8 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $selfCheck = Join-Path $PSScriptRoot "self-check.ps1"
-$privateRoot = Join-Path $repoRoot ".astra\readiness"
+$privateEvidence = Join-Path $PSScriptRoot "private-evidence.ps1"
+. $privateEvidence
 
 function Assert-True {
   param(
