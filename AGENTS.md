@@ -43,9 +43,9 @@ Read these only when the active task needs their historical/detail context:
 - Phase 17A safe full-system preflight tooling is merged and CI-verified.
 - Repository cleanup before RC is complete.
 - Phase 19A–19G Windows repository tooling/hardening is merged through PR #117.
-- Current repository checkpoint after Phase 20 evidence hardening: `e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`.
+- Current repository checkpoint after runtime/evidence provenance hardening: `03073fe8a95b7064b059aadcd4b9ff933c8c73e8`.
 - Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
-- Repository-only release preparation includes target-PC evidence collection, Humanoid/browser capture, conservative Phase 20 report generation, evidence-backed manual gate recording, final-report context recording, and strict evidence-shape/private-path validation (PRs #121, #123–#126, #129).
+- Repository-only release preparation includes target-PC evidence collection, Humanoid/browser capture, conservative Phase 20 report generation, evidence-backed manual gate recording, final-report context recording, strict evidence-shape/private-path validation, runtime-build attestation, end-to-end capture provenance, and stale-browser rejection (PRs #121, #123–#126, #129, #142–#145).
 - MEM-X still requires real local Sonor access.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
@@ -74,9 +74,9 @@ Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
 When target-PC access is unavailable, continue from the first unchecked implementable tracker item.
 
-At the current checkpoint, Phase 18A is already merged on current `main`.
+At the current checkpoint, Phase 18A and the known repository-side Phase 20 provenance hardening through PR #145 are already merged on current `main`.
 
-Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates. When those are unavailable, continue only work that is independently useful and does not fabricate local evidence. Read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` before deciding what can still be improved safely.
+Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates. The 2026-09-21 repository audit found no additional concrete independently implementable release-evidence defect after PR #145. When target-PC access is unavailable, change code only for a newly demonstrated defect; otherwise preserve the checkpoint and leave the local gates pending. Read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` before deciding what can still be improved safely.
 
 Do not rebuild or redesign completed Phase 14 work.
 
