@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import os from "node:os";
 import { performance } from "node:perf_hooks";
@@ -16,6 +15,11 @@ import { normalizeLoopbackBase } from "../../lib/performance/loopback";
 import {
   prepareRuntimePerformancePath,
 } from "../../lib/performance/private-output";
+import {
+  assertSameCleanRepositorySnapshot,
+  cleanRepositorySnapshot,
+  type CleanRepositorySnapshot,
+} from "../../lib/release/repository-state";
 
 type Options = {
   baseUrl: string;
@@ -130,26 +134,15 @@ function parseArgs(argv: readonly string[]): Options {
   return options;
 }
 
-function currentCommit() {
-  try {
-    return execFileSync(
-      "git",
-      ["rev-parse", "HEAD"],
-      {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      },
-    ).trim();
-  } catch {
-    return "unknown";
-  }
-}
-
-function environmentSnapshot() {
+function environmentSnapshot(
+  repository: CleanRepositorySnapshot,
+) {
   const cpus = os.cpus();
   return {
     capturedAt: new Date().toISOString(),
-    commit: currentCommit(),
+    commit: repository.commit,
+    workingTreeClean:
+      repository.workingTreeClean,
     platform: os.platform(),
     release: os.release(),
     arch: os.arch(),
@@ -393,6 +386,7 @@ function summarizeNullable(
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const baseUrl = normalizeLoopbackBase(options.baseUrl);
+  const repository = cleanRepositorySnapshot();
   const startedAt = new Date().toISOString();
 
   const endpoints = [
@@ -430,6 +424,10 @@ async function main() {
     );
   }
 
+  const finalRepository =
+    assertSameCleanRepositorySnapshot(
+      repository,
+    );
   const outputPath =
     prepareRuntimePerformancePath(
       options.output,
@@ -440,7 +438,9 @@ async function main() {
     startedAt,
     completedAt: new Date().toISOString(),
     baseUrl,
-    environment: environmentSnapshot(),
+    environment: environmentSnapshot(
+      finalRepository,
+    ),
     configuration: {
       statusSamples: options.samples,
       timeoutMs: options.timeoutMs,
