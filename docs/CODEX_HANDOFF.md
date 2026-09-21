@@ -1755,3 +1755,38 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evi
 ```
 
 A green collector result is not the final release verdict. Continue the documented real approval/STOP, MEM-X, browser/Humanoid and approved external-action validation.
+
+
+---
+
+## 2026-09-21 — Phase 20 evidence pipeline checkpoint
+
+Current repository checkpoint after PR #126:
+
+`b687fd0588e96f7fa3e0a60d6e45811797be4fff`
+
+New merged tooling:
+
+- PR #123 — conservative Phase 20 core report generator;
+- PR #124 — private HIGH-quality Humanoid/browser performance capture;
+- PR #125 — safe manual gate recorder;
+- PR #126 — final-report context recorder.
+
+Target-PC execution order:
+
+1. `npm run release:repo-gate`;
+2. `powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1 -IncludePerformance -IncludeChatPreflight -Provider auto`;
+3. open `/lab/humanoid`, set QUALITY HIGH and capture the required browser scenarios with PERF CAPTURE;
+4. perform each real manual/physical gate and record only evidence-backed PASS/FAIL using `npm run release:record-gate`;
+5. record CONNECTED / REQUIRES USER LOGIN / NOT IMPLEMENTED context with `npm run release:record-context`;
+6. generate `npm run release:core-report`;
+7. treat `BLOCKED` as actionable truth, not as an error to bypass.
+
+Still not proven by repository CI:
+
+- real Automation Level-2/3 approvals and STOP;
+- real Sonor / Graphify / Obsidian;
+- actual target browser/Humanoid measurements;
+- approved full-system external actions;
+- emergency STOP against a real cancellable task;
+- Windows install/update/reinstall/startup proof.
