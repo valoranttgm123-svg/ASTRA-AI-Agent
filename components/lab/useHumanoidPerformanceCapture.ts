@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import {
+  parseBrowserRuntimeIdentity,
   summarizeBrowserFrames,
   type BrowserPerformanceEvidence,
 } from "@/lib/performance/browser-evidence";
@@ -45,6 +46,30 @@ type PerformanceMemory = {
   jsHeapSizeLimit: number;
 };
 
+async function fetchRuntimeIdentity() {
+  const response = await fetch("/api/agent", {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      "x-astra-client": "1",
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Runtime build identity check failed (${response.status}).`,
+    );
+  }
+
+  const payload = await response.json() as {
+    runtime?: unknown;
+  };
+  return parseBrowserRuntimeIdentity(
+    payload.runtime,
+  );
+}
+
 function scenarioFor(snapshot: Snapshot) {
   if (snapshot.assemblyActive) return "assembly" as const;
   if (snapshot.shockwaveActive) return "shockwave" as const;
@@ -76,6 +101,10 @@ export function useHumanoidPerformanceCapture() {
 
       activeRef.current = true;
       setCapturing(true);
+      setStatus("VERIFYING BUILD...");
+
+      const runtimeAtStart =
+        await fetchRuntimeIdentity();
       setStatus("CAPTURING 10S...");
 
       let windowErrorCount = 0;
@@ -157,6 +186,18 @@ export function useHumanoidPerformanceCapture() {
           );
         }
 
+        const runtimeAtCompletion =
+          await fetchRuntimeIdentity();
+        if (
+          runtimeAtCompletion.commit !==
+            runtimeAtStart.commit ||
+          runtimeAtCompletion.workingTreeClean !== true
+        ) {
+          throw new Error(
+            "ASTRA runtime build changed during browser performance capture.",
+          );
+        }
+
         const memory = (
           performance as Performance & {
             memory?: PerformanceMemory;
@@ -171,6 +212,13 @@ export function useHumanoidPerformanceCapture() {
             scenario: scenarioFor(snapshot),
             releaseVerdict:
               "NOT_EVALUATED",
+            runtime: {
+              commit:
+                runtimeAtCompletion.commit,
+              workingTreeClean: true,
+              verifiedAtStart: true,
+              verifiedAtCompletion: true,
+            },
             frame:
               summarizeBrowserFrames(
                 intervals,
