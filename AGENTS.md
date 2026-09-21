@@ -53,6 +53,8 @@ Read these only when the active task needs their historical/detail context:
 - Level 2/3 stay exact-occurrence approval gated.
 - Level 4 stays unavailable.
 
+- NVIDIA NIM / Nemotron Ultra provider is merged as PR #152. It is optional, OFF by default, memory-off by default, and cannot execute side effects. Real hosted readiness requires a local `NVIDIA_API_KEY` on the target PC; never commit that key. Read `docs/NVIDIA_NIM.md` before changing this provider.
+
 ### Do not stall on external/local-only blockers
 
 If a task requires target-PC access, real Sonor access, login, physical microphone/camera interaction, or another external action that is unavailable:
