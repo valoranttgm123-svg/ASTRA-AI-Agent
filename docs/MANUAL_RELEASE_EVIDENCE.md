@@ -48,3 +48,23 @@ It does not choose READY/BLOCKED. Run the Phase 20 report generator afterward:
 ```powershell
 npm run release:core-report
 ```
+
+
+## Record final-report context labels
+
+Use the context recorder for the non-gate sections of the Phase 20 report:
+
+```powershell
+npm run release:record-context -- --connected "Ollama,Codex CLI" --requires-login "Gmail OAuth,Google Calendar OAuth" --not-implemented "Screen understanding" --external-config-required true
+```
+
+Supported fields:
+
+- `CONNECTED`;
+- `REQUIRES USER LOGIN`;
+- `NOT IMPLEMENTED`;
+- whether external configuration remains required.
+
+These values are bounded labels only. Secret-like material is scrubbed before it is written to the private manifest.
+
+The command still does **not** choose the final release status.
