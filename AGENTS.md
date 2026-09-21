@@ -17,7 +17,8 @@ Before changing any code, read these files in this exact order:
 9. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
 10. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
 11. `docs/TARGET_PC_EVIDENCE.md` — unified read-only target-PC evidence collection.
-12. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+12. `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` — post-PR #123–#126 continuation note, exact local blockers and safe resume steps.
+13. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
 
 Read these only when the active task needs their historical/detail context:
 
@@ -39,9 +40,15 @@ Read these only when the active task needs their historical/detail context:
 - Phase 17A safe full-system preflight tooling is merged and CI-verified.
 - Repository cleanup before RC is complete.
 - Phase 19A–19G Windows repository tooling/hardening is merged through PR #117.
-- Current `main` after P19G: `42657c7affc776057178416c5e777de388b98787`.
+- Target-PC read-only evidence collector is merged as PR #121.
 - Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
-- Current repository-only release preparation is complete through Phase 18A and Phase 19G; remaining core release gates require real local/target evidence unless a new non-fabricated repository preparation task is identified.
+- Phase 20 evidence/report preparation tooling is merged through PR #126:
+  - PR #123 — conservative core release report generator;
+  - PR #124 — private browser/Humanoid HIGH performance capture;
+  - PR #125 — safe manual release-gate recorder;
+  - PR #126 — release-report context recorder.
+- Current merged checkpoint after PR #126: `b687fd0588e96f7fa3e0a60d6e45811797be4fff`.
+- Remaining core release gates require real local/target evidence; repository tooling alone must not be reported as READY.
 - MEM-X still requires real local Sonor access.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
@@ -70,9 +77,9 @@ Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
 When target-PC access is unavailable, continue from the first unchecked implementable tracker item.
 
-At the current checkpoint, Phase 18A is already merged on current `main`.
+At the current checkpoint, Phase 18A, the target-PC evidence collector, and Phase 20 evidence/report tooling through PR #126 are already merged on current `main`.
 
-Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates. When those are unavailable, continue only work that is independently useful and does not fabricate local evidence.
+Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates. When those are unavailable, continue only independently useful repository audits, tests, hardening, documentation synchronization, or concrete defect fixes that do not fabricate local evidence. Read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` before deciding what can still be done without the target PC.
 
 Do not rebuild or redesign completed Phase 14 work.
 
@@ -97,16 +104,17 @@ Resume protocol:
 4. read `docs/CODEX_PROGRESS_TRACKER.md`;
 5. read the latest section of `docs/CODEX_HANDOFF.md`;
 6. read `docs/CODEX_NEXT_MISSION.md`;
-7. identify the first task that is not PASS/complete and is implementable in the current environment;
-8. if an earlier task is blocked only by target-PC access, login, Sonor access, camera/mic or another external-only action, record the blocker and continue the next independent repository task;
-9. create a focused feature branch;
-10. implement the task completely enough to satisfy its exit gate;
-11. add/update regression tests;
-12. run build, tests, typecheck, lint and audit;
-13. open a PR;
-14. merge only after green CI;
-15. update `ASTRA_WORKLOG.md`, `CODEX_HANDOFF.md`, `CODEX_PROGRESS_TRACKER.md` and any relevant validation document;
-16. continue automatically to the next implementable unfinished task.
+7. read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`;
+8. identify the first task that is not PASS/complete and is implementable in the current environment;
+9. if an earlier task is blocked only by target-PC access, login, Sonor access, camera/mic or another external-only action, record the blocker and continue the next independent repository task;
+10. create a focused feature branch;
+11. implement the task completely enough to satisfy its exit gate;
+12. add/update regression tests;
+13. run build, tests, typecheck, lint and audit;
+14. open a PR;
+15. merge only after green CI;
+16. update `ASTRA_WORKLOG.md`, `CODEX_HANDOFF.md`, `CODEX_PROGRESS_TRACKER.md` and any relevant validation document;
+17. continue automatically to the next implementable unfinished task.
 
 Stop only when:
 
