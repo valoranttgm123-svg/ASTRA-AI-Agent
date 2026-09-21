@@ -86,6 +86,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\update-local.ps1
 
 # Non-destructive reinstall/repair of startup integration
 powershell -ExecutionPolicy Bypass -File .\scripts\windows\reinstall-local.ps1
+
+# Read-only target-PC evidence bundle (never selects READY)
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1
 ```
 
 See `docs/WINDOWS_RELEASE.md` for the safety model and target-PC verification boundary.
