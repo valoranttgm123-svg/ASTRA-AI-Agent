@@ -416,4 +416,3 @@ Still not proven:
 - Phase 20 final evidence-backed verdict.
 
 Exact next task: continue on the real target PC using `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`. If target-PC access is unavailable, change repository code only for a newly reproducible concrete defect; do not fabricate evidence or start Phase 21–30 as a substitute.
-
