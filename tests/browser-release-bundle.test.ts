@@ -26,6 +26,12 @@ function rawCapture(
       "2026-09-21T10:00:00.000Z",
     scenario,
     releaseVerdict: "NOT_EVALUATED",
+    runtime: {
+      commit: COMMIT,
+      workingTreeClean: true,
+      verifiedAtStart: true,
+      verifiedAtCompletion: true,
+    },
     frame: {
       sampleCount: 600,
       durationMs: 10000,
@@ -142,6 +148,23 @@ test("browser release capture requires current clean HIGH provenance", () => {
         COMMIT,
       ),
     /dirty Git working tree/,
+  );
+
+  assert.throws(
+    () =>
+      parseStoredBrowserReleaseCapture(
+        rawCapture("idle", {
+          runtime: {
+            commit: OTHER_COMMIT,
+            workingTreeClean: true,
+            verifiedAtStart: true,
+            verifiedAtCompletion: true,
+          },
+        }),
+        "idle",
+        COMMIT,
+      ),
+    /running ASTRA build/,
   );
 
   assert.throws(
