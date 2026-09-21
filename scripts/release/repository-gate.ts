@@ -1,9 +1,12 @@
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
 
 import {
   REPOSITORY_GATE_STEPS,
   repositoryGateExecutable,
 } from "../../lib/release/repository-gate";
+import { resolveReleaseEvidencePath } from "../../lib/release/private-output";
 
 function main() {
   for (const step of REPOSITORY_GATE_STEPS) {
@@ -42,9 +45,51 @@ function main() {
     }
   }
 
+  const outputPath = resolveReleaseEvidencePath(
+    undefined,
+    "repository-gate",
+    "json",
+  );
+  mkdirSync(path.dirname(outputPath), {
+    recursive: true,
+  });
+
+  let commit = "unknown";
+  try {
+    commit = execFileSync(
+      "git",
+      ["rev-parse", "HEAD"],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      },
+    ).trim();
+  } catch {
+    commit = "unknown";
+  }
+
+  writeFileSync(
+    outputPath,
+    JSON.stringify(
+      {
+        schemaVersion: 1,
+        capturedAt: new Date().toISOString(),
+        commit,
+        passed: true,
+        steps: REPOSITORY_GATE_STEPS.map(
+          (step) => step.id,
+        ),
+      },
+      null,
+      2,
+    ) + "\n",
+    "utf8",
+  );
+
   console.log(
     "\nASTRA repository RC gate: PASS. Program/local release gates are evaluated separately.",
   );
+  console.log("Evidence: " + outputPath);
 }
 
 try {

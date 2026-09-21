@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "externalConfigurationRequired": true,
+  "connected": [],
+  "requiresUserLogin": [],
+  "notImplemented": [],
+  "gates": [
+    {
+      "id": "automation-approval-stop",
+      "status": "NOT_RUN",
+      "note": "Requires real target-PC Level-2/3 approval and STOP evidence."
+    },
+    {
+      "id": "sonor-graph-memory",
+      "status": "NOT_RUN",
+      "note": "Requires real Sonor/Graphify/Obsidian validation."
+    },
+    {
+      "id": "browser-humanoid-performance",
+      "status": "NOT_RUN",
+      "note": "Requires browser/Humanoid HIGH FPS and console evidence."
+    },
+    {
+      "id": "full-system-approved-actions",
+      "status": "NOT_RUN",
+      "note": "Requires explicitly approved real-write/integration scenarios."
+    },
+    {
+      "id": "emergency-stop",
+      "status": "NOT_RUN",
+      "note": "Requires STOP during a real cancellable task."
+    },
+    {
+      "id": "windows-install-update-reinstall",
+      "status": "NOT_RUN",
+      "note": "Requires real install/update/reinstall/startup proof."
+    }
+  ]
+}
