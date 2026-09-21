@@ -31,14 +31,21 @@ Assert-True -Condition ($null -ne $ollamaTask) -Message "ASTRA-Ollama scheduled 
 
 $agentAction = @($agentTask.Actions)[0]
 $ollamaAction = @($ollamaTask.Actions)[0]
+$expectedPowerShell = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+$expectedAstraScript = Join-Path $PSScriptRoot "run-astra.ps1"
+$expectedOllamaScript = Join-Path $PSScriptRoot "run-ollama.ps1"
 
 Assert-True -Condition ($null -ne $agentAction) -Message "ASTRA-Agent tidak memiliki action."
 Assert-True -Condition ($null -ne $ollamaAction) -Message "ASTRA-Ollama tidak memiliki action."
-Assert-True -Condition ([string]$agentAction.Arguments -match "run-astra\.ps1") -Message "ASTRA-Agent action tidak menunjuk run-astra.ps1."
+Assert-True -Condition ([string]$agentAction.Execute -ieq $expectedPowerShell) -Message "ASTRA-Agent action tidak memakai Windows PowerShell sistem."
+Assert-True -Condition ([string]$ollamaAction.Execute -ieq $expectedPowerShell) -Message "ASTRA-Ollama action tidak memakai Windows PowerShell sistem."
+Assert-True -Condition ([string]$agentAction.Arguments -match [regex]::Escape($expectedAstraScript)) -Message "ASTRA-Agent action tidak menunjuk runner ASTRA dari repository aktif."
 Assert-True -Condition ([string]$agentAction.Arguments -match ("-Port\s+" + [regex]::Escape($Port.ToString()))) -Message "ASTRA-Agent action tidak menggunakan port yang divalidasi."
-Assert-True -Condition ([string]$ollamaAction.Arguments -match "run-ollama\.ps1") -Message "ASTRA-Ollama action tidak menunjuk run-ollama.ps1."
+Assert-True -Condition ([string]$ollamaAction.Arguments -match [regex]::Escape($expectedOllamaScript)) -Message "ASTRA-Ollama action tidak menunjuk runner Ollama dari repository aktif."
 Assert-True -Condition ([string]$agentTask.Principal.RunLevel -eq "Limited") -Message "ASTRA-Agent tidak memakai RunLevel Limited."
 Assert-True -Condition ([string]$ollamaTask.Principal.RunLevel -eq "Limited") -Message "ASTRA-Ollama tidak memakai RunLevel Limited."
+Assert-True -Condition ([string]$agentTask.State -ne "Disabled") -Message "ASTRA-Agent scheduled task disabled."
+Assert-True -Condition ([string]$ollamaTask.State -ne "Disabled") -Message "ASTRA-Ollama scheduled task disabled."
 
 $shortcutPath = Join-Path ([Environment]::GetFolderPath("Desktop")) "ASTRA.url"
 Assert-True -Condition (Test-Path -LiteralPath $shortcutPath -PathType Leaf) -Message "Desktop shortcut ASTRA.url tidak ditemukan."
