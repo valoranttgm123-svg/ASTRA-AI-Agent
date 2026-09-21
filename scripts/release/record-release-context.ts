@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
   mkdir,
@@ -126,6 +127,23 @@ async function main() {
     process.argv.slice(2),
   );
 
+  const commit = execFileSync(
+    "git",
+    ["rev-parse", "HEAD"],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    },
+  ).trim();
+
+  if (!/^[0-9a-f]{40}$/i.test(commit)) {
+    throw new Error(
+      "Cannot record release context without a valid Git HEAD commit.",
+    );
+  }
+
+  const recordedAt = new Date().toISOString();
+
   const outputPath = path.join(
     releaseEvidenceRoot(),
     "manual-gates.json",
@@ -145,7 +163,11 @@ async function main() {
 
   const next = updateReleaseContext(
     current,
-    options,
+    {
+      ...options,
+      recordedAt,
+      commit,
+    },
   );
 
   await mkdir(
@@ -172,6 +194,10 @@ async function main() {
         externalConfigurationRequired:
           next.externalConfigurationRequired ??
           true,
+        contextRecordedAt:
+          next.contextRecordedAt ?? null,
+        contextCommit:
+          next.contextCommit ?? null,
         finalReleaseStatus:
           "NOT_EVALUATED",
       },
