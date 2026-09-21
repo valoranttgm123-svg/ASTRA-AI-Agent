@@ -336,7 +336,7 @@ async function main() {
     options.baseUrl,
   );
   const repository = cleanRepositorySnapshot();
-  const runtime = await verifyRuntimeBuildIdentity(
+  const runtimeAtStart = await verifyRuntimeBuildIdentity(
     baseUrl,
     repository.commit,
     options.timeoutMs,
@@ -358,6 +358,12 @@ async function main() {
     );
   }
 
+  const runtimeAtCompletion =
+    await verifyRuntimeBuildIdentity(
+      baseUrl,
+      repository.commit,
+      options.timeoutMs,
+    );
   const finalRepository =
     assertSameCleanRepositorySnapshot(
       repository,
@@ -369,7 +375,17 @@ async function main() {
     commit: finalRepository.commit,
     workingTreeClean:
       finalRepository.workingTreeClean,
-    runtime,
+    runtime: {
+      commit: runtimeAtCompletion.commit,
+      workingTreeClean:
+        runtimeAtCompletion.workingTreeClean,
+      verifiedAtStart:
+        runtimeAtStart.commit ===
+          runtimeAtCompletion.commit &&
+        runtimeAtStart.workingTreeClean === true,
+      verifiedAtCompletion:
+        runtimeAtCompletion.workingTreeClean === true,
+    },
     baseUrl,
     providerChoice: options.provider,
     mode: "chat-preflight-only",

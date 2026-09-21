@@ -39,9 +39,12 @@ const targetPcEvidence = {
   Runtime: {
     Commit: COMMIT,
     WorkingTreeClean: true,
+    VerifiedAtStart: true,
+    VerifiedAtCompletion: true,
   },
   Checks: [
     "runtime-build-attestation",
+    "runtime-build-attestation-final",
     "windows-preflight",
     "runtime-self-check",
     "windows-release-validator",
@@ -62,6 +65,8 @@ const runtimePerformanceEvidence = {
   runtime: {
     commit: COMMIT,
     workingTreeClean: true,
+    verifiedAtStart: true,
+    verifiedAtCompletion: true,
   },
   statusMeasurements: {
     "/api/agent": {
@@ -85,6 +90,8 @@ const fullChatPreflightEvidence = {
   runtime: {
     commit: COMMIT,
     workingTreeClean: true,
+    verifiedAtStart: true,
+    verifiedAtCompletion: true,
   },
   scenarios: ["A", "B", "C", "D"].map(
     (id) => ({
@@ -355,6 +362,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         Runtime: {
           Commit: OTHER_COMMIT,
           WorkingTreeClean: true,
+          VerifiedAtStart: true,
+          VerifiedAtCompletion: true,
         },
       },
     },
@@ -365,6 +374,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         Runtime: {
           Commit: COMMIT,
           WorkingTreeClean: false,
+          VerifiedAtStart: true,
+          VerifiedAtCompletion: true,
         },
       },
     },
@@ -375,6 +386,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         runtime: {
           commit: OTHER_COMMIT,
           workingTreeClean: true,
+          verifiedAtStart: true,
+          verifiedAtCompletion: true,
         },
       },
     },
@@ -385,6 +398,8 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
         runtime: {
           commit: COMMIT,
           workingTreeClean: false,
+          verifiedAtStart: true,
+          verifiedAtCompletion: true,
         },
       },
     },
@@ -429,6 +444,53 @@ test("Phase 20 rejects contradictory or duplicate target-PC checks", () => {
     assert.equal(
       report.gates.targetPcReadOnly,
       false,
+    );
+    assert.equal(
+      report.sections.RELEASE_STATUS,
+      "BLOCKED",
+    );
+  }
+});
+
+test("Phase 20 requires runtime attestation at capture start and completion", () => {
+  const cases = [
+    {
+      ...completeEvidence(),
+      targetPc: {
+        ...targetPcEvidence,
+        Runtime: {
+          ...targetPcEvidence.Runtime,
+          VerifiedAtCompletion: false,
+        },
+      },
+    },
+    {
+      ...completeEvidence(),
+      performance: {
+        ...runtimePerformanceEvidence,
+        runtime: {
+          ...runtimePerformanceEvidence.runtime,
+          verifiedAtCompletion: false,
+        },
+      },
+    },
+    {
+      ...completeEvidence(),
+      validation: {
+        ...fullChatPreflightEvidence,
+        runtime: {
+          ...fullChatPreflightEvidence.runtime,
+          verifiedAtCompletion: false,
+        },
+      },
+    },
+  ];
+
+  for (const evidence of cases) {
+    const report = evaluateCoreRelease(
+      evidence,
+      new Date(),
+      COMMIT,
     );
     assert.equal(
       report.sections.RELEASE_STATUS,

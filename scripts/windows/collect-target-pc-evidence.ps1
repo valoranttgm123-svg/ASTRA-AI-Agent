@@ -106,6 +106,8 @@ try {
     $script:runtimeIdentity = [ordered]@{
       Commit = ([string]$status.runtime.commit).ToLowerInvariant()
       WorkingTreeClean = $true
+      VerifiedAtStart = $true
+      VerifiedAtCompletion = $false
     }
   }
 
@@ -157,6 +159,27 @@ try {
 }
 finally {
   Pop-Location
+}
+
+Invoke-EvidenceCheck -Name "runtime-build-attestation-final" -Action {
+  if (
+    $null -eq $runtimeIdentity -or
+    $runtimeIdentity.VerifiedAtStart -ne $true
+  ) {
+    throw "Initial ASTRA runtime build attestation did not pass."
+  }
+
+  $status = Invoke-RestMethod -Uri "$baseUrl/api/agent" -Method Get -TimeoutSec 10
+  if (
+    $null -eq $status.runtime -or
+    [string]$status.runtime.commit -notmatch "^[0-9a-fA-F]{40}$" -or
+    [string]$status.runtime.commit -ine $repositoryStart.Commit -or
+    $status.runtime.workingTreeClean -ne $true
+  ) {
+    throw "Running ASTRA build changed or became invalid during evidence collection."
+  }
+
+  $script:runtimeIdentity.VerifiedAtCompletion = $true
 }
 
 $repositoryEnd = $null

@@ -153,6 +153,7 @@ const REQUIRED_REPOSITORY_GATE_STEPS = [
 
 const REQUIRED_TARGET_PC_CHECKS = [
   "runtime-build-attestation",
+  "runtime-build-attestation-final",
   "windows-preflight",
   "runtime-self-check",
   "windows-release-validator",
@@ -262,6 +263,8 @@ function hasTargetPcEvidence(
       expectedCommit,
     ) ||
     targetPc.Runtime.WorkingTreeClean !== true ||
+    targetPc.Runtime.VerifiedAtStart !== true ||
+    targetPc.Runtime.VerifiedAtCompletion !== true ||
     !Array.isArray(targetPc.Checks)
   ) {
     return false;
@@ -333,7 +336,9 @@ function hasRuntimePerformanceEvidence(
     performance.environment.workingTreeClean !== true ||
     !isRecord(performance.runtime) ||
     !sameCommit(performance.runtime.commit, expectedCommit) ||
-    performance.runtime.workingTreeClean !== true
+    performance.runtime.workingTreeClean !== true ||
+    performance.runtime.verifiedAtStart !== true ||
+    performance.runtime.verifiedAtCompletion !== true
   ) {
     return false;
   }
@@ -382,7 +387,9 @@ function hasChatPreflightEvidence(
     !sameCommit(validation.commit, expectedCommit) ||
     !isRecord(validation.runtime) ||
     !sameCommit(validation.runtime.commit, expectedCommit) ||
-    validation.runtime.workingTreeClean !== true
+    validation.runtime.workingTreeClean !== true ||
+    validation.runtime.verifiedAtStart !== true ||
+    validation.runtime.verifiedAtCompletion !== true
   ) {
     return false;
   }

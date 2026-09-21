@@ -30,7 +30,7 @@ Its summary always keeps:
 
 `ReleaseVerdict = NOT_EVALUATED`
 
-The collector now requires a clean Git working tree before it starts, verifies that the running ASTRA build reports the same commit and was built from a clean tree, persists that verified build identity in the private evidence as `Runtime.Commit` + `Runtime.WorkingTreeClean`, re-checks the repository after all probes, and records `WorkingTreeClean`. If the tree becomes dirty or `HEAD` changes during collection, repository provenance fails and `ReadOnlyCollectionPassed` cannot be true. Phase 20 accepts the evidence only when its schema, every recorded check is PASS with no duplicate names, required checks are present, loopback port/base URL is exact, the repository is clean, and both the evidence commit and persisted runtime-build commit match the current repository-gate evidence.
+The collector now requires a clean Git working tree before it starts, verifies that the running ASTRA build reports the same commit and was built from a clean tree, persists that verified build identity in the private evidence as `Runtime.Commit` + `Runtime.WorkingTreeClean`, verifies the same build again after all probes, re-checks the repository, and records `VerifiedAtStart` / `VerifiedAtCompletion`. If the runtime build changes, the tree becomes dirty, or `HEAD` changes during collection, provenance fails and `ReadOnlyCollectionPassed` cannot be true. Phase 20 accepts the evidence only when its schema, both runtime-attestation checks, every recorded check is PASS with no duplicate names, loopback port/base URL is exact, the repository is clean, and both the evidence commit and persisted runtime-build commit match the current repository-gate evidence.
 
 ## Optional runtime performance probe
 
