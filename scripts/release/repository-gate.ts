@@ -9,6 +9,25 @@ import {
 import { resolveReleaseEvidencePath } from "../../lib/release/private-output";
 
 function main() {
+  const workingTree = execFileSync(
+    "git",
+    [
+      "status",
+      "--porcelain",
+      "--untracked-files=normal",
+    ],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    },
+  ).trim();
+
+  if (workingTree) {
+    throw new Error(
+      "Repository gate requires a clean Git working tree. Commit, stash, or remove untracked repository files before collecting release evidence.",
+    );
+  }
+
   for (const step of REPOSITORY_GATE_STEPS) {
     const executable = repositoryGateExecutable(
       step.executable,
@@ -76,6 +95,7 @@ function main() {
         capturedAt: new Date().toISOString(),
         commit,
         passed: true,
+        workingTreeClean: true,
         steps: REPOSITORY_GATE_STEPS.map(
           (step) => step.id,
         ),
