@@ -4,6 +4,21 @@
 >
 > This document records the agreed implementation sequence so project direction is not dependent on chat history.
 
+## Current release checkpoint — 2026-09-21
+
+Latest implementation checkpoint before this documentation handoff: `03073fe8a95b7064b059aadcd4b9ff933c8c73e8` (PR #145).
+
+Repository-side release/evidence hardening through PRs #142–#145 is merged and CI-verified:
+
+- running-build identity is embedded and checked against release evidence;
+- target-PC evidence persists structured runtime identity and rejects contradictory check sets;
+- runtime performance and Phase 17 preflight verify the same clean build before and after capture;
+- browser/Humanoid HIGH capture verifies the runtime before/after sampling and is rejected when the browser/server/checkout provenance does not align.
+
+No target-PC PASS is implied. Remaining core-release work is real local evidence: Automation approval/STOP, Sonor/Graphify/Obsidian, target/browser measurements, full-system approved actions + emergency STOP, Windows install/update/reinstall/startup verification, and the evidence-backed Phase 20 report. Phase 21–30 begins only after that core gate is stable.
+
+---
+
 ## Product vision
 
 ASTRA is designed as one connected AI operating system:
