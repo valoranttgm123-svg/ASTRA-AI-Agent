@@ -80,11 +80,15 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 - [x] Compare stale PR #51 to current main — `docs/PR51_TELEMETRY_AUDIT.md`
 - [x] Port only genuinely unique unsuperseded behavior/tests — none identified; no port required
 - [x] Close PR #51 as superseded if nothing useful remains — closed after audit
-- [x] verify no abandoned release-blocking branch is required — no open PRs; historical branches retained as non-blocking snapshots
+- [x] verify no abandoned release-blocking branch is required — stale PR #51 reconciled; historical branches retained as non-blocking snapshots
+- [ ] reconcile active Release Candidate PR #111 against current `main` before Phase 18 merge
 - [x] verify no secret/private runtime file is tracked — current tree scan clean
 
 ## Phase 18 — Release Candidate
 
+- [ ] P18A — repository RC gate automation merged
+  - PR #111 exists and CI succeeded on its branch, but it remains draft/open and predates later Phase 19 merges.
+  - Codex must refresh/reconcile it against current `main`, rerun CI, and merge only if the gate remains correct.
 - [ ] npm test
 - [ ] npm run typecheck
 - [ ] npm run lint
@@ -97,13 +101,23 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 - [ ] target-PC Automation result known
 - [ ] Sonor result known truthfully
 
-Phase 18 result: **PENDING**
+Phase 18 result: **PENDING — repository gate PR exists; program/local gates remain open**
 
 ## Phase 19 — Windows ready-to-use release
 
-- [x] P19A — read-only readiness self-check implemented — PR #109
-- [x] P19B — safe update/reinstall tooling implemented — PR #110
-- [ ] P19C — target-PC self-check + install/update/reinstall evidence captured
+Repository tooling merged:
+
+- [x] P19A — read-only readiness self-check — PR #109
+- [x] P19B — safe fast-forward update + non-destructive reinstall tooling — PR #110
+- [x] P19C — read-only Windows install preflight — PR #115
+- [x] P19D — read-only Windows release invariant validator — PR #113
+- [x] P19E — Ollama loopback-only startup hardening — PR #114
+- [x] P19F — ASTRA loopback runtime identity/binding hardening — PR #116
+- [x] P19G — bounded startup health gate — PR #117
+
+Target-PC evidence still required:
+
+- [ ] target-PC self-check + install/update/reinstall evidence captured
 - [ ] install path verified
 - [ ] startup tasks verified
 - [ ] loopback binding verified
@@ -112,10 +126,11 @@ Phase 18 result: **PENDING**
 - [ ] Automation status verified
 - [ ] Sonor status verified
 - [ ] private runtime directories verified
-- [ ] read-only self-check available
+- [ ] read-only self-check executed successfully
 - [ ] reinstall/update path verified
+- [ ] bounded startup health gate executed successfully on the real target PC
 
-Phase 19 result: **IN PROGRESS — self-check tooling only; target-PC readiness not claimed**
+Phase 19 result: **REPOSITORY TOOLING ADVANCED THROUGH P19G / TARGET-PC READINESS NOT YET VERIFIED**
 
 ## Phase 20 — ASTRA MAX Core Release Gate
 
