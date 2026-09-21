@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { writeFile } from "node:fs/promises";
 
 import {
   errorResponse,
@@ -12,7 +11,7 @@ import {
   parseBrowserPerformanceEvidence,
 } from "@/lib/performance/browser-evidence";
 import {
-  resolveBrowserPerformancePath,
+  prepareBrowserPerformancePath,
 } from "@/lib/performance/private-output";
 
 export const dynamic = "force-dynamic";
@@ -75,12 +74,9 @@ export async function POST(request: Request) {
     }
 
     const outputPath =
-      resolveBrowserPerformancePath(
+      prepareBrowserPerformancePath(
         evidence.scenario,
       );
-    await mkdir(path.dirname(outputPath), {
-      recursive: true,
-    });
     const storedEvidence = {
       ...evidence,
       repository: repositorySnapshot(),
