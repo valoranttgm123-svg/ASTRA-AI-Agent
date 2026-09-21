@@ -16,11 +16,12 @@ if ($LASTEXITCODE -ne 0) {
   throw "Tidak dapat membaca versi Node.js."
 }
 
-if ($nodeVersionText -notmatch '^v(?<major>\d+)\.') {
+if ($nodeVersionText -match '^v(?<major>\d+)\.') {
+  $nodeMajor = [int]$Matches.major
+}
+else {
   throw "Format versi Node.js tidak dikenali: $nodeVersionText"
 }
-
-$nodeMajor = [int]$Matches.major
 if ($nodeMajor -lt 20) {
   throw "ASTRA membutuhkan Node.js major 20 atau lebih baru. Terdeteksi: $nodeVersionText"
 }
