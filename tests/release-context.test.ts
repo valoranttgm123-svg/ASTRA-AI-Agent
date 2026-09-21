@@ -5,7 +5,11 @@ import {
   updateReleaseContext,
 } from "../lib/release/release-context";
 
-test("release context recorder updates final-report labels without changing gate evidence", () => {
+const COMMIT = "a".repeat(40);
+const RECORDED_AT =
+  "2026-09-21T09:00:00.000Z";
+
+test("release context recorder stamps commit/time and preserves gate evidence", () => {
   const result = updateReleaseContext(
     {
       schemaVersion: 1,
@@ -15,10 +19,10 @@ test("release context recorder updates final-report labels without changing gate
           status: "NOT_RUN",
         },
       ],
-      externalConfigurationRequired:
-        true,
     },
     {
+      recordedAt: RECORDED_AT,
+      commit: COMMIT,
       connected: [
         "Ollama",
         "Codex CLI",
@@ -34,9 +38,14 @@ test("release context recorder updates final-report labels without changing gate
     },
   );
 
+  assert.equal(result.gates.length, 1);
   assert.equal(
-    result.gates.length,
-    1,
+    result.contextRecordedAt,
+    RECORDED_AT,
+  );
+  assert.equal(
+    result.contextCommit,
+    COMMIT,
   );
   assert.deepEqual(
     result.connected,
@@ -52,10 +61,40 @@ test("release context recorder updates final-report labels without changing gate
   );
 });
 
+test("release context defaults missing lists and external config conservatively", () => {
+  const result = updateReleaseContext(
+    null,
+    {
+      recordedAt: RECORDED_AT,
+      commit: COMMIT,
+      connected: ["Ollama"],
+    },
+  );
+
+  assert.deepEqual(
+    result.connected,
+    ["Ollama"],
+  );
+  assert.deepEqual(
+    result.requiresUserLogin,
+    [],
+  );
+  assert.deepEqual(
+    result.notImplemented,
+    [],
+  );
+  assert.equal(
+    result.externalConfigurationRequired,
+    true,
+  );
+});
+
 test("release context labels are bounded deduplicated and secret-like material is scrubbed", () => {
   const result = updateReleaseContext(
     null,
     {
+      recordedAt: RECORDED_AT,
+      commit: COMMIT,
       connected: [
         "Ollama",
         "Ollama",
@@ -73,5 +112,33 @@ test("release context labels are bounded deduplicated and secret-like material i
   assert.doesNotMatch(
     JSON.stringify(result.connected),
     /FAKESECRET123456789/,
+  );
+});
+
+test("release context rejects invalid provenance metadata", () => {
+  assert.throws(
+    () =>
+      updateReleaseContext(
+        null,
+        {
+          recordedAt: "invalid",
+          commit: COMMIT,
+          connected: [],
+        },
+      ),
+    /recordedAt/,
+  );
+
+  assert.throws(
+    () =>
+      updateReleaseContext(
+        null,
+        {
+          recordedAt: RECORDED_AT,
+          commit: "short",
+          connected: [],
+        },
+      ),
+    /commit/,
   );
 });
