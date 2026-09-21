@@ -37,8 +37,10 @@ Read these only when the active task needs their historical/detail context:
 - Phase 16A repository performance instrumentation is merged and CI-verified; P16B/P16C still require the target runtime/browser.
 - Phase 17A safe full-system preflight tooling is merged and CI-verified.
 - Repository cleanup before RC is complete.
-- Phase 19A read-only readiness self-check tooling is merged and CI-verified.
-- Current implementable repository task: **Phase 19B — safe update/reinstall tooling**.
+- Phase 19A–19G Windows repository tooling/hardening is merged through PR #117.
+- Current `main` after P19G: `42657c7affc776057178416c5e777de388b98787`.
+- Draft PR #111 contains Phase 18A repository RC gate automation with successful historical branch CI, but it predates later Phase 19 merges.
+- Current implementable repository task: **reconcile/refresh PR #111 against current `main`, rerun CI, and merge only if still correct**.
 - MEM-X still requires real local Sonor access.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
@@ -65,9 +67,11 @@ Examples:
 
 Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
-When target-PC access is unavailable, continue from the first unchecked implementable tracker item. After Phase 15F merges, that is:
+When target-PC access is unavailable, continue from the first unchecked implementable tracker item.
 
-**Phase 19B — safe update/reinstall tooling**, while Phase 14/16/17 target-runtime evidence and MEM-X remain local-access gates.
+At the current checkpoint, first reconcile **draft PR #111 — Phase 18A repository RC gate automation** against current `main`. It predates P19C–P19G, so do not merge it blindly. Preserve the newest Windows/release tooling, rerun CI, and only then merge/update the repository-owned handoff.
+
+Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates.
 
 Do not rebuild or redesign completed Phase 14 work.
 

@@ -153,12 +153,17 @@ test("Phase 14C2 global STOP propagates into the active read-only executor", asy
     await saveAutomationStore([fixture("cancellable")]);
     const controller = new AbortController();
     const events: string[] = [];
+    let markExecutorStarted: (() => void) | undefined;
+    const executorStarted = new Promise<void>((resolve) => {
+      markExecutorStarted = resolve;
+    });
 
     const resultPromise = runAutomationTickFromStore({
       now: new Date("2026-09-20T10:30:00.000Z"),
       signal: controller.signal,
       onEvent: (event) => events.push(event.type),
       async execute(_automation, context) {
+        markExecutorStarted?.();
         await new Promise<void>((resolve, reject) => {
           const timer = setTimeout(resolve, 500);
           const onAbort = () => {
@@ -181,12 +186,9 @@ test("Phase 14C2 global STOP propagates into the active read-only executor", asy
       },
     });
 
-    setTimeout(
-      () =>
-        controller.abort(
-          new DOMException("global stop", "AbortError"),
-        ),
-      20,
+    await executorStarted;
+    controller.abort(
+      new DOMException("global stop", "AbortError"),
     );
 
     const result = await resultPromise;

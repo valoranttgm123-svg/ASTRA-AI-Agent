@@ -1658,3 +1658,47 @@ Reinstall/repair:
 Truth boundary:
 
 **P19B provides repository tooling only. The update/reinstall checklist remains unverified until run on the target Windows PC.**
+
+
+---
+
+## 2026-09-21 — ChatGPT repository synchronization after Phase 19G
+
+Current `main`:
+
+`42657c7affc776057178416c5e777de388b98787`
+
+Merged Windows/release tooling now includes:
+
+- P19A PR #109 — read-only readiness self-check;
+- P19B PR #110 — safe update/reinstall;
+- P19C PR #115 — read-only install preflight;
+- P19D PR #113 — read-only release validator;
+- P19E PR #114 — Ollama loopback-only hardening;
+- P19F PR #116 — ASTRA loopback runtime hardening;
+- P19G PR #117 — bounded startup health gate.
+
+Repository truth:
+
+`PHASE 19 REPOSITORY TOOLING ADVANCED THROUGH P19G / TARGET-PC VALIDATION REQUIRED`
+
+Do not mark any physical/local gate PASS from this merge history alone.
+
+Next exact Codex task:
+
+1. inspect current `main`;
+2. inspect draft PR #111 (Phase 18A repository RC gate);
+3. reconcile its changes with current `main` because it predates P19C–P19G;
+4. keep repository gate behavior non-destructive;
+5. rerun tests/typecheck/lint/build/audit/diff checks through CI;
+6. merge only after current CI is green;
+7. update tracker/handoff/worklog;
+8. continue independent repository work while leaving target-PC-only gates explicitly pending.
+
+Local-only work still requiring the real target PC:
+
+- Phase 14 Automation approval/STOP proof;
+- MEM-X Sonor/Graphify/Obsidian real validation;
+- Phase 16 performance/browser measurements;
+- Phase 17 real scenario execution;
+- Phase 19 install/update/reinstall/startup evidence.

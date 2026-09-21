@@ -14,14 +14,14 @@
 ### Program gate
 
 - [ ] Phase 14 target-PC Automation validation
-- [ ] Phase 15 security validation matrix
+- [x] Phase 15 security validation matrix
 - [ ] Real Sonor state validated/reported
 - [ ] Phase 16 performance baseline
 - [ ] Phase 17 full-system validation
-- [ ] stale PR #51 reconciled
+- [x] stale PR #51 reconciled
 - [ ] no release-blocking browser console errors
-- [ ] no known secret/private runtime data committed
-- [ ] README / install docs reflect current architecture
+- [x] no known secret/private runtime data committed
+- [x] README / install docs reflect current architecture
 
 RC status: **PENDING**
 
@@ -45,6 +45,7 @@ RC status: **PENDING**
 - [ ] Sonor status truthful
 - [ ] private `.astra/` paths valid
 - [ ] uninstall/reinstall procedure verified
+- [ ] bounded startup health gate verified on target Windows
 
 ### Self-check output
 

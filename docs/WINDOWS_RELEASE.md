@@ -59,7 +59,11 @@ This:
   - `ASTRA-Ollama`;
 - starts the local services;
 - creates `ASTRA.url` on the desktop;
-- verifies ASTRA, Ollama and Automation status.
+- waits on a bounded startup health gate instead of relying on a fixed sleep;
+- requires ASTRA `/api/agent` to report `ready=true`;
+- requires Ollama `/api/version` to report a version;
+- requires the Automation service endpoint to return a service status object;
+- creates the desktop shortcut only after the startup health gate passes.
 
 Default ASTRA URL:
 
@@ -193,6 +197,7 @@ Target-PC readiness still requires real execution evidence for:
 - Automation;
 - Sonor;
 - private runtime directories;
-- update/reinstall path.
+- update/reinstall path;
+- bounded startup health gate on the actual target PC.
 
 Do not mark those target-PC checklist rows verified from source inspection alone.

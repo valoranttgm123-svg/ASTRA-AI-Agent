@@ -14,11 +14,13 @@ Current `main` checkpoint:
 - Phase 16A performance instrumentation: **merged / CI verified**;
 - Phase 17A safe validation preflight: **merged / CI verified**;
 - repository cleanup before RC: **complete**;
-- Phase 19A read-only readiness self-check: **merged / CI verified**;
-- current branch gate: **Phase 19B — safe update/reinstall tooling**;
+- Phase 19A–19G Windows repository tooling/hardening: **merged through PR #117**;
+- current `main` merge commit after P19G: `42657c7affc776057178416c5e777de388b98787`;
+- Phase 18A repository RC gate exists as draft PR #111 with successful branch CI, but must be reconciled against current `main` before merge;
 - Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
-- real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**.
+- real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**;
+- Phase 19 target-PC install/update/reinstall/startup evidence: **still required**.
 
 ## Durable milestone log
 
@@ -100,14 +102,14 @@ Follow `docs/SONOR_CODEX_MISSION.md`.
 
 ## Next exact repository work
 
-1. **P15F — Security regression report**
-2. MEM-X real Sonor validation when local access exists
-3. Phase 16 performance
-7. Phase 17 full-system validation
-8. Phase 18 Release Candidate
-9. Phase 19 Windows ready-to-use
-10. Phase 20 ASTRA MAX Core Release Gate
-11. Phase 21–30 JARVIS-Class continuation
+1. reconcile and refresh draft PR #111 (Phase 18A repository RC gate) against current `main`; rerun CI and merge only after the gate remains correct;
+2. update tracker/handoff/worklog after that merge;
+3. when target-PC access is available, execute the real Phase 14 Automation validation and Phase 19 Windows evidence commands;
+4. audit/validate the real existing Sonor / Graphify / Obsidian stack exactly as documented; do not rebuild or fake it;
+5. run Phase 16 target-PC/browser measurements and record real evidence;
+6. run Phase 17 real full-system scenarios including STOP;
+7. complete Phase 18 RC only after all required repository and local gates are truthful;
+8. complete Phase 20 core release gate, then continue Phase 21–30.
 
 ## Worklog update rule
 
@@ -229,3 +231,31 @@ Never mark local/physical verification PASS from repository inspection alone.
 - self-check runs after successful update/reinstall;
 - static regression tests lock destructive-command/private-path invariants;
 - target-PC update/reinstall behavior remains unverified until actually executed.
+
+
+## 2026-09-21 — Phase 19B–19G repository catch-up
+
+Merged repository slices now present on `main`:
+
+- P19B — PR #110 — safe fast-forward-only update and non-destructive reinstall/repair tooling;
+- P19C — PR #115 — read-only Windows install preflight;
+- P19D — PR #113 — read-only Windows release invariant validator;
+- P19E — PR #114 — ASTRA-managed Ollama forced to loopback-only startup;
+- P19F — PR #116 — ASTRA loopback runtime listener/identity hardening;
+- P19G — PR #117 — bounded startup health gate replacing fragile fixed sleeps.
+
+P19G merge commit:
+
+`42657c7affc776057178416c5e777de388b98787`
+
+Truth boundary:
+
+- these are repository/tooling results;
+- they do not prove the target Windows PC passes install/update/reinstall/startup;
+- they do not complete Phase 14 local Automation validation;
+- they do not prove Sonor/Graphify/Obsidian connectivity;
+- they do not substitute for real Phase 16/17 evidence.
+
+Open repository work:
+
+- draft PR #111 (Phase 18A repository RC gate) has successful branch CI but predates later Phase 19 merges; reconcile it against current `main` before merging.
