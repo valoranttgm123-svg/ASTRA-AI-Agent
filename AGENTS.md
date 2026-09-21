@@ -16,7 +16,8 @@ Before changing any code, read these files in this exact order:
 8. `docs/ASTRA_ROADMAP.md` — milestone history and current phase sequence.
 9. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
 10. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
-11. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+11. `docs/TARGET_PC_EVIDENCE.md` — unified read-only target-PC evidence collection.
+12. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
 
 Read these only when the active task needs their historical/detail context:
 

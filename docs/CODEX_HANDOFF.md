@@ -1733,3 +1733,25 @@ Remaining release evidence still requires the real target environment:
 - Phase 16 target performance/browser measurements;
 - Phase 17 real scenarios;
 - Phase 19 Windows install/update/reinstall/startup proof.
+
+
+---
+
+## 2026-09-21 — target-PC evidence collection support
+
+Merged PR #121 / commit `67d6501bd9f61fe1f5819f7541ce5ab3101d26a8`.
+
+When the real ASTRA Windows PC is available, begin non-destructive evidence collection with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1
+```
+
+Optional:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1 -IncludePerformance
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1 -IncludeChatPreflight -Provider auto
+```
+
+A green collector result is not the final release verdict. Continue the documented real approval/STOP, MEM-X, browser/Humanoid and approved external-action validation.

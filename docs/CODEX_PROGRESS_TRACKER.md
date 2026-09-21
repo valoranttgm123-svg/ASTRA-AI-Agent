@@ -114,6 +114,10 @@ Repository tooling merged:
 - [x] P19E — Ollama loopback-only startup hardening — PR #114
 - [x] P19F — ASTRA loopback runtime identity/binding hardening — PR #116
 - [x] P19G — bounded startup health gate — PR #117
+- [x] target-PC read-only evidence collector — PR #121
+  - orchestrates existing preflight/self-check/release-validator/Automation-status checks;
+  - optional performance and chat-preflight remain explicit opt-ins;
+  - always records `ReleaseVerdict = NOT_EVALUATED`.
 
 Target-PC evidence still required:
 

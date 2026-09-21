@@ -271,3 +271,17 @@ Open repository work:
 - gate command set is explicitly non-destructive;
 - stale/diverged PR #111 was closed as superseded rather than merged.
 - truth boundary: this completes the repository RC gate implementation only; Phase 16/17/19 target-runtime evidence and Phase 14/MEM-X local validation remain open.
+
+
+## 2026-09-21 — target-PC read-only evidence collector
+
+- PR: **#121**
+- merge commit: `67d6501bd9f61fe1f5819f7541ce5ab3101d26a8`
+- CI: **SUCCESS**
+- command: `powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evidence.ps1`
+- default collection combines Windows preflight, runtime self-check, Windows release invariant validation and read-only Automation status/safety inspection;
+- optional performance uses zero Ollama turns unless separately requested;
+- optional Phase 17 chat preflight remains no-write;
+- private evidence stays under `.astra/readiness/`;
+- release verdict remains `NOT_EVALUATED`;
+- manual approval/STOP, Sonor/Graphify/Obsidian, browser/Humanoid and real external-action evidence remain required.
