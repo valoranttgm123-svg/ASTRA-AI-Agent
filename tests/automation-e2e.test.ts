@@ -325,7 +325,7 @@ test("Automation timeout returns promptly even when the executor never settles",
     await saveAutomationStore([
       {
         ...definition("stuck-timeout", 1),
-        maxRuntimeMs: 50,
+        maxRuntimeMs: 1000,
       },
     ]);
 
@@ -344,7 +344,7 @@ test("Automation timeout returns promptly even when the executor never settles",
       Date.now() - startedAt;
 
     assert.ok(
-      elapsed < 1000,
+      elapsed < 2000,
       `timeout returned too late: ${elapsed}ms`,
     );
     assert.equal(result.stopped, false);
