@@ -98,11 +98,12 @@ npm run release:core-report
 
 See `docs/WINDOWS_RELEASE.md` for the safety model and target-PC verification boundary.
 
-The command console has three explicit provider modes:
+The command console has four explicit provider modes:
 
-- `AUTO` uses ASTRA routing (Codex first for engineering, otherwise local paths);
+- `AUTO` remains local-first (Codex first for engineering, otherwise local paths; NVIDIA is used only when its explicit AUTO fallback flag is enabled);
 - `OLLAMA` forces the configured local model and never silently changes models;
-- `CHATGPT / CODEX` forces the authenticated local Codex CLI.
+- `CHATGPT / CODEX` forces the authenticated local Codex CLI;
+- `NVIDIA · NEMOTRON ULTRA` forces the optional NVIDIA NIM reasoning provider and never becomes an execution bypass.
 
 `SEND` is chat/read-only reasoning. `EXECUTE TASK` is a per-request approval and
 still cannot exceed the server-side permission policy.
@@ -112,6 +113,8 @@ still cannot exceed the server-side permission policy.
 Copy `.env.example` to `.env.local` and fill only the provider/integrations you choose.
 
 For full web search, point `ASTRA_SEARXNG_URL` at a loopback SearXNG JSON `/search` endpoint. ASTRA health-checks it before marking Researcher READY. Without SearXNG, `browser.fetch` can still read one explicit public URL, but ASTRA does not pretend general web search is configured.
+
+For NVIDIA Build/NIM, ASTRA supports the hosted NVIDIA endpoint with `nvidia/nemotron-3-ultra-550b-a55b` as the default model. It is disabled by default, keeps private memory out by default, and AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`. See `docs/NVIDIA_NIM.md`.
 
 ```bash
 cp .env.example .env.local
@@ -150,7 +153,8 @@ ASTRA Brain Adapter
    ├─ Hermes
    ├─ Ollama
    ├─ Codex engineering specialist
-   └─ optional cloud (explicit opt-in only)
+   ├─ NVIDIA Nemotron Ultra (explicit opt-in)
+   └─ optional generic cloud (explicit opt-in only)
    ↓
 real Brain events
    ├─ Humanoid high-level state

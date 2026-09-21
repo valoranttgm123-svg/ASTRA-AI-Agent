@@ -1,6 +1,6 @@
 export type AstraOrbState = "idle" | "thinking" | "speaking";
 
-export type AstraProviderChoice = "auto" | "ollama" | "codex";
+export type AstraProviderChoice = "auto" | "ollama" | "codex" | "nvidia";
 
 export type AstraInputSource = "text" | "voice";
 
