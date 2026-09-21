@@ -251,6 +251,10 @@ test("Phase 20 report script requires PASS manual evidence files to exist under 
   );
   assert.match(
     script,
-    /existsSync\(referencedEvidence\)/,
+    /existsSync\\(referencedCandidate\\)/,
+  );
+  assert.match(
+    script,
+    /assertExistingPrivateAstraEvidenceFile/,
   );
 });
