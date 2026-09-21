@@ -122,3 +122,25 @@ test("manual PASS gates require timestamp and private evidence path reference", 
     /requires observedAt and evidencePath/,
   );
 });
+
+
+test("Phase 20 report script requires PASS manual evidence files to exist under .astra", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const script = await readFile(
+    new URL("../scripts/release/core-report.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    script,
+    /assertPrivateAstraEvidencePath/,
+  );
+  assert.match(
+    script,
+    /references missing evidence/,
+  );
+  assert.match(
+    script,
+    /existsSync\(referencedEvidence\)/,
+  );
+});
