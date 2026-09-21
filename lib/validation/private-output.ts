@@ -1,5 +1,9 @@
 import path from "node:path";
 
+import {
+  preparePrivateAstraOutputFile,
+} from "../security/private-output";
+
 export function validationEvidenceRoot() {
   return path.resolve(".astra", "validation");
 }
@@ -32,4 +36,18 @@ export function resolveValidationEvidencePath(
   }
 
   return candidate;
+}
+
+
+export function prepareValidationEvidencePath(
+  raw?: string,
+  now = new Date(),
+) {
+  return preparePrivateAstraOutputFile(
+    resolveValidationEvidencePath(
+      raw,
+      now,
+    ),
+    validationEvidenceRoot(),
+  );
 }
