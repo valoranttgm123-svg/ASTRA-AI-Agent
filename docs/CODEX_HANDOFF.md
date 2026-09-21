@@ -1877,4 +1877,3 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evi
 Then follow `docs/BROWSER_PERFORMANCE_EVIDENCE.md`, `docs/AUTOMATION_VALIDATION.md`, `docs/SONOR_CODEX_MISSION.md`, `docs/FULL_SYSTEM_VALIDATION.md`, `docs/MANUAL_RELEASE_EVIDENCE.md`, and `docs/CORE_RELEASE_REPORT.md`.
 
 Truth boundary: repository CI is not target-PC proof. Do not mark READY, Sonor connected, physical STOP PASS, Windows release PASS, or browser performance PASS without the corresponding real private evidence.
-
