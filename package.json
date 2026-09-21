@@ -14,7 +14,8 @@
     "perf:runtime": "tsx scripts/performance/measure-runtime.ts",
     "validate:preflight": "tsx scripts/validation/full-system-preflight.ts",
     "release:self-check": "tsx scripts/release/self-check.ts",
-    "release:repo-gate": "tsx scripts/release/repository-gate.ts"
+    "release:repo-gate": "tsx scripts/release/repository-gate.ts",
+    "release:core-report": "tsx scripts/release/core-report.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.0.1",
