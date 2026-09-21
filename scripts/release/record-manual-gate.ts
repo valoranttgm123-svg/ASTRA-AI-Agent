@@ -18,6 +18,9 @@ import {
   upsertManualGate,
 } from "../../lib/release/manual-evidence";
 import {
+  validateBrowserReleaseBundle,
+} from "../../lib/performance/browser-release";
+import {
   assertExistingPrivateAstraEvidenceFile,
   assertPrivateAstraEvidencePath,
   releaseEvidenceRoot,
@@ -185,6 +188,22 @@ async function main() {
       evidencePath,
     );
     commit = currentCommit();
+
+    if (
+      options.gate ===
+      "browser-humanoid-performance"
+    ) {
+      const rawBundle = JSON.parse(
+        await readFile(
+          evidencePath,
+          "utf8",
+        ),
+      ) as unknown;
+      validateBrowserReleaseBundle(
+        rawBundle,
+        commit,
+      );
+    }
   }
 
   const outputPath = path.join(

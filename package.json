@@ -17,7 +17,8 @@
     "release:repo-gate": "tsx scripts/release/repository-gate.ts",
     "release:core-report": "tsx scripts/release/core-report.ts",
     "release:record-gate": "tsx scripts/release/record-manual-gate.ts",
-    "release:record-context": "tsx scripts/release/record-release-context.ts"
+    "release:record-context": "tsx scripts/release/record-release-context.ts",
+    "release:browser-bundle": "tsx scripts/release/browser-performance-bundle.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.0.1",

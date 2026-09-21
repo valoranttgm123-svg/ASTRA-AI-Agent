@@ -43,6 +43,18 @@ test("browser performance endpoint is local guarded and writes only private evid
     route,
     /NOT_EVALUATED/,
   );
+  assert.match(
+    route,
+    /rev-parse[\s\S]*HEAD/,
+  );
+  assert.match(
+    route,
+    /--untracked-files=normal/,
+  );
+  assert.match(
+    route,
+    /workingTreeClean/,
+  );
   assert.doesNotMatch(
     route,
     /READY["']/,
