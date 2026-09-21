@@ -20,12 +20,14 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\validate-windows-rele
 
 - `ASTRA-Agent` Scheduled Task exists;
 - `ASTRA-Ollama` Scheduled Task exists;
-- both tasks use `RunLevel Limited`;
-- task actions point to the expected ASTRA/Ollama runner scripts;
-- ASTRA-Agent uses the validated port;
+- exactly one root-level `ASTRA-Agent` task and one root-level `ASTRA-Ollama` task exist;
+- each task has exactly one action and one current-user logon trigger;
+- both tasks use the current Windows user, `Interactive` logon, and `RunLevel Limited`;
+- task PowerShell executable and full argument strings exactly match the installer contract, including ASTRA's validated port;
 - desktop `ASTRA.url` points to the loopback URL;
 - the ASTRA port has a listener;
-- no listener on that port is bound to a non-loopback address;
+- no listener on the ASTRA port is bound to a non-loopback address;
+- Ollama port `11434` has a listener and every listener is loopback-only;
 - the existing read-only `self-check.ps1` succeeds.
 
 ## Evidence
