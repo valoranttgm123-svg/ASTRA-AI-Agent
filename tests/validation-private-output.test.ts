@@ -64,7 +64,7 @@ test("Phase 17A validation writer prepares only private output", () => {
   );
 });
 
-test("Phase 17 preflight stamps evidence with the current Git commit", () => {
+test("Phase 17 preflight stamps clean repository provenance", () => {
   const source = readFileSync(
     path.resolve(
       "scripts",
@@ -76,10 +76,14 @@ test("Phase 17 preflight stamps evidence with the current Git commit", () => {
 
   assert.match(
     source,
-    /rev-parse[\s\S]*HEAD/,
+    /cleanRepositorySnapshot/,
   );
   assert.match(
     source,
-    /commit:\s*currentCommit\(\)/,
+    /assertSameCleanRepositorySnapshot/,
+  );
+  assert.match(
+    source,
+    /workingTreeClean/,
   );
 });
