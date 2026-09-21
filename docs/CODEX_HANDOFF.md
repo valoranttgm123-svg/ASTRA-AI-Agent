@@ -1,5 +1,34 @@
 # ASTRA Codex Handoff
 
+## 2026-09-21 — post-PR #126 core-release handoff
+
+Current merged checkpoint:
+
+`b687fd0588e96f7fa3e0a60d6e45811797be4fff`
+
+Repository preparation now includes:
+
+- PR #121 — read-only target-PC evidence collector;
+- PR #123 — conservative Phase 20 core report generator;
+- PR #124 — browser/Humanoid HIGH private performance evidence capture;
+- PR #125 — safe manual Phase 20 gate recorder;
+- PR #126 — bounded Phase 20 release-context recorder.
+
+This does **not** complete the real release gates. Still required on the actual target/runtime environment:
+
+- Phase 14 Automation Level-2/3 approval + STOP validation;
+- real Sonor / Graphify / Obsidian MEM-X validation;
+- Phase 16 real runtime/browser/Humanoid HIGH measurements;
+- Phase 17 real scenarios A–E and failure variants;
+- Phase 19 install/startup/update/reinstall validation;
+- Phase 20 report generation from the resulting private evidence.
+
+Next Codex session must read:
+
+`docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
+
+If target-PC access is unavailable, improve only repository work that is concretely useful (tests, hardening, deterministic evidence tooling, docs synchronization, real defect fixes). Do not invent local PASS/READY state and do not use Phase 21–30 to bypass unfinished core-release evidence.
+
 ## 2026-09-20 — Phase 13 Command Center MAX
 
 Implemented on `astra/phase13-command-center-max`:
