@@ -36,11 +36,12 @@ Repository-complete / merged on current `main`:
 - target-PC read-only evidence collector — PR #121;
 - Phase 20 conservative core report generator — PR #123;
 - Phase 20 manual gate recorder — PR #125;
-- Phase 20 report context recorder — PR #126.
+- Phase 20 report context recorder — PR #126;
+- Phase 20 evidence-shape/private-path hardening — PR #129.
 
 Current repository checkpoint:
 
-`b687fd0588e96f7fa3e0a60d6e45811797be4fff`
+`e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`
 
 Stale/diverged PR #111 is closed as superseded by PR #119.
 
@@ -61,7 +62,7 @@ Current execution rule:
 - run `release:core-report` repeatedly; any `BLOCKED` result identifies evidence still missing;
 - if target-PC/local access is unavailable, read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`, then continue only concrete repository audits, regression coverage, hardening, documentation synchronization or real defect fixes;
 - do not invent benchmark values, Sonor state, physical STOP results, external-action success, Windows install proof or READY status;
-- do not reimplement PR #123–#126 tooling unless a concrete defect is found;
+- do not reimplement PR #123–#126 tooling or PR #129 evidence-shape/path hardening unless a new concrete defect is found;
 - do not begin Phase 21–30 as a substitute for unfinished Phase 18–20 core evidence.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
