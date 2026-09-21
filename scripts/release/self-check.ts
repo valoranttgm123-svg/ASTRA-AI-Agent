@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import os from "node:os";
-import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { normalizeLoopbackBase } from "../../lib/performance/loopback";
@@ -12,7 +11,9 @@ import {
   extractBrainReadiness,
   type ReadinessCheck,
 } from "../../lib/release/readiness";
-import { resolveReadinessEvidencePath } from "../../lib/release/private-output";
+import {
+  prepareReadinessEvidencePath,
+} from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
 
 type Options = {
@@ -268,9 +269,10 @@ async function main() {
   const baseUrl = normalizeLoopbackBase(
     options.baseUrl,
   );
-  const outputPath = resolveReadinessEvidencePath(
-    options.output,
-  );
+  const outputPath =
+    prepareReadinessEvidencePath(
+      options.output,
+    );
 
   const [brainHttp, automationHttp, serviceHttp] =
     await Promise.all([
@@ -432,9 +434,6 @@ async function main() {
     ],
   };
 
-  await mkdir(path.dirname(outputPath), {
-    recursive: true,
-  });
   await writeFile(
     outputPath,
     JSON.stringify(document, null, 2) + "\n",
