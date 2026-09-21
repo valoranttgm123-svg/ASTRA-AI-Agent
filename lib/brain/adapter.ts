@@ -997,22 +997,6 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
 
   async status(): Promise<AstraBrainStatus> {
     const policy = getPermissionPolicy();
-    if (nvidia.available && nvidiaAutoFallbackEnabled()) {
-      return {
-        ready: true,
-        provider: "nvidia",
-        mode: "cloud",
-        endpoint: nvidia.endpoint,
-        model: nvidia.model ?? undefined,
-        fallback: "routing_only",
-        detail:
-          "Local Hermes/Ollama are unavailable. ASTRA NVIDIA AUTO fallback is explicitly enabled and Nemotron is available.",
-        permissions: policy,
-        capabilities,
-        features,
-      };
-    }
-
     return {
       ready: true,
       provider: "routing_only",
@@ -2196,6 +2180,22 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           (nvidia.available
             ? " NVIDIA Nemotron is available as an optional reasoning provider."
             : ""),
+        permissions: policy,
+        capabilities,
+        features,
+      };
+    }
+
+    if (nvidia.available && nvidiaAutoFallbackEnabled()) {
+      return {
+        ready: true,
+        provider: "nvidia",
+        mode: "cloud",
+        endpoint: nvidia.endpoint,
+        model: nvidia.model ?? undefined,
+        fallback: "routing_only",
+        detail:
+          "Local Hermes/Ollama are unavailable. ASTRA NVIDIA AUTO fallback is explicitly enabled and Nemotron is available.",
         permissions: policy,
         capabilities,
         features,
