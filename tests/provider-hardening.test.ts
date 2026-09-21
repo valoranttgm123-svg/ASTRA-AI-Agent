@@ -391,6 +391,39 @@ test("Phase 15C2 Cloud chat fails closed on malformed empty oversized and HTTP-e
   }
 });
 
+test("Phase 15C2 Cloud refuses insecure remote and credential-bearing provider URLs", async () => {
+  process.env.ASTRA_CLOUD_URL = "http://example.com/v1";
+
+  const insecure = await getCloudStatus(cloudPolicy);
+  assert.equal(insecure.available, false);
+  assert.match(insecure.detail, /HTTPS unless.*loopback/i);
+
+  await assert.rejects(
+    chatWithCloud({
+      input: "fixture",
+      agent,
+      policy: cloudPolicy,
+    }),
+    /HTTPS unless.*loopback/i,
+  );
+
+  process.env.ASTRA_CLOUD_URL =
+    "https://user:password@example.com/v1";
+
+  const credentials = await getCloudStatus(cloudPolicy);
+  assert.equal(credentials.available, false);
+  assert.match(credentials.detail, /embedded credentials/i);
+
+  await assert.rejects(
+    chatWithCloud({
+      input: "fixture",
+      agent,
+      policy: cloudPolicy,
+    }),
+    /embedded credentials/i,
+  );
+});
+
 test("Phase 15C2 incomplete Cloud configuration is unavailable before any chat call", async () => {
   delete process.env.ASTRA_CLOUD_API_KEY;
   const status = await getCloudStatus(cloudPolicy);
