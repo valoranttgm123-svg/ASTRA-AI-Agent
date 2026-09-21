@@ -64,7 +64,7 @@ function parseArgs(
         "Usage:",
         "  npm run release:record-gate -- --gate <id> --status <PASS|FAIL|NOT_RUN> [--evidence <path>] [--note <text>]",
         "",
-        "PASS requires an existing evidence file under .astra/.",
+        "PASS requires current-commit structured evidence under .astra/.",
         "The command never selects the final release status.",
       ].join("\n"));
       process.exit(0);
