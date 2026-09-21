@@ -19,7 +19,7 @@ ASTRA MAX repository work is CI-verified through:
 - Phase 19F ASTRA loopback runtime hardening;
 - Phase 19G bounded startup health gate.
 
-Phase 18A repository RC gate automation is merged as PR #119. Phase 20 now also has conservative evidence/report tooling (PRs #123, #125, #126), while PR #124 adds private browser/Humanoid performance capture. These tools are necessary but not sufficient for release; real target-runtime gates remain.
+Phase 18A repository RC gate automation is merged as PR #119. Phase 20 also has conservative evidence/report tooling, private browser/Humanoid capture, runtime provenance hardening, and the final repository security/release audit through PR #150. See `docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md`. These repository results are necessary but not sufficient for release; real target-runtime gates remain.
 
 Current truthful release state:
 
