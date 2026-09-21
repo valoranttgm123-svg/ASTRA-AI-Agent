@@ -34,7 +34,9 @@ The preflight is read-only and verifies:
 - `git.exe` is available;
 - `package.json` and `package-lock.json` exist;
 - the checkout has `.git` metadata, including Git worktree pointer files;
-- loopback port state is reported;
+- the complete listener set for the requested ASTRA port is inspected;
+- any non-loopback listener on that port fails preflight before install/update/reinstall can mutate the system;
+- a safe existing listener is reported as `LOOPBACK_LISTENING`; otherwise the port is `FREE`;
 - current elevation state is reported;
 - ASTRA does **not** declare administrator privilege as a requirement;
 - existing `.env.local` / `.astra` presence is reported without reading their contents.
@@ -137,7 +139,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\reinstall-local.ps1 -
 
 Reinstall:
 
-- removes ASTRA startup task registrations and the desktop shortcut through the existing uninstaller;
+- runs `npm ci` and `npm run build` **before** removing existing startup integration, unless `-SkipBuild` is explicitly used;
+- if dependency install or production build fails, the existing task registrations/shortcut are left in place;
+- only after a successful build removes ASTRA startup task registrations and the desktop shortcut through the existing uninstaller;
 - does not delete the repository;
 - does not delete Ollama models;
 - does not delete `.env.local`;
