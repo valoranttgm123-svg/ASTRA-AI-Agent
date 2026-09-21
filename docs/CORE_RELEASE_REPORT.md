@@ -12,6 +12,7 @@ It is conservative by design:
 - repository-gate evidence is accepted only from a clean Git working tree and a full Git commit;
 - target-PC, runtime performance, Phase 17 preflight, release context, and every manual PASS must all bind to the same repository commit;
 - target-PC, runtime performance, and Phase 17 preflight also require the running ASTRA server to attest that its embedded build commit matches that repository commit and that the build was created from a clean tree;
+- target-PC evidence must persist that verified runtime identity, contain no duplicate check names, and contain no recorded FAIL/non-PASS check when `ReadOnlyCollectionPassed` is true;
 - target-PC/runtime/preflight evidence must prove a clean working tree; runtime and preflight capture also require the same clean commit at start and completion;
 - manual PASS and release-context recorders refuse dirty working trees and re-check that HEAD stayed unchanged before writing;
 - manual physical gates cannot be marked PASS without:
