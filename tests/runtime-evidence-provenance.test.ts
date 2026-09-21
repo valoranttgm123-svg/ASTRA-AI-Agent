@@ -15,7 +15,7 @@ for (const relativePath of [
 
   test(`${label} verifies runtime identity before and after capture`, () => {
     const verifications =
-      source.match(/verifyRuntimeBuildIdentity/g) ?? [];
+      source.match(/verifyRuntimeBuildIdentity\s*\(/g) ?? [];
 
     assert.ok(
       verifications.length >= 2,
