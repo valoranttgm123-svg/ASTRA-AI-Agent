@@ -30,17 +30,14 @@ Repository-complete / merged on current `main`:
 - Phase 16A runtime performance measurement instrumentation — PR #105;
 - Phase 17A safe full-system preflight instrumentation — PR #106;
 - repository cleanup before RC;
-- Phase 19A read-only readiness self-check — PR #109;
-- Phase 19B safe update/reinstall tooling — PR #110;
-- Phase 19C read-only Windows install preflight — PR #115;
-- Phase 19D read-only release validator — PR #113;
-- Phase 19E Ollama loopback hardening — PR #114;
-- Phase 19F ASTRA loopback runtime hardening — PR #116;
-- Phase 19G bounded startup health gate — PR #117.
+- Phase 18A repository RC gate automation — PR #119;
+- Phase 19A–19G Windows repository tooling/hardening — PRs #109, #110, #115, #113, #114, #116, #117.
 
-Current `main` after P19G:
+Current merged RC-gate checkpoint:
 
-`42657c7affc776057178416c5e777de388b98787`
+`6ac2b98e6f99be68b75769654e78200f54d25fac`
+
+Stale/diverged PR #111 has been closed as superseded by PR #119.
 
 Still local/target-runtime gated:
 
@@ -50,13 +47,11 @@ Still local/target-runtime gated:
 - Phase 17B–P17D real scenario evidence;
 - Phase 19 target-PC install/self-check/update/reinstall/startup verification.
 
-Current implementable repository task:
+Current execution rule:
 
-**Reconcile Phase 18A repository RC gate PR #111 against current `main`.**
-
-PR #111 has successful branch CI but is still draft/open and was created before the later Phase 19 merges. Do not merge it blindly. Refresh/rebase or otherwise reconcile it with current `main`, preserve its non-destructive repository-gate behavior, rerun CI, then merge only if the result remains correct.
-
-After that, continue any independent repository preparation that does not require inventing target-PC evidence. When local PC access is available, prioritize the real validation gates above.
+- if target-PC/local access is available, perform the earliest real validation gate above and record evidence;
+- if target-PC/local access is unavailable, continue only repository/report preparation that does not invent measurements, integration state, or PASS/READY claims;
+- do not start Phase 21–30 as a substitute for unfinished Phase 18–20 core release evidence.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
 
