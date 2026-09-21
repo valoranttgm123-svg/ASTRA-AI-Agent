@@ -15,7 +15,7 @@ Current `main` checkpoint:
 - Phase 17A safe validation preflight: **merged / CI verified**;
 - repository cleanup before RC: **complete**;
 - Phase 19A–19G Windows repository tooling/hardening: **merged through PR #117**;
-- current `main` merge commit after P19G: `42657c7affc776057178416c5e777de388b98787`;
+- current repository checkpoint after Phase 20 evidence tooling: `b687fd0588e96f7fa3e0a60d6e45811797be4fff`;
 - Phase 18A repository RC gate: **merged as PR #119**; stale PR #111 closed as superseded;
 - Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
@@ -285,3 +285,51 @@ Open repository work:
 - private evidence stays under `.astra/readiness/`;
 - release verdict remains `NOT_EVALUATED`;
 - manual approval/STOP, Sonor/Graphify/Obsidian, browser/Humanoid and real external-action evidence remain required.
+
+
+## 2026-09-21 — Phase 20 evidence/report tooling + browser performance capture
+
+### PR #123 — conservative Phase 20 core report tooling
+- merge commit: `536acdf4c74c6d98fbae75faee6f2d9a85aa8996`;
+- CI: **SUCCESS**;
+- `npm run release:core-report`;
+- repository-gate PASS evidence is stored privately under `.astra/release/`;
+- missing/incomplete evidence yields `BLOCKED`;
+- report outputs exact required Phase 20 sections;
+- manual PASS requires real private evidence rather than prose claims.
+
+### PR #124 — browser/Humanoid performance evidence
+- merge commit: `16dc1836cffca8116c92338a10d4c4cb16d6709c`;
+- CI: **SUCCESS** after fixing full `AstraAvatarState` typing;
+- Humanoid V15 adds HIGH-quality private `PERF CAPTURE`;
+- records frame/FPS, P50/P95/max frame time, slow frames, long-task counts, error/warn counts, viewport/DPR, GPU, optional JS heap, particle/state/effect metadata;
+- does not persist prompt/response text, console message text, audio, camera frames, approval tokens or credentials;
+- evidence stays under `.astra/performance/` with `NOT_EVALUATED`.
+
+### PR #125 — safe Phase 20 manual gate recorder
+- merge commit: `73bc822e2bdbdae9126412c9bf1a07369a6b0098`;
+- CI: **SUCCESS**;
+- `npm run release:record-gate`;
+- only six official manual gate IDs are accepted;
+- PASS requires an existing evidence file under `.astra/`;
+- final release status is not selected by this command.
+
+### PR #126 — Phase 20 report context recorder
+- merge commit: `b687fd0588e96f7fa3e0a60d6e45811797be4fff`;
+- CI: **SUCCESS**;
+- `npm run release:record-context`;
+- records bounded/redacted labels for CONNECTED, REQUIRES USER LOGIN and NOT IMPLEMENTED plus external-configuration-required;
+- preserves gate evidence and cannot select READY.
+
+Truth boundary after these merges:
+
+`REPOSITORY EVIDENCE/REPORT TOOLING READY / CORE RELEASE STILL REQUIRES REAL TARGET-PC + PHYSICAL/INTEGRATION EVIDENCE`
+
+Next real work:
+1. update/pull current `main` on target Windows;
+2. run repository gate and target-PC collector;
+3. capture Humanoid HIGH browser scenarios;
+4. execute and record manual gates with real evidence;
+5. run Phase 17 approved scenarios + emergency STOP;
+6. validate real Sonor/Graphify/Obsidian;
+7. run `release:core-report` and fix every remaining BLOCKED gate before any READY claim.

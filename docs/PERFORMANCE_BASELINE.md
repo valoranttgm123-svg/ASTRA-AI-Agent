@@ -65,15 +65,23 @@ Node-side runtime harness results can fill:
 - Automation status latency;
 - optional Ollama ASTRA-stream latency.
 
-Browser/GPU measurements still require the real browser diagnostics for:
+Browser/Humanoid evidence capture tooling is available in the real Humanoid V15 UI:
 
-- GPU;
-- Browser;
-- Display resolution / DPR;
-- Humanoid FPS;
-- CPU/GPU utilization;
-- browser memory;
-- Command Center render behavior.
+1. open `/lab/humanoid` (or the Humanoid overlay);
+2. set `QUALITY HIGH`;
+3. select/trigger the required state;
+4. click `PERF CAPTURE`.
+
+Private evidence is written to `.astra/performance/browser-*.json` and includes frame/FPS timing, viewport/DPR, GPU identity, optional browser JS heap, particle/state metadata, long-task counts, and error/warning counts without persisting message text.
+
+Real execution is still required for:
+
+- actual target GPU/browser/display values;
+- Humanoid HIGH measurements in each required state;
+- browser console review outside the capture window;
+- CPU/GPU utilization if collected by external OS/browser diagnostics;
+- Command Center active render behavior;
+- Automation panel open render behavior.
 
 ## Test environment
 
