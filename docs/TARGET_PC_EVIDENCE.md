@@ -14,6 +14,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evi
 
 Default checks:
 
+- running-build attestation: the ASTRA server must report the same full Git commit as the clean checkout used for collection;
 - Windows install preflight;
 - ASTRA runtime readiness self-check;
 - Windows release invariant validator;
@@ -29,7 +30,7 @@ Its summary always keeps:
 
 `ReleaseVerdict = NOT_EVALUATED`
 
-The collector now requires a clean Git working tree before it starts, re-checks the repository after all probes, and records `WorkingTreeClean`. If the tree becomes dirty or `HEAD` changes during collection, repository provenance fails and `ReadOnlyCollectionPassed` cannot be true. Phase 20 accepts the evidence only when its schema, required PASS checks, loopback port/base URL, clean-tree flag, and commit all match the current repository-gate evidence.
+The collector now requires a clean Git working tree before it starts, verifies that the running ASTRA build reports the same commit and was built from a clean tree, re-checks the repository after all probes, and records `WorkingTreeClean`. If the tree becomes dirty or `HEAD` changes during collection, repository provenance fails and `ReadOnlyCollectionPassed` cannot be true. Phase 20 accepts the evidence only when its schema, required PASS checks, loopback port/base URL, clean-tree flag, and commit all match the current repository-gate evidence.
 
 ## Optional runtime performance probe
 

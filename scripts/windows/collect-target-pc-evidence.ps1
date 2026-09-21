@@ -18,15 +18,17 @@ $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 . (Join-Path $PSScriptRoot "private-evidence-output.ps1")
 $baseUrl = "http://127.0.0.1:$Port"
+$git = (Get-Command git.exe -ErrorAction Stop).Source
+$npm = (Get-Command npm.cmd -ErrorAction Stop).Source
 $results = [System.Collections.Generic.List[object]]::new()
 
 function Get-RepositorySnapshot {
-  $commit = (& git -C $repoRoot rev-parse HEAD 2>$null).Trim()
+  $commit = (& $git -C $repoRoot rev-parse HEAD 2>$null).Trim()
   if ($LASTEXITCODE -ne 0 -or $commit -notmatch "^[0-9a-fA-F]{40}$") {
     throw "Cannot capture target-PC evidence without a valid Git HEAD commit."
   }
 
-  $status = @(& git -C $repoRoot status --porcelain --untracked-files=normal 2>$null)
+  $status = @(& $git -C $repoRoot status --porcelain --untracked-files=normal 2>$null)
   if ($LASTEXITCODE -ne 0) {
     throw "Cannot inspect Git working tree state."
   }
@@ -72,7 +74,7 @@ function Invoke-Npm {
     [string[]]$Arguments
   )
 
-  & npm @Arguments
+  & $npm @Arguments
   if ($LASTEXITCODE -ne 0) {
     throw "npm exited with code $LASTEXITCODE."
   }
@@ -87,6 +89,20 @@ $privateRoot = Initialize-AstraPrivateEvidenceDirectory -RepoRoot $repoRoot -Are
 
 Push-Location -LiteralPath $repoRoot
 try {
+  Invoke-EvidenceCheck -Name "runtime-build-attestation" -Action {
+    $status = Invoke-RestMethod -Uri "$baseUrl/api/agent" -Method Get -TimeoutSec 10
+    if ($null -eq $status.runtime) {
+      throw "ASTRA runtime build identity is missing."
+    }
+    if (
+      [string]$status.runtime.commit -notmatch "^[0-9a-fA-F]{40}$" -or
+      [string]$status.runtime.commit -ine $repositoryStart.Commit -or
+      $status.runtime.workingTreeClean -ne $true
+    ) {
+      throw "Running ASTRA build does not match the clean repository commit."
+    }
+  }
+
   Invoke-EvidenceCheck -Name "windows-preflight" -Action {
     & (Join-Path $PSScriptRoot "preflight-local.ps1") -Port $Port
   }

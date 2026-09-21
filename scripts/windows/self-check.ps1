@@ -23,7 +23,7 @@ try {
     $argsList += @("--output", $Output)
   }
 
-  & npm @argsList
+  & $npm @argsList
   if ($LASTEXITCODE -ne 0) {
     throw "ASTRA readiness self-check failed with exit code $LASTEXITCODE."
   }

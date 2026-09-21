@@ -11,6 +11,7 @@ It is conservative by design:
 - runtime timing alone is not browser/Humanoid performance proof;
 - repository-gate evidence is accepted only from a clean Git working tree and a full Git commit;
 - target-PC, runtime performance, Phase 17 preflight, release context, and every manual PASS must all bind to the same repository commit;
+- target-PC, runtime performance, and Phase 17 preflight also require the running ASTRA server to attest that its embedded build commit matches that repository commit and that the build was created from a clean tree;
 - target-PC/runtime/preflight evidence must prove a clean working tree; runtime and preflight capture also require the same clean commit at start and completion;
 - manual PASS and release-context recorders refuse dirty working trees and re-check that HEAD stayed unchanged before writing;
 - manual physical gates cannot be marked PASS without:
@@ -82,7 +83,7 @@ npm run release:core-report
 
 The tool automatically discovers the latest known private artifacts when explicit paths are not supplied. Phase 17 discovery is restricted to `full-system-preflight-*.json`; unrelated validation JSON cannot replace the preflight artifact.
 
-The report refuses to evaluate READY on a dirty Git working tree or when the repository-gate commit differs from current `HEAD`.
+The report refuses to evaluate READY on a dirty Git working tree, when the repository-gate commit differs from current `HEAD`, or when runtime/performance/preflight evidence came from a stale or dirty ASTRA build.
 
 Outputs:
 

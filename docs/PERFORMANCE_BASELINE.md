@@ -12,6 +12,7 @@ npm run perf:runtime
 
 Default behavior is read-only and loopback-only:
 
+- verifies `/api/agent` reports a clean runtime build from the same Git commit as the checkout;
 - probes `/api/agent`;
 - probes `/api/automation`;
 - probes `/api/automation/service`;
@@ -47,7 +48,7 @@ Ollama measurement records timing only:
 
 It does not persist the chat response text.
 
-Generated `.astra/performance/*.json` files are private runtime artifacts and stay gitignored. Release-grade runtime evidence is captured only from a clean Git working tree and is rejected if `HEAD` changes or the tree becomes dirty before the capture completes.
+Generated `.astra/performance/*.json` files are private runtime artifacts and stay gitignored. Release-grade runtime evidence is captured only from a clean Git working tree, requires the running ASTRA build attestation to match that commit, and is rejected if `HEAD` changes or the tree becomes dirty before the capture completes.
 
 ### Baseline population rule
 

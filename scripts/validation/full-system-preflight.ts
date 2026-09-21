@@ -11,6 +11,7 @@ import {
   assertSameCleanRepositorySnapshot,
   cleanRepositorySnapshot,
 } from "../../lib/release/repository-state";
+import { verifyRuntimeBuildIdentity } from "../../lib/release/runtime-build-identity";
 import { extractValidationEvidence } from "../../lib/validation/evidence";
 import {
   prepareValidationEvidencePath,
@@ -335,6 +336,11 @@ async function main() {
     options.baseUrl,
   );
   const repository = cleanRepositorySnapshot();
+  const runtime = await verifyRuntimeBuildIdentity(
+    baseUrl,
+    repository.commit,
+    options.timeoutMs,
+  );
   const outputPath =
     prepareValidationEvidencePath(
       options.output,
@@ -363,6 +369,7 @@ async function main() {
     commit: finalRepository.commit,
     workingTreeClean:
       finalRepository.workingTreeClean,
+    runtime,
     baseUrl,
     providerChoice: options.provider,
     mode: "chat-preflight-only",

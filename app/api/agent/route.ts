@@ -1,4 +1,5 @@
 import { astraBrain } from "@/lib/brain/adapter";
+import { runtimeBuildIdentity } from "@/lib/release/runtime-build-identity";
 import {
   errorResponse,
   guardRequest,
@@ -9,7 +10,10 @@ import {
 export async function GET(request: Request) {
   try {
     guardRequest(request);
-    return Response.json(await astraBrain.status());
+    return Response.json({
+      ...(await astraBrain.status()),
+      runtime: runtimeBuildIdentity(),
+    });
   } catch (error) {
     return errorResponse(error);
   }
