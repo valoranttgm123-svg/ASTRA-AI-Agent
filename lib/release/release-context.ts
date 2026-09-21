@@ -7,6 +7,8 @@ import {
 import { safePublicDetail } from "../security/redaction";
 
 export type ReleaseContextUpdate = {
+  recordedAt: string;
+  commit: string;
   connected?: string[];
   requiresUserLogin?: string[];
   notImplemented?: string[];
@@ -49,13 +51,22 @@ export function updateReleaseContext(
     current ?? {
       schemaVersion: 1,
       gates: [],
-      connected: [],
-      requiresUserLogin: [],
-      notImplemented: [],
-      externalConfigurationRequired: true,
     };
 
   validateManualReleaseEvidence(base);
+
+  if (
+    Number.isNaN(Date.parse(update.recordedAt))
+  ) {
+    throw new Error(
+      "Release context recordedAt must be a valid timestamp.",
+    );
+  }
+  if (!/^[0-9a-f]{40}$/i.test(update.commit)) {
+    throw new Error(
+      "Release context commit must be a full Git commit.",
+    );
+  }
 
   const connected =
     normalizeLabels(update.connected);
@@ -70,22 +81,22 @@ export function updateReleaseContext(
 
   const next: ManualReleaseEvidence = {
     ...base,
-    ...(connected !== undefined
-      ? { connected }
-      : {}),
-    ...(requiresUserLogin !== undefined
-      ? { requiresUserLogin }
-      : {}),
-    ...(notImplemented !== undefined
-      ? { notImplemented }
-      : {}),
-    ...(update.externalConfigurationRequired !==
-    undefined
-      ? {
-          externalConfigurationRequired:
-            update.externalConfigurationRequired,
-        }
-      : {}),
+    contextRecordedAt: update.recordedAt,
+    contextCommit: update.commit.toLowerCase(),
+    connected:
+      connected ?? base.connected ?? [],
+    requiresUserLogin:
+      requiresUserLogin ??
+      base.requiresUserLogin ??
+      [],
+    notImplemented:
+      notImplemented ??
+      base.notImplemented ??
+      [],
+    externalConfigurationRequired:
+      update.externalConfigurationRequired ??
+      base.externalConfigurationRequired ??
+      true,
   };
 
   validateManualReleaseEvidence(next);

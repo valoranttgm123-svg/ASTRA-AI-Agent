@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
   mkdir,
@@ -106,6 +108,43 @@ function parseArgs(
   };
 }
 
+function currentCommit() {
+  const commit = execFileSync(
+    "git",
+    ["rev-parse", "HEAD"],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    },
+  ).trim();
+
+  if (!/^[0-9a-f]{40}$/i.test(commit)) {
+    throw new Error(
+      "Cannot record release evidence without a valid Git HEAD commit.",
+    );
+  }
+
+  return commit.toLowerCase();
+}
+
+async function evidenceIntegrity(
+  evidencePath: string,
+) {
+  const bytes = await readFile(evidencePath);
+  if (bytes.byteLength <= 0) {
+    throw new Error(
+      "Release evidence file must not be empty.",
+    );
+  }
+
+  return {
+    evidenceBytes: bytes.byteLength,
+    evidenceSha256: createHash("sha256")
+      .update(bytes)
+      .digest("hex"),
+  };
+}
+
 async function main() {
   const options = parseArgs(
     process.argv.slice(2),
@@ -128,13 +167,24 @@ async function main() {
       );
   }
 
-  if (
-    options.status === "PASS" &&
-    !evidencePath
-  ) {
-    throw new Error(
-      "PASS requires --evidence pointing to an existing private file.",
+
+  let integrity:
+    | Awaited<
+        ReturnType<typeof evidenceIntegrity>
+      >
+    | undefined;
+  let commit: string | undefined;
+
+  if (options.status === "PASS") {
+    if (!evidencePath) {
+      throw new Error(
+        "PASS requires --evidence pointing to an existing private file.",
+      );
+    }
+    integrity = await evidenceIntegrity(
+      evidencePath,
     );
+    commit = currentCommit();
   }
 
   const outputPath = path.join(
@@ -169,6 +219,18 @@ async function main() {
         options.status === "NOT_RUN"
           ? undefined
           : evidencePath,
+      evidenceSha256:
+        options.status === "PASS"
+          ? integrity?.evidenceSha256
+          : undefined,
+      evidenceBytes:
+        options.status === "PASS"
+          ? integrity?.evidenceBytes
+          : undefined,
+      commit:
+        options.status === "PASS"
+          ? commit
+          : undefined,
       note: options.note,
     },
   );
@@ -191,6 +253,11 @@ async function main() {
         status: options.status,
         evidencePath:
           evidencePath ?? null,
+        evidenceSha256:
+          integrity?.evidenceSha256 ?? null,
+        evidenceBytes:
+          integrity?.evidenceBytes ?? null,
+        commit: commit ?? null,
         manualManifest:
           outputPath,
         finalReleaseStatus:

@@ -27,6 +27,8 @@ Its summary always keeps:
 
 `ReleaseVerdict = NOT_EVALUATED`
 
+The evidence also records the current Git commit. Phase 20 accepts it only when its schema, required PASS checks, loopback port/base URL, and commit all match the current repository-gate evidence.
+
 ## Optional runtime performance probe
 
 ```powershell

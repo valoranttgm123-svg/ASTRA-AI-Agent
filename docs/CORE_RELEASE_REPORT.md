@@ -9,10 +9,14 @@ It is conservative by design:
 - chat-mode preflight evidence is accepted only when scenarios A–D are all captured as completed;
 - chat-mode preflight alone is not full-system validation;
 - runtime timing alone is not browser/Humanoid performance proof;
+- repository-gate evidence is accepted only from a clean Git working tree and a full Git commit;
+- target-PC, runtime performance, Phase 17 preflight, release context, and every manual PASS must all bind to the same repository commit;
 - manual physical gates cannot be marked PASS without:
   - a valid observation timestamp;
-  - an existing evidence file under `.astra/`;
+  - an existing non-empty evidence file under `.astra/`;
+  - SHA-256 + byte-size integrity metadata recorded by the official gate recorder;
 - evidence inputs must resolve to regular files inside `.astra/`; directory inputs and symlink escapes are rejected;
+- changing a manual evidence file after PASS recording invalidates the report;
 - the tool never reads evidence outside `.astra/`;
 - generated output stays under `.astra/release/`.
 
@@ -40,15 +44,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evi
 
 ## 3. Record real manual/physical gates
 
-Copy the schema example:
+Do **not** hand-edit or copy a PASS manifest. Use the recorder so ASTRA binds the evidence file to its SHA-256, byte size, timestamp, and current Git commit:
 
-`docs/MANUAL_RELEASE_EVIDENCE.example.json`
+```powershell
+npm run release:record-gate -- --gate <gate-id> --status <PASS|FAIL|NOT_RUN> --evidence ".astra/<real-evidence>.json" --note "<review note>"
+```
 
-to the private path:
-
-`.astra/release/manual-gates.json`
-
-A manual gate may be `PASS` only when a corresponding real evidence file exists under `.astra/`.
+A manual gate may be `PASS` only when a corresponding non-empty real evidence file exists under `.astra/`.
 
 Required manual gates:
 
@@ -59,13 +61,23 @@ Required manual gates:
 - `emergency-stop`;
 - `windows-install-update-reinstall`.
 
+Record final-report context on the same commit:
+
+```powershell
+npm run release:record-context -- --connected "Ollama,Codex CLI" --requires-login "" --not-implemented "" --external-config-required true
+```
+
+The context recorder is required for a final READY-class verdict. Missing or stale context keeps the report BLOCKED.
+
 ## 4. Generate the Phase 20 report
 
 ```powershell
 npm run release:core-report
 ```
 
-The tool automatically discovers the latest known private artifacts when explicit paths are not supplied.
+The tool automatically discovers the latest known private artifacts when explicit paths are not supplied. Phase 17 discovery is restricted to `full-system-preflight-*.json`; unrelated validation JSON cannot replace the preflight artifact.
+
+The report refuses to evaluate READY on a dirty Git working tree or when the repository-gate commit differs from current `HEAD`.
 
 Outputs:
 

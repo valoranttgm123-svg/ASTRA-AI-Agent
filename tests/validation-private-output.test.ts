@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 
@@ -39,5 +40,26 @@ test("Phase 17A validation evidence refuses output outside .astra/validation", (
   assert.equal(
     resolveValidationEvidencePath(safe),
     path.resolve(safe),
+  );
+});
+
+
+test("Phase 17 preflight stamps evidence with the current Git commit", () => {
+  const source = readFileSync(
+    path.resolve(
+      "scripts",
+      "validation",
+      "full-system-preflight.ts",
+    ),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /rev-parse[\s\S]*HEAD/,
+  );
+  assert.match(
+    source,
+    /commit:\s*currentCommit\(\)/,
   );
 });

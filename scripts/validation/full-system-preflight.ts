@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
@@ -197,6 +198,25 @@ function elapsedMs(started: number) {
   ) / 1000;
 }
 
+function currentCommit() {
+  try {
+    const commit = execFileSync(
+      "git",
+      ["rev-parse", "HEAD"],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      },
+    ).trim();
+
+    return /^[0-9a-f]{40}$/i.test(commit)
+      ? commit
+      : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 async function runScenario(
   baseUrl: string,
   provider: ProviderChoice,
@@ -348,6 +368,7 @@ async function main() {
   const document = {
     schemaVersion: 1,
     capturedAt: new Date().toISOString(),
+    commit: currentCommit(),
     baseUrl,
     providerChoice: options.provider,
     mode: "chat-preflight-only",
