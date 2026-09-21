@@ -780,3 +780,29 @@ Current repository audit conclusion:
 Do not reimplement PRs #147–#150 without a new reproducible defect. The next meaningful execution is the real target-PC sequence already documented below. Do not start Phase 21–30 as a substitute for unfinished Phase 14/MEM-X/16/17/19/20 gates.
 
 Repository governance note: `main` was not protected and no repository ruleset existed at audit time. Enabling PR-required branch protection + ASTRA CI is recommended as a manual GitHub administrator setting; it is not a runtime release PASS and the available connector cannot configure it.
+
+
+---
+
+## 2026-09-21 — optional NVIDIA provider added after final repository audit
+
+PR #152 / merge commit:
+
+`c151d9d044829e14f66be84a70d56aaf163ea09c`
+
+ASTRA now includes an optional NVIDIA NIM reasoning provider with default model:
+
+`nvidia/nemotron-3-ultra-550b-a55b`
+
+This does **not** change the target-PC release gate order.
+
+Important:
+- NVIDIA is OFF by default;
+- AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`;
+- memory is not sent unless `ASTRA_NVIDIA_INCLUDE_MEMORY=true`;
+- NVIDIA is chat/reasoning only and cannot replace Codex/Tool Runtime for real execution;
+- the real hosted provider is not READY until a valid `NVIDIA_API_KEY` is configured privately on the target PC and status verification passes.
+
+Provider runbook: `docs/NVIDIA_NIM.md`.
+
+Continue Phase 14 / MEM-X / 16 / 17 / 19 / 20 target-PC evidence as previously documented.

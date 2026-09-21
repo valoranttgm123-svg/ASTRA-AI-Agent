@@ -1920,3 +1920,33 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\collect-target-pc-evi
 ```
 
 GitHub governance note: branch `main` was unprotected and no repository ruleset existed at audit time. Recommended manual administrator action is to require PR + ASTRA CI and block force-push/deletion. This is not a substitute for target-PC evidence and cannot be configured with the available connector.
+
+
+---
+
+## 2026-09-21 — NVIDIA NIM / Nemotron Ultra provider merged
+
+PR #152 merged as:
+
+`c151d9d044829e14f66be84a70d56aaf163ea09c`
+
+ASTRA now has an optional explicit NVIDIA provider using:
+
+`nvidia/nemotron-3-ultra-550b-a55b`
+
+Security/privacy defaults:
+
+- `ASTRA_NVIDIA_ENABLED=false`;
+- `ASTRA_NVIDIA_AUTO_FALLBACK=false`;
+- `ASTRA_NVIDIA_INCLUDE_MEMORY=false`;
+- `NVIDIA_API_KEY` belongs only in target-PC `.env.local`;
+- hosted endpoint must be exactly `https://integrate.api.nvidia.com/v1`;
+- NVIDIA is reasoning/chat only and cannot execute side effects.
+
+Repository CI passed build, tests, typecheck, lint, dependency audit and diff-check.
+
+Real NVIDIA hosted availability is still a target-PC configuration gate. Do not claim NVIDIA READY until the user has added a valid API key locally and ASTRA runtime status verifies the exact configured model.
+
+See:
+
+`docs/NVIDIA_NIM.md`
