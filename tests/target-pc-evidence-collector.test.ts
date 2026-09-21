@@ -44,6 +44,8 @@ test("target-PC evidence collector binds evidence to a stable clean repository",
   assert.match(script, /repository-provenance/);
   assert.match(script, /runtime-build-attestation/);
   assert.match(script, /runtime\.commit/i);
+  assert.match(script, /\$script:runtimeIdentity/);
+  assert.match(script, /Runtime\s*=\s*\$runtimeIdentity/);
   assert.match(script, /Get-Command git\.exe/i);
   assert.match(script, /Get-Command npm\.cmd/i);
 });
