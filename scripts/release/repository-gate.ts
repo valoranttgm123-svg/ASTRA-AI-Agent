@@ -8,8 +8,8 @@ import {
 } from "../../lib/release/repository-gate";
 import { resolveReleaseEvidencePath } from "../../lib/release/private-output";
 
-function main() {
-  const workingTree = execFileSync(
+function workingTreeStatus() {
+  return execFileSync(
     "git",
     [
       "status",
@@ -21,12 +21,18 @@ function main() {
       stdio: ["ignore", "pipe", "ignore"],
     },
   ).trim();
+}
 
-  if (workingTree) {
+function assertCleanWorkingTree(stage: string) {
+  if (workingTreeStatus()) {
     throw new Error(
-      "Repository gate requires a clean Git working tree. Commit, stash, or remove untracked repository files before collecting release evidence.",
+      `Repository gate requires a clean Git working tree ${stage}. Commit, stash, or remove untracked repository files before collecting release evidence.`,
     );
   }
+}
+
+function main() {
+  assertCleanWorkingTree("before validation");
 
   for (const step of REPOSITORY_GATE_STEPS) {
     const executable = repositoryGateExecutable(
@@ -63,6 +69,8 @@ function main() {
       );
     }
   }
+
+  assertCleanWorkingTree("after validation");
 
   const outputPath = resolveReleaseEvidencePath(
     undefined,
