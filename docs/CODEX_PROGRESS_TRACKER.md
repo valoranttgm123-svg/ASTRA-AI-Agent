@@ -145,6 +145,10 @@ Repository/report tooling:
 - [x] manual/physical gate recorder with real-evidence requirement — PR #125
 - [x] final-report context recorder (connected/login/not-implemented/external-config) — PR #126
 - [x] browser/Humanoid evidence can be referenced from private `.astra/performance/` artifacts — PR #124
+- [x] Phase 20 evidence-shape + private-path hardening — PR #129
+  - runtime evidence requires valid timestamp + real samples for all required status endpoints;
+  - chat preflight requires completed A–D scenarios with structured evidence;
+  - evidence inputs must resolve to regular files inside the real `.astra/` root; symlink escapes/directories fail closed.
 - [ ] run repository gate and collect real private evidence on target environment
 - [ ] generate final core release report from real evidence
 
