@@ -33,3 +33,12 @@ test("target-PC evidence collector makes performance and chat preflight explicit
   assert.match(script, /validate:preflight/);
   assert.match(script, /StillRequiresRealManualEvidence/);
 });
+
+test("target-PC evidence collector binds evidence to a stable clean repository", () => {
+  assert.match(script, /status --porcelain --untracked-files=normal/);
+  assert.match(script, /WorkingTreeClean/);
+  assert.match(script, /repositoryStart/);
+  assert.match(script, /repositoryEnd/);
+  assert.match(script, /repositoryStable/);
+  assert.match(script, /repository-provenance/);
+});
