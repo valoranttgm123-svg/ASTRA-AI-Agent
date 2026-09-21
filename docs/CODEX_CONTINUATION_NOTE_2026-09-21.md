@@ -1,6 +1,6 @@
 # ChatGPT → Codex Continuation Note — 2026-09-21
 
-This note records the repository truth after merged PRs #123–#126 so a later Codex session can continue without reconstructing the latest state from chat.
+This note records the repository truth after merged PRs #123–#129 so a later Codex session can continue without reconstructing the latest state from chat.
 
 ## Current merged repository state
 
@@ -9,7 +9,18 @@ Merged on `main`:
 - PR #123 — conservative Phase 20 core release report tooling;
 - PR #124 — private browser/Humanoid HIGH performance evidence capture;
 - PR #125 — safe manual Phase 20 gate recorder;
-- PR #126 — Phase 20 report context recorder.
+- PR #126 — Phase 20 report context recorder;
+- PR #127 — repository handoff/evidence-pipeline synchronization + this Codex continuation note;
+- PR #129 — Phase 20 evidence-shape and private-path hardening.
+
+PR #129 closes three repository-side fail-open/weak-validation classes:
+- `null`, empty, or partial runtime performance objects cannot count as captured evidence;
+- Phase 17 chat preflight counts only when scenarios A–D are all completed with structured evidence;
+- evidence inputs must resolve to real regular files inside the real `.astra/` root; directory inputs and symlink escapes are rejected.
+
+Current merged checkpoint after PR #129:
+
+`e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`
 
 These additions improve evidence collection/reporting only. They do **not** prove target-PC readiness by themselves.
 
@@ -107,7 +118,7 @@ Missing/incomplete evidence must remain `BLOCKED`.
 
 Codex may continue only repository-side work that is independently useful and does not fabricate evidence. In particular:
 
-- audit PR #123–#126 tooling for missing regression coverage or inconsistent docs;
+- audit the remaining release tooling for concrete defects, but do not reimplement the PR #129 evidence-shape/path hardening;
 - keep AGENTS / tracker / worklog / handoff / release checklist synchronized;
 - improve error handling, validation, redaction, path confinement, and deterministic report generation if a concrete defect is found;
 - improve target-PC runbooks or evidence parsing when supported by tests;
