@@ -16,7 +16,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$privateRoot = Join-Path $repoRoot ".astra\readiness"
+$privateEvidence = Join-Path $PSScriptRoot "private-evidence.ps1"
+. $privateEvidence
 $baseUrl = "http://127.0.0.1:$Port"
 $results = [System.Collections.Generic.List[object]]::new()
 
