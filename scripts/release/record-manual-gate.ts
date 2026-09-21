@@ -16,6 +16,7 @@ import {
   upsertManualGate,
 } from "../../lib/release/manual-evidence";
 import {
+  assertExistingPrivateAstraEvidenceFile,
   assertPrivateAstraEvidencePath,
   releaseEvidenceRoot,
 } from "../../lib/release/private-output";
@@ -112,15 +113,19 @@ async function main() {
 
   let evidencePath: string | undefined;
   if (options.evidence) {
-    evidencePath =
+    const candidate =
       assertPrivateAstraEvidencePath(
         options.evidence,
       );
-    if (!existsSync(evidencePath)) {
+    if (!existsSync(candidate)) {
       throw new Error(
         `Evidence file does not exist: ${options.evidence}`,
       );
     }
+    evidencePath =
+      assertExistingPrivateAstraEvidenceFile(
+        candidate,
+      );
   }
 
   if (
