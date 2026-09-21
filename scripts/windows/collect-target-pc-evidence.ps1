@@ -16,7 +16,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$privateRoot = Join-Path $repoRoot ".astra\readiness"
+. (Join-Path $PSScriptRoot "private-evidence-output.ps1")
 $baseUrl = "http://127.0.0.1:$Port"
 $results = [System.Collections.Generic.List[object]]::new()
 
@@ -83,7 +83,7 @@ if (-not $repositoryStart.WorkingTreeClean) {
   throw "Target-PC evidence requires a clean Git working tree."
 }
 
-New-Item -ItemType Directory -Path $privateRoot -Force | Out-Null
+$privateRoot = Initialize-AstraPrivateEvidenceDirectory -RepoRoot $repoRoot -Area "readiness"
 
 Push-Location -LiteralPath $repoRoot
 try {
@@ -168,7 +168,7 @@ $workingTreeClean = $repositoryStable
 $failed = @($results | Where-Object { $_.Status -ne "PASS" })
 $collectionPassed = ($failed.Count -eq 0 -and $workingTreeClean)
 $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH-mm-ssZ")
-$evidencePath = Join-Path $privateRoot "target-pc-evidence-$timestamp.json"
+$evidencePath = Resolve-AstraPrivateEvidenceFile -RepoRoot $repoRoot -Area "readiness" -FileName "target-pc-evidence-$timestamp.json"
 
 $evidence = [ordered]@{
   SchemaVersion = 1
