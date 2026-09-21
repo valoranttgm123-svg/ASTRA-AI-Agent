@@ -36,6 +36,10 @@ const targetPcEvidence = {
   Port: 3017,
   ReadOnlyCollectionPassed: true,
   ReleaseVerdict: "NOT_EVALUATED",
+  Runtime: {
+    Commit: COMMIT,
+    WorkingTreeClean: true,
+  },
   Checks: [
     "runtime-build-attestation",
     "windows-preflight",
@@ -346,6 +350,26 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
   for (const evidence of [
     {
       ...completeEvidence(),
+      targetPc: {
+        ...targetPcEvidence,
+        Runtime: {
+          Commit: OTHER_COMMIT,
+          WorkingTreeClean: true,
+        },
+      },
+    },
+    {
+      ...completeEvidence(),
+      targetPc: {
+        ...targetPcEvidence,
+        Runtime: {
+          Commit: COMMIT,
+          WorkingTreeClean: false,
+        },
+      },
+    },
+    {
+      ...completeEvidence(),
       performance: {
         ...runtimePerformanceEvidence,
         runtime: {
@@ -369,6 +393,42 @@ test("Phase 20 rejects evidence from a stale or dirty running build", () => {
       evidence,
       new Date(),
       COMMIT,
+    );
+    assert.equal(
+      report.sections.RELEASE_STATUS,
+      "BLOCKED",
+    );
+  }
+});
+
+test("Phase 20 rejects contradictory or duplicate target-PC checks", () => {
+  for (const Checks of [
+    [
+      ...targetPcEvidence.Checks,
+      {
+        Name: "optional-extra-check",
+        Status: "FAIL",
+      },
+    ],
+    [
+      ...targetPcEvidence.Checks,
+      {
+        Name: "windows-preflight",
+        Status: "PASS",
+      },
+    ],
+  ]) {
+    const report = evaluateCoreRelease({
+      ...completeEvidence(),
+      targetPc: {
+        ...targetPcEvidence,
+        Checks,
+      },
+    });
+
+    assert.equal(
+      report.gates.targetPcReadOnly,
+      false,
     );
     assert.equal(
       report.sections.RELEASE_STATUS,
