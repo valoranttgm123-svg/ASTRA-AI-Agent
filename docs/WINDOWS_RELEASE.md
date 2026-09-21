@@ -87,6 +87,8 @@ Evidence is written under:
 
 `.astra/readiness/`
 
+Windows-native evidence writers use a shared private-output guard. A symlink, junction, or other NTFS reparse point at `.astra`, `.astra/readiness`, or an existing target evidence file is rejected before the writer stores JSON.
+
 The self-check does not start or stop services, edit configuration, approve actions, read secret values from `.env.local`, or select the Phase 20 release status.
 
 ## Safe update
