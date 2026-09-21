@@ -29,6 +29,12 @@ import {
   cloudMayReceiveMemory,
   getCloudStatus,
 } from "./cloud";
+import {
+  chatWithNvidia,
+  getNvidiaStatus,
+  nvidiaAutoFallbackEnabled,
+  nvidiaMayReceiveMemory,
+} from "./nvidia";
 import { chatWithHermes, getHermesStatus } from "./hermes";
 import type { AstraMemoryContext } from "./memory";
 import { getUnifiedMemoryContext } from "./unified-memory";
@@ -433,6 +439,8 @@ function providerLabel(provider: AstraBrainProvider) {
       return "Ollama";
     case "codex":
       return "Codex";
+    case "nvidia":
+      return "NVIDIA Nemotron";
     case "cloud":
       return "Cloud";
     default:
@@ -586,9 +594,11 @@ function emitLiveProviderStart(
     detail:
       provider === "codex"
         ? "ASTRA selected the local authenticated Codex CLI engineering specialist."
-        : provider === "cloud"
-          ? "ASTRA selected the explicitly opted-in cloud fallback."
-          : `ASTRA Brain selected the local ${label} provider.`,
+        : provider === "nvidia"
+          ? "ASTRA selected the explicitly enabled NVIDIA NIM reasoning provider."
+          : provider === "cloud"
+            ? "ASTRA selected the explicitly opted-in cloud fallback."
+            : `ASTRA Brain selected the local ${label} provider.`,
   });
   emitLiveEvent(options, {
     type: "agent.started",
@@ -686,9 +696,11 @@ function providerEvents(
       detail:
         provider === "codex"
           ? "ASTRA selected the local authenticated Codex CLI engineering specialist."
-          : provider === "cloud"
-            ? "ASTRA selected the explicitly opted-in cloud fallback."
-            : `ASTRA Brain selected the local ${label} provider.`,
+          : provider === "nvidia"
+            ? "ASTRA selected the explicitly enabled NVIDIA NIM reasoning provider."
+            : provider === "cloud"
+              ? "ASTRA selected the explicitly opted-in cloud fallback."
+              : `ASTRA Brain selected the local ${label} provider.`,
     },
     {
       id: `${now}-started`,
@@ -790,6 +802,7 @@ function planExecutionEventFields(
     event.provider === "codex" ||
     event.provider === "ollama" ||
     event.provider === "hermes" ||
+    event.provider === "nvidia" ||
     event.provider === "cloud"
       ? event.provider
       : undefined;
@@ -896,6 +909,7 @@ function providerFromPlanEvents(events: AstraBrainEvent[]): AstraBrainProvider {
   if (events.some((event) => event.provider === "codex")) return "codex";
   if (events.some((event) => event.provider === "hermes")) return "hermes";
   if (events.some((event) => event.provider === "ollama")) return "ollama";
+  if (events.some((event) => event.provider === "nvidia")) return "nvidia";
   if (events.some((event) => event.provider === "cloud")) return "cloud";
   return "routing_only";
 }
@@ -983,6 +997,22 @@ class RoutingOnlyBrainAdapter implements AstraBrain {
 
   async status(): Promise<AstraBrainStatus> {
     const policy = getPermissionPolicy();
+    if (nvidia.available && nvidiaAutoFallbackEnabled()) {
+      return {
+        ready: true,
+        provider: "nvidia",
+        mode: "cloud",
+        endpoint: nvidia.endpoint,
+        model: nvidia.model ?? undefined,
+        fallback: "routing_only",
+        detail:
+          "Local Hermes/Ollama are unavailable. ASTRA NVIDIA AUTO fallback is explicitly enabled and Nemotron is available.",
+        permissions: policy,
+        capabilities,
+        features,
+      };
+    }
+
     return {
       ready: true,
       provider: "routing_only",
@@ -1098,7 +1128,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
     }
 
-    if (preferredProvider !== "codex") {
+    if (preferredProvider === "auto" || preferredProvider === "ollama") {
       emitLiveProviderStart(selected, "ollama", options);
       try {
         const result = await chatWithOllama({
@@ -1132,6 +1162,61 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         const detail = "Ollama: " + safeErrorDetail(error, "unavailable", 700);
         failures.push(detail);
         emitLiveProviderUnavailable(selected, "ollama", detail, options);
+      }
+    }
+
+
+    if (
+      preferredProvider === "nvidia" ||
+      (preferredProvider === "auto" && nvidiaAutoFallbackEnabled())
+    ) {
+      emitLiveProviderStart(selected, "nvidia", options);
+      try {
+        const nvidiaContext = [
+          context.skillOnlyContext,
+          nvidiaMayReceiveMemory() ? context.memory.text : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        const result = await chatWithNvidia({
+          input,
+          agent,
+          context: nvidiaContext,
+          policyText: context.policyText,
+          signal: options?.signal,
+        });
+        emitLiveProviderComplete(selected, "nvidia", options);
+
+        return {
+          ok: true,
+          agent: selected,
+          agentName: agent.name,
+          state: "completed",
+          message: result.message,
+          requiresApproval: false,
+          brain: {
+            provider: "nvidia",
+            execution: "executed",
+            requestedMode: "chat",
+            route,
+            visualNodes: route.map(visualNodeForAgent),
+            events: providerEvents(selected, "nvidia", context),
+            ...envelopeContext(context),
+          },
+        };
+      } catch (error) {
+        options?.signal?.throwIfAborted();
+        const detail =
+          "NVIDIA: " +
+          safeErrorDetail(error, "unavailable", 700);
+        failures.push(detail);
+        emitLiveProviderUnavailable(
+          selected,
+          "nvidia",
+          detail,
+          options,
+        );
       }
     }
 
@@ -1257,6 +1342,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       return blocked(
         "Automation execution requires a bounded plan, but the Strategist did not produce one.",
         "requirePlan is active; ASTRA will not fall through to a provider executor without a validated plan.",
+      );
+    }
+
+    if (preferredProvider === "nvidia") {
+      return blocked(
+        "NVIDIA Nemotron dipilih untuk chat/reasoning, bukan eksekusi side effect. Gunakan Codex atau Auto untuk perubahan nyata.",
+        "Explicit NVIDIA mode is reasoning-only. Real execution must stay behind ASTRA Tool Runtime/Codex approval paths.",
       );
     }
 
@@ -1743,6 +1835,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       hermes,
       ollama,
       codex,
+      nvidia,
       cloud,
       memory,
       skills,
@@ -1751,6 +1844,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       getHermesStatus(),
       getOllamaStatus(),
       getCodexStatus(policy),
+      getNvidiaStatus(),
       getCloudStatus(policy),
       getUnifiedMemoryContext("ASTRA status"),
       getSkillContext("chief_of_staff"),
@@ -1776,6 +1870,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         endpoint: codex.endpoint,
         model: codex.model ?? undefined,
       },
+      nvidia: {
+        enabled: nvidia.enabled,
+        available: nvidia.available,
+        detail: nvidia.detail,
+        endpoint: nvidia.endpoint,
+        model: nvidia.model ?? undefined,
+      },
       research: {
         enabled: true,
         available:
@@ -1794,11 +1895,17 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       business: {
         enabled: true,
         available:
-          (hermes.available || ollama.available || (cloud.enabled && cloud.available)) &&
+          (hermes.available ||
+          ollama.available ||
+          nvidia.available ||
+          (cloud.enabled && cloud.available)) &&
           toolRuntime.get("business.finance.metrics")?.availability === "READY" &&
           toolRuntime.get("analytics.summary")?.availability === "READY",
         state:
-          hermes.available || ollama.available || (cloud.enabled && cloud.available)
+          hermes.available ||
+          ollama.available ||
+          nvidia.available ||
+          (cloud.enabled && cloud.available)
             ? toolRuntime.get("business.finance.metrics")?.availability === "READY" &&
               toolRuntime.get("analytics.summary")?.availability === "READY"
               ? "READY"
@@ -1806,7 +1913,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             : "OFFLINE",
         detail:
           "Business specialist reasoning=" +
-          (hermes.available || ollama.available || (cloud.enabled && cloud.available)
+          (hermes.available ||
+          ollama.available ||
+          nvidia.available ||
+          (cloud.enabled && cloud.available)
             ? "READY"
             : "OFFLINE") +
           ", finance=" +
@@ -1940,6 +2050,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const reasoningReady =
       hermes.available ||
       ollama.available ||
+      nvidia.available ||
       (cloud.enabled && cloud.available);
     const businessState: AstraCapabilityState = reasoningReady
       ? "READY"
@@ -2076,8 +2187,15 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         mode: "local",
         endpoint: ollama.endpoint,
         model: ollama.model ?? undefined,
-        fallback: "routing_only",
-        detail: `${hermes.detail} ASTRA is using local Ollama model ${ollama.model}.`,
+        fallback:
+          nvidia.available && nvidiaAutoFallbackEnabled()
+            ? "nvidia"
+            : "routing_only",
+        detail:
+          `${hermes.detail} ASTRA is using local Ollama model ${ollama.model}.` +
+          (nvidia.available
+            ? " NVIDIA Nemotron is available as an optional reasoning provider."
+            : ""),
         permissions: policy,
         capabilities,
         features,
