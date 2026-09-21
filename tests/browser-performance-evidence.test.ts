@@ -33,6 +33,12 @@ test("browser performance evidence parser bounds and preserves only structured t
         "2026-09-21T07:00:00.000Z",
       scenario: "thinking",
       releaseVerdict: "READY",
+      runtime: {
+        commit: "a".repeat(40),
+        workingTreeClean: true,
+        verifiedAtStart: true,
+        verifiedAtCompletion: true,
+      },
       frame: {
         sampleCount: 600,
         durationMs: 10000,
@@ -85,6 +91,78 @@ test("browser performance evidence parser bounds and preserves only structured t
     "responseText" in result,
     false,
   );
+});
+
+test("browser performance evidence requires clean start/end runtime provenance", () => {
+  const base = {
+    capturedAt:
+      "2026-09-21T07:00:00.000Z",
+    scenario: "idle",
+    releaseVerdict: "NOT_EVALUATED",
+    runtime: {
+      commit: "a".repeat(40),
+      workingTreeClean: true,
+      verifiedAtStart: true,
+      verifiedAtCompletion: true,
+    },
+    frame: {
+      sampleCount: 2,
+      durationMs: 32,
+      averageFps: 62.5,
+      p50FrameMs: 16,
+      p95FrameMs: 16,
+      maxFrameMs: 16,
+      slowFramesOver25Ms: 0,
+    },
+    environment: {
+      userAgent: "browser",
+      viewport: {
+        width: 1280,
+        height: 720,
+        dpr: 1,
+      },
+      gpu: null,
+      jsHeap: null,
+    },
+    humanoid: {
+      quality: "high",
+      effects: true,
+      particleCount: 8000,
+      reducedMotion: false,
+      cameraEnabled: false,
+      assemblyActive: false,
+      shockwaveActive: false,
+    },
+    diagnostics: {
+      longTaskCount: 0,
+      longTaskTotalMs: 0,
+      windowErrorCount: 0,
+      unhandledRejectionCount: 0,
+      consoleErrorCount: 0,
+      consoleWarnCount: 0,
+    },
+  };
+
+  for (const runtime of [
+    undefined,
+    {
+      ...base.runtime,
+      workingTreeClean: false,
+    },
+    {
+      ...base.runtime,
+      verifiedAtCompletion: false,
+    },
+  ]) {
+    assert.throws(
+      () =>
+        parseBrowserPerformanceEvidence({
+          ...base,
+          runtime,
+        }),
+      /runtime build identity/i,
+    );
+  }
 });
 
 test("browser performance evidence rejects invalid frame inputs and scenarios", () => {
