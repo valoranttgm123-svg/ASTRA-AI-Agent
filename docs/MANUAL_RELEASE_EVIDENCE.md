@@ -26,7 +26,7 @@ npm run release:browser-bundle
 npm run release:record-gate -- --gate browser-humanoid-performance --status PASS --evidence ".astra/performance/browser-release-bundle-<timestamp>.json" --note "Reviewed all six HIGH browser scenarios and console state."
 ```
 
-PASS is rejected unless the referenced evidence is a non-empty regular file inside the real `.astra/` tree. The recorder stores its SHA-256, byte size, observation timestamp, and current Git commit.
+PASS is rejected unless the referenced evidence is a non-empty regular file inside the real `.astra/` tree. The recorder also requires a clean Git working tree, re-checks that `HEAD` and cleanliness remain stable before writing, then stores the evidence SHA-256, byte size, observation timestamp, and current Git commit.
 
 For `browser-humanoid-performance`, PASS additionally requires a valid current-commit six-scenario browser release bundle. A single IDLE/LISTENING/THINKING/SPEAKING/Assembly/Shockwave capture is never sufficient by itself. If the file changes afterward, `release:core-report` rejects the PASS until it is reviewed and recorded again.
 
