@@ -15,7 +15,7 @@ Current `main` checkpoint:
 - Phase 17A safe validation preflight: **merged / CI verified**;
 - repository cleanup before RC: **complete**;
 - Phase 19A–19G Windows repository tooling/hardening: **merged through PR #117**;
-- current repository checkpoint after Phase 20 evidence tooling: `b687fd0588e96f7fa3e0a60d6e45811797be4fff`;
+- current repository checkpoint after Phase 20 evidence hardening: `e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`;
 - Phase 18A repository RC gate: **merged as PR #119**; stale PR #111 closed as superseded;
 - Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
@@ -333,3 +333,45 @@ Next real work:
 5. run Phase 17 approved scenarios + emergency STOP;
 6. validate real Sonor/Graphify/Obsidian;
 7. run `release:core-report` and fix every remaining BLOCKED gate before any READY claim.
+
+
+## 2026-09-21 — Phase 20 evidence-shape/private-path hardening
+
+- PR: **#129**
+- merge commit: `e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`
+- CI: **SUCCESS**
+- files/components materially changed:
+  - `lib/release/core-report.ts`;
+  - `lib/release/private-output.ts`;
+  - `scripts/release/core-report.ts`;
+  - `scripts/release/record-manual-gate.ts`;
+  - `tests/core-release-report.test.ts`;
+  - `tests/release-evidence-path.test.ts`;
+  - `docs/CORE_RELEASE_REPORT.md`.
+- findings fixed:
+  - JavaScript `typeof null === "object"` could let malformed runtime performance evidence count as captured;
+  - any non-empty Phase 17 scenario array could previously count as chat-preflight captured instead of requiring completed A–D;
+  - lexical-only `.astra/` evidence confinement could allow an inner symlink to resolve outside the private root;
+  - directory paths could satisfy existence checks even though release evidence must be a real file.
+- final behavior:
+  - required runtime status endpoints must contain non-empty finite samples;
+  - completion timestamp must be valid;
+  - A–D chat-preflight scenarios must all be completed with structured evidence;
+  - evidence inputs resolve through realpath and must remain regular files inside the real `.astra/` root;
+  - regression coverage locks malformed evidence, partial scenarios, directories and symlink escapes.
+- validation:
+  - production build PASS;
+  - 246 unit/integration tests PASS;
+  - typecheck PASS;
+  - lint PASS;
+  - high-severity dependency audit PASS;
+  - PR diff-check PASS.
+- external validation still missing:
+  - Phase 14 real approval/STOP;
+  - MEM-X real Sonor/Graphify/Obsidian;
+  - Phase 16 target/browser measurements;
+  - Phase 17 real approved scenarios + emergency STOP;
+  - Phase 19 install/update/reinstall/startup;
+  - Phase 20 final evidence-backed verdict.
+- exact next task:
+  - use the target PC to collect real evidence; if target-PC access is unavailable, continue only newly discovered concrete repository defects and do not fabricate PASS/READY.
