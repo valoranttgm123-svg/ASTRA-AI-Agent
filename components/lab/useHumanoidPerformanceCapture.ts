@@ -16,7 +16,10 @@ type Snapshot = {
     | "idle"
     | "listening"
     | "thinking"
-    | "speaking";
+    | "speaking"
+    | "executing"
+    | "success"
+    | "error";
   quality: "low" | "high";
   effects: boolean;
   particleCount: number | null;
