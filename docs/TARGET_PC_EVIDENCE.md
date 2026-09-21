@@ -23,6 +23,8 @@ The collector writes only private evidence under:
 
 `.astra/readiness/`
 
+Before writing, the Windows evidence helper rejects a symlink, junction, or other NTFS reparse point at `.astra`, `.astra/readiness`, or an existing evidence target. This mirrors the Node-side private evidence boundary and prevents Windows evidence from being redirected outside the private runtime directory.
+
 Its summary always keeps:
 
 `ReleaseVerdict = NOT_EVALUATED`
