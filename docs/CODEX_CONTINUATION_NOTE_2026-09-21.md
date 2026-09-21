@@ -24,7 +24,7 @@ PR #129 closes three repository-side fail-open/weak-validation classes:
 
 PRs #142–#145 close the remaining concrete stale-build/provenance gaps found in the 2026-09-21 repository audit.
 
-Current merged checkpoint after PR #145:
+Latest implementation checkpoint after PR #145 (before the final docs-only handoff):
 
 `03073fe8a95b7064b059aadcd4b9ff933c8c73e8`
 
