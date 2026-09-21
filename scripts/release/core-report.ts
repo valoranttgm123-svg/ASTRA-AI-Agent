@@ -14,6 +14,7 @@ import {
   type ManualReleaseEvidence,
 } from "../../lib/release/core-report";
 import {
+  assertExistingPrivateAstraEvidenceFile,
   assertPrivateAstraEvidencePath,
   resolveReleaseEvidencePath,
 } from "../../lib/release/private-output";
@@ -93,9 +94,17 @@ async function latestMatching(
 
 async function readJson<T>(rawPath?: string): Promise<T | null> {
   if (!rawPath) return null;
-  const filePath = assertPrivateAstraEvidencePath(rawPath);
-  if (!existsSync(filePath)) return null;
-  return JSON.parse(await readFile(filePath, "utf8")) as T;
+  const candidate =
+    assertPrivateAstraEvidencePath(rawPath);
+  if (!existsSync(candidate)) return null;
+
+  const filePath =
+    assertExistingPrivateAstraEvidenceFile(
+      candidate,
+    );
+  return JSON.parse(
+    await readFile(filePath, "utf8"),
+  ) as T;
 }
 
 async function main() {
@@ -145,15 +154,18 @@ async function main() {
         `PASS manual gate ${gate.id} is missing evidencePath.`,
       );
     }
-    const referencedEvidence =
+    const referencedCandidate =
       assertPrivateAstraEvidencePath(
         gate.evidencePath,
       );
-    if (!existsSync(referencedEvidence)) {
+    if (!existsSync(referencedCandidate)) {
       throw new Error(
         `PASS manual gate ${gate.id} references missing evidence: ${gate.evidencePath}`,
       );
     }
+    assertExistingPrivateAstraEvidenceFile(
+      referencedCandidate,
+    );
   }
 
   const evidence: CoreReleaseEvidence = {
