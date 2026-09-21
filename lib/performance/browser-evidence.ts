@@ -227,8 +227,13 @@ export function parseBrowserPerformanceEvidence(
     | Record<string, unknown>
     | undefined;
 
+  if (!runtimeRaw) {
+    throw new Error(
+      "Browser runtime build identity is missing.",
+    );
+  }
+
   if (
-    !runtimeRaw ||
     !frameRaw ||
     !envRaw ||
     !humanoidRaw ||
