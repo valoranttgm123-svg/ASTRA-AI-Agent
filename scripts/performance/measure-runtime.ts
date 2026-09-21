@@ -16,6 +16,9 @@ import {
   prepareRuntimePerformancePath,
 } from "../../lib/performance/private-output";
 import {
+  verifyRuntimeBuildIdentity,
+} from "../../lib/release/runtime-build-identity";
+import {
   assertSameCleanRepositorySnapshot,
   cleanRepositorySnapshot,
   type CleanRepositorySnapshot,
@@ -387,6 +390,11 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const baseUrl = normalizeLoopbackBase(options.baseUrl);
   const repository = cleanRepositorySnapshot();
+  const runtime = await verifyRuntimeBuildIdentity(
+    baseUrl,
+    repository.commit,
+    options.timeoutMs,
+  );
   const startedAt = new Date().toISOString();
 
   const endpoints = [
@@ -441,6 +449,7 @@ async function main() {
     environment: environmentSnapshot(
       finalRepository,
     ),
+    runtime,
     configuration: {
       statusSamples: options.samples,
       timeoutMs: options.timeoutMs,
