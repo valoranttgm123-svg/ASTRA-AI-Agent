@@ -47,7 +47,7 @@ Ollama measurement records timing only:
 
 It does not persist the chat response text.
 
-Generated `.astra/performance/*.json` files are private runtime artifacts and stay gitignored.
+Generated `.astra/performance/*.json` files are private runtime artifacts and stay gitignored. Release-grade runtime evidence is captured only from a clean Git working tree and is rejected if `HEAD` changes or the tree becomes dirty before the capture completes.
 
 ### Baseline population rule
 

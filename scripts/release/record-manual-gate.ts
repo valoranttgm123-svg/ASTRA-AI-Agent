@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
@@ -26,6 +25,11 @@ import {
   releaseEvidenceRoot,
 } from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
+import {
+  assertSameCleanRepositorySnapshot,
+  cleanRepositorySnapshot,
+  type CleanRepositorySnapshot,
+} from "../../lib/release/repository-state";
 
 type Options = {
   gate: ManualGateId;
@@ -111,25 +115,6 @@ function parseArgs(
   };
 }
 
-function currentCommit() {
-  const commit = execFileSync(
-    "git",
-    ["rev-parse", "HEAD"],
-    {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    },
-  ).trim();
-
-  if (!/^[0-9a-f]{40}$/i.test(commit)) {
-    throw new Error(
-      "Cannot record release evidence without a valid Git HEAD commit.",
-    );
-  }
-
-  return commit.toLowerCase();
-}
-
 async function evidenceIntegrity(
   evidencePath: string,
 ) {
@@ -177,6 +162,9 @@ async function main() {
       >
     | undefined;
   let commit: string | undefined;
+  let repository:
+    | CleanRepositorySnapshot
+    | undefined;
 
   if (options.status === "PASS") {
     if (!evidencePath) {
@@ -184,10 +172,11 @@ async function main() {
         "PASS requires --evidence pointing to an existing private file.",
       );
     }
+    repository = cleanRepositorySnapshot();
     integrity = await evidenceIntegrity(
       evidencePath,
     );
-    commit = currentCommit();
+    commit = repository.commit;
 
     if (
       options.gate ===
@@ -258,6 +247,12 @@ async function main() {
       note: options.note,
     },
   );
+
+  if (repository) {
+    assertSameCleanRepositorySnapshot(
+      repository,
+    );
+  }
 
   await writeFile(
     outputPath,

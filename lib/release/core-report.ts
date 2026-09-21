@@ -50,6 +50,7 @@ export type CoreReleaseEvidence = {
     SchemaVersion?: number;
     CapturedAt?: string;
     Commit?: string;
+    WorkingTreeClean?: boolean;
     BaseUrl?: string;
     Port?: number;
     ReadOnlyCollectionPassed?: boolean;
@@ -66,6 +67,7 @@ export type CoreReleaseEvidence = {
     schemaVersion?: number;
     capturedAt?: string;
     commit?: string;
+    workingTreeClean?: boolean;
     mode?: string;
     scenarios?: unknown[];
   } | null;
@@ -241,6 +243,7 @@ function hasTargetPcEvidence(
   if (
     targetPc?.SchemaVersion !== 1 ||
     targetPc.ReadOnlyCollectionPassed !== true ||
+    targetPc.WorkingTreeClean !== true ||
     targetPc.ReleaseVerdict !== "NOT_EVALUATED" ||
     !isValidTimestamp(targetPc.CapturedAt) ||
     !sameCommit(targetPc.Commit, expectedCommit) ||
@@ -313,7 +316,8 @@ function hasRuntimePerformanceEvidence(
     !sameCommit(
       performance.environment.commit,
       expectedCommit,
-    )
+    ) ||
+    performance.environment.workingTreeClean !== true
   ) {
     return false;
   }
@@ -358,6 +362,7 @@ function hasChatPreflightEvidence(
     validation?.schemaVersion !== 1 ||
     validation.mode !== "chat-preflight-only" ||
     !isValidTimestamp(validation.capturedAt) ||
+    validation.workingTreeClean !== true ||
     !sameCommit(validation.commit, expectedCommit)
   ) {
     return false;

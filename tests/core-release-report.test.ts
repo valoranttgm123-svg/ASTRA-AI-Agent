@@ -31,6 +31,7 @@ const targetPcEvidence = {
   SchemaVersion: 1,
   CapturedAt: "2026-09-21T00:01:00.000Z",
   Commit: COMMIT,
+  WorkingTreeClean: true,
   BaseUrl: "http://127.0.0.1:3017",
   Port: 3017,
   ReadOnlyCollectionPassed: true,
@@ -51,6 +52,7 @@ const runtimePerformanceEvidence = {
   completedAt: "2026-09-21T00:02:00.000Z",
   environment: {
     commit: COMMIT,
+    workingTreeClean: true,
   },
   statusMeasurements: {
     "/api/agent": {
@@ -69,6 +71,7 @@ const fullChatPreflightEvidence = {
   schemaVersion: 1,
   capturedAt: "2026-09-21T00:03:00.000Z",
   commit: COMMIT,
+  workingTreeClean: true,
   mode: "chat-preflight-only",
   scenarios: ["A", "B", "C", "D"].map(
     (id) => ({
@@ -288,6 +291,48 @@ test("Phase 20 binds every automatic evidence class to one commit", () => {
   );
 });
 
+test("Phase 20 rejects automatic evidence captured from a dirty working tree", () => {
+  const cases = [
+    {
+      ...completeEvidence(),
+      targetPc: {
+        ...targetPcEvidence,
+        WorkingTreeClean: false,
+      },
+    },
+    {
+      ...completeEvidence(),
+      performance: {
+        ...runtimePerformanceEvidence,
+        environment: {
+          commit: COMMIT,
+          workingTreeClean: false,
+        },
+      },
+    },
+    {
+      ...completeEvidence(),
+      validation: {
+        ...fullChatPreflightEvidence,
+        workingTreeClean: false,
+      },
+    },
+  ];
+
+  for (const evidence of cases) {
+    const report = evaluateCoreRelease(
+      evidence,
+      new Date(),
+      COMMIT,
+    );
+
+    assert.equal(
+      report.sections.RELEASE_STATUS,
+      "BLOCKED",
+    );
+  }
+});
+
 test("Phase 20 requires release context from the same commit", () => {
   const manual = {
     ...allManualPass,
@@ -372,6 +417,7 @@ test("Phase 20 report rejects malformed runtime performance evidence", () => {
           "2026-09-21T00:00:00.000Z",
         environment: {
           commit: COMMIT,
+          workingTreeClean: true,
         },
         statusMeasurements,
       },

@@ -27,7 +27,7 @@ Its summary always keeps:
 
 `ReleaseVerdict = NOT_EVALUATED`
 
-The evidence also records the current Git commit. Phase 20 accepts it only when its schema, required PASS checks, loopback port/base URL, and commit all match the current repository-gate evidence.
+The collector now requires a clean Git working tree before it starts, re-checks the repository after all probes, and records `WorkingTreeClean`. If the tree becomes dirty or `HEAD` changes during collection, repository provenance fails and `ReadOnlyCollectionPassed` cannot be true. Phase 20 accepts the evidence only when its schema, required PASS checks, loopback port/base URL, clean-tree flag, and commit all match the current repository-gate evidence.
 
 ## Optional runtime performance probe
 
