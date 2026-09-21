@@ -1790,3 +1790,9 @@ Still not proven by repository CI:
 - approved full-system external actions;
 - emergency STOP against a real cancellable task;
 - Windows install/update/reinstall/startup proof.
+
+Codex continuation note:
+
+`docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
+
+When target-PC access is unavailable, Codex may improve only repository work that is independently useful and supported by tests/review. It must not convert missing local evidence into PASS/READY.
