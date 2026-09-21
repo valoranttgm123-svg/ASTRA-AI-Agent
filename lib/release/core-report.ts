@@ -189,6 +189,7 @@ function repositoryGateCommit(
   repositoryGate:
     | CoreReleaseEvidence["repositoryGate"]
     | undefined,
+  expectedCommit?: string,
 ) {
   if (
     repositoryGate?.schemaVersion !== 1 ||
@@ -212,7 +213,20 @@ function repositoryGateCommit(
     return null;
   }
 
-  return repositoryGate.commit.toLowerCase();
+  const commit =
+    repositoryGate.commit.toLowerCase();
+
+  if (
+    expectedCommit !== undefined &&
+    (
+      !isGitCommit(expectedCommit) ||
+      commit !== expectedCommit.toLowerCase()
+    )
+  ) {
+    return null;
+  }
+
+  return commit;
 }
 
 function hasTargetPcEvidence(
@@ -416,6 +430,7 @@ export function validateManualReleaseEvidence(
 export function evaluateCoreRelease(
   evidence: CoreReleaseEvidence,
   now = new Date(),
+  expectedCommit?: string,
 ): CoreReleaseReport {
   if (evidence.manual) {
     validateManualReleaseEvidence(evidence.manual);
@@ -425,6 +440,7 @@ export function evaluateCoreRelease(
   const repositoryCommit =
     repositoryGateCommit(
       evidence.repositoryGate,
+      expectedCommit,
     );
   const repositoryGate =
     repositoryCommit !== null;
