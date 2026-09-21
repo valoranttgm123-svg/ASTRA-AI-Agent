@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
-  mkdir,
   readFile,
   writeFile,
 } from "node:fs/promises";
@@ -23,6 +22,7 @@ import {
 import {
   assertExistingPrivateAstraEvidenceFile,
   assertPrivateAstraEvidencePath,
+  prepareReleaseEvidencePath,
   releaseEvidenceRoot,
 } from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
@@ -206,10 +206,15 @@ async function main() {
     }
   }
 
-  const outputPath = path.join(
-    releaseEvidenceRoot(),
-    "manual-gates.json",
-  );
+  const outputPath =
+    prepareReleaseEvidencePath(
+      path.join(
+        releaseEvidenceRoot(),
+        "manual-gates.json",
+      ),
+      "manual-gates",
+      "json",
+    );
 
   let current:
     | ManualReleaseEvidence
@@ -254,10 +259,6 @@ async function main() {
     },
   );
 
-  await mkdir(
-    path.dirname(outputPath),
-    { recursive: true },
-  );
   await writeFile(
     outputPath,
     JSON.stringify(next, null, 2) + "\n",
