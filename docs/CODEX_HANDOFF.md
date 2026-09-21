@@ -1796,3 +1796,40 @@ Codex continuation note:
 `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
 
 When target-PC access is unavailable, Codex may improve only repository work that is independently useful and supported by tests/review. It must not convert missing local evidence into PASS/READY.
+
+
+---
+
+## 2026-09-21 — Phase 20 evidence validation hardening merged
+
+PR #129 merged successfully.
+
+Current repository checkpoint:
+
+`e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`
+
+Repository-side release evidence validation now fails closed for:
+
+- null/empty/partial runtime performance evidence;
+- missing required status endpoint samples;
+- invalid runtime completion timestamp;
+- partial Phase 17 preflight scenarios instead of completed A–D;
+- directory evidence inputs;
+- `.astra/` symlink evidence that resolves outside the real private root.
+
+CI for the final #129 head passed build, all 246 unit/integration tests, typecheck, lint, dependency audit and PR diff-check.
+
+Do not reimplement this hardening unless a new concrete defect is demonstrated.
+
+Remaining work is still real target-runtime evidence:
+
+- Automation Level-2/3 approval + STOP;
+- Sonor / Graphify / Obsidian MEM-X;
+- target runtime/browser/Humanoid performance;
+- full-system approved actions + emergency STOP;
+- Windows install/update/reinstall/startup;
+- final Phase 20 report from real private evidence.
+
+Continue from:
+
+`docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
