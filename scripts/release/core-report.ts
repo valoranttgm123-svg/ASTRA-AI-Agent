@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
   mkdir,
@@ -107,8 +109,57 @@ async function readJson<T>(rawPath?: string): Promise<T | null> {
   ) as T;
 }
 
+function currentRepositoryState() {
+  const commit = execFileSync(
+    "git",
+    ["rev-parse", "HEAD"],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    },
+  ).trim();
+
+  if (!/^[0-9a-f]{40}$/i.test(commit)) {
+    throw new Error(
+      "ASTRA core release report requires a valid Git HEAD commit.",
+    );
+  }
+
+  const status = execFileSync(
+    "git",
+    [
+      "status",
+      "--porcelain",
+      "--untracked-files=normal",
+    ],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    },
+  ).trim();
+
+  if (status) {
+    throw new Error(
+      "ASTRA core release report requires a clean Git working tree.",
+    );
+  }
+
+  return commit.toLowerCase();
+}
+
+async function fileIntegrity(filePath: string) {
+  const bytes = await readFile(filePath);
+  return {
+    evidenceBytes: bytes.byteLength,
+    evidenceSha256: createHash("sha256")
+      .update(bytes)
+      .digest("hex"),
+  };
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  const currentCommit = currentRepositoryState();
 
   const repositoryGatePath =
     options.repositoryGate ??
@@ -132,7 +183,7 @@ async function main() {
     options.validation ??
     await latestMatching(
       path.resolve(".astra", "validation"),
-      "",
+      "full-system-preflight-",
     );
   const manualPath =
     options.manual ??
@@ -163,9 +214,24 @@ async function main() {
         `PASS manual gate ${gate.id} references missing evidence: ${gate.evidencePath}`,
       );
     }
-    assertExistingPrivateAstraEvidenceFile(
-      referencedCandidate,
+    const referencedEvidence =
+      assertExistingPrivateAstraEvidenceFile(
+        referencedCandidate,
+      );
+    const integrity = await fileIntegrity(
+      referencedEvidence,
     );
+
+    if (
+      integrity.evidenceSha256 !==
+        gate.evidenceSha256?.toLowerCase() ||
+      integrity.evidenceBytes !==
+        gate.evidenceBytes
+    ) {
+      throw new Error(
+        `PASS manual gate ${gate.id} evidence integrity mismatch.`,
+      );
+    }
   }
 
   const evidence: CoreReleaseEvidence = {
@@ -180,7 +246,11 @@ async function main() {
     manual,
   };
 
-  const report = evaluateCoreRelease(evidence);
+  const report = evaluateCoreRelease(
+    evidence,
+    new Date(),
+    currentCommit,
+  );
   const jsonPath = resolveReleaseEvidencePath(
     options.outputJson,
     "core-release-report",
