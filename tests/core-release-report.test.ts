@@ -544,10 +544,10 @@ test("Phase 20 report script verifies manual integrity and selects only prefligh
   );
   assert.match(
     script,
-    /--untracked-files=normal/,
+    /cleanRepositorySnapshot/,
   );
   assert.match(
     script,
-    /currentCommit/,
+    /assertSameCleanRepositorySnapshot/,
   );
 });
