@@ -28,30 +28,39 @@ Repository-complete / merged on current `main`:
 
 - Phase 15A–15F security/failure hardening;
 - Phase 16A runtime performance measurement instrumentation — PR #105;
+- Phase 16 browser/Humanoid private evidence capture tooling — PR #124;
 - Phase 17A safe full-system preflight instrumentation — PR #106;
 - repository cleanup before RC;
 - Phase 18A repository RC gate automation — PR #119;
-- Phase 19A–19G Windows repository tooling/hardening — PRs #109, #110, #115, #113, #114, #116, #117.
+- Phase 19A–19G Windows repository tooling/hardening — PRs #109, #110, #115, #113, #114, #116, #117;
+- target-PC read-only evidence collector — PR #121;
+- Phase 20 conservative core report generator — PR #123;
+- Phase 20 manual gate recorder — PR #125;
+- Phase 20 report context recorder — PR #126.
 
-Current merged RC-gate checkpoint:
+Current repository checkpoint:
 
-`6ac2b98e6f99be68b75769654e78200f54d25fac`
+`b687fd0588e96f7fa3e0a60d6e45811797be4fff`
 
-Stale/diverged PR #111 has been closed as superseded by PR #119.
+Stale/diverged PR #111 is closed as superseded by PR #119.
 
 Still local/target-runtime gated:
 
-- Phase 14 target-PC Automation validation;
+- Phase 14 target-PC Automation approval/STOP validation;
 - MEM-X real Sonor/Graphify/Obsidian validation;
-- Phase 16B/P16C target runtime/browser measurements;
-- Phase 17B–P17D real scenario evidence;
-- Phase 19 target-PC install/self-check/update/reinstall/startup verification.
+- Phase 16 real target runtime + browser/Humanoid measurements;
+- Phase 17 real scenarios including approved actions and emergency STOP;
+- Phase 19 real install/update/reinstall/startup verification;
+- Phase 20 final evidence-backed verdict.
 
 Current execution rule:
 
-- if target-PC/local access is available, first run `scripts/windows/collect-target-pc-evidence.ps1` to capture the safe read-only baseline, then perform the earliest remaining real/manual validation gate above and record evidence;
-- if target-PC/local access is unavailable, continue only repository/report preparation that does not invent measurements, integration state, or PASS/READY claims;
-- do not start Phase 21–30 as a substitute for unfinished Phase 18–20 core release evidence.
+- if target-PC/local access is available, run `npm run release:repo-gate`, then `scripts/windows/collect-target-pc-evidence.ps1`, then capture the remaining browser/manual/integration evidence;
+- use `release:record-gate` only after a real evidence file exists for a manual PASS;
+- use `release:record-context` for bounded final-report context labels;
+- run `release:core-report` repeatedly; any `BLOCKED` result identifies evidence still missing;
+- if target-PC/local access is unavailable, do not invent benchmark values, Sonor state, physical STOP results, external-action success, Windows install proof or READY status;
+- do not begin Phase 21–30 as a substitute for unfinished Phase 18–20 core evidence.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
 
