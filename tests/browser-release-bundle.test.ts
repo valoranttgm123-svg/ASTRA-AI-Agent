@@ -264,6 +264,48 @@ test("browser release bundle rejects stale commit and unknown scenarios", () => 
 });
 
 
+test("browser release bundle binds every scenario to the current running build", () => {
+  const staleSources = completeSources();
+  staleSources.idle = {
+    ...staleSources.idle,
+    evidence: {
+      ...staleSources.idle.evidence,
+      runtime: {
+        ...staleSources.idle.evidence.runtime,
+        commit: OTHER_COMMIT,
+      },
+    },
+  };
+
+  assert.throws(
+    () =>
+      createBrowserReleaseBundle(
+        staleSources,
+        COMMIT,
+      ),
+    /clean running ASTRA build/,
+  );
+
+  const bundle =
+    createBrowserReleaseBundle(
+      completeSources(),
+      COMMIT,
+    );
+  const tampered = structuredClone(bundle);
+  tampered.scenarios.idle.evidence.runtime.commit =
+    OTHER_COMMIT;
+
+  assert.throws(
+    () =>
+      validateBrowserReleaseBundle(
+        tampered,
+        COMMIT,
+      ),
+    /scenario idle is invalid/,
+  );
+});
+
+
 test("manual browser PASS requires the structured release bundle", () => {
   const source = readFileSync(
     path.resolve(
