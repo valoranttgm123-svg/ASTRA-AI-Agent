@@ -48,6 +48,7 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 
 - [x] P16A — repository runtime measurement harness implemented — PR #105
 - [ ] P16B — target-PC runtime measurements captured
+- [x] P16C-tooling — private browser/Humanoid HIGH evidence capture implemented — PR #124
 - [ ] P16C — browser/Humanoid HIGH measurements captured
 - [ ] P16D — evidence-based bottleneck fixes and re-measurement
 - [ ] real hardware/browser environment recorded
@@ -57,7 +58,7 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 - [ ] no release-blocking console error
 - [ ] `docs/PERFORMANCE_BASELINE.md` filled with real measurements
 
-Phase 16 result: **IN PROGRESS — instrumentation only; no target-PC measurements claimed**
+Phase 16 result: **IN PROGRESS — runtime + browser evidence tooling implemented; no target-PC measurements claimed**
 
 ## Phase 17 — Full-system validation
 
@@ -81,7 +82,7 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 - [x] Port only genuinely unique unsuperseded behavior/tests — none identified; no port required
 - [x] Close PR #51 as superseded if nothing useful remains — closed after audit
 - [x] verify no abandoned release-blocking branch is required — stale PR #51 reconciled; historical branches retained as non-blocking snapshots
-- [ ] reconcile active Release Candidate PR #111 against current `main` before Phase 18 merge
+- [x] reconcile Release Candidate PR #111 — closed as superseded by current-main PR #119
 - [x] verify no secret/private runtime file is tracked — current tree scan clean
 
 ## Phase 18 — Release Candidate
@@ -138,6 +139,17 @@ Phase 19 result: **REPOSITORY TOOLING ADVANCED THROUGH P19G / TARGET-PC READINES
 
 ## Phase 20 — ASTRA MAX Core Release Gate
 
+Repository/report tooling:
+
+- [x] conservative core report generator — PR #123
+- [x] manual/physical gate recorder with real-evidence requirement — PR #125
+- [x] final-report context recorder (connected/login/not-implemented/external-config) — PR #126
+- [x] browser/Humanoid evidence can be referenced from private `.astra/performance/` artifacts — PR #124
+- [ ] run repository gate and collect real private evidence on target environment
+- [ ] generate final core release report from real evidence
+
+Final report content:
+
 - [ ] COMPLETED section filled
 - [ ] VERIFIED section filled
 - [ ] CONNECTED section filled
@@ -155,7 +167,7 @@ Allowed release status:
 - `READY WITH EXTERNAL CONFIGURATION REQUIRED`
 - `BLOCKED`
 
-Phase 20 result: **PENDING**
+Phase 20 result: **REPORT/EVIDENCE TOOLING READY / FINAL VERDICT BLOCKED UNTIL REAL EVIDENCE EXISTS**
 
 ---
 
