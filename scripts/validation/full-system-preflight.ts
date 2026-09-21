@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 
 import { normalizeLoopbackBase } from "../../lib/performance/loopback";
@@ -10,7 +9,9 @@ import {
 } from "../../lib/performance/sse";
 import { safeErrorDetail } from "../../lib/security/redaction";
 import { extractValidationEvidence } from "../../lib/validation/evidence";
-import { resolveValidationEvidencePath } from "../../lib/validation/private-output";
+import {
+  prepareValidationEvidencePath,
+} from "../../lib/validation/private-output";
 
 type ScenarioId = "A" | "B" | "C" | "D";
 type ProviderChoice = "auto" | "ollama" | "codex";
@@ -349,9 +350,10 @@ async function main() {
   const baseUrl = normalizeLoopbackBase(
     options.baseUrl,
   );
-  const outputPath = resolveValidationEvidencePath(
-    options.output,
-  );
+  const outputPath =
+    prepareValidationEvidencePath(
+      options.output,
+    );
 
   const results = [];
   for (const scenarioId of options.scenarios) {
@@ -385,9 +387,6 @@ async function main() {
     },
   };
 
-  await mkdir(path.dirname(outputPath), {
-    recursive: true,
-  });
   await writeFile(
     outputPath,
     JSON.stringify(document, null, 2) + "\n",
