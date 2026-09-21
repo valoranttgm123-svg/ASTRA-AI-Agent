@@ -59,7 +59,9 @@ Current execution rule:
 - use `release:record-gate` only after a real evidence file exists for a manual PASS;
 - use `release:record-context` for bounded final-report context labels;
 - run `release:core-report` repeatedly; any `BLOCKED` result identifies evidence still missing;
-- if target-PC/local access is unavailable, do not invent benchmark values, Sonor state, physical STOP results, external-action success, Windows install proof or READY status;
+- if target-PC/local access is unavailable, read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`, then continue only concrete repository audits, regression coverage, hardening, documentation synchronization or real defect fixes;
+- do not invent benchmark values, Sonor state, physical STOP results, external-action success, Windows install proof or READY status;
+- do not reimplement PR #123–#126 tooling unless a concrete defect is found;
 - do not begin Phase 21–30 as a substitute for unfinished Phase 18–20 core evidence.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
@@ -94,7 +96,11 @@ Read before coding:
 3. `docs/CODEX_HANDOFF.md`
 4. `docs/AUTOMATION_VALIDATION.md`
 5. `docs/SONOR_CODEX_MISSION.md`
-6. `SECURITY.md`
+6. `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
+7. `docs/CORE_RELEASE_REPORT.md`
+8. `docs/MANUAL_RELEASE_EVIDENCE.md`
+9. `docs/BROWSER_PERFORMANCE_EVIDENCE.md`
+10. `SECURITY.md`
 
 ---
 
