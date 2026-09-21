@@ -79,6 +79,32 @@ async function targetProject(projectId: string) {
   return { project, workspace };
 }
 
+export function isVerifiedGitHubRemoteUrl(value: string) {
+  const clean = value.trim();
+  if (!clean) return false;
+
+  if (/^git@github\.com:[^\s/]+\/[^\s/]+(?:\.git)?$/i.test(clean)) {
+    return true;
+  }
+
+  let url: URL;
+  try {
+    url = new URL(clean);
+  } catch {
+    return false;
+  }
+
+  if (url.hostname.toLowerCase() !== "github.com") return false;
+  if (url.protocol === "https:") {
+    return !url.username && !url.password;
+  }
+  if (url.protocol === "ssh:") {
+    return (!url.username || url.username === "git") && !url.password;
+  }
+
+  return false;
+}
+
 function cleanProcessDetail(value: string) {
   return value
     .replace(/gh[pousr]_[A-Za-z0-9_]+/g, "[REDACTED_GITHUB_TOKEN]")
@@ -193,7 +219,7 @@ export class GhCliGitHubTransport implements AstraGitHubTransport {
     }
 
     const remoteUrl = remoteCheck.stdout.trim();
-    if (!/(?:github\.com[:/])/i.test(remoteUrl)) {
+    if (!isVerifiedGitHubRemoteUrl(remoteUrl)) {
       return {
         ok: false,
         detail: "External push is restricted to a verified GitHub remote.",
