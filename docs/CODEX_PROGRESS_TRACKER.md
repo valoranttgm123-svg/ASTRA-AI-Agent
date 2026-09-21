@@ -48,7 +48,8 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 
 - [x] P16A — repository runtime measurement harness implemented — PR #105
 - [ ] P16B — target-PC runtime measurements captured
-- [ ] P16C — browser/Humanoid HIGH measurements captured
+- [x] P16C tooling — browser/Humanoid HIGH private evidence capture implemented — PR #124
+- [ ] P16C evidence — real browser/Humanoid HIGH measurements captured on target PC
 - [ ] P16D — evidence-based bottleneck fixes and re-measurement
 - [ ] real hardware/browser environment recorded
 - [ ] Humanoid HIGH baseline measured
@@ -57,7 +58,7 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 - [ ] no release-blocking console error
 - [ ] `docs/PERFORMANCE_BASELINE.md` filled with real measurements
 
-Phase 16 result: **IN PROGRESS — instrumentation only; no target-PC measurements claimed**
+Phase 16 result: **IN PROGRESS — runtime + browser evidence tooling implemented; no target-PC measurements claimed**
 
 ## Phase 17 — Full-system validation
 
@@ -81,7 +82,7 @@ Phase 17 result: **PREPARATION IN PROGRESS — no scenario PASS claimed yet**
 - [x] Port only genuinely unique unsuperseded behavior/tests — none identified; no port required
 - [x] Close PR #51 as superseded if nothing useful remains — closed after audit
 - [x] verify no abandoned release-blocking branch is required — stale PR #51 reconciled; historical branches retained as non-blocking snapshots
-- [ ] reconcile active Release Candidate PR #111 against current `main` before Phase 18 merge
+- [x] reconcile active Release Candidate PR #111 against current `main` before Phase 18 merge — closed as superseded by PR #119
 - [x] verify no secret/private runtime file is tracked — current tree scan clean
 
 ## Phase 18 — Release Candidate
@@ -138,16 +139,26 @@ Phase 19 result: **REPOSITORY TOOLING ADVANCED THROUGH P19G / TARGET-PC READINES
 
 ## Phase 20 — ASTRA MAX Core Release Gate
 
-- [ ] COMPLETED section filled
-- [ ] VERIFIED section filled
-- [ ] CONNECTED section filled
-- [ ] REQUIRES USER LOGIN section filled
-- [ ] REQUIRES PHYSICAL TEST section filled
-- [ ] NOT IMPLEMENTED section filled
-- [ ] SECURITY STATUS filled
-- [ ] PERFORMANCE STATUS filled
-- [ ] TEST STATUS filled
-- [ ] RELEASE STATUS selected from allowed values
+Repository/report tooling merged:
+
+- [x] conservative core release report generator — PR #123
+- [x] browser/Humanoid HIGH private evidence capture — PR #124
+- [x] safe manual release-gate recorder — PR #125
+- [x] release-report context recorder — PR #126
+
+Real evidence/report completion still required:
+
+- [ ] all six manual release gates recorded from real evidence
+- [ ] COMPLETED section generated from current evidence
+- [ ] VERIFIED section generated from current evidence
+- [ ] CONNECTED section recorded truthfully
+- [ ] REQUIRES USER LOGIN section recorded truthfully
+- [ ] REQUIRES PHYSICAL TEST section generated from remaining gates
+- [ ] NOT IMPLEMENTED section recorded truthfully
+- [ ] SECURITY STATUS generated from current evidence
+- [ ] PERFORMANCE STATUS generated from real target/browser evidence
+- [ ] TEST STATUS generated from repository + real validation evidence
+- [ ] RELEASE STATUS selected by `release:core-report` from allowed values
 
 Allowed release status:
 
@@ -155,7 +166,7 @@ Allowed release status:
 - `READY WITH EXTERNAL CONFIGURATION REQUIRED`
 - `BLOCKED`
 
-Phase 20 result: **PENDING**
+Phase 20 result: **REPORT/EVIDENCE TOOLING MERGED THROUGH PR #126 / REAL TARGET-PC GATES REMAIN**
 
 ---
 
