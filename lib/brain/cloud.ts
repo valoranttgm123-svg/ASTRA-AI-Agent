@@ -31,6 +31,38 @@ function normalizeRoot(value?: string) {
   return (value?.trim() || "").replace(/\/+$/, "");
 }
 
+function secureCloudRoot(value: string) {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("Cloud provider URL is invalid.");
+  }
+
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new Error("Cloud provider URL must use HTTPS or loopback HTTP.");
+  }
+  if (url.username || url.password) {
+    throw new Error("Cloud provider URL must not contain embedded credentials.");
+  }
+
+  const hostname = url.hostname.toLowerCase();
+  const loopback = [
+    "127.0.0.1",
+    "localhost",
+    "::1",
+    "[::1]",
+  ].includes(hostname);
+
+  if (url.protocol === "http:" && !loopback) {
+    throw new Error(
+      "Cloud provider URL must use HTTPS unless it is a loopback endpoint.",
+    );
+  }
+
+  return value.replace(/\/+$/, "");
+}
+
 function config(policy?: AstraBrainPermissionSnapshot) {
   return {
     enabled: envFlag("ASTRA_CLOUD_ENABLED", false),
@@ -114,9 +146,28 @@ export async function getCloudStatus(
     };
   }
 
+  let rootUrl: string;
+  try {
+    rootUrl = secureCloudRoot(value.rootUrl);
+  } catch (error) {
+    return {
+      enabled: true,
+      available: false,
+      endpoint,
+      model: value.model || null,
+      detail:
+        "Cloud provider URL rejected: " +
+        safeErrorDetail(
+          error,
+          "invalid provider URL",
+          500,
+        ),
+    };
+  }
+
   try {
     const response = await withTimeout(value.statusTimeoutMs, (signal) =>
-      fetch(`${value.rootUrl}/models`, {
+      fetch(`${rootUrl}/models`, {
         method: "GET",
         headers: { authorization: `Bearer ${value.apiKey}` },
         cache: "no-store",
@@ -196,8 +247,10 @@ export async function chatWithCloud({
     throw new Error("Cloud provider configuration is incomplete.");
   }
 
+  const rootUrl = secureCloudRoot(value.rootUrl);
+
   const response = await withTimeout(value.timeoutMs, (requestSignal) =>
-    fetch(`${value.rootUrl}/chat/completions`, {
+    fetch(`${rootUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -259,7 +312,7 @@ export async function chatWithCloud({
 
   return {
     message,
-    endpoint: safePublicUrl(value.rootUrl),
+    endpoint: safePublicUrl(rootUrl),
     model: value.model,
   };
 }
