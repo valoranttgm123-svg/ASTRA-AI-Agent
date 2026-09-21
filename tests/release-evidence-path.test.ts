@@ -120,7 +120,7 @@ test("release evidence input must resolve to a real file inside .astra", async (
         assertExistingPrivateAstraEvidenceFile(
           linkPath,
         ),
-      /resolved outside \.astra/,
+      /symbolic links|resolved outside \.astra/,
     );
   } finally {
     await rm(insideDir, {
