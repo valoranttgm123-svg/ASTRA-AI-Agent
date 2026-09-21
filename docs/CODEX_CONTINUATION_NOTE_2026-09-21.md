@@ -1,6 +1,6 @@
 # ChatGPT → Codex Continuation Note — 2026-09-21
 
-This note records the repository truth after merged release/evidence work through PR #145 so a later Codex session can continue without reconstructing the latest state from chat.
+This note records the repository truth after the final 2026-09-21 repository audit through PR #150 so a later Codex session can continue without reconstructing the latest state from chat.
 
 ## Current merged repository state
 
@@ -15,22 +15,26 @@ Merged on `main`:
 - PR #142 — running ASTRA build identity embedded in the production bundle and required by runtime evidence;
 - PR #143 — target-PC evidence persists that runtime identity and rejects duplicate/non-PASS check sets;
 - PR #144 — target-PC, runtime-performance and Phase 17 preflight evidence verify the same clean build before and after capture;
-- PR #145 — browser/Humanoid HIGH evidence verifies build identity before/after sampling, the save endpoint rejects checkout/runtime mismatch, and release bundling rejects stale/unverified captures.
+- PR #145 — browser/Humanoid HIGH evidence verifies build identity before/after sampling, the save endpoint rejects checkout/runtime mismatch, and release bundling rejects stale/unverified captures;
+- PR #147 — every browser release scenario is bound to the current clean runtime commit;
+- PR #148 — optional paid-cloud remote endpoints require HTTPS and credential-bearing provider URLs are rejected;
+- PR #149 — GitHub external push verifies the exact `github.com` remote host;
+- PR #150 — STOP/timeout terminates the full owned process tree, including Windows descendants.
 
 PR #129 closes three repository-side fail-open/weak-validation classes:
 - `null`, empty, or partial runtime performance objects cannot count as captured evidence;
 - Phase 17 chat preflight counts only when scenarios A–D are all completed with structured evidence;
 - evidence inputs must resolve to real regular files inside the real `.astra/` root; directory inputs and symlink escapes are rejected.
 
-PRs #142–#145 close the remaining concrete stale-build/provenance gaps found in the 2026-09-21 repository audit.
+PRs #142–#145 closed the stale-build/provenance gaps known at the earlier checkpoint. A later full audit found and closed four additional concrete defects in PRs #147–#150.
 
-Latest implementation checkpoint after PR #145 (before the final docs-only handoff):
+Latest implementation checkpoint after the final repository audit:
 
-`03073fe8a95b7064b059aadcd4b9ff933c8c73e8`
+`32f3f8f340a6bfc4004c5b4eeedd116682dae854`
 
 These additions improve evidence collection/reporting only. They do **not** prove target-PC readiness by themselves.
 
-Repository-side saturation checkpoint: after PR #145, no additional concrete independently implementable release-evidence defect was identified in this audit. Do not invent speculative hardening or start Phase 21–30 to bypass the remaining gates. If no new reproducible defect appears, continue on the real target PC.
+Repository-side saturation checkpoint: after PR #150, no additional concrete independently implementable defect was identified in the audited release/security scope. See `docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md`. Do not invent speculative hardening or start Phase 21–30 to bypass the remaining gates. If no new reproducible defect appears, continue on the real target PC.
 
 ## What remains genuinely external / target-PC gated
 
