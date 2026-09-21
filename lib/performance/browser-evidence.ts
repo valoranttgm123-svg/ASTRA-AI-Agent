@@ -76,6 +76,9 @@ export type BrowserPerformanceEvidence = {
     | "listening"
     | "thinking"
     | "speaking"
+    | "executing"
+    | "success"
+    | "error"
     | "assembly"
     | "shockwave";
   releaseVerdict: "NOT_EVALUATED";
@@ -159,6 +162,9 @@ export function parseBrowserPerformanceEvidence(
     scenario !== "listening" &&
     scenario !== "thinking" &&
     scenario !== "speaking" &&
+    scenario !== "executing" &&
+    scenario !== "success" &&
+    scenario !== "error" &&
     scenario !== "assembly" &&
     scenario !== "shockwave"
   ) {
