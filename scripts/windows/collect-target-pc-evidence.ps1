@@ -20,6 +20,23 @@ $privateRoot = Join-Path $repoRoot ".astra\readiness"
 $baseUrl = "http://127.0.0.1:$Port"
 $results = [System.Collections.Generic.List[object]]::new()
 
+function Get-RepositorySnapshot {
+  $commit = (& git -C $repoRoot rev-parse HEAD 2>$null).Trim()
+  if ($LASTEXITCODE -ne 0 -or $commit -notmatch "^[0-9a-fA-F]{40}$") {
+    throw "Cannot capture target-PC evidence without a valid Git HEAD commit."
+  }
+
+  $status = @(& git -C $repoRoot status --porcelain --untracked-files=normal 2>$null)
+  if ($LASTEXITCODE -ne 0) {
+    throw "Cannot inspect Git working tree state."
+  }
+
+  return [pscustomobject]@{
+    Commit = $commit.ToLowerInvariant()
+    WorkingTreeClean = ($status.Count -eq 0)
+  }
+}
+
 function Invoke-EvidenceCheck {
   param(
     [Parameter(Mandatory = $true)]
@@ -59,6 +76,11 @@ function Invoke-Npm {
   if ($LASTEXITCODE -ne 0) {
     throw "npm exited with code $LASTEXITCODE."
   }
+}
+
+$repositoryStart = Get-RepositorySnapshot
+if (-not $repositoryStart.WorkingTreeClean) {
+  throw "Target-PC evidence requires a clean Git working tree."
 }
 
 New-Item -ItemType Directory -Path $privateRoot -Force | Out-Null
@@ -115,15 +137,36 @@ finally {
   Pop-Location
 }
 
-$commit = "unknown"
+$repositoryEnd = $null
+$repositoryStable = $false
 try {
-  $commit = (& git -C $repoRoot rev-parse HEAD 2>$null).Trim()
+  $repositoryEnd = Get-RepositorySnapshot
+  $repositoryStable = (
+    $repositoryEnd.WorkingTreeClean -and
+    $repositoryEnd.Commit -eq $repositoryStart.Commit
+  )
 }
 catch {
-  $commit = "unknown"
+  Write-Warning "Repository provenance re-check failed: $($_.Exception.Message)"
 }
 
+if (-not $repositoryStable) {
+  $results.Add([pscustomobject]@{
+    Name = "repository-provenance"
+    Status = "FAIL"
+    DurationMs = 0
+    ErrorType = "RepositoryStateChanged"
+  })
+}
+
+$commit = if ($null -ne $repositoryEnd) {
+  $repositoryEnd.Commit
+} else {
+  $repositoryStart.Commit
+}
+$workingTreeClean = $repositoryStable
 $failed = @($results | Where-Object { $_.Status -ne "PASS" })
+$collectionPassed = ($failed.Count -eq 0 -and $workingTreeClean)
 $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH-mm-ssZ")
 $evidencePath = Join-Path $privateRoot "target-pc-evidence-$timestamp.json"
 
@@ -131,9 +174,10 @@ $evidence = [ordered]@{
   SchemaVersion = 1
   CapturedAt = (Get-Date).ToUniversalTime().ToString("o")
   Commit = $commit
+  WorkingTreeClean = $workingTreeClean
   BaseUrl = $baseUrl
   Port = $Port
-  ReadOnlyCollectionPassed = ($failed.Count -eq 0)
+  ReadOnlyCollectionPassed = $collectionPassed
   ReleaseVerdict = "NOT_EVALUATED"
   Checks = @($results)
   OptionalChecks = [ordered]@{
@@ -153,7 +197,8 @@ $evidence = [ordered]@{
 $evidence | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $evidencePath -Encoding UTF8
 
 [pscustomobject]@{
-  ReadOnlyCollectionPassed = ($failed.Count -eq 0)
+  ReadOnlyCollectionPassed = $collectionPassed
+  WorkingTreeClean = $workingTreeClean
   EvidencePath = $evidencePath
   ReleaseVerdict = "NOT_EVALUATED"
   FailedChecks = @($failed | ForEach-Object { $_.Name })
