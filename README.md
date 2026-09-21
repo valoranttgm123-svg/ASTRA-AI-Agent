@@ -10,9 +10,15 @@ ASTRA MAX repository work is CI-verified through:
 - Phase 16A performance measurement instrumentation;
 - Phase 17A safe full-system preflight instrumentation;
 - pre-RC repository cleanup;
-- Phase 19A read-only readiness self-check tooling.
+- Phase 19A read-only readiness self-check;
+- Phase 19B safe update/reinstall tooling;
+- Phase 19C read-only Windows install preflight;
+- Phase 19D read-only release validator;
+- Phase 19E Ollama loopback hardening;
+- Phase 19F ASTRA loopback runtime hardening;
+- Phase 19G bounded startup health gate.
 
-Windows update/reinstall tooling is being completed in Phase 19B.
+Phase 18A repository RC gate automation exists as draft PR #111 and must be reconciled against current `main` before merge.
 
 Current truthful release state:
 
@@ -24,7 +30,7 @@ Still requiring real target-runtime evidence:
 - MEM-X real Sonor/Graphify/Obsidian validation;
 - Phase 16 target hardware/browser measurements;
 - Phase 17 real scenario execution;
-- Phase 19 target Windows install/update/reinstall verification.
+- Phase 19 target Windows install/update/reinstall/startup verification.
 
 Hermes/Ollama/Codex/integrations are reported from real configuration/runtime state. Optional paid cloud remains disabled by default; unavailable integrations must remain `NOT_CONFIGURED` / unavailable rather than being presented as working.
 
