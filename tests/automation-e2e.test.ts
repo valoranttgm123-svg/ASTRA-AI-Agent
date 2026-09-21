@@ -258,3 +258,103 @@ test("Automation STOP suppresses late success from an executor that ignores Abor
     );
   });
 });
+
+
+test("Automation STOP returns promptly even when the executor never settles", async () => {
+  await withStore(async () => {
+    await saveAutomationStore([
+      definition("stuck-stop", 1),
+    ]);
+
+    let markStarted: (() => void) | undefined;
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+    const events: string[] = [];
+    const controller = new AbortController();
+
+    const tick = runAutomationTickFromStore({
+      now: new Date(
+        "2026-09-20T10:30:00.000Z",
+      ),
+      signal: controller.signal,
+      onEvent: (event) => {
+        events.push(event.type);
+      },
+      execute: async () => {
+        markStarted?.();
+        return await new Promise<never>(
+          () => {},
+        );
+      },
+    });
+
+    await started;
+    const stoppedAt = Date.now();
+    controller.abort(
+      new DOMException(
+        "Emergency STOP",
+        "AbortError",
+      ),
+    );
+
+    const result = await tick;
+    const elapsed = Date.now() - stoppedAt;
+
+    assert.ok(
+      elapsed < 750,
+      `STOP returned too late: ${elapsed}ms`,
+    );
+    assert.equal(result.stopped, true);
+    assert.equal(
+      result.runs[0]?.status,
+      "cancelled",
+    );
+    assert.ok(
+      events.includes("automation.cancelled"),
+    );
+    assert.equal(
+      events.includes("automation.completed"),
+      false,
+    );
+  });
+});
+
+test("Automation timeout returns promptly even when the executor never settles", async () => {
+  await withStore(async () => {
+    await saveAutomationStore([
+      {
+        ...definition("stuck-timeout", 1),
+        maxRuntimeMs: 50,
+      },
+    ]);
+
+    const startedAt = Date.now();
+    const result =
+      await runAutomationTickFromStore({
+        now: new Date(
+          "2026-09-20T10:30:00.000Z",
+        ),
+        execute: async () =>
+          await new Promise<never>(
+            () => {},
+          ),
+      });
+    const elapsed =
+      Date.now() - startedAt;
+
+    assert.ok(
+      elapsed < 1000,
+      `timeout returned too late: ${elapsed}ms`,
+    );
+    assert.equal(result.stopped, false);
+    assert.equal(
+      result.runs[0]?.status,
+      "failed",
+    );
+    assert.match(
+      result.runs[0]?.detail ?? "",
+      /timed out/i,
+    );
+  });
+});
