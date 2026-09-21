@@ -37,6 +37,7 @@ const targetPcEvidence = {
   ReadOnlyCollectionPassed: true,
   ReleaseVerdict: "NOT_EVALUATED",
   Checks: [
+    "runtime-build-attestation",
     "windows-preflight",
     "runtime-self-check",
     "windows-release-validator",
@@ -51,6 +52,10 @@ const runtimePerformanceEvidence = {
   schemaVersion: 1,
   completedAt: "2026-09-21T00:02:00.000Z",
   environment: {
+    commit: COMMIT,
+    workingTreeClean: true,
+  },
+  runtime: {
     commit: COMMIT,
     workingTreeClean: true,
   },
@@ -73,6 +78,10 @@ const fullChatPreflightEvidence = {
   commit: COMMIT,
   workingTreeClean: true,
   mode: "chat-preflight-only",
+  runtime: {
+    commit: COMMIT,
+    workingTreeClean: true,
+  },
   scenarios: ["A", "B", "C", "D"].map(
     (id) => ({
       id,
@@ -333,6 +342,41 @@ test("Phase 20 rejects automatic evidence captured from a dirty working tree", (
   }
 });
 
+test("Phase 20 rejects evidence from a stale or dirty running build", () => {
+  for (const evidence of [
+    {
+      ...completeEvidence(),
+      performance: {
+        ...runtimePerformanceEvidence,
+        runtime: {
+          commit: OTHER_COMMIT,
+          workingTreeClean: true,
+        },
+      },
+    },
+    {
+      ...completeEvidence(),
+      validation: {
+        ...fullChatPreflightEvidence,
+        runtime: {
+          commit: COMMIT,
+          workingTreeClean: false,
+        },
+      },
+    },
+  ]) {
+    const report = evaluateCoreRelease(
+      evidence,
+      new Date(),
+      COMMIT,
+    );
+    assert.equal(
+      report.sections.RELEASE_STATUS,
+      "BLOCKED",
+    );
+  }
+});
+
 test("Phase 20 requires release context from the same commit", () => {
   const manual = {
     ...allManualPass,
@@ -416,6 +460,10 @@ test("Phase 20 report rejects malformed runtime performance evidence", () => {
         completedAt:
           "2026-09-21T00:00:00.000Z",
         environment: {
+          commit: COMMIT,
+          workingTreeClean: true,
+        },
+        runtime: {
           commit: COMMIT,
           workingTreeClean: true,
         },
