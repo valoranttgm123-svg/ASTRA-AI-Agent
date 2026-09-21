@@ -20,6 +20,13 @@ import {
   prepareReleaseEvidencePath,
 } from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
+import {
+  validateBrowserReleaseBundle,
+} from "../../lib/performance/browser-release";
+import {
+  isManualObservationGateId,
+  validateManualGateObservation,
+} from "../../lib/release/manual-observation";
 
 type Options = {
   repositoryGate?: string;
@@ -229,6 +236,39 @@ async function main() {
     ) {
       throw new Error(
         `PASS manual gate ${gate.id} evidence integrity mismatch.`,
+      );
+    }
+
+    const rawEvidence = JSON.parse(
+      await readFile(
+        referencedEvidence,
+        "utf8",
+      ),
+    ) as unknown;
+
+    if (
+      gate.id ===
+      "browser-humanoid-performance"
+    ) {
+      validateBrowserReleaseBundle(
+        rawEvidence,
+        currentCommit,
+      );
+    } else {
+      if (
+        !isManualObservationGateId(
+          gate.id,
+        )
+      ) {
+        throw new Error(
+          `PASS manual gate ${gate.id} has no semantic evidence validator.`,
+        );
+      }
+
+      validateManualGateObservation(
+        rawEvidence,
+        gate.id,
+        currentCommit,
       );
     }
   }
