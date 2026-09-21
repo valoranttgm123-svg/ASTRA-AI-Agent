@@ -532,6 +532,14 @@ test("Phase 20 report script verifies manual integrity and selects only prefligh
   );
   assert.match(
     script,
+    /validateBrowserReleaseBundle/,
+  );
+  assert.match(
+    script,
+    /validateManualGateObservation/,
+  );
+  assert.match(
+    script,
     /full-system-preflight-/,
   );
   assert.match(
