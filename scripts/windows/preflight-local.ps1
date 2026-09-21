@@ -44,8 +44,30 @@ $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = [Security.Principal.WindowsPrincipal]::new($identity)
 $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-$listener = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-$portState = if ($listener) { "LISTENING" } else { "FREE" }
+$listeners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
+$nonLoopback = @($listeners | Where-Object {
+  $_.LocalAddress -ne "127.0.0.1" -and
+  $_.LocalAddress -ne "::1"
+})
+
+if ($nonLoopback.Count -gt 0) {
+  $addresses = @(
+    $nonLoopback |
+      ForEach-Object { [string]$_.LocalAddress } |
+      Sort-Object -Unique
+  ) -join ", "
+  throw "Port $Port memiliki listener non-loopback ($addresses). ASTRA menolak instalasi/update pada port yang terekspos jaringan."
+}
+
+$loopbackListeners = @($listeners | Where-Object {
+  $_.LocalAddress -eq "127.0.0.1" -or
+  $_.LocalAddress -eq "::1"
+})
+$portState = if ($loopbackListeners.Count -gt 0) {
+  "LOOPBACK_LISTENING"
+} else {
+  "FREE"
+}
 
 [pscustomobject]@{
   Ready = $true
@@ -56,6 +78,11 @@ $portState = if ($listener) { "LISTENING" } else { "FREE" }
   GitPath = $git.Source
   Port = $Port
   PortState = $portState
+  ListenerAddresses = @(
+    $listeners |
+      ForEach-Object { [string]$_.LocalAddress } |
+      Sort-Object -Unique
+  )
   Elevated = $isAdmin
   RequiresAdministrator = $false
   EnvLocalPresent = Test-Path -LiteralPath (Join-Path $repoRoot ".env.local") -PathType Leaf
