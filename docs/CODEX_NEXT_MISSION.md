@@ -49,7 +49,7 @@ Still local/target-runtime gated:
 
 Current execution rule:
 
-- if target-PC/local access is available, perform the earliest real validation gate above and record evidence;
+- if target-PC/local access is available, first run `scripts/windows/collect-target-pc-evidence.ps1` to capture the safe read-only baseline, then perform the earliest remaining real/manual validation gate above and record evidence;
 - if target-PC/local access is unavailable, continue only repository/report preparation that does not invent measurements, integration state, or PASS/READY claims;
 - do not start Phase 21–30 as a substitute for unfinished Phase 18–20 core release evidence.
 
