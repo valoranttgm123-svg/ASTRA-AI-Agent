@@ -24,13 +24,23 @@ External-only blockers must be recorded but must not stop unrelated repository w
 
 ## Current repository checkpoint
 
-Repository-complete and CI-verified:
+Repository-complete / merged on current `main`:
 
 - Phase 15A–15F security/failure hardening;
 - Phase 16A runtime performance measurement instrumentation — PR #105;
 - Phase 17A safe full-system preflight instrumentation — PR #106;
-- pre-RC repository cleanup;
-- Phase 19A read-only readiness self-check tooling — PR #109.
+- repository cleanup before RC;
+- Phase 19A read-only readiness self-check — PR #109;
+- Phase 19B safe update/reinstall tooling — PR #110;
+- Phase 19C read-only Windows install preflight — PR #115;
+- Phase 19D read-only release validator — PR #113;
+- Phase 19E Ollama loopback hardening — PR #114;
+- Phase 19F ASTRA loopback runtime hardening — PR #116;
+- Phase 19G bounded startup health gate — PR #117.
+
+Current `main` after P19G:
+
+`42657c7affc776057178416c5e777de388b98787`
 
 Still local/target-runtime gated:
 
@@ -38,17 +48,17 @@ Still local/target-runtime gated:
 - MEM-X real Sonor/Graphify/Obsidian validation;
 - Phase 16B/P16C target runtime/browser measurements;
 - Phase 17B–P17D real scenario evidence;
-- Phase 19 target-PC install/self-check evidence.
+- Phase 19 target-PC install/self-check/update/reinstall/startup verification.
 
 Current implementable repository task:
 
-**Phase 19B — safe update/reinstall tooling.**
+**Reconcile Phase 18A repository RC gate PR #111 against current `main`.**
 
-P19B must preserve private runtime/configuration, avoid destructive Git recovery, use fast-forward-only update behavior, and remain unverified until actually executed on the target Windows PC.
+PR #111 has successful branch CI but is still draft/open and was created before the later Phase 19 merges. Do not merge it blindly. Refresh/rebase or otherwise reconcile it with current `main`, preserve its non-destructive repository-gate behavior, rerun CI, then merge only if the result remains correct.
 
-After P19B merges, continue the next independent release/report preparation that does not require inventing target-PC evidence.
+After that, continue any independent repository preparation that does not require inventing target-PC evidence. When local PC access is available, prioritize the real validation gates above.
 
-If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer those repository truths.
+If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
 
 ---
 
