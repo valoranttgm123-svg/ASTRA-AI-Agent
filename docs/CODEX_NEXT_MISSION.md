@@ -43,7 +43,7 @@ Repository-complete / merged on current `main`:
 - target-PC/runtime/preflight capture verifies the same clean running build at start and completion — PR #144;
 - browser/Humanoid HIGH capture verifies start/end runtime identity, server checkout/runtime agreement, and release-bundle provenance — PR #145.
 
-Current repository checkpoint:
+Latest implementation checkpoint before the final docs-only handoff:
 
 `03073fe8a95b7064b059aadcd4b9ff933c8c73e8`
 
