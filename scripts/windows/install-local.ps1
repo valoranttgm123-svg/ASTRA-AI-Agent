@@ -8,6 +8,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $preflight = Join-Path $PSScriptRoot "preflight-local.ps1"
+$healthWait = Join-Path $PSScriptRoot "wait-local-health.ps1"
 & $preflight -Port $Port | Out-Null
 
 $npm = (Get-Command npm.cmd -ErrorAction Stop).Source
@@ -41,26 +42,23 @@ $astraTask = New-ScheduledTask -Action $astraAction -Trigger $trigger -Settings 
 Register-ScheduledTask -TaskName 'ASTRA-Agent' -InputObject $astraTask -Force | Out-Null
 
 Start-ScheduledTask -TaskName 'ASTRA-Ollama'
-Start-Sleep -Seconds 2
 Start-ScheduledTask -TaskName 'ASTRA-Agent'
+
+$health = & $healthWait -Port $Port
 
 $desktop = [Environment]::GetFolderPath('Desktop')
 $shortcutPath = Join-Path $desktop 'ASTRA.url'
 $shortcutContent = "[InternetShortcut]`r`nURL=http://127.0.0.1:$Port/`r`n"
 [System.IO.File]::WriteAllText($shortcutPath, $shortcutContent, [System.Text.Encoding]::ASCII)
 
-Start-Sleep -Seconds 3
-$astraStatus = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$Port/" -TimeoutSec 10
-$ollamaStatus = Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/version' -TimeoutSec 10
-$automationStatus = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/automation/service" -TimeoutSec 10
-
 [pscustomobject]@{
   AstraUrl = "http://127.0.0.1:$Port/"
-  AstraHttpStatus = $astraStatus.StatusCode
-  OllamaVersion = $ollamaStatus.version
+  AstraReady = $health.AstraReady
+  OllamaVersion = $health.OllamaVersion
   DesktopShortcut = $shortcutPath
   StartupTasks = 'ASTRA-Agent, ASTRA-Ollama'
-  AutomationEnabled = $automationStatus.service.enabled
-  AutomationRunning = $automationStatus.service.running
-  AutomationDetail = $automationStatus.service.lastDetail
+  AutomationEnabled = $health.AutomationEnabled
+  AutomationRunning = $health.AutomationRunning
+  AutomationDetail = $health.AutomationDetail
+  StartupHealthElapsedMs = $health.ElapsedMs
 }
