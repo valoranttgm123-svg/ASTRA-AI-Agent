@@ -15,7 +15,8 @@
     "validate:preflight": "tsx scripts/validation/full-system-preflight.ts",
     "release:self-check": "tsx scripts/release/self-check.ts",
     "release:repo-gate": "tsx scripts/release/repository-gate.ts",
-    "release:core-report": "tsx scripts/release/core-report.ts"
+    "release:core-report": "tsx scripts/release/core-report.ts",
+    "release:record-gate": "tsx scripts/release/record-manual-gate.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.0.1",
