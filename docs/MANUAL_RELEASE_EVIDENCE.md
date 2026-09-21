@@ -70,6 +70,6 @@ Supported fields:
 
 These values are bounded labels only. Secret-like material is scrubbed before it is written to the private manifest.
 
-The recorder also stamps the context with the current Git commit and timestamp. Phase 20 will not use stale context from another commit. On first context recording, external configuration defaults conservatively to `true` unless explicitly set to `false`.
+The recorder also requires a clean Git working tree, re-checks the same `HEAD` before writing, and stamps the context with the current Git commit and timestamp. Phase 20 will not use stale context from another commit. On first context recording, external configuration defaults conservatively to `true` unless explicitly set to `false`.
 
 The command still does **not** choose the final release status.
