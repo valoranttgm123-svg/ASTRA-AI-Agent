@@ -33,3 +33,59 @@ export function resolveReadinessEvidencePath(
 
   return candidate;
 }
+
+
+export function releaseEvidenceRoot() {
+  return path.resolve(".astra", "release");
+}
+
+export function resolveReleaseEvidencePath(
+  raw: string | undefined,
+  prefix: string,
+  extension: "json" | "md" = "json",
+  now = new Date(),
+) {
+  const root = releaseEvidenceRoot();
+  const timestamp = now
+    .toISOString()
+    .replace(/[:.]/g, "-");
+
+  const candidate = path.resolve(
+    raw ||
+      path.join(
+        root,
+        `${prefix}-${timestamp}.${extension}`,
+      ),
+  );
+  const relative = path.relative(root, candidate);
+
+  if (
+    relative.startsWith("..") ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(
+      "Release evidence output must stay inside .astra/release/.",
+    );
+  }
+
+  return candidate;
+}
+
+export function assertPrivateAstraEvidencePath(
+  candidate: string,
+) {
+  const privateRoot = path.resolve(".astra");
+  const resolved = path.resolve(candidate);
+  const relative = path.relative(privateRoot, resolved);
+
+  if (
+    relative.startsWith("..") ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(
+      "Release evidence inputs must stay inside .astra/.",
+    );
+  }
+
+  return resolved;
+}
