@@ -97,3 +97,52 @@ Capture at minimum:
 Also review the browser console manually for anything that occurred before the capture window.
 
 Command Center and Automation-panel render evidence remain separate UI scenarios; do not claim them measured merely because the Humanoid capture passed.
+
+
+## Release bundle
+
+Individual captures are not enough to mark the Phase 20 `browser-humanoid-performance` gate PASS.
+
+After capturing all required HIGH scenarios on the same clean repository commit, run:
+
+```powershell
+npm run release:browser-bundle
+```
+
+The bundler requires valid current-commit captures for exactly:
+
+- IDLE
+- LISTENING
+- THINKING
+- SPEAKING
+- Assembly
+- Shockwave
+
+Each saved browser capture now includes repository provenance:
+
+- full Git commit;
+- whether the Git working tree was clean at capture time.
+
+The bundler rejects:
+
+- LOW-quality captures;
+- dirty-tree captures;
+- captures from another Git commit;
+- missing required scenarios;
+- malformed/private-path evidence.
+
+It writes a structured snapshot under:
+
+`.astra/performance/browser-release-bundle-<timestamp>.json`
+
+The bundle embeds the sanitized telemetry for all six scenarios together with each source file path, SHA-256 and byte size. It still records:
+
+`releaseVerdict = NOT_EVALUATED`
+
+After manual review confirms the measured performance and console state are acceptable, record the gate using the **bundle**, not an individual capture:
+
+```powershell
+npm run release:record-gate -- --gate browser-humanoid-performance --status PASS --evidence ".astra/performance/browser-release-bundle-<timestamp>.json" --note "Reviewed all six HIGH browser scenarios and console state."
+```
+
+The gate recorder rejects an individual capture file for this PASS.
