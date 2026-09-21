@@ -12,6 +12,7 @@ It is conservative by design:
 - manual physical gates cannot be marked PASS without:
   - a valid observation timestamp;
   - an existing evidence file under `.astra/`;
+- evidence inputs must resolve to regular files inside `.astra/`; directory inputs and symlink escapes are rejected;
 - the tool never reads evidence outside `.astra/`;
 - generated output stays under `.astra/release/`.
 
