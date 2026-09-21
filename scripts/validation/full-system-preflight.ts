@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 
@@ -8,6 +7,10 @@ import {
   parseSseBlock,
 } from "../../lib/performance/sse";
 import { safeErrorDetail } from "../../lib/security/redaction";
+import {
+  assertSameCleanRepositorySnapshot,
+  cleanRepositorySnapshot,
+} from "../../lib/release/repository-state";
 import { extractValidationEvidence } from "../../lib/validation/evidence";
 import {
   prepareValidationEvidencePath,
@@ -199,25 +202,6 @@ function elapsedMs(started: number) {
   ) / 1000;
 }
 
-function currentCommit() {
-  try {
-    const commit = execFileSync(
-      "git",
-      ["rev-parse", "HEAD"],
-      {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      },
-    ).trim();
-
-    return /^[0-9a-f]{40}$/i.test(commit)
-      ? commit
-      : "unknown";
-  } catch {
-    return "unknown";
-  }
-}
-
 async function runScenario(
   baseUrl: string,
   provider: ProviderChoice,
@@ -350,6 +334,7 @@ async function main() {
   const baseUrl = normalizeLoopbackBase(
     options.baseUrl,
   );
+  const repository = cleanRepositorySnapshot();
   const outputPath =
     prepareValidationEvidencePath(
       options.output,
@@ -367,10 +352,17 @@ async function main() {
     );
   }
 
+  const finalRepository =
+    assertSameCleanRepositorySnapshot(
+      repository,
+    );
+
   const document = {
     schemaVersion: 1,
     capturedAt: new Date().toISOString(),
-    commit: currentCommit(),
+    commit: finalRepository.commit,
+    workingTreeClean:
+      finalRepository.workingTreeClean,
     baseUrl,
     providerChoice: options.provider,
     mode: "chat-preflight-only",
