@@ -49,7 +49,10 @@ import { createToolRegistry } from "../lib/tools/registry";
 import { createExecutableToolRegistry } from "../lib/tools/executor";
 import { astraNativeToolRuntime, createToolRuntime } from "../lib/tools/runtime";
 import type { AstraMcpTransport } from "../lib/tools/mcp";
-import type { AstraGitHubTransport } from "../lib/tools/github";
+import {
+  isVerifiedGitHubRemoteUrl,
+  type AstraGitHubTransport,
+} from "../lib/tools/github";
 import {
   createComputerToolRegistrations,
   WindowsComputerTransport,
@@ -1899,6 +1902,53 @@ test("Brain executes a structured registered tool plan even when Ollama is the r
   assert.ok(events.some((event) => event.type === "tool.started"));
   assert.ok(events.some((event) => event.type === "tool.completed"));
 });
+
+test("GitHub remote validation requires the exact github.com host", () => {
+  assert.equal(
+    isVerifiedGitHubRemoteUrl(
+      "https://github.com/example/repo.git",
+    ),
+    true,
+  );
+  assert.equal(
+    isVerifiedGitHubRemoteUrl(
+      "git@github.com:example/repo.git",
+    ),
+    true,
+  );
+  assert.equal(
+    isVerifiedGitHubRemoteUrl(
+      "ssh://git@github.com/example/repo.git",
+    ),
+    true,
+  );
+
+  assert.equal(
+    isVerifiedGitHubRemoteUrl(
+      "https://evil.example/github.com/example/repo.git",
+    ),
+    false,
+  );
+  assert.equal(
+    isVerifiedGitHubRemoteUrl(
+      "https://github.com.evil.example/example/repo.git",
+    ),
+    false,
+  );
+  assert.equal(
+    isVerifiedGitHubRemoteUrl(
+      "http://github.com/example/repo.git",
+    ),
+    false,
+  );
+  assert.equal(
+    isVerifiedGitHubRemoteUrl(
+      "https://token@github.com/example/repo.git",
+    ),
+    false,
+  );
+});
+
 
 test("authenticated GitHub transport tools stay behind Level 3 and external-action policy", async () => {
   let pushes = 0;
