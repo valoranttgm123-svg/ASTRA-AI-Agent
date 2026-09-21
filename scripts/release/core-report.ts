@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
@@ -20,6 +19,17 @@ import {
   prepareReleaseEvidencePath,
 } from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
+import {
+  validateBrowserReleaseBundle,
+} from "../../lib/performance/browser-release";
+import {
+  isManualObservationGateId,
+  validateManualGateObservation,
+} from "../../lib/release/manual-observation";
+import {
+  assertSameCleanRepositorySnapshot,
+  cleanRepositorySnapshot,
+} from "../../lib/release/repository-state";
 
 type Options = {
   repositoryGate?: string;
@@ -108,44 +118,6 @@ async function readJson<T>(rawPath?: string): Promise<T | null> {
   ) as T;
 }
 
-function currentRepositoryState() {
-  const commit = execFileSync(
-    "git",
-    ["rev-parse", "HEAD"],
-    {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    },
-  ).trim();
-
-  if (!/^[0-9a-f]{40}$/i.test(commit)) {
-    throw new Error(
-      "ASTRA core release report requires a valid Git HEAD commit.",
-    );
-  }
-
-  const status = execFileSync(
-    "git",
-    [
-      "status",
-      "--porcelain",
-      "--untracked-files=normal",
-    ],
-    {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    },
-  ).trim();
-
-  if (status) {
-    throw new Error(
-      "ASTRA core release report requires a clean Git working tree.",
-    );
-  }
-
-  return commit.toLowerCase();
-}
-
 async function fileIntegrity(filePath: string) {
   const bytes = await readFile(filePath);
   return {
@@ -158,7 +130,8 @@ async function fileIntegrity(filePath: string) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const currentCommit = currentRepositoryState();
+  const repository = cleanRepositorySnapshot();
+  const currentCommit = repository.commit;
 
   const repositoryGatePath =
     options.repositoryGate ??
@@ -231,6 +204,39 @@ async function main() {
         `PASS manual gate ${gate.id} evidence integrity mismatch.`,
       );
     }
+
+    const rawEvidence = JSON.parse(
+      await readFile(
+        referencedEvidence,
+        "utf8",
+      ),
+    ) as unknown;
+
+    if (
+      gate.id ===
+      "browser-humanoid-performance"
+    ) {
+      validateBrowserReleaseBundle(
+        rawEvidence,
+        currentCommit,
+      );
+    } else {
+      if (
+        !isManualObservationGateId(
+          gate.id,
+        )
+      ) {
+        throw new Error(
+          `PASS manual gate ${gate.id} has no semantic evidence validator.`,
+        );
+      }
+
+      validateManualGateObservation(
+        rawEvidence,
+        gate.id,
+        currentCommit,
+      );
+    }
   }
 
   const evidence: CoreReleaseEvidence = {
@@ -250,6 +256,10 @@ async function main() {
     new Date(),
     currentCommit,
   );
+  assertSameCleanRepositorySnapshot(
+    repository,
+  );
+
   const jsonPath =
     prepareReleaseEvidencePath(
       options.outputJson,

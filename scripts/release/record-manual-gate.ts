@@ -19,6 +19,10 @@ import {
   validateBrowserReleaseBundle,
 } from "../../lib/performance/browser-release";
 import {
+  isManualObservationGateId,
+  validateManualGateObservation,
+} from "../../lib/release/manual-observation";
+import {
   assertExistingPrivateAstraEvidenceFile,
   assertPrivateAstraEvidencePath,
   prepareReleaseEvidencePath,
@@ -60,7 +64,7 @@ function parseArgs(
         "Usage:",
         "  npm run release:record-gate -- --gate <id> --status <PASS|FAIL|NOT_RUN> [--evidence <path>] [--note <text>]",
         "",
-        "PASS requires an existing evidence file under .astra/.",
+        "PASS requires current-commit structured evidence under .astra/.",
         "The command never selects the final release status.",
       ].join("\n"));
       process.exit(0);
@@ -178,18 +182,34 @@ async function main() {
     );
     commit = repository.commit;
 
+    const rawEvidence = JSON.parse(
+      await readFile(
+        evidencePath,
+        "utf8",
+      ),
+    ) as unknown;
+
     if (
       options.gate ===
       "browser-humanoid-performance"
     ) {
-      const rawBundle = JSON.parse(
-        await readFile(
-          evidencePath,
-          "utf8",
-        ),
-      ) as unknown;
       validateBrowserReleaseBundle(
-        rawBundle,
+        rawEvidence,
+        commit,
+      );
+    } else {
+      if (
+        !isManualObservationGateId(
+          options.gate,
+        )
+      ) {
+        throw new Error(
+          "Manual gate has no structured evidence validator.",
+        );
+      }
+      validateManualGateObservation(
+        rawEvidence,
+        options.gate,
         commit,
       );
     }
