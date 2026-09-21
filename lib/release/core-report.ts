@@ -141,16 +141,21 @@ function hasRuntimePerformanceEvidence(
 ) {
   if (
     performance?.schemaVersion !== 1 ||
-    !isValidTimestamp(performance.completedAt) ||
-    !isRecord(performance.statusMeasurements)
+    !isValidTimestamp(performance.completedAt)
   ) {
+    return false;
+  }
+
+  const statusMeasurements =
+    performance.statusMeasurements;
+  if (!isRecord(statusMeasurements)) {
     return false;
   }
 
   return REQUIRED_RUNTIME_STATUS_ENDPOINTS.every(
     (endpoint) => {
       const measurement =
-        performance.statusMeasurements?.[endpoint];
+        statusMeasurements[endpoint];
 
       if (!isRecord(measurement)) {
         return false;
@@ -178,15 +183,19 @@ function hasChatPreflightEvidence(
 ) {
   if (
     validation?.schemaVersion !== 1 ||
-    validation.mode !== "chat-preflight-only" ||
-    !Array.isArray(validation.scenarios)
+    validation.mode !== "chat-preflight-only"
   ) {
+    return false;
+  }
+
+  const scenarios = validation.scenarios;
+  if (!Array.isArray(scenarios)) {
     return false;
   }
 
   return REQUIRED_CHAT_PREFLIGHT_SCENARIOS.every(
     (scenarioId) =>
-      validation.scenarios?.some((scenario) => {
+      scenarios.some((scenario) => {
         if (!isRecord(scenario)) {
           return false;
         }
@@ -196,7 +205,7 @@ function hasChatPreflightEvidence(
           scenario.captureStatus === "completed" &&
           isRecord(scenario.evidence)
         );
-      }) === true,
+      }),
   );
 }
 
