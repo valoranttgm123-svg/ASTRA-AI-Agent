@@ -17,7 +17,10 @@ Before changing any code, read these files in this exact order:
 9. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
 10. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
 11. `docs/TARGET_PC_EVIDENCE.md` — unified read-only target-PC evidence collection.
-12. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+12. `docs/BROWSER_PERFORMANCE_EVIDENCE.md` — private HIGH-quality Humanoid/browser measurement flow.
+13. `docs/CORE_RELEASE_REPORT.md` — conservative Phase 20 evidence-to-report flow.
+14. `docs/MANUAL_RELEASE_EVIDENCE.md` — evidence-backed manual gate/context recording.
+15. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
 
 Read these only when the active task needs their historical/detail context:
 
@@ -39,9 +42,9 @@ Read these only when the active task needs their historical/detail context:
 - Phase 17A safe full-system preflight tooling is merged and CI-verified.
 - Repository cleanup before RC is complete.
 - Phase 19A–19G Windows repository tooling/hardening is merged through PR #117.
-- Current `main` after P19G: `42657c7affc776057178416c5e777de388b98787`.
+- Current repository checkpoint after Phase 20 evidence tooling: `b687fd0588e96f7fa3e0a60d6e45811797be4fff`.
 - Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
-- Current repository-only release preparation is complete through Phase 18A and Phase 19G; remaining core release gates require real local/target evidence unless a new non-fabricated repository preparation task is identified.
+- Repository-only release preparation now also includes target-PC evidence collection, Humanoid/browser capture, conservative Phase 20 report generation, evidence-backed manual gate recording, and final-report context recording (PRs #121, #123–#126).
 - MEM-X still requires real local Sonor access.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
