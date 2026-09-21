@@ -15,8 +15,10 @@ Current `main` checkpoint:
 - Phase 17A safe validation preflight: **merged / CI verified**;
 - repository cleanup before RC: **complete**;
 - Phase 19A–19G Windows repository tooling/hardening: **merged through PR #117**;
-- current `main` merge commit after P19G: `42657c7affc776057178416c5e777de388b98787`;
+- target-PC read-only evidence collector: **merged as PR #121**;
 - Phase 18A repository RC gate: **merged as PR #119**; stale PR #111 closed as superseded;
+- Phase 20 evidence/report preparation tooling: **merged through PR #126**;
+- current merged checkpoint after PR #126: `b687fd0588e96f7fa3e0a60d6e45811797be4fff`;
 - Phase 16/17 target-runtime evidence remains pending;
 - Phase 14 target-PC validation: **still required**;
 - real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**;
@@ -285,3 +287,46 @@ Open repository work:
 - private evidence stays under `.astra/readiness/`;
 - release verdict remains `NOT_EVALUATED`;
 - manual approval/STOP, Sonor/Graphify/Obsidian, browser/Humanoid and real external-action evidence remain required.
+
+
+## 2026-09-21 — Phase 20 evidence/report tooling checkpoint
+
+Merged repository slices:
+
+- PR #123 — conservative Phase 20 core release report tooling;
+  - merge commit: `536acdf4c74c6d98fbae75faee6f2d9a85aa8996`;
+  - generates private JSON/Markdown reports from real evidence;
+  - missing/incomplete evidence remains `BLOCKED`.
+- PR #124 — browser/Humanoid HIGH performance evidence capture;
+  - merge commit: `16dc1836cffca8116c92338a10d4c4cb16d6709c`;
+  - records structured frame/GPU/heap/diagnostic evidence under `.astra/performance/`;
+  - does not store chat or console message content;
+  - does not mark performance PASS automatically.
+- PR #125 — safe Phase 20 manual gate recorder;
+  - merge commit: `73bc822e2bdbdae9126412c9bf1a07369a6b0098`;
+  - PASS requires an existing private evidence file under `.astra/`;
+  - final release status remains owned by the core report generator.
+- PR #126 — Phase 20 release context recorder;
+  - merge commit: `b687fd0588e96f7fa3e0a60d6e45811797be4fff`;
+  - records bounded CONNECTED / REQUIRES USER LOGIN / NOT IMPLEMENTED labels and external-configuration state;
+  - final release status remains `NOT_EVALUATED` until generated from evidence.
+
+Truth boundary:
+
+- repository tooling is now prepared to collect and summarize the remaining release evidence;
+- Phase 14 approval/STOP, MEM-X Sonor/Graphify/Obsidian, Phase 16 real measurements, Phase 17 real scenarios, and Phase 19 install/update/reinstall/startup remain target-PC/local gates;
+- no READY claim may be made from PR #123–#126 alone.
+
+Continuation note:
+
+`docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
+
+Exact next work:
+
+1. on the real target PC, collect the read-only baseline;
+2. execute/record the six real manual gates without fabricating evidence;
+3. capture Humanoid HIGH evidence and review browser console state;
+4. run the real Phase 17 scenarios and emergency STOP;
+5. generate `npm run release:core-report`;
+6. fix any concrete failures and repeat evidence collection;
+7. only after the core release gate stabilizes continue Phase 21–30.
