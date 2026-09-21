@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -235,5 +237,26 @@ test("browser release bundle rejects stale commit and unknown scenarios", () => 
         COMMIT,
       ),
     /unknown scenario/,
+  );
+});
+
+
+test("manual browser PASS requires the structured release bundle", () => {
+  const source = readFileSync(
+    path.resolve(
+      "scripts",
+      "release",
+      "record-manual-gate.ts",
+    ),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /browser-humanoid-performance/,
+  );
+  assert.match(
+    source,
+    /validateBrowserReleaseBundle/,
   );
 });
