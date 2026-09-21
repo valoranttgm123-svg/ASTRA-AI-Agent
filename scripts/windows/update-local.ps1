@@ -14,6 +14,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$preflight = Join-Path $PSScriptRoot "preflight-local.ps1"
+& $preflight -Port $Port | Out-Null
+
 $git = (Get-Command git.exe -ErrorAction Stop).Source
 $npm = (Get-Command npm.cmd -ErrorAction Stop).Source
 $installer = Join-Path $PSScriptRoot "install-local.ps1"
