@@ -86,6 +86,16 @@ $nonLoopback = @($listeners | Where-Object {
 })
 Assert-True -Condition ($nonLoopback.Count -eq 0) -Message "Ditemukan listener non-loopback pada port ASTRA."
 
+$ollamaPort = 11434
+$ollamaListeners = @(Get-NetTCPConnection -LocalPort $ollamaPort -State Listen -ErrorAction SilentlyContinue)
+Assert-True -Condition ($ollamaListeners.Count -gt 0) -Message "Tidak ada listener Ollama pada port 11434."
+
+$ollamaNonLoopback = @($ollamaListeners | Where-Object {
+  $_.LocalAddress -ne "127.0.0.1" -and
+  $_.LocalAddress -ne "::1"
+})
+Assert-True -Condition ($ollamaNonLoopback.Count -eq 0) -Message "Ditemukan listener Ollama non-loopback pada port 11434."
+
 & $selfCheck -BaseUrl "http://127.0.0.1:$Port" | Out-Null
 
 $privateRoot = Initialize-AstraPrivateEvidenceDirectory -RepoRoot $repoRoot -Area "readiness"
@@ -99,15 +109,26 @@ $evidence = [ordered]@{
   ReleaseVerdict = "NOT_EVALUATED"
   Port = $Port
   ListenerAddresses = @($listeners | ForEach-Object { [string]$_.LocalAddress })
+  OllamaListenerAddresses = @($ollamaListeners | ForEach-Object { [string]$_.LocalAddress })
   StartupTasks = [ordered]@{
     AstraAgent = [ordered]@{
       State = [string]$agentTask.State
       RunLevel = [string]$agentTask.Principal.RunLevel
+      LogonType = [string]$agentTask.Principal.LogonType
+      PrincipalMatchesCurrentUser = $true
+      TaskPath = [string]$agentTask.TaskPath
+      ActionCount = $agentActions.Count
+      TriggerType = [string]$agentTrigger.CimClass.CimClassName
       Script = "run-astra.ps1"
     }
     AstraOllama = [ordered]@{
       State = [string]$ollamaTask.State
       RunLevel = [string]$ollamaTask.Principal.RunLevel
+      LogonType = [string]$ollamaTask.Principal.LogonType
+      PrincipalMatchesCurrentUser = $true
+      TaskPath = [string]$ollamaTask.TaskPath
+      ActionCount = $ollamaActions.Count
+      TriggerType = [string]$ollamaTrigger.CimClass.CimClassName
       Script = "run-ollama.ps1"
     }
   }
