@@ -390,7 +390,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const baseUrl = normalizeLoopbackBase(options.baseUrl);
   const repository = cleanRepositorySnapshot();
-  const runtime = await verifyRuntimeBuildIdentity(
+  const runtimeAtStart = await verifyRuntimeBuildIdentity(
     baseUrl,
     repository.commit,
     options.timeoutMs,
@@ -436,6 +436,12 @@ async function main() {
     assertSameCleanRepositorySnapshot(
       repository,
     );
+  const runtimeAtCompletion =
+    await verifyRuntimeBuildIdentity(
+      baseUrl,
+      finalRepository.commit,
+      options.timeoutMs,
+    );
   const outputPath =
     prepareRuntimePerformancePath(
       options.output,
@@ -449,7 +455,17 @@ async function main() {
     environment: environmentSnapshot(
       finalRepository,
     ),
-    runtime,
+    runtime: {
+      commit: runtimeAtCompletion.commit,
+      workingTreeClean:
+        runtimeAtCompletion.workingTreeClean,
+      verifiedAtStart:
+        runtimeAtStart.commit ===
+          runtimeAtCompletion.commit &&
+        runtimeAtStart.workingTreeClean === true,
+      verifiedAtCompletion:
+        runtimeAtCompletion.workingTreeClean === true,
+    },
     configuration: {
       statusSamples: options.samples,
       timeoutMs: options.timeoutMs,
