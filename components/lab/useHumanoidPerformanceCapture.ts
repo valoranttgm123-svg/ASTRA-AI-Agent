@@ -86,11 +86,11 @@ export function useHumanoidPerformanceCapture() {
       const originalWarn = console.warn;
       console.error = (...args: unknown[]) => {
         consoleErrorCount += 1;
-        originalError(...args);
+        originalError.apply(console, args);
       };
       console.warn = (...args: unknown[]) => {
         consoleWarnCount += 1;
-        originalWarn(...args);
+        originalWarn.apply(console, args);
       };
 
       const onWindowError = () => {
