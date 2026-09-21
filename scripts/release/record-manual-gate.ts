@@ -7,6 +7,7 @@ import {
 import path from "node:path";
 
 import {
+  type ManualGateId,
   type ManualGateStatus,
   type ManualReleaseEvidence,
 } from "../../lib/release/core-report";
@@ -21,7 +22,7 @@ import {
 import { safeErrorDetail } from "../../lib/security/redaction";
 
 type Options = {
-  gate: string;
+  gate: ManualGateId;
   status: ManualGateStatus;
   evidence?: string;
   note?: string;
@@ -97,7 +98,7 @@ function parseArgs(
   }
 
   return {
-    gate,
+    gate: gate as ManualGateId,
     status,
     evidence,
     note,
