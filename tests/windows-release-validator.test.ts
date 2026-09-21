@@ -26,7 +26,8 @@ test("Phase 19D Windows validator checks tasks shortcut loopback and self-check"
   assert.match(source, /127\.0\.0\.1/);
   assert.match(source, /Get-NetTCPConnection/i);
   assert.match(source, /self-check\.ps1/i);
-  assert.match(source, /\.astra\\readiness/i);
+  assert.match(source, /private-evidence\.ps1/i);
+  assert.match(source, /Get-AstraPrivateReadinessEvidencePath/i);
   assert.match(source, /ReleaseVerdict\s*=\s*"NOT_EVALUATED"/i);
 });
 
