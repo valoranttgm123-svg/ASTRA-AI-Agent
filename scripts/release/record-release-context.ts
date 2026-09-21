@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
   readFile,
@@ -17,6 +16,10 @@ import {
   releaseEvidenceRoot,
 } from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
+import {
+  assertSameCleanRepositorySnapshot,
+  cleanRepositorySnapshot,
+} from "../../lib/release/repository-state";
 
 type Options = {
   connected?: string[];
@@ -127,20 +130,8 @@ async function main() {
     process.argv.slice(2),
   );
 
-  const commit = execFileSync(
-    "git",
-    ["rev-parse", "HEAD"],
-    {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    },
-  ).trim();
-
-  if (!/^[0-9a-f]{40}$/i.test(commit)) {
-    throw new Error(
-      "Cannot record release context without a valid Git HEAD commit.",
-    );
-  }
+  const repository = cleanRepositorySnapshot();
+  const commit = repository.commit;
 
   const recordedAt = new Date().toISOString();
 
@@ -173,6 +164,10 @@ async function main() {
       recordedAt,
       commit,
     },
+  );
+
+  assertSameCleanRepositorySnapshot(
+    repository,
   );
 
   await writeFile(
