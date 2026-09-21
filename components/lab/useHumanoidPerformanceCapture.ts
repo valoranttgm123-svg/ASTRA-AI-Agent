@@ -103,8 +103,16 @@ export function useHumanoidPerformanceCapture() {
       setCapturing(true);
       setStatus("VERIFYING BUILD...");
 
-      const runtimeAtStart =
-        await fetchRuntimeIdentity();
+      let runtimeAtStart;
+      try {
+        runtimeAtStart =
+          await fetchRuntimeIdentity();
+      } catch (error) {
+        activeRef.current = false;
+        setCapturing(false);
+        setStatus("CAPTURE FAILED");
+        throw error;
+      }
       setStatus("CAPTURING 10S...");
 
       let windowErrorCount = 0;
