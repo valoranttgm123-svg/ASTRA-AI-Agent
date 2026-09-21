@@ -55,6 +55,14 @@ test("browser performance endpoint is local guarded and writes only private evid
     route,
     /workingTreeClean/,
   );
+  assert.match(
+    route,
+    /runtimeBuildIdentity/,
+  );
+  assert.match(
+    route,
+    /evidence\.runtime\.commit/,
+  );
   assert.doesNotMatch(
     route,
     /READY["']/,
@@ -77,6 +85,22 @@ test("Humanoid browser capture persists counts and telemetry, not chat or consol
   assert.match(hook, /unhandledRejectionCount/);
   assert.match(hook, /longTaskCount/);
   assert.match(hook, /quality !== "high"/);
+  assert.match(
+    hook,
+    /parseBrowserRuntimeIdentity/,
+  );
+  assert.equal(
+    (
+      hook.match(
+        /await fetchRuntimeIdentity\(\)/g,
+      ) ?? []
+    ).length,
+    2,
+  );
+  assert.match(
+    hook,
+    /runtimeAtCompletion\.commit[\s\S]*runtimeAtStart\.commit/,
+  );
 
   assert.doesNotMatch(
     hook,
