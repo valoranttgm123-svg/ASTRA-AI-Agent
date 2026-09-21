@@ -67,3 +67,67 @@ test("Phase 19B uninstall remains scoped to startup tasks and desktop shortcut",
     /File proyek dan model tidak dihapus/i,
   );
 });
+
+
+test("Phase 19C Windows preflight is read-only and enforces the supported runtime baseline", () => {
+  const source = readWindowsScript(
+    "preflight-local.ps1",
+  );
+
+  assert.match(source, /Get-Command node\.exe/i);
+  assert.match(source, /Get-Command npm\.cmd/i);
+  assert.match(source, /Get-Command git\.exe/i);
+  assert.match(
+    source,
+    /\$nodeMajor\s+-lt\s+20/i,
+  );
+  assert.match(source, /package\.json/i);
+  assert.match(source, /package-lock\.json/i);
+  assert.match(source, /RequiresAdministrator\s*=\s*\$false/i);
+  assert.match(source, /127\.0\.0\.1/);
+
+  assert.doesNotMatch(
+    source,
+    /Register-ScheduledTask|Unregister-ScheduledTask|Start-ScheduledTask|Stop-ScheduledTask|Remove-Item|git\s+pull|npm\s+ci|npm\s+run\s+build/i,
+  );
+});
+
+test("Phase 19C install update and reinstall run preflight before their first mutation", () => {
+  const cases = [
+    {
+      name: "install-local.ps1",
+      firstMutation: "npm ci",
+    },
+    {
+      name: "update-local.ps1",
+      firstMutation: "git pull",
+    },
+    {
+      name: "reinstall-local.ps1",
+      firstMutation: "& $uninstaller",
+    },
+  ] as const;
+
+  for (const item of cases) {
+    const source = readWindowsScript(item.name);
+    const preflightIndex = source.indexOf(
+      "& $preflight -Port $Port",
+    );
+    const mutationIndex = source.indexOf(
+      item.firstMutation,
+    );
+
+    assert.ok(
+      preflightIndex >= 0,
+      item.name + " must invoke preflight",
+    );
+    assert.ok(
+      mutationIndex >= 0,
+      item.name + " mutation anchor missing",
+    );
+    assert.ok(
+      preflightIndex < mutationIndex,
+      item.name + " must preflight before mutation",
+    );
+  }
+});
