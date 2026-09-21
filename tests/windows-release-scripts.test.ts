@@ -85,10 +85,50 @@ test("Phase 19C Windows preflight is read-only and enforces the supported runtim
   assert.match(source, /package-lock\.json/i);
   assert.match(source, /RequiresAdministrator\s*=\s*\$false/i);
   assert.match(source, /127\.0\.0\.1/);
+  assert.match(
+    source,
+    /Get-NetTCPConnection\s+-LocalPort\s+\$Port/i,
+  );
+  assert.match(
+    source,
+    /LocalAddress\s+-ne\s+"127\.0\.0\.1"[\s\S]*LocalAddress\s+-ne\s+"::1"/i,
+  );
+  assert.match(
+    source,
+    /listener non-loopback/i,
+  );
 
   assert.doesNotMatch(
     source,
     /Register-ScheduledTask|Unregister-ScheduledTask|Start-ScheduledTask|Stop-ScheduledTask|Remove-Item|git\s+pull|npm\s+ci|npm\s+run\s+build/i,
+  );
+});
+
+test("Phase 19B reinstall completes dependency/build validation before teardown", () => {
+  const source = readWindowsScript(
+    "reinstall-local.ps1",
+  );
+
+  const npmCi = source.indexOf(
+    'Invoke-Native -FilePath $npm -Arguments @("ci")',
+  );
+  const npmBuild = source.indexOf(
+    'Invoke-Native -FilePath $npm -Arguments @("run", "build")',
+  );
+  const uninstall = source.indexOf(
+    "& $uninstaller",
+  );
+  const install = source.indexOf(
+    "& $installer -Port $Port -SkipBuild",
+  );
+
+  assert.ok(npmCi >= 0);
+  assert.ok(npmBuild > npmCi);
+  assert.ok(uninstall > npmBuild);
+  assert.ok(install > uninstall);
+  assert.doesNotMatch(
+    source.slice(0, uninstall),
+    /Unregister-ScheduledTask|Remove-Item/,
   );
 });
 
