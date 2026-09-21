@@ -648,7 +648,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       setBrainStatus((current) => {
         const provider = finalResult.brain.provider;
         const mode =
-          provider === "cloud"
+          provider === "cloud" || provider === "nvidia"
             ? "cloud"
             : provider === "routing_only"
               ? "routing_only"
@@ -663,7 +663,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
                 ? "Codex"
                 : provider === "hermes"
                   ? "Hermes"
-                  : "Cloud";
+                  : provider === "nvidia"
+                    ? "NVIDIA Nemotron"
+                    : "Cloud";
 
         return {
           ready: true,
@@ -673,8 +675,14 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
             provider === "routing_only"
               ? "ASTRA used routing-only fallback for the latest request."
               : `${providerName} handled the latest ASTRA request via live telemetry.`,
-          endpoint: current?.endpoint,
-          model: current?.model,
+          endpoint:
+            provider === "nvidia"
+              ? current?.features?.nvidia?.endpoint
+              : current?.endpoint,
+          model:
+            provider === "nvidia"
+              ? current?.features?.nvidia?.model
+              : current?.model,
           fallback: current?.fallback ?? "routing_only",
           permissions: finalResult.brain.permissions ?? current?.permissions,
           features: current?.features,
