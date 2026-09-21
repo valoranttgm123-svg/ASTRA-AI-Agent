@@ -432,15 +432,15 @@ async function main() {
     );
   }
 
-  const finalRepository =
-    assertSameCleanRepositorySnapshot(
-      repository,
-    );
   const runtimeAtCompletion =
     await verifyRuntimeBuildIdentity(
       baseUrl,
-      finalRepository.commit,
+      repository.commit,
       options.timeoutMs,
+    );
+  const finalRepository =
+    assertSameCleanRepositorySnapshot(
+      repository,
     );
   const outputPath =
     prepareRuntimePerformancePath(
