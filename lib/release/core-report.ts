@@ -276,6 +276,14 @@ function hasReleaseContext(
   manual: ManualReleaseEvidence | null | undefined,
   expectedCommit: string | null,
 ) {
+  const validLabels = (value: unknown) =>
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        typeof item === "string" &&
+        item.length <= 160,
+    );
+
   return (
     manual !== null &&
     manual !== undefined &&
@@ -284,9 +292,9 @@ function hasReleaseContext(
       manual.contextCommit,
       expectedCommit,
     ) &&
-    Array.isArray(manual.connected) &&
-    Array.isArray(manual.requiresUserLogin) &&
-    Array.isArray(manual.notImplemented) &&
+    validLabels(manual.connected) &&
+    validLabels(manual.requiresUserLogin) &&
+    validLabels(manual.notImplemented) &&
     typeof manual.externalConfigurationRequired ===
       "boolean"
   );
