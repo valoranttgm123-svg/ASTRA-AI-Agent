@@ -190,3 +190,71 @@ test("Phase 14E3 end-to-end service executes Level 1 once and keeps Level 2 appr
     assert.equal(brainCalls.length, 1);
   });
 });
+
+
+test("Automation STOP suppresses late success from an executor that ignores AbortSignal", async () => {
+  await withStore(async () => {
+    await saveAutomationStore([
+      definition("late-success", 1),
+    ]);
+
+    let releaseExecutor:
+      | ((outcome: {
+          status: "completed";
+          detail: string;
+        }) => void)
+      | undefined;
+    let markStarted: (() => void) | undefined;
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+
+    const events: string[] = [];
+    const controller = new AbortController();
+
+    const tick = runAutomationTickFromStore({
+      now: new Date(
+        "2026-09-20T10:30:00.000Z",
+      ),
+      signal: controller.signal,
+      onEvent: (event) => {
+        events.push(event.type);
+      },
+      execute: async () =>
+        new Promise((resolve) => {
+          releaseExecutor = resolve;
+          markStarted?.();
+        }),
+    });
+
+    await started;
+    controller.abort(
+      new DOMException(
+        "Emergency STOP",
+        "AbortError",
+      ),
+    );
+
+    releaseExecutor?.({
+      status: "completed",
+      detail:
+        "Executor ignored cancellation and returned late success.",
+    });
+
+    const result = await tick;
+
+    assert.equal(result.stopped, true);
+    assert.equal(result.runs.length, 1);
+    assert.equal(
+      result.runs[0].status,
+      "cancelled",
+    );
+    assert.ok(
+      events.includes("automation.cancelled"),
+    );
+    assert.equal(
+      events.includes("automation.completed"),
+      false,
+    );
+  });
+});

@@ -91,7 +91,19 @@ async function runWithTimeout<T>(
   }
 
   try {
-    return await run(controller.signal);
+    const result = await run(controller.signal);
+
+    if (controller.signal.aborted) {
+      const reason = controller.signal.reason;
+      if (reason instanceof Error) {
+        throw reason;
+      }
+      throw abortError(
+        "Automation run completed after cancellation.",
+      );
+    }
+
+    return result;
   } finally {
     clearTimeout(timeout);
     externalSignal?.removeEventListener("abort", onExternalAbort);
