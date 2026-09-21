@@ -11,6 +11,9 @@ export type ManualGateUpdate = {
   status: ManualGateStatus;
   observedAt?: string;
   evidencePath?: string;
+  evidenceSha256?: string;
+  evidenceBytes?: number;
+  commit?: string;
   note?: string;
 };
 
@@ -34,11 +37,16 @@ export function upsertManualGate(
 
   if (
     update.status === "PASS" &&
-    (!update.observedAt ||
-      !update.evidencePath)
+    (
+      !update.observedAt ||
+      !update.evidencePath ||
+      !update.evidenceSha256 ||
+      update.evidenceBytes === undefined ||
+      !update.commit
+    )
   ) {
     throw new Error(
-      "PASS requires observedAt and evidencePath.",
+      "PASS requires observedAt, evidencePath, evidenceSha256, evidenceBytes, and commit.",
     );
   }
 
@@ -68,6 +76,21 @@ export function upsertManualGate(
           : {}),
         ...(update.evidencePath
           ? { evidencePath: update.evidencePath }
+          : {}),
+        ...(update.evidenceSha256
+          ? {
+              evidenceSha256:
+                update.evidenceSha256,
+            }
+          : {}),
+        ...(update.evidenceBytes !== undefined
+          ? {
+              evidenceBytes:
+                update.evidenceBytes,
+            }
+          : {}),
+        ...(update.commit
+          ? { commit: update.commit }
           : {}),
         ...(update.note
           ? { note: update.note.slice(0, 1000) }
