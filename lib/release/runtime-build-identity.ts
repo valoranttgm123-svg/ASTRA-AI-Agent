@@ -52,3 +52,44 @@ export function assertRuntimeBuildIdentity(
     workingTreeClean: true as const,
   };
 }
+
+export async function verifyRuntimeBuildIdentity(
+  baseUrl: string,
+  expectedCommit: string,
+  timeoutMs: number,
+) {
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () =>
+      controller.abort(
+        new DOMException(
+          "ASTRA runtime build identity request timed out.",
+          "TimeoutError",
+        ),
+      ),
+    timeoutMs,
+  );
+
+  try {
+    const response = await fetch(baseUrl + "/api/agent", {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        "x-astra-client": "1",
+      },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(
+        `ASTRA runtime build identity returned HTTP ${response.status}.`,
+      );
+    }
+    return assertRuntimeBuildIdentity(
+      await response.json(),
+      expectedCommit,
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}
