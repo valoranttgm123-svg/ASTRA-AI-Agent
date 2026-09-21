@@ -62,16 +62,7 @@ function Resolve-AstraPrivateEvidenceFile {
   $candidate = Join-Path $areaRoot $FileName
 
   if (Test-Path -LiteralPath $candidate) {
-    $item = Get-Item -LiteralPath $candidate -Force
-    if ($item.PSIsContainer) {
-      throw "Private evidence output target must be a regular file."
-    }
-    $isReparsePoint = (
-      ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0
-    )
-    if ($isReparsePoint) {
-      throw "Private evidence output target must not be a symbolic link, junction, or other reparse point."
-    }
+    throw "Private evidence output target must not already exist."
   }
 
   return $candidate
