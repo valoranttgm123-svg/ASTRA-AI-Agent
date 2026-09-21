@@ -40,6 +40,8 @@ Click:
 
 Normal states are sampled for roughly 10 seconds. Assembly/shockwave use a shorter window matching the transient effect.
 
+Before sampling starts, the browser reads the running ASTRA build identity from `/api/agent`. It reads it again when sampling completes. A capture is rejected if the build commit changes, either attestation is not clean, or the evidence no longer matches the clean server checkout when it is saved. This prevents a stale browser tab or stale ASTRA server build from being labeled as current release evidence.
+
 The browser records only structured telemetry:
 
 - requestAnimationFrame frame intervals;
@@ -118,16 +120,20 @@ The bundler requires valid current-commit captures for exactly:
 - Assembly
 - Shockwave
 
-Each saved browser capture now includes repository provenance:
+Each saved browser capture now includes repository and runtime provenance:
 
 - full Git commit;
-- whether the Git working tree was clean at capture time.
+- whether the Git working tree was clean at capture time;
+- running-build commit;
+- clean-build state;
+- start and completion runtime-attestation flags.
 
 The bundler rejects:
 
 - LOW-quality captures;
 - dirty-tree captures;
 - captures from another Git commit;
+- captures from a stale/dirty build or without start/end runtime attestation;
 - missing required scenarios;
 - malformed/private-path evidence.
 

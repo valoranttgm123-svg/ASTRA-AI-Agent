@@ -146,6 +146,18 @@ export function parseStoredBrowserReleaseCapture(
   const evidence =
     parseBrowserPerformanceEvidence(value);
 
+  if (
+    evidence.runtime.commit !==
+      expectedCommit.toLowerCase() ||
+    evidence.runtime.workingTreeClean !== true ||
+    evidence.runtime.verifiedAtStart !== true ||
+    evidence.runtime.verifiedAtCompletion !== true
+  ) {
+    throw new Error(
+      `Browser release capture ${scenario} does not match the clean running ASTRA build.`,
+    );
+  }
+
   if (evidence.scenario !== scenario) {
     throw new Error(
       `Browser release capture expected ${scenario} but found ${evidence.scenario}.`,

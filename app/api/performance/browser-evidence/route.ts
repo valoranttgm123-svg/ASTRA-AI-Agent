@@ -13,6 +13,7 @@ import {
 import {
   prepareBrowserPerformancePath,
 } from "@/lib/performance/private-output";
+import { runtimeBuildIdentity } from "@/lib/release/runtime-build-identity";
 
 export const dynamic = "force-dynamic";
 
@@ -73,13 +74,32 @@ export async function POST(request: Request) {
       );
     }
 
+    const repository = repositorySnapshot();
+    const runtime = runtimeBuildIdentity();
+    if (
+      repository.commit === "unknown" ||
+      repository.workingTreeClean !== true ||
+      runtime.commit === "unknown" ||
+      runtime.workingTreeClean !== true ||
+      runtime.commit !== repository.commit ||
+      evidence.runtime.commit !== runtime.commit ||
+      evidence.runtime.workingTreeClean !== true ||
+      evidence.runtime.verifiedAtStart !== true ||
+      evidence.runtime.verifiedAtCompletion !== true
+    ) {
+      throw new RequestError(
+        "Browser evidence runtime does not match the clean running ASTRA build.",
+        409,
+      );
+    }
+
     const outputPath =
       prepareBrowserPerformancePath(
         evidence.scenario,
       );
     const storedEvidence = {
       ...evidence,
-      repository: repositorySnapshot(),
+      repository,
     };
 
     await writeFile(

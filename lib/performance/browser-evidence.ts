@@ -68,6 +68,13 @@ export function summarizeBrowserFrames(
   };
 }
 
+export type BrowserRuntimeEvidence = {
+  commit: string;
+  workingTreeClean: true;
+  verifiedAtStart: true;
+  verifiedAtCompletion: true;
+};
+
 export type BrowserPerformanceEvidence = {
   schemaVersion: 1;
   capturedAt: string;
@@ -82,6 +89,7 @@ export type BrowserPerformanceEvidence = {
     | "assembly"
     | "shockwave";
   releaseVerdict: "NOT_EVALUATED";
+  runtime: BrowserRuntimeEvidence;
   frame: BrowserFrameSummary;
   environment: {
     userAgent: string;
@@ -129,6 +137,36 @@ function boundedString(
     : "";
 }
 
+export function parseBrowserRuntimeIdentity(
+  value: unknown,
+) {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    Array.isArray(value)
+  ) {
+    throw new Error(
+      "Browser runtime build identity is missing.",
+    );
+  }
+
+  const raw = value as Record<string, unknown>;
+  if (
+    typeof raw.commit !== "string" ||
+    !/^[0-9a-f]{40}$/i.test(raw.commit) ||
+    raw.workingTreeClean !== true
+  ) {
+    throw new Error(
+      "Browser runtime build identity is invalid.",
+    );
+  }
+
+  return {
+    commit: raw.commit.toLowerCase(),
+    workingTreeClean: true as const,
+  };
+}
+
 function finiteNumber(
   value: unknown,
   min: number,
@@ -173,6 +211,9 @@ export function parseBrowserPerformanceEvidence(
     );
   }
 
+  const runtimeRaw = raw.runtime as
+    | Record<string, unknown>
+    | undefined;
   const frameRaw = raw.frame as
     | Record<string, unknown>
     | undefined;
@@ -186,6 +227,12 @@ export function parseBrowserPerformanceEvidence(
     | Record<string, unknown>
     | undefined;
 
+  if (!runtimeRaw) {
+    throw new Error(
+      "Browser runtime build identity is missing.",
+    );
+  }
+
   if (
     !frameRaw ||
     !envRaw ||
@@ -194,6 +241,17 @@ export function parseBrowserPerformanceEvidence(
   ) {
     throw new Error(
       "Browser performance evidence is incomplete.",
+    );
+  }
+
+  const runtime =
+    parseBrowserRuntimeIdentity(runtimeRaw);
+  if (
+    runtimeRaw.verifiedAtStart !== true ||
+    runtimeRaw.verifiedAtCompletion !== true
+  ) {
+    throw new Error(
+      "Browser runtime build identity was not verified across the capture.",
     );
   }
 
@@ -252,6 +310,11 @@ export function parseBrowserPerformanceEvidence(
       new Date().toISOString(),
     scenario,
     releaseVerdict: "NOT_EVALUATED",
+    runtime: {
+      ...runtime,
+      verifiedAtStart: true,
+      verifiedAtCompletion: true,
+    },
     frame: {
       sampleCount: Math.round(
         number(frameRaw, "sampleCount", 1, 100000),
