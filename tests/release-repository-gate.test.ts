@@ -59,6 +59,30 @@ test("Phase 18A repository gate uses platform-safe npm executable and no destruc
   );
 });
 
+test("Phase 18A repository gate requires a clean working tree before evidence capture", () => {
+  const script = readFileSync(
+    path.resolve(
+      "scripts",
+      "release",
+      "repository-gate.ts",
+    ),
+    "utf8",
+  );
+
+  assert.match(
+    script,
+    /git[\s\S]*status[\s\S]*--porcelain/,
+  );
+  assert.match(
+    script,
+    /--untracked-files=normal/,
+  );
+  assert.match(
+    script,
+    /workingTreeClean:\s*true/,
+  );
+});
+
 test("Phase 18A GitHub CI enforces full history and PR/push diff checks", () => {
   const workflow = readFileSync(
     path.resolve(".github", "workflows", "ci.yml"),
