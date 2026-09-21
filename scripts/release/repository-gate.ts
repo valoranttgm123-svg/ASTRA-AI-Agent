@@ -1,12 +1,13 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
-import path from "node:path";
+import { writeFileSync } from "node:fs";
 
 import {
   REPOSITORY_GATE_STEPS,
   repositoryGateExecutable,
 } from "../../lib/release/repository-gate";
-import { resolveReleaseEvidencePath } from "../../lib/release/private-output";
+import {
+  prepareReleaseEvidencePath,
+} from "../../lib/release/private-output";
 
 function workingTreeStatus() {
   return execFileSync(
@@ -72,14 +73,12 @@ function main() {
 
   assertCleanWorkingTree("after validation");
 
-  const outputPath = resolveReleaseEvidencePath(
-    undefined,
-    "repository-gate",
-    "json",
-  );
-  mkdirSync(path.dirname(outputPath), {
-    recursive: true,
-  });
+  const outputPath =
+    prepareReleaseEvidencePath(
+      undefined,
+      "repository-gate",
+      "json",
+    );
 
   let commit = "unknown";
   try {
