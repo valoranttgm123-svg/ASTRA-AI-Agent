@@ -593,3 +593,18 @@ No additional speculative NVIDIA repository work should be created. Next changes
 
 Core target-PC priority remains:
 `Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`.
+
+## 2026-09-22 — recovery pointer cleanup after NVIDIA saturation
+
+Fresh repository audit found Codex had already advanced beyond the interrupted NVA-1 session:
+
+- PR #159: NVA-0 merged;
+- PR #160: NVA-1 merged;
+- PR #161: NVA-2…NVA-9 contracts merged;
+- PR #162: NVIDIA MAX repository saturation merged;
+- main push CI run #435: SUCCESS;
+- open PRs at audit: 0.
+
+Added `docs/CURRENT_EXECUTION_POINTER.md` and latest-override notes so future ChatGPT/Codex sessions do not restart stale NVA-1/NVA-2 instructions.
+
+Next work is real target-PC/core release validation and real NVIDIA backend integration, not more speculative repository architecture.
