@@ -5,6 +5,7 @@ import AstraAutomationPanel from "@/components/AstraAutomationPanel";
 import AstraHumanoidPortal from "@/components/AstraHumanoidPortal";
 import { AstraRuntimeProvider } from "@/components/AstraRuntime";
 import UiPerformanceProbe from "@/components/UiPerformanceProbe";
+import AstraOperationsPanel from "@/components/AstraOperationsPanel";
 
 export default function Home() {
   return (
@@ -21,6 +22,7 @@ export default function Home() {
 
         <AstraConsole />
         <AstraAutomationPanel />
+        <AstraOperationsPanel />
         <AstraHumanoidPortal />
         <UiPerformanceProbe />
 
