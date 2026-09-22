@@ -2029,3 +2029,26 @@ Truth boundary:
 - generic production executors are not invented in this slice;
 - real target-PC task continuation/restart evidence remains required;
 - approved Level 2/3 execution must reuse ASTRA's real approval path rather than bypass it.
+
+## Phase 28 repository checkpoint — Diagnostics / Audit / Offline foundation
+
+Repository-side Phase 28 foundation is implemented on `feature/phase28-diagnostics-audit-offline`.
+
+Implemented:
+- provider-neutral health registry with explicit `HEALTHY / DEGRADED / UNAVAILABLE / NOT_CONFIGURED / UNKNOWN` truth states;
+- operating modes `ONLINE / DEGRADED / OFFLINE / UNKNOWN`;
+- no implicit internet-online claim: connectivity defaults to `UNKNOWN` until a real probe is wired;
+- real local aggregation for Event store, Background Task store, Automation store, and Automation service;
+- bounded private audit journal under `.astra/audit.json`;
+- audit entries record actor/action/resource/project/permission/outcome/verification/failure without raw secret material;
+- sensitive token/path redaction reuses ASTRA security redaction;
+- bounded action-history queries;
+- recovery-plan contract that never executes directly and preserves Level-2 approval for service restart/cache mutation;
+- read-only loopback diagnostics API;
+- regression tests for health aggregation, explicit offline/degraded behavior, cancellation, recovery permission boundaries, redaction, persistence, querying, malformed data and symlink targets.
+
+Truth boundary:
+- real internet state remains UNKNOWN until a real target-runtime connectivity probe exists;
+- no provider/service is marked healthy unless an actual registered health check reports it;
+- recovery plans are proposals only; ASTRA Tool Runtime/approval remains execution authority;
+- Phase 28 final exit gate still needs real target-PC recovery/offline/audit evidence.

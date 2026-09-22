@@ -2053,3 +2053,20 @@ Next work is execution, not redesign:
 - defect repair and evidence collection.
 
 Owner interaction remains zero-touch except unavoidable external authorization/physical boundaries.
+
+## 2026-09-22 — JARVIS foundations handoff through Phase 28
+
+While target-PC/Codex execution was unavailable, repository-only JARVIS foundations continued under the owner's explicit authorization.
+
+Merged:
+- Phase 24 Event Engine — PR #164;
+- Phase 25 Durable Background Task Manager — PR #165.
+
+Active:
+- Phase 28 Diagnostics / Audit / Offline on `feature/phase28-diagnostics-audit-offline`.
+
+Read `docs/JARVIS_PROGRESS_TRACKER.md` and `docs/CURRENT_EXECUTION_POINTER.md` before touching these phases.
+
+Do not duplicate merged foundations. Real provider/Windows/backend adapters should plug into the existing contracts and must preserve truthful health, permission boundaries, STOP/cancellation, and private evidence rules.
+
+After Phase 28 green merge, next independent repository slice is Phase 22 Identity / Trust / Secret boundary.
