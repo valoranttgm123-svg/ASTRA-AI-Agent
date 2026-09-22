@@ -110,3 +110,39 @@ export function prepareBrowserBundlePath(
     browserPerformanceRoot(),
   );
 }
+
+
+export function resolveUiPerformancePath(
+  scenario: string,
+  now = new Date(),
+) {
+  const root = browserPerformanceRoot();
+  const timestamp = now
+    .toISOString()
+    .replace(/[:.]/g, "-");
+  const safeScenario = scenario
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .slice(0, 40);
+  const candidate = path.resolve(
+    root,
+    `ui-${safeScenario}-${timestamp}.json`,
+  );
+  const relative = path.relative(root, candidate);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(
+      "UI performance output must stay inside .astra/performance/.",
+    );
+  }
+  return candidate;
+}
+
+export function prepareUiPerformancePath(
+  scenario: string,
+  now = new Date(),
+) {
+  return preparePrivateAstraOutputFile(
+    resolveUiPerformancePath(scenario, now),
+    browserPerformanceRoot(),
+  );
+}

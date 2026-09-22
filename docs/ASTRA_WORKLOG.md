@@ -8,19 +8,20 @@
 
 ## Recovery truth
 
-Current `main` checkpoint:
+Current merged `main` checkpoint before the active reconciliation PR:
 
+- PR #170: `10bc9f57aeeed4431207a11f8b3626e07560c505`;
 - Phase 15 repository hardening: **merged / CI verified**;
-- Phase 16A performance instrumentation: **merged / CI verified**;
+- Phase 16 runtime + Humanoid/browser evidence tooling: **merged / CI verified**;
 - Phase 17A safe validation preflight: **merged / CI verified**;
-- repository cleanup before RC: **complete**;
-- Phase 19A–19G Windows repository tooling/hardening: **merged through PR #117**;
-- current repository checkpoint after Phase 20 evidence hardening: `e86fe028f0fa1f0d9f78c5ef5c426cd34ec1f50b`;
-- Phase 18A repository RC gate: **merged as PR #119**; stale PR #111 closed as superseded;
-- Phase 16/17 target-runtime evidence remains pending;
+- Phase 18–20 repository release/evidence tooling: **merged / CI verified**;
+- Phase 19A–19G Windows repository tooling/hardening: **merged / CI verified**;
+- NVIDIA MAX provider-neutral repository contracts: **merged / CI verified**;
+- JARVIS repository foundations Phase 24/25/28/22/27/29: **merged / CI verified**;
+- active reconciliation PR #171 recovers the missing Phase 16 main-UI evidence instrumentation and normalizes cross-session handoff;
 - Phase 14 target-PC validation: **still required**;
-- real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**;
-- Phase 19 target-PC install/update/reinstall/startup evidence: **still required**.
+- MEM-X real Sonor/Graphify/Obsidian validation: **still requires target-PC/local access**;
+- Phase 16 real measurements, Phase 17 real scenarios, Phase 19 real Windows evidence and Phase 20 final report: **still required**.
 
 ## Durable milestone log
 

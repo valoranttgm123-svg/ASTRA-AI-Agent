@@ -14,7 +14,7 @@ That is a complete continuation instruction.
 
 On that command, use repository state instead of asking for the roadmap again:
 
-`main → AGENTS.md → CODEX_PROGRESS_TRACKER.md → CODEX_HANDOFF.md → this file`
+`main/open PR/CI → CURRENT_EXECUTION_POINTER → CROSS_SESSION_RECONCILIATION → AGENTS.md → trackers/handoff → this file`
 
 Then select the first implementable unfinished task, satisfy its exit gate, validate it, PR/CI/merge it, update the tracker/handoff, and continue.
 
@@ -43,9 +43,17 @@ Repository-complete / merged on current `main`:
 - target-PC/runtime/preflight capture verifies the same clean running build at start and completion — PR #144;
 - browser/Humanoid HIGH capture verifies start/end runtime identity, server checkout/runtime agreement, and release-bundle provenance — PR #145.
 
-Latest implementation checkpoint before the final docs-only handoff:
+Latest merged continuity checkpoint before the active cross-session reconciliation:
 
-`03073fe8a95b7064b059aadcd4b9ff933c8c73e8`
+`10bc9f57aeeed4431207a11f8b3626e07560c505` (PR #170).
+
+Also merged and repository-complete:
+- Phase 24 Event Engine — PR #164;
+- Phase 25 Durable Background Task Manager — PR #165;
+- Phase 28 Diagnostics/Audit/Offline — PR #166;
+- Phase 22 Identity/Trust/Secret boundary — PR #167;
+- Phase 27 Multi-device foundation — PR #168;
+- Phase 29 Generic Skill/Environment registry — PR #169.
 
 Stale/diverged PR #111 is closed as superseded by PR #119.
 
@@ -67,11 +75,11 @@ Current execution rule:
 - if target-PC/local access is unavailable, read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`, then continue only concrete repository audits, regression coverage, hardening, documentation synchronization or real defect fixes;
 - do not invent benchmark values, Sonor state, physical STOP results, external-action success, Windows install proof or READY status;
 - do not reimplement PR #123–#126, #129, or #142–#145 release/evidence hardening unless a new concrete defect is demonstrated;
-- do not begin Phase 21–30 as a substitute for unfinished Phase 18–20 core evidence.
+- do not recreate the already-merged Phase 24/25/28/22/27/29 repository foundations; real Phase 21/23/26/27/29 integration and Phase 30 remain evidence-gated.
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
 
-Repository saturation note (2026-09-21): after PR #145, the latest audit found no additional concrete repository-only release-evidence defect to implement. Until a new defect is demonstrated, the next meaningful work is the real target-PC/Sonor/browser/approval evidence below; do not create speculative hardening merely to avoid those gates.
+Repository reconciliation note (2026-09-22): later work continued well beyond PR #145. Use `docs/CURRENT_EXECUTION_POINTER.md` and `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` as the current truth. One real missed repository slice—Phase 16 main-UI evidence instrumentation—was recovered in PR #171. After that, do not create speculative hardening merely to avoid real target-PC/provider gates.
 
 ---
 

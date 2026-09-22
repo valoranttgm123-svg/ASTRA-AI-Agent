@@ -4,24 +4,28 @@ This repository is the working source of truth for the ASTRA AI Agent project.
 
 ## START HERE — current Codex mission
 
-Before changing any code, read these files in this exact order:
+Before changing any code:
 
-1. `docs/CODEX_NEXT_MISSION.md` — **current executable mission and task order**.
-2. `docs/ASTRA_WORKLOG.md` — durable chronological repository history and current checkpoint.
-3. `docs/SESSION_RECOVERY.md` — recovery protocol for interrupted/new sessions.
-4. `docs/CODEX_HANDOFF.md` — current implementation state, verified baseline and next task.
-5. `docs/CODEX_PROGRESS_TRACKER.md` — persistent completion checklist; update after every merged slice.
-6. `docs/SECURITY_VALIDATION.md` — Phase 15 hardening matrix.
-7. `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done.
-8. `docs/ASTRA_ROADMAP.md` — milestone history and current phase sequence.
-9. `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation still required.
-10. `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**.
-11. `docs/TARGET_PC_EVIDENCE.md` — unified read-only target-PC evidence collection.
-12. `docs/BROWSER_PERFORMANCE_EVIDENCE.md` — private HIGH-quality Humanoid/browser measurement flow.
-13. `docs/CORE_RELEASE_REPORT.md` — conservative Phase 20 evidence-to-report flow.
-14. `docs/MANUAL_RELEASE_EVIDENCE.md` — evidence-backed manual gate/context recording.
-15. `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` — exact target-PC blockers and safe continuation instructions when local access is unavailable.
-16. `docs/ARCHITECTURE.md` and `SECURITY.md` — runtime/security boundaries.
+0. inspect current `main`, open PRs, and newest CI;
+1. read `docs/CURRENT_EXECUTION_POINTER.md` — **shortest authoritative current checkpoint**;
+2. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` — stale/divergent branch reconciliation;
+3. read `docs/CODEX_NEXT_MISSION.md` — executable mission and real-environment order;
+4. read `docs/JARVIS_PROGRESS_TRACKER.md` — Phase 21–30 repository-foundation truth;
+5. read `docs/ASTRA_WORKLOG.md` — durable chronological history;
+6. read `docs/SESSION_RECOVERY.md` — interruption/new-session protocol;
+7. read `docs/CODEX_HANDOFF.md` and `docs/CODEX_PROGRESS_TRACKER.md`;
+8. then read the validation/security document relevant to the active task.
+
+Supporting canonical documents:
+- `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done;
+- `docs/AUTOMATION_VALIDATION.md` — Phase 14 target-PC validation;
+- `docs/SONOR_CODEX_MISSION.md` — preserve/audit/connect the existing Sonor; **do not rebuild it**;
+- `docs/TARGET_PC_EVIDENCE.md`;
+- `docs/BROWSER_PERFORMANCE_EVIDENCE.md`;
+- `docs/PERFORMANCE_BASELINE.md`;
+- `docs/CORE_RELEASE_REPORT.md`;
+- `docs/MANUAL_RELEASE_EVIDENCE.md`;
+- `docs/ARCHITECTURE.md` and `SECURITY.md`.
 
 Read these only when the active task needs their historical/detail context:
 
@@ -43,7 +47,9 @@ Read these only when the active task needs their historical/detail context:
 - Phase 17A safe full-system preflight tooling is merged and CI-verified.
 - Repository cleanup before RC is complete.
 - Phase 19A–19G Windows repository tooling/hardening is merged through PR #117.
-- Latest repository audit implementation checkpoint: `32f3f8f340a6bfc4004c5b4eeedd116682dae854` (PR #150).
+- PR #150 is the historical release/security audit checkpoint; later NVIDIA/JARVIS foundations and continuity updates are also merged.
+- Latest merged continuity checkpoint before cross-session reconciliation: PR #170, `10bc9f57aeeed4431207a11f8b3626e07560c505`.
+- Phase 24/25/28/22/27/29 repository foundations are merged; do not recreate them.
 - Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
 - Repository-only release preparation includes target-PC evidence collection, Humanoid/browser capture, conservative Phase 20 report generation, evidence-backed manual gate recording, final-report context recording, strict evidence-shape/private-path validation, runtime-build attestation, end-to-end capture provenance, stale-browser rejection, browser nested-runtime binding, secure optional-cloud transport, exact GitHub remote validation, and process-tree STOP hardening (PRs #121, #123–#126, #129, #142–#145, #147–#150).
 - MEM-X still requires real local Sonor access.
@@ -76,9 +82,11 @@ Start with the first not-PASS task in `docs/CODEX_NEXT_MISSION.md`.
 
 When target-PC access is unavailable, continue from the first unchecked implementable tracker item.
 
-At the current checkpoint, Phase 18A plus the final 2026-09-21 repository audit hardening through PR #150 are merged on current `main`.
+The old PR #150 paragraph was a historical release/security checkpoint, not the current project head.
 
-The fresh full audit after PR #145 found four additional concrete defects and fixed them in PRs #147–#150. After PR #150, no additional concrete independently implementable repository defect was identified in the audited release/security scope. Phase 14/16/17/19 target-runtime evidence and MEM-X remain local-access gates. When target-PC access is unavailable, change code only for a newly demonstrated defect; otherwise preserve the checkpoint and leave the local gates pending. Read `docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md` and `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` before deciding what can still be improved safely.
+Current task selection must come from `docs/CURRENT_EXECUTION_POINTER.md` after checking current `main`, open PRs, and CI. The Phase 24/25/28/22/27/29 repository foundations are merged. If PR #171 (cross-session reconciliation / Phase 16 main-UI evidence recovery) is still open, resume/fix that PR first; if it has merged, do not recreate it.
+
+After reconciliation, the remaining roadmap is primarily real target-PC/provider evidence: Phase 14, MEM-X, Phase 16, Phase 17, Phase 19, Phase 20, then real Phase 21/23/26/27/29 integrations and Phase 30. Change repository code only for a concrete reproduced gap or explicit owner requirement.
 
 Do not rebuild or redesign completed Phase 14 work.
 

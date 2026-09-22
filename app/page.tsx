@@ -4,6 +4,7 @@ import AstraConsole from "@/components/AstraConsole";
 import AstraAutomationPanel from "@/components/AstraAutomationPanel";
 import AstraHumanoidPortal from "@/components/AstraHumanoidPortal";
 import { AstraRuntimeProvider } from "@/components/AstraRuntime";
+import UiPerformanceProbe from "@/components/UiPerformanceProbe";
 
 export default function Home() {
   return (
@@ -21,6 +22,7 @@ export default function Home() {
         <AstraConsole />
         <AstraAutomationPanel />
         <AstraHumanoidPortal />
+        <UiPerformanceProbe />
 
         <a
           href="https://github.com/valoranttgm123-svg/ASTRA-AI-Agent"
