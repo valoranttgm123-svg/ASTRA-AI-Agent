@@ -2016,3 +2016,21 @@ The catalog provider is injected/provider-neutral on purpose. Do not add brittle
 Target-PC completion still needs the actual supported NVIDIA/Codex skill mechanism. Record installed state only after real verification.
 
 After this branch merges, next independent repo task is **NVA-2 AI-Q adapter contract** from `docs/NVIDIA_MAX_INTEGRATION.md`.
+
+## 2026-09-22 — NVIDIA MAX subsystem contract handoff
+
+NVA-0 is on main through PR #159 (`e155c75f98da4e07ca3c07b7f15d46ceb655f417`).
+NVA-1 is on main through PR #160 (`af7e05e1252b1b80e94b32cfbfedff6f2c7e006b`).
+
+Current branch `feature/nvidia-max-subsystem-contracts` adds safe contracts for NVA-2 through NVA-9:
+AI-Q, Retriever, Document Intelligence, Voice, Vision, NemoClaw/Hermes governance, Guardrails, and Evaluation.
+
+After this branch merges:
+- do not create more speculative NVIDIA architecture;
+- do not guess service endpoint schemas;
+- inspect the actual supported NVIDIA tooling/runtime when target access exists;
+- wire each existing contract to the real backend;
+- keep fallback/degradation truthful;
+- collect exact target-PC evidence before marking a subsystem READY.
+
+Codex still owns zero-touch delivery. The owner should not receive setup commands.
