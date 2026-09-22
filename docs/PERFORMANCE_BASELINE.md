@@ -75,14 +75,32 @@ Browser/Humanoid evidence capture tooling is available in the real Humanoid V15 
 
 Private evidence is written to `.astra/performance/browser-*.json` and includes frame/FPS timing, viewport/DPR, GPU identity, optional browser JS heap, particle/state metadata, long-task counts, and error/warning counts without persisting message text.
 
+### Main UI evidence probe
+
+Repository instrumentation is available for the two non-Humanoid UI rows that were previously missing a capture path.
+
+Open the normal ASTRA page with:
+
+`http://127.0.0.1:3017/?perf=1`
+
+The opt-in `PERF UI` panel can capture:
+
+- `MAIN IDLE`;
+- `COMMAND CENTER` — the capture is rejected unless real ASTRA activity is observed;
+- `AUTOMATION PANEL` — the real Automation panel must stay open throughout capture.
+
+The probe records structured frame/error/activity counters only. It does not persist prompts, responses, microphone transcripts, approval tokens, or console message text. Evidence is bound to the same clean running-build commit at capture start and completion and stored under `.astra/performance/ui-*.json` with `releaseVerdict = NOT_EVALUATED`.
+
+This instrumentation does not fill the table automatically; target-browser execution and review remain required.
+
 Real execution is still required for:
 
 - actual target GPU/browser/display values;
 - Humanoid HIGH measurements in each required state;
 - browser console review outside the capture window;
 - CPU/GPU utilization if collected by external OS/browser diagnostics;
-- Command Center active render behavior;
-- Automation panel open render behavior.
+- Command Center active render behavior using the main UI evidence probe;
+- Automation panel open render behavior using the main UI evidence probe.
 
 ## Test environment
 
