@@ -1950,3 +1950,20 @@ Real NVIDIA hosted availability is still a target-PC configuration gate. Do not 
 See:
 
 `docs/NVIDIA_NIM.md`
+
+## 2026-09-22 — NVIDIA JARVIS mesh handoff
+
+PR #154 is merged at `ce5a5623867f443ffc931c6b4687b19e38412882` with green CI.
+
+Do not collapse NVIDIA back to a single-model provider. Preserve:
+- Chief / Deep / Fast / Vision deterministic routing;
+- actual active-model telemetry;
+- no side-effect execution through NVIDIA;
+- memory and AUTO cloud fallback opt-in defaults;
+- exact NVIDIA hosted endpoint validation;
+- fail-closed mesh health;
+- current no-fake-vision boundary.
+
+Real API validation is target-PC work because the user's key belongs only in `.env.local`.
+
+Continue the existing target-PC Phase 14 / MEM-X / 16 / 17 / 19 / 20 gate order; this model mesh does not waive any release gate.
