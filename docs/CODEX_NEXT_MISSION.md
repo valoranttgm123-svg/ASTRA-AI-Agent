@@ -1,1009 +1,322 @@
-# CODEX NEXT MISSION — ASTRA HARDENING → CORE RELEASE → JARVIS EXPANSION
+# CODEX NEXT MISSION — CURRENT EXECUTION PLAN
 
-> This file is the execution handoff for the next Codex session.
->
-> Do not reconstruct project history from chat. Start from current `main`, read the files listed below, verify the repository state, then execute this mission sequentially.
+Status date: **2026-09-22**
 
-## One-line resume behavior
+This file is the current executable mission. Historical implementation chronology belongs in `docs/ASTRA_WORKLOG.md`, not here.
 
-The repository owner may intentionally give only:
+Before acting:
+
+1. inspect current `main`;
+2. inspect newest CI;
+3. inspect open PRs;
+4. read `docs/CURRENT_EXECUTION_POINTER.md`;
+5. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
+6. then use this mission.
+
+If any older branch/chat/document conflicts with current `main` + the pointer, do not reconstruct the old plan.
+
+## One-line resume
+
+The owner may say only:
 
 `lanjutkan yang belum selesai`
 
-That is a complete continuation instruction.
+That is a complete instruction.
 
-On that command, use repository state instead of asking for the roadmap again:
+Resume automatically from repository truth. Do not ask the owner to restate the roadmap.
 
-`main/open PR/CI → CURRENT_EXECUTION_POINTER → CROSS_SESSION_RECONCILIATION → AGENTS.md → trackers/handoff → this file`
+## Current completed repository baseline
 
-Then select the first implementable unfinished task, satisfy its exit gate, validate it, PR/CI/merge it, update the tracker/handoff, and continue.
+Do not rebuild these:
 
-External-only blockers must be recorded but must not stop unrelated repository work.
-
----
-
-## Current repository checkpoint
-
-Repository-complete / merged on current `main`:
-
-- Phase 15A–15F security/failure hardening;
-- Phase 16A runtime performance measurement instrumentation — PR #105;
-- Phase 16 browser/Humanoid private evidence capture tooling — PR #124;
-- Phase 17A safe full-system preflight instrumentation — PR #106;
-- repository cleanup before RC;
-- Phase 18A repository RC gate automation — PR #119;
-- Phase 19A–19G Windows repository tooling/hardening — PRs #109, #110, #115, #113, #114, #116, #117;
-- target-PC read-only evidence collector — PR #121;
-- Phase 20 conservative core report generator — PR #123;
-- Phase 20 manual gate recorder — PR #125;
-- Phase 20 report context recorder — PR #126;
-- Phase 20 evidence-shape/private-path hardening — PR #129;
-- running-build identity embedded and required for release evidence — PR #142;
-- target-PC evidence persists structured runtime identity and rejects duplicate/non-PASS checks — PR #143;
-- target-PC/runtime/preflight capture verifies the same clean running build at start and completion — PR #144;
-- browser/Humanoid HIGH capture verifies start/end runtime identity, server checkout/runtime agreement, and release-bundle provenance — PR #145.
-
-Latest merged continuity checkpoint before the active cross-session reconciliation:
-
-`10bc9f57aeeed4431207a11f8b3626e07560c505` (PR #170).
-
-Also merged and repository-complete:
+- Phase 14 Automation implementation through PR #92 plus later hardening;
+- Phase 15 security/failure hardening;
+- Phase 16 runtime measurement harness;
+- Phase 16 Humanoid/browser evidence tooling;
+- Phase 16 Command Center / Automation-panel evidence tooling — PR #171;
+- Phase 17 safe preflight tooling;
+- Phase 18 repository RC gate;
+- Phase 19 Windows install/update/reinstall/readiness tooling;
+- Phase 20 evidence/report tooling;
+- NVIDIA JARVIS Model Mesh;
+- NVIDIA MAX provider-neutral contracts;
 - Phase 24 Event Engine — PR #164;
-- Phase 25 Durable Background Task Manager — PR #165;
+- Phase 25 Durable Background Tasks — PR #165;
 - Phase 28 Diagnostics/Audit/Offline — PR #166;
-- Phase 22 Identity/Trust/Secret boundary — PR #167;
+- Phase 22 Identity/Trust/Secrets — PR #167;
 - Phase 27 Multi-device foundation — PR #168;
-- Phase 29 Generic Skill/Environment registry — PR #169.
+- Phase 29 Generic Skill/Environment foundation — PR #169.
 
-Stale/diverged PR #111 is closed as superseded by PR #119.
+Cross-session reconciliation:
+- PR #171 merge: `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- PR CI #466 SUCCESS;
+- main CI #467 SUCCESS;
+- all 206 branches audited.
 
-Still local/target-runtime gated:
+## Mission order
 
-- Phase 14 target-PC Automation approval/STOP validation;
-- MEM-X real Sonor/Graphify/Obsidian validation;
-- Phase 16 real target runtime + browser/Humanoid measurements;
-- Phase 17 real scenarios including approved actions and emergency STOP;
-- Phase 19 real install/update/reinstall/startup verification;
-- Phase 20 final evidence-backed verdict.
+Execute the first task below that is actionable in the current environment.
 
-Current execution rule:
+### M1 — Phase 14 target-PC Automation validation
 
-- if target-PC/local access is available, run `npm run release:repo-gate`, then `scripts/windows/collect-target-pc-evidence.ps1`, then capture the remaining browser/manual/integration evidence;
-- use `release:record-gate` only after a real evidence file exists for a manual PASS;
-- use `release:record-context` for bounded final-report context labels;
-- run `release:core-report` repeatedly; any `BLOCKED` result identifies evidence still missing;
-- if target-PC/local access is unavailable, read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`, then continue only concrete repository audits, regression coverage, hardening, documentation synchronization or real defect fixes;
-- do not invent benchmark values, Sonor state, physical STOP results, external-action success, Windows install proof or READY status;
-- do not reimplement PR #123–#126, #129, or #142–#145 release/evidence hardening unless a new concrete defect is demonstrated;
-- do not recreate the already-merged Phase 24/25/28/22/27/29 repository foundations; real Phase 21/23/26/27/29 integration and Phase 30 remain evidence-gated.
+Canonical document:
 
-If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
+`docs/AUTOMATION_VALIDATION.md`
 
-Repository reconciliation note (2026-09-22): later work continued well beyond PR #145. Use `docs/CURRENT_EXECUTION_POINTER.md` and `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` as the current truth. One real missed repository slice—Phase 16 main-UI evidence instrumentation—was recovered in PR #171. After that, do not create speculative hardening merely to avoid real target-PC/provider gates.
+Goal:
+- validate real target-PC Automation behavior;
+- verify Level-2/3 approval boundaries;
+- verify exact occurrence/scope behavior;
+- verify STOP during a real running occurrence;
+- verify UI/service status remains truthful.
 
----
+Do not mark PASS from code inspection.
 
-## Current verified baseline
+Exit:
+- real evidence exists;
+- failures are repaired and retested;
+- tracker/handoff updated.
 
-Current core milestone:
+### M2 — MEM-X real Sonor / Graphify / Obsidian
 
-- Phase 14 Automation implementation is merged to `main`;
-- final Phase 14 merge: PR #92;
-- merge commit: `de4fbefe6f9a23792a542a74d4d0ca1aef1aa208`;
-- latest `main` CI after PR #92: SUCCESS;
-- Automation service remains OFF by default;
-- unattended Automation ceiling remains Permission Level 0/1;
-- Level 2/3 remain explicit per-occurrence approval paths;
-- Level 4 remains unavailable;
-- global STOP covers interactive Automation plus the active background service tick;
-- no fake Automation lifecycle should be introduced.
+Canonical documents:
 
-Repository truth status:
-
-`PHASE 14 IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
-
-Do not upgrade that status to target-PC verified until the documented Windows validation actually runs successfully.
-
-Read before coding:
-
-1. `docs/ASTRA_MAX.md`
-2. `docs/ASTRA_ROADMAP.md`
-3. `docs/CODEX_HANDOFF.md`
-4. `docs/AUTOMATION_VALIDATION.md`
-5. `docs/SONOR_CODEX_MISSION.md`
-6. `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`
-7. `docs/CORE_RELEASE_REPORT.md`
-8. `docs/MANUAL_RELEASE_EVIDENCE.md`
-9. `docs/BROWSER_PERFORMANCE_EVIDENCE.md`
-10. `SECURITY.md`
-
----
-
-# Mission order
-
-Use this exact order unless a real dependency proves otherwise:
-
-```text
-P14-X  Target-PC Automation validation
-P15A   Project path / filesystem hardening
-P15B   Untrusted retrieved-context / prompt-injection boundary
-P15C   Provider + MCP failure isolation
-P15D   Cancellation / timeout / network failure matrix
-P15E   Secret / error / telemetry leakage hardening
-P15F   Security regression matrix + report
-MEM-X  Real Sonor / Graphify / Obsidian validation
-P16    Performance pass
-P17    Full-system scenarios
-P18    Release Candidate
-P19    Windows ready-to-use release
-P20    ASTRA MAX Core Release Gate
-P21-30 Continue JARVIS-Class roadmap
-```
-
-Do not skip directly to cosmetic UI work while a safety/release gate is incomplete.
-
----
-
-# P14-X — Target-PC Automation validation
-
-This is external/local validation, not new architecture.
-
-On the target Windows PC:
-
-1. pull current `main`;
-2. build current production code;
-3. run:
-   `scripts/windows/validate-automation.ps1`;
-4. if the owner explicitly wants background Automation enabled, run:
-   `scripts/windows/enable-automation.ps1`;
-5. optionally run one deliberate Level 0/1 proof:
-   `scripts/windows/validate-automation.ps1 -RunSafeTick`;
-6. create a due Level-2 occurrence and verify it stays approval-gated;
-7. verify Level-3 scope review and single-use approval;
-8. trigger STOP during a real running occurrence;
-9. record exact results in `docs/CODEX_HANDOFF.md`.
-
-Do not create a fake test definition that performs real external writes.
-
-Exit gate:
-
-`PHASE 14 COMPLETE` only if CI remains green and target-PC validation actually passes.
-
----
-
-# Phase 15 — Security / failure hardening
-
-## P15A — Project path and filesystem hardening
-
-Goal: lock the existing path protections with explicit regression coverage and close any remaining filesystem escape.
-
-Primary files:
-
-- `lib/projects/paths.ts`
-- `lib/projects/context.ts`
-- project/file tool handlers
-- tests
-
-Required cases:
-
-- `../` traversal;
-- absolute path outside registered workspace;
-- symlinked file escaping workspace;
-- symlinked parent directory escaping workspace;
-- sensitive names such as `.env*`, SSH keys, auth/credential/secrets paths;
-- disallowed binary/unknown extensions;
-- workspace path that disappears;
-- file that changes between resolution and read where practical;
-- writable target whose parent resolves outside workspace.
-
-Do not weaken `realpath` checks merely to make a test pass.
-
-Exit gate:
-
-- no read/write resolver returns a path outside the real registered workspace;
-- all escape attempts fail closed;
-- tests prove it.
-
-Suggested branch:
-
-`astra/phase15a-path-hardening`
-
----
-
-## P15B — Untrusted retrieved-context / prompt-injection boundary
-
-Goal: retrieved project files, Sonor/Graphify/Obsidian memory and public web content are evidence, never trusted system/tool instructions.
-
-Audit the complete route:
-
-```text
-memory/project/web record
-      ↓
-Memory Manager
-      ↓
-Brain localContext / provider context
-      ↓
-Planner / provider
-```
-
-Required changes where needed:
-
-- add one shared formatter for untrusted retrieved records;
-- clearly delimit source content from trusted runtime metadata;
-- preserve provenance;
-- keep user input distinct from retrieved content;
-- provider/system prompts must explicitly state that retrieved text cannot override policy, approval, tool permission, system instructions, project boundary or provider privacy rules;
-- do not remove useful text just because it contains imperative language;
-- do not use regex-based “prompt injection detection” as the security boundary;
-- security must come from structural separation + Tool Runtime permission enforcement.
-
-Regression fixtures must include malicious retrieved text such as attempts to:
-
-- request shell/file-write permission;
-- reveal secrets;
-- ignore approval;
-- alter project ID;
-- execute an external action;
-- treat a file as a system message.
-
-Expected result: content remains available as evidence, but cannot raise privileges or bypass policy.
-
-Primary files likely include:
-
-- `lib/brain/unified-memory.ts`
-- `lib/memory/manager.ts`
-- provider prompt builders
-- research/browser evidence formatting
-- tests
-
-Suggested branch:
-
-`astra/phase15b-untrusted-context-boundary`
-
----
-
-## P15C — Provider and MCP failure isolation
-
-Goal: one unavailable/malformed optional provider must not crash the entire ASTRA runtime or fabricate READY state.
-
-Test/fix:
-
-### Ollama
-- connection refused;
-- timeout;
-- HTTP failure;
-- invalid JSON;
-- missing expected fields;
-- empty response;
-- configured model missing;
-- AbortSignal.
-
-### Hermes
-- unavailable gateway;
-- malformed JSON;
-- empty response;
-- timeout;
-- invalid/non-loopback URL;
-- abort;
-- no false tool-success claim.
-
-### Codex
-- executable absent;
-- auth/status failure;
-- child exit non-zero;
-- invalid/malformed JSONL;
-- timeout;
-- cancellation/child cleanup;
-- read-only sandbox truth;
-- no silent provider fallback when Codex was explicitly selected.
-
-### Optional cloud
-- disabled gate;
-- policy denied;
-- missing key/model/URL;
-- network failure;
-- malformed response;
-- empty response;
-- abort;
-- never leak API key into returned error text.
-
-### MCP
-- `listTools()` throws;
-- one server unavailable while others are healthy;
-- malformed descriptor;
-- empty/oversized tool names/descriptions/schema;
-- duplicate normalized tool IDs;
-- call failure;
-- malformed/oversized output;
-- cancellation;
-- provider result claiming success without acceptable Tool Runtime verification.
-
-Preferred behavior for optional MCP discovery:
-
-- isolate failure per configured optional server when possible;
-- keep native tools available;
-- report the failed MCP server truthfully;
-- never mark its tools READY if discovery failed.
-
-Do not silently swallow a required provider failure if the user explicitly selected that provider.
-
-Suggested branch:
-
-`astra/phase15c-provider-mcp-failure-isolation`
-
----
-
-## P15D — Cancellation / timeout / network failure matrix
-
-Goal: STOP must remain authoritative across every long-running path.
-
-Build a single test matrix covering:
-
-- Ollama request;
-- Hermes request;
-- optional cloud request;
-- Codex child process;
-- Strategist planning;
-- Memory/Sonor retrieval;
-- public browser fetch;
-- Tool Runtime handler;
-- Computer transport;
-- Automation occurrence SSE;
-- background Automation service tick.
-
-For each applicable path verify:
-
-1. abort propagates;
-2. owned resources/timers/listeners/processes are cleaned up;
-3. no completed/success event appears after cancellation;
-4. Command Center settles truthfully;
-5. no automatic retry converts STOP into another execution.
-
-Also test timeout separately from user STOP.
-
-Suggested branch:
-
-`astra/phase15d-cancellation-matrix`
-
----
-
-## P15E — Secret, error and telemetry leakage hardening
-
-Goal: errors and telemetry are useful without leaking local secrets or authentication material.
-
-Audit:
-
-- provider errors;
-- child-process stderr;
-- MCP details;
-- integration/provider errors;
-- URLs containing credentials/query tokens;
-- local Windows paths;
-- environment values;
-- approval tokens;
-- OAuth/API keys;
-- Codex auth/session details.
-
-Add a shared safe-error/redaction helper only where it genuinely improves consistency.
-
-Never commit real secret fixtures. Use unmistakably fake test tokens.
-
-Verify:
-
-- approval tokens are not emitted into ordinary timeline detail;
-- API keys are never returned by status endpoints;
-- private `.env.local` remains gitignored;
-- server logs do not print request authorization headers;
-- provider exception messages are bounded before UI exposure.
-
-Suggested branch:
-
-`astra/phase15e-secret-telemetry-hardening`
-
----
-
-## P15F — Security regression matrix and final hardening report
-
-Create a table in a dedicated document, for example:
-
-`docs/SECURITY_VALIDATION.md`
-
-Rows should include:
-
-- remote API request;
-- cross-site request;
-- oversized body;
-- malformed JSON;
-- provider outage;
-- MCP outage;
-- malformed planner output;
-- retrieved prompt injection;
-- invalid project path;
-- symlink escape;
-- permission denial;
-- Level-4 action;
-- cancellation;
-- timeout;
-- network failure;
-- secret leakage;
-- Automation duplicate run;
-- Automation STOP.
-
-Columns:
-
-`SCENARIO | EXPECTED FAIL-SAFE STATE | AUTOMATED TEST | LOCAL TEST | RESULT`
-
-Phase 15 exit gate:
-
-- all implementable rows have automated coverage;
-- local-only rows have a documented command/procedure;
-- CI green;
-- no known fail-open path remains.
-
-Then update:
-
-- `SECURITY.md`
-- `docs/ASTRA_ROADMAP.md`
-- `docs/ASTRA_MAX.md`
-- `docs/CODEX_HANDOFF.md`
-
----
-
-# MEM-X — Real Sonor / Graphify / Obsidian validation
-
-This work is still required for the final ASTRA Definition of Done.
-
-Do not rebuild Sonor.
-
-Follow `docs/SONOR_CODEX_MISSION.md` exactly:
-
-`PRESERVE → AUDIT → BACK UP → DOCUMENT → EXPOSE MINIMAL API → CONNECT ASTRA → VERIFY`
-
-Important:
-
-- find/audit the real existing Sonor first;
-- keep Sonor source in its own private repo;
-- do not upload private graph DB/indexes, personal Obsidian vault, secrets or private conversations;
-- reuse the real structured backend if it exists;
-- do not scrape graph DOM when structured data exists;
-- ASTRA is the Brain; Sonor is knowledge/workflow intelligence;
-- no duplicate Graphify/Obsidian pipeline inside ASTRA;
-- keep full graph workspace outside the Humanoid home screen;
-- preserve provenance source type `graphify` / `obsidian` when known.
-
-Required real tests from the mission:
-
-- Test A — ASTRA project;
-- Test B — `lanjutkan ALURKA terakhir` with ALURKA-only context;
-- Test C — known Obsidian note with `obsidian` provenance;
-- Test D — known Graphify relationship with `graphify` provenance;
-- Test E — Sonor stopped: ASTRA degrades to local/project memory truthfully;
-- Test F — cancellation aborts cleanly.
-
-Only after the real endpoint is verified configure private local values:
-
-```env
-ASTRA_SONOR_ENABLED=true
-ASTRA_SONOR_URL=http://127.0.0.1:55127
-ASTRA_SONOR_SEARCH_PATH=<REAL VERIFIED PATH>
-```
-
-Never commit the real `.env.local`.
-
----
-
-# Phase 16 — Performance pass
-
-Goal: improve responsiveness without degrading the approved Humanoid HIGH visual quality.
-
-Measure before changing.
-
-Required measurements:
-
-- idle Humanoid FPS;
-- LISTENING / THINKING / SPEAKING FPS;
-- assembly/shockwave FPS;
-- CPU usage;
-- JS heap / memory trend where available;
-- Command Center update cost;
-- Brain event list/update cost;
-- Memory retrieval latency by source;
-- Project context retrieval latency;
-- Sonor latency when connected;
-- provider status probe latency;
-- first token/final response latency where measurable;
-- browser console warnings/errors.
+- `docs/SONOR_CODEX_MISSION.md`
+- `docs/SONOR_BRIDGE.md`
+- `docs/SONOR_UI_INTEGRATION.md`
 
 Rules:
+- the real Sonor graph already exists; preserve it;
+- do not rebuild a duplicate memory graph;
+- inspect the real implementation/API before wiring endpoints;
+- do not guess routes;
+- keep project scope and provenance;
+- validate unavailable/cancellation behavior;
+- never commit private graph/vault/index data.
 
-- no fake benchmark values;
-- no lowering HIGH quality as the first fix;
-- no per-frame full particle CPU loops;
-- no duplicate renderer;
-- no fullscreen blur/backdrop-filter regression;
-- no unbounded React event history.
+Exit:
+- actual local Sonor state is known;
+- minimal search/retrieval works through the real adapter;
+- Graphify/Obsidian provenance is truthful;
+- degradation/cancellation is validated.
 
-Create:
+### M3 — Phase 16 real performance evidence
 
-`docs/PERFORMANCE_BASELINE.md`
+Canonical documents:
 
-Record hardware/browser/runtime when measurements are local.
+- `docs/PERFORMANCE_BASELINE.md`
+- `docs/BROWSER_PERFORMANCE_EVIDENCE.md`
 
-Exit gate: measured improvement or verified no regression, with Humanoid quality preserved.
+Repository tooling already exists for:
+- runtime/status latency;
+- Humanoid HIGH browser captures;
+- Command Center active capture;
+- Automation panel open capture.
 
----
+For main UI capture, use the merged PR #171 opt-in probe:
 
-# Phase 17 — Full system test
+`http://127.0.0.1:3017/?perf=1`
 
-Implement/execute the required scenarios from `docs/ASTRA_MAX.md`.
+Required:
+- real target PC/browser/GPU context;
+- Humanoid HIGH states/effects;
+- Command Center active;
+- Automation panel open;
+- console review;
+- real measured values only.
 
-Mandatory scenarios:
+Do not invent FPS, CPU, memory, latency or browser evidence.
 
-### A — Project continuation
-“lanjutkan project terakhir saya dan jelaskan apa yang belum selesai”
+Exit:
+- `docs/PERFORMANCE_BASELINE.md` reflects real measurements;
+- concrete bottlenecks are fixed and re-measured;
+- visual quality is not lowered first as a shortcut.
 
-Expected:
-- Project Registry;
-- Memory;
-- Sonor when configured;
-- Chief;
-- provenance visible;
-- no wrong-project contamination.
+### M4 — Phase 17 full-system validation
 
-### B — Engineering workflow
-“cek ASTRA, perbaiki error, test dan siapkan PR”
-
-Expected:
-- Chief;
-- Developer/Codex;
-- Files/GitHub;
-- bounded plan;
-- approval for writes;
-- test/build/diff;
-- PR;
-- CI result;
-- no fake success.
-
-### C — ALURKA campaign
-“buat campaign ALURKA minggu depan”
-
-Expected:
-- ALURKA context only;
-- Memory;
-- Research;
-- Strategist;
-- Marketing;
-- Design;
-- Editor;
-- external creative provider remains NOT_CONFIGURED unless real.
-
-### D — Calendar/email
-“cek jadwal saya dan siapkan email follow-up”
-
-Expected:
-- if integrations unavailable: truthful NOT_CONFIGURED;
-- if configured: reads real schedule;
-- email drafting may be read-only;
-- sending remains explicit Level-3 approval.
-
-### E — STOP
-Start a real cancellable task and trigger STOP.
-
-Expected:
-- owned work cancels;
-- no later success event;
-- UI returns to truthful state.
-
-Add failure variants, not only happy paths.
-
-Create:
+Canonical document:
 
 `docs/FULL_SYSTEM_VALIDATION.md`
 
----
+Run real scenarios:
+- project continuation;
+- engineering workflow;
+- ALURKA campaign;
+- Calendar/Email behavior where configured;
+- Emergency STOP;
+- documented failure variants.
 
-# Phase 18 — Release Candidate
+Safe preflight tooling is not the PASS gate.
 
-Create RC only after:
+Exit:
+- every required scenario has exact build/commit and real evidence;
+- no fake provider/integration success;
+- failures repaired/retested where technically executable.
 
-- `npm test`
-- `npm run typecheck`
-- `npm run lint`
-- `npm run build`
-- `npm audit --audit-level=high`
-- `git diff --check`
+### M5 — Phase 19 Windows ready-to-use validation
 
-Also require:
+Canonical documents:
 
-- Phase 15 security matrix complete;
-- Phase 16 performance baseline complete;
-- Phase 17 scenarios documented;
-- target-PC Automation validation complete;
-- real Sonor state reported truthfully;
-- open stale PRs reconciled;
-- no known release-blocking console error.
+- `docs/TARGET_PC_EVIDENCE.md`
+- `docs/WINDOWS_RELEASE.md`
+- `docs/READY_TO_USE_DELIVERY.md`
 
-Do not tag READY because CI alone is green.
+Validate on the real target PC:
+- supported runtime/dependencies;
+- production build/start;
+- loopback-only binding;
+- desktop/startup behavior;
+- Ollama/Codex/Automation/Sonor truthful status;
+- private `.astra/` paths;
+- update/reinstall;
+- bounded startup health.
 
----
+Exit:
+- real install/start/update/reinstall evidence exists;
+- reproducible release-blocking defects are fixed.
 
-# Phase 19 — Windows ready-to-use release
+### M6 — Phase 20 evidence-backed core report
 
-Goal:
+Canonical documents:
 
-`Install → local services → health check → UI`
+- `docs/CORE_RELEASE_REPORT.md`
+- `docs/MANUAL_RELEASE_EVIDENCE.md`
+- `docs/CORE_RELEASE_CHECKLIST.md`
 
-Verify on target Windows:
+Use only real private artifacts bound to the same clean build.
 
-- supported Node version;
-- npm install/build;
-- ASTRA binds loopback;
-- Ollama installation and configured model;
-- Codex CLI presence/auth status;
-- private runtime directories;
-- Automation service explicit state;
-- Sonor explicit state;
-- browser launch;
-- startup task health;
-- uninstall/reinstall path;
-- logs/errors understandable;
-- no admin privilege unless truly required.
+Allowed final status remains:
+- `READY`;
+- `READY WITH EXTERNAL CONFIGURATION REQUIRED`;
+- `BLOCKED`.
 
-Add one read-only self-check command/script that reports:
+Missing/stale/mismatched evidence must remain BLOCKED.
 
-`READY / NOT_CONFIGURED / OFFLINE / ERROR`
+Exit:
+- final report is generated from real evidence;
+- status is truthful;
+- no manual gate is marked PASS without valid evidence.
 
-for core dependencies without printing secrets.
+## After the core release sequence
 
----
+Repository-only JARVIS foundations are already saturated.
 
-# Phase 20 — ASTRA MAX Core Release Gate
+Continue real integration, not new mocks:
 
-Generate the required final report from `docs/ASTRA_MAX.md` with these exact sections:
+### Phase 21 — real voice
 
-- COMPLETED
-- VERIFIED
-- CONNECTED
-- REQUIRES USER LOGIN
-- REQUIRES PHYSICAL TEST
-- NOT IMPLEMENTED
-- SECURITY STATUS
-- PERFORMANCE STATUS
-- TEST STATUS
-- RELEASE STATUS
+Requires actual microphone/speech transport, interruption and latency evidence.
 
-Allowed release status:
+### Phase 23 — real situational vision
 
-- `READY`
-- `READY WITH EXTERNAL CONFIGURATION REQUIRED`
-- `BLOCKED`
+Requires actual screen/camera pixels, consent, privacy controls and evidence. Metadata alone is not vision.
 
-Do not use READY unless the actual production validation supports it.
+### Phase 26 — real episodic/context memory
 
-Phase 20 is a core release gate only. It is not the final roadmap stop.
+Build on the audited real Sonor/Graphify/Obsidian system. Do not create a competing graph.
 
----
+### Phase 27 — real multi-device transport
 
-# Phase 21–30 continuation
+Use the merged trust/device contracts with authenticated/encrypted transport. Do not expose the current loopback API directly.
 
-After Phase 20 is stable, continue the already-approved JARVIS-Class roadmap in `docs/ASTRA_MAX.md`.
+### Phase 29 — real skills/environment devices
 
-Do not redesign Phase 0–20 foundations to implement Phase 21–30.
+Connect actual provider-backed skills/devices through Tool Runtime and existing approval/privacy boundaries.
 
-Order remains:
+### Phase 30 — final JARVIS integration
 
-21. Always-On Voice Presence
-22. Identity / Trust / Secrets
-23. Situational Awareness
-24. Event Engine + Proactive Intelligence
-25. Background Tasks + Parallel Agents
-26. Episodic Memory + Context Fusion
-27. Multi-Device Presence
-28. Self-Diagnostics / Recovery / Audit / Offline
-29. Skill Ecosystem + IoT Bridge
-30. JARVIS-Class Integration + Self-Evaluation + Ready Release
+Run final scenarios, soak, evaluation, STOP/permission behavior, diagnostics/recovery and release evidence against the exact target runtime.
 
----
+## NVIDIA execution rule
 
-# Stale PR / branch cleanup
+NVIDIA repository architecture is already complete.
 
-Open PR #51 (`ASTRA V15 — real-time Brain telemetry stream`) predates the current merged Runtime/Command Center architecture.
+Do not create another NVIDIA roadmap or provider-neutral wrapper.
 
-Before closing it:
+For a real NVIDIA subsystem:
+1. inspect the actual supported service/tooling/version;
+2. implement only the transport/backend glue required by existing contracts;
+3. preserve ASTRA Tool Runtime and approvals as final authority;
+4. validate:
+   `health → happy path → cancellation → malformed response → outage/degradation → STOP/permission → evidence`.
 
-1. compare its diff against current `main`;
-2. identify any unique behavior/tests that were never superseded;
-3. port only genuinely missing useful pieces through a new focused branch if needed;
-4. otherwise close PR #51 as superseded by the merged Brain/Runtime telemetry work.
+Never claim voice/vision/retrieval/guardrail readiness from contracts alone.
 
-Do not merge the old branch wholesale into current main.
+## External/local blocker rule
 
----
+A real blocker is not permission to fabricate completion.
 
-# Pre-created execution templates
+If one task is blocked by:
+- unavailable target PC;
+- login/MFA/CAPTCHA;
+- unavailable secret;
+- physical mic/camera interaction;
+- UAC/security consent;
+- missing real provider/backend;
 
-These files already exist on this branch and should be filled with measured/verified results rather than replaced with new formats:
+then:
 
-- `docs/PERFORMANCE_BASELINE.md` — Phase 16 measurements;
-- `docs/FULL_SYSTEM_VALIDATION.md` — Phase 17 scenarios;
-- `docs/CORE_RELEASE_CHECKLIST.md` — Phase 18–20 gates.
+1. record the blocker truthfully;
+2. continue any independent real task that is actionable;
+3. do not create a placeholder subsystem merely to create progress;
+4. return to the blocked gate when access exists.
 
-Keep them factual. Do not mark PASS/READY from code inspection alone.
+If every remaining task is genuinely external-only, preserve the checkpoint rather than generating speculative code.
 
----
+## Repository-change rule
 
-# Codex execution discipline
+When a concrete repository defect is found:
 
-For every subphase:
+1. verify it against current `main`;
+2. create one focused branch;
+3. fix the concrete defect;
+4. add/update regression tests;
+5. run CI;
+6. merge only after newest-head CI is green;
+7. verify post-merge main CI;
+8. update:
+   - `docs/CURRENT_EXECUTION_POINTER.md`;
+   - `docs/ASTRA_WORKLOG.md`;
+   - `docs/CODEX_HANDOFF.md`;
+   - the relevant tracker/validation document.
 
-1. inspect current `main`;
-2. create one recoverable feature branch;
-3. make focused changes;
-4. add/adjust tests before claiming completion;
-5. run build/test/typecheck/lint/audit;
-6. inspect diff for accidental secrets/private data;
-7. update handoff/roadmap docs;
-8. open PR;
-9. merge only after green CI;
-10. record the exact next task.
+Do not reactivate an old branch only because it is ahead/diverged.
 
-Do not:
+## Branch-history rule
 
-- fake integrations;
-- fake telemetry;
-- fake provider/tool success;
-- create a second Brain;
-- duplicate Sonor/Graphify/Obsidian;
-- weaken permission gates to make tests pass;
-- commit secrets/private runtime data;
-- turn on paid cloud automatically;
-- expose loopback APIs publicly;
-- sacrifice Humanoid quality before architectural optimization;
-- execute destructive external actions as release tests.
+The full 206-branch reconciliation is already recorded in:
 
-The objective is not feature count.
+`docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`
 
-The objective is:
+Historical branches are forensic history.
 
-`truthful + safe + recoverable + fast + useful + ready for daily use`.
+Revisit one only when:
+- a current open PR depends on it;
+- current pointer explicitly names it;
+- a fresh comparison proves a missing capability;
+- the owner explicitly asks to revive it.
 
+## Zero-touch owner delivery
 
----
+The owner wants a ready-to-use result, not a list of setup steps.
 
-## 2026-09-21 — final repository audit through PR #150
+Perform every technically executable task through available repository/local access.
 
-A fresh audit after the earlier PR #145 saturation checkpoint found four additional concrete repository defects. They are now fixed and CI-verified:
+Ask the owner only for a genuine human/external boundary:
+- authentication/MFA/CAPTCHA;
+- UAC/security prompt;
+- physical observation/consent;
+- unavailable secret;
+- high-impact approval.
 
-- PR #147 / `5338f3f184ab84102f635dfb89255e090b43dba9` — every browser bundle scenario is bound to the expected clean runtime commit;
-- PR #148 / `95b2d6e8d82dae4da85650609650e72a5a14c8ef` — optional remote cloud endpoints require HTTPS and embedded-credential URLs are rejected;
-- PR #149 / `542e5f7494c23b525eccf38a503adf330b7a7cfc` — GitHub remote verification requires the exact `github.com` host;
-- PR #150 / `32f3f8f340a6bfc4004c5b4eeedd116682dae854` — STOP/timeout termination covers the full owned subprocess tree, including Windows descendants.
+After the boundary is satisfied, resume the mission automatically.
 
-Read `docs/FINAL_REPOSITORY_AUDIT_2026-09-21.md` before starting new repository hardening.
+## Current exact next task
 
-Current repository audit conclusion:
+No speculative repository foundation remains from the earlier Phase 24/25/28/22/27/29 sequence.
 
-`REPOSITORY AUDIT COMPLETE THROUGH PR #150 / CI VERIFIED / REAL TARGET-PC GATES REQUIRED`
+If real target-PC/local access is available:
 
-Do not reimplement PRs #147–#150 without a new reproducible defect. The next meaningful execution is the real target-PC sequence already documented below. Do not start Phase 21–30 as a substitute for unfinished Phase 14/MEM-X/16/17/19/20 gates.
+`M1 Phase 14 → M2 MEM-X → M3 Phase 16 → M4 Phase 17 → M5 Phase 19 → M6 Phase 20`
 
-Repository governance note: `main` was not protected and no repository ruleset existed at audit time. Enabling PR-required branch protection + ASTRA CI is recommended as a manual GitHub administrator setting; it is not a runtime release PASS and the available connector cannot configure it.
-
-
----
-
-## 2026-09-21 — optional NVIDIA provider added after final repository audit
-
-PR #152 / merge commit:
-
-`c151d9d044829e14f66be84a70d56aaf163ea09c`
-
-ASTRA now includes an optional NVIDIA NIM reasoning provider with default model:
-
-`nvidia/nemotron-3-ultra-550b-a55b`
-
-This does **not** change the target-PC release gate order.
-
-Important:
-- NVIDIA is OFF by default;
-- AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`;
-- memory is not sent unless `ASTRA_NVIDIA_INCLUDE_MEMORY=true`;
-- NVIDIA is chat/reasoning only and cannot replace Codex/Tool Runtime for real execution;
-- the real hosted provider is not READY until a valid `NVIDIA_API_KEY` is configured privately on the target PC and status verification passes.
-
-Provider runbook: `docs/NVIDIA_NIM.md`.
-
-Continue Phase 14 / MEM-X / 16 / 17 / 19 / 20 target-PC evidence as previously documented.
-
-## NVIDIA mesh constraint after PR #154
-
-ASTRA now has an adaptive NVIDIA JARVIS model mesh at merge commit `ce5a5623867f443ffc931c6b4687b19e38412882`.
-
-Before touching provider routing, read `docs/NVIDIA_NIM.md`.
-
-Treat the mesh as a completed repo-side enhancement. Do not spend target-gate time on speculative model churn unless a concrete test or NVIDIA deprecation forces a change. Real API-key validation belongs to the target PC and must never commit secrets.
-
-Existing target-runtime evidence remains the priority.
-
-## Target-PC NVIDIA key handling — owner preference
-
-When the target-PC phase begins, Codex should handle NVIDIA configuration locally.
-
-Required workflow:
-1. verify the correct ASTRA checkout and current `main`;
-2. create or update `.env.local` on the target PC;
-3. ask the owner to enter the NVIDIA API key only in the local PC session;
-4. write the key to `NVIDIA_API_KEY` in `.env.local` without printing it back;
-5. preserve the JARVIS mesh configuration from `.env.example`;
-6. verify only that the key is present, never display the secret value;
-7. confirm `.env.local` is gitignored and absent from `git status --short`;
-8. run live NVIDIA mesh health/runtime validation;
-9. never commit, upload, log, paste into GitHub, or store the API key in docs/issues/PRs.
-
-The owner does not want to manually edit the NVIDIA secret into the project. Codex should perform the local file/configuration step when the PC checkout exists, while the owner supplies the secret only through the local target-PC session.
-
-## Owner delivery preference — zero-touch technical completion
-
-Read and follow `docs/READY_TO_USE_DELIVERY.md`.
-
-The owner wants Codex to perform 100% of the technically executable work and deliver ASTRA ready to use. Do not turn target-PC validation into a list of commands for the owner.
-
-When PC access is available, Codex must execute the repository sync, installation, dependency repair, local configuration, provider setup, Sonor integration, Windows startup/launcher work, target-runtime validation, defect repair, evidence collection, and final readiness checks itself.
-
-The owner should only be interrupted for unavoidable credential entry, account consent/MFA, UAC/security prompts, camera/microphone consent, physical-human-only observations, or a genuine high-impact approval.
-
-After each unavoidable owner input, continue automatically. Do not make the owner resume the technical workflow manually.
-
-The final target is not "code complete"; it is a truthfully validated, ready-to-use ASTRA installation on the target PC.
-
-## Autonomous credential rule
-
-For provider credentials, do not default to asking the owner to paste a key.
-
-First inspect the target PC for an already-authorized ASTRA credential source or an already-authenticated provider session that Codex can legitimately reuse. If a valid NVIDIA credential already exists, configure and validate it without exposing the secret.
-
-If the provider account/session permits Codex to create or retrieve the needed credential through an already-authenticated flow, do so and store it only in the local secret location.
-
-Never bypass login/MFA/CAPTCHA/account consent or fabricate credentials. If authentication truly requires the account owner and no authorized session exists, keep working on all independent tasks and record that one provider as an external blocker rather than turning the blocker into a setup checklist for the owner.
-
-## Additional mission — NVIDIA MAX integration
-
-Canonical plan: `docs/NVIDIA_MAX_INTEGRATION.md`.
-
-The owner approved the full NVIDIA architecture: JARVIS Model Mesh, NVIDIA Skill Hub, AI-Q Research, NeMo Retriever/RAG under Sonor, Document Intelligence, Nemotron Voice Agent, DeepStream/VSS, NemoClaw for Hermes, NeMo Guardrails/Content Safety, and NeMo evaluation.
-
-### Resume order
-
-When real target-PC access exists, first finish the existing release gates:
-
-`Phase 14 validation → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`.
-
-Do not postpone those gates by adding speculative NVIDIA features.
-
-When repository work can proceed independently of PC access, continue the NVIDIA track:
-
-`NVA-0 → NVA-1 → NVA-2 ... NVA-9`
-
-NVA-0 is the repository framework slice in branch `feature/nvidia-max-framework`.
-
-After it merges, the exact next repo-side task is **NVA-1 Skill Hub discovery/install-state**.
-
-### NVA-1 Codex instructions
-
-Implement a safe, provider-neutral catalog/install-state layer. Requirements:
-
-- do not inject the whole NVIDIA catalog into every prompt;
-- no runtime HTML scraping on normal ASTRA requests;
-- keep a bounded cached/private catalog snapshot or use a supported NVIDIA mechanism;
-- installed-skill state lives under private `.astra/`;
-- truth states: `available / installed / disabled / incompatible`;
-- record provenance/version/checksum when the provider exposes them;
-- selection remains bounded;
-- install/update/remove mutations require the existing ASTRA permission model;
-- provide dry-run planning before mutations;
-- a skill never becomes execution authority;
-- validate the actual Codex skill installation mechanism/version on the target PC before claiming READY.
-
-Then continue NVA-2 onward only after NVA-1 exit gate is green.
-
-For all NVIDIA work, preserve zero-touch owner delivery: Codex performs technical setup/repair/validation itself and asks for owner involvement only when a genuine external authorization boundary cannot be satisfied from an already-authorized local session.
-
-## NVIDIA NVA-1 continuation checkpoint
-
-PR #159/NVA-0 is merged. Repository-side NVA-1 now has a private catalog/state contract on `feature/nvidia-skill-hub-state`.
-
-Do not implement skill installation by guessing shell commands or folder conventions.
-
-For target-PC NVA-1:
-1. inspect the actual installed Codex version and NVIDIA-supported skill workflow;
-2. use an official/supported mechanism;
-3. install only the approved core set first;
-4. record real installed/disabled/incompatible state in the private registry;
-5. test update/remove/rollback;
-6. never expose provider credentials.
-
-After NVA-1 repository merge, proceed with **NVA-2 AI-Q provider-neutral adapter contract** when target-PC gates are not available.
-
-## NVIDIA repository-saturation checkpoint
-
-After the NVA-2…NVA-9 subsystem-contract PR merges, stop designing additional NVIDIA abstractions unless a concrete integration test exposes a missing contract.
-
-When target-PC/backend access exists, Codex should execute the integration track using the contracts already in `lib/nvidia/`:
-
-1. finish the core release sequence first when possible:
-   `Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`;
-2. validate real NVIDIA/Codex Skill Hub installation mechanism from NVA-1;
-3. inspect the real AI-Q supported deployment/API and write only the necessary transport;
-4. audit real Sonor before connecting NeMo Retriever/RAG;
-5. select and validate real OCR/parser backend;
-6. connect real speech/voice transport and microphone evidence;
-7. connect actual visual payload transport before DeepStream/VSS;
-8. validate real Hermes/NemoClaw version before workflow learning;
-9. deploy/configure Guardrails as defense in depth only;
-10. run evaluation suites tied to exact target runtime/build.
-
-For every backend: health → happy path → cancellation → malformed response → outage/degradation → STOP/permission behavior → evidence.
-
-Do not claim READY from repository contracts alone.
-
-## Current NVIDIA execution status after PR #161
-
-NVIDIA repo-only design work is complete and CI-verified through PR #161.
-
-Do not ask the owner for another NVIDIA architecture decision. Do not create more provider-neutral wrappers until an actual backend integration proves one is missing.
-
-When target access exists, Codex must autonomously move from contracts to working services, fix concrete failures, collect evidence, and continue until the ready-to-use acceptance gates are met.
-
-If a provider/backend is unavailable, continue every independent core-release task rather than stopping.
-
-## AUTHORITATIVE CURRENT OVERRIDE — after NVIDIA repository saturation
-
-Read `docs/CURRENT_EXECUTION_POINTER.md` first.
-
-This section supersedes older NVIDIA continuation text above that still says "next NVA-1" or "next NVA-2".
-
-Repository truth:
-- NVA-0 merged in PR #159;
-- NVA-1 merged in PR #160;
-- NVA-2…NVA-9 contracts merged in PR #161;
-- saturation checkpoint merged in PR #162;
-- post-merge main CI run #435 succeeded.
-
-Do not repeat those repository slices.
-
-The next meaningful work is real execution:
-1. target-PC Phase 14 → MEM-X → 16 → 17 → 19 → 20;
-2. real NVIDIA backend integration against the existing contracts;
-3. concrete defect/provider-change repair only.
-
-If target access is unavailable, do not invent another NVIDIA wrapper merely to stay busy.
-
-
-## 2026-09-22 — Phase 29 continuation override
-
-Before doing any older mission text in this file, inspect current `main`, open PRs, and `docs/CURRENT_EXECUTION_POINTER.md`.
-
-If PR #169 (`feature/phase29-skill-environment-registry`) is still open:
-1. inspect its newest CI;
-2. fix only concrete failures;
-3. keep the generic skill/environment architecture in `docs/SKILL_ENVIRONMENT_BRIDGE.md`;
-4. do not build a duplicate registry;
-5. merge only after newest-head CI is green.
-
-Once PR #169 is merged, do **not** start speculative repository-only Phase 30 replacements. Resume real execution:
-`Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`,
-then provider-backed JARVIS scenarios (including Phase 29/J9 real skill/device evidence) as the target environment allows.
-
-
-## 2026-09-22 — Phase 29 merged; repository-only JARVIS foundation saturated
-
-PR #169 is merged at `390a5c35e50a5020ccf34f317edcc25f4837dcb1`.
-PR CI #457 and main CI #458 are green.
-
-Do not create another Phase 24/25/28/22/27/29 foundation branch.
-
-Next mission is real execution/evidence, in the order defined by `docs/CURRENT_EXECUTION_POINTER.md`:
-`Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`,
-then the real provider/device integrations and Phase 30 scenarios that those environments unlock.
-
-If the target PC/provider is unavailable, only fix a concrete reproduced repository defect or an explicit new owner request; do not manufacture placeholder integrations to create artificial progress.
+If it is not available, change repository code only for a newly demonstrated concrete defect or explicit new owner requirement.

@@ -49,7 +49,7 @@ Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
 - [x] P16A — repository runtime measurement harness implemented — PR #105
 - [ ] P16B — target-PC runtime measurements captured
 - [x] P16C-tooling — private browser/Humanoid HIGH evidence capture implemented — PR #124
-- [ ] P16C-main-ui-tooling — Command Center / Automation-panel evidence recovery — PR #171 (check only after merge)
+- [x] P16C-main-ui-tooling — Command Center / Automation-panel evidence recovery — PR #171, merge `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`, CI #466 green
 - [ ] P16C — browser/Humanoid HIGH measurements captured
 - [ ] P16D — evidence-based bottleneck fixes and re-measurement
 - [ ] real hardware/browser environment recorded

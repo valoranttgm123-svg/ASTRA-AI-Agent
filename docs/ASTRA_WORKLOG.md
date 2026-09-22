@@ -771,3 +771,21 @@ Remaining before repository completion:
 - Phase 29 is repository-complete;
 - authorized independent JARVIS repository sequence Phase 24/25/28/22/27/29 is saturated;
 - next work is real target-PC/provider integration and evidence, not another mock/foundation layer.
+
+
+## 2026-09-22 — Cross-session reconciliation / Phase 16 main-UI evidence
+
+- audited all **206** repository branches against current `main`;
+- classified divergent early Humanoid/core, Phase 14/18, old Phase 28/29, old Windows private-evidence, old V15 telemetry, and stale documentation branches as superseded historical work after comparison with current-main implementations;
+- found one concrete repository-side omission still required by current docs: Phase 16 main-UI evidence for Command Center active and Automation panel open;
+- rebuilt that slice on current main instead of cherry-picking the stale prototype;
+- added opt-in `?perf=1` UI performance probe, clean-build start/end provenance, private output, real-activity checks, Automation-panel presence checks, and regression coverage;
+- normalized `AGENTS.md`, `CODEX_NEXT_MISSION.md`, execution pointer and recovery docs so older PR #150-era text is not treated as current mission;
+- PR #171 final CI #466: **SUCCESS**;
+- PR #171 merged to `main` as `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- post-merge main CI #467: **SUCCESS**;
+- real Phase 16 target-browser measurements remain required; no benchmark PASS is claimed from CI.
+
+Next:
+`Phase 14 → MEM-X → Phase 16 real measurements → Phase 17 → Phase 19 → Phase 20`.
+Do not restart historical branches unless a new concrete capability gap is demonstrated.
