@@ -783,6 +783,7 @@ Remaining before repository completion:
 - normalized `AGENTS.md`, `CODEX_NEXT_MISSION.md`, execution pointer and recovery docs so older PR #150-era text is not treated as current mission;
 - PR #171 final CI #466: **SUCCESS**;
 - PR #171 merged to `main` as `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- post-merge main CI #467: **SUCCESS**;
 - real Phase 16 target-browser measurements remain required; no benchmark PASS is claimed from CI.
 
 Next:
