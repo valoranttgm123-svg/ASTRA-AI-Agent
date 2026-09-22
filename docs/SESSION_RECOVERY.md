@@ -295,10 +295,27 @@ The repository contains many historical branches from interrupted ASTRA sessions
 
 Known superseded divergent branches include old Phase 28, old Phase 29 extensions, old Windows evidence hardening, and old V15 telemetry variants. Their useful safety/functionality was compared against later implementations on `main`.
 
-One genuine repository-side omission was identified: the old main-UI performance evidence prototype was never merged even though Phase 16 still requires Command Center and Automation-panel measurements. Recovery work is tracked on `fix/cross-session-ui-performance-reconciliation`.
+One genuine repository-side omission was identified: the old main-UI performance evidence prototype was never merged even though Phase 16 still requires Command Center and Automation-panel measurements. It was rebuilt safely and merged in PR #171 at `cc8432edcf9e854bba9d0d78c14c7731fd279dbd` after green CI #466. Do not resume the old recovery branch.
 
 New sessions must:
 1. inspect `main`, open PRs and CI;
 2. read `docs/CURRENT_EXECUTION_POINTER.md`;
 3. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
 4. never resume a stale branch solely because it contains unique commits.
+
+
+## Reconciliation completed — PR #171
+
+Cross-session branch reconciliation is complete.
+
+New-session rule:
+- do not re-enumerate historical branches as routine startup work;
+- read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
+- trust current `main`, CI, open PRs, and `docs/CURRENT_EXECUTION_POINTER.md`;
+- only revisit an old branch when a fresh concrete capability gap is demonstrated.
+
+PR #171 merge:
+`cc8432edcf9e854bba9d0d78c14c7731fd279dbd`
+
+PR CI:
+`#466 SUCCESS`
