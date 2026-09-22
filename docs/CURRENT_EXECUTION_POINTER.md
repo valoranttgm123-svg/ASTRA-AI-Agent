@@ -6,20 +6,21 @@ This file is the shortest authoritative handoff for a new ChatGPT/Codex session.
 
 ## Repository truth
 
-NVIDIA repository architecture is complete and CI-verified through:
+Current canonical `main` after cross-session reconciliation:
 
-- PR #159 — NVA-0 framework;
-- PR #160 — NVA-1 Skill Hub catalog/state contract;
-- PR #161 — NVA-2…NVA-9 provider-neutral subsystem contracts;
-- PR #162 — repository-saturation checkpoint.
+- PR #169 — Phase 29 Generic Skill + Environment foundation merged;
+- PR #170 — repository-foundation continuity checkpoint merged;
+- PR #171 — cross-session reconciliation + Phase 16 main-UI performance evidence recovery merged;
+- PR #171 merge commit: `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- PR #171 CI #466: **SUCCESS**;
+- post-merge `main` CI #467: **SUCCESS**;
+- all **206** repository branches were inventoried against `main`;
+- historical divergent branches are classified in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
+- repository foundations Phase 24/25/28/22/27/29 are merged and must not be recreated.
 
-The latest verified baseline before this pointer update was:
+Repository code/tooling is not equivalent to real target-PC readiness. The remaining release sequence is real evidence/integration work.
 
-`c4354682b925019d5ad0724c3074a1ef6ce04489`
-
-with ASTRA CI push run #435: **SUCCESS**.
-
-Always re-check current `main` and open PRs before acting.
+Always re-check current `main`, open PRs, and newest CI before acting.
 
 ## Do not repeat
 
@@ -250,7 +251,8 @@ Verified:
 - superseded divergent branches are classified in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
 - the only concrete repository-side omission found was Phase 16 main-UI performance evidence;
 - that omission is merged in PR #171 at `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
-- PR CI #466 passed build, tests, typecheck, lint, dependency audit and diff check.
+- PR CI #466 passed build, tests, typecheck, lint, dependency audit and diff check;
+- post-merge main CI #467 also passed.
 
 Current next work is not another branch-history reconstruction. Resume real evidence/integration work in this order:
 `Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`,
