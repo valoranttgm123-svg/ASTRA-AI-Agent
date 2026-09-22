@@ -114,7 +114,7 @@ Copy `.env.example` to `.env.local` and fill only the provider/integrations you 
 
 For full web search, point `ASTRA_SEARXNG_URL` at a loopback SearXNG JSON `/search` endpoint. ASTRA health-checks it before marking Researcher READY. Without SearXNG, `browser.fetch` can still read one explicit public URL, but ASTRA does not pretend general web search is configured.
 
-For NVIDIA Build/NIM, ASTRA uses an adaptive model mesh: Nemotron Ultra (Chief), GLM-5.3 (Deep), Nemotron 3.5 Lightning (Fast), and GLM-5.3 Flash (Vision). It is disabled by default, keeps private memory out by default, and AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`. See `docs/NVIDIA_NIM.md`.
+For NVIDIA Build/NIM, ASTRA uses an adaptive model mesh: Nemotron Ultra (Chief), GLM-5.3 (Deep), Nemotron 3.5 Lightning (Fast), and GLM-5.3 Flash (Vision). It is disabled by default, keeps private memory out by default, and AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`. See `docs/NVIDIA_NIM.md`. The approved full NVIDIA expansion (Skill Hub, AI-Q, Retriever/RAG, Document Intelligence, Voice, DeepStream/VSS, NemoClaw, Guardrails, and Evaluation) is tracked in `docs/NVIDIA_MAX_INTEGRATION.md`.
 
 ```bash
 cp .env.example .env.local
