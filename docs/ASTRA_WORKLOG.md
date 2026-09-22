@@ -789,3 +789,22 @@ Remaining before repository completion:
 Next:
 `Phase 14 → MEM-X → Phase 16 real measurements → Phase 17 → Phase 19 → Phase 20`.
 Do not restart historical branches unless a new concrete capability gap is demonstrated.
+
+
+## 2026-09-22 — Operations UI refinement
+
+After the repository foundation sequence was reconciled, two concrete unchecked repo-side gaps remained implementable without target-PC/provider access:
+
+- Phase 25 durable background-task UI/runtime presence;
+- Phase 28 user-facing diagnostics + audit/action-history panel.
+
+PR #174 adds:
+- `components/AstraOperationsPanel.tsx`;
+- canonical `/api/tasks` task list/queue/checkpoint/error visibility;
+- guarded resume/pause/cancel/delete lifecycle controls only;
+- canonical read-only `/api/diagnostics` health + audit visibility;
+- explicit connectivity UNKNOWN truth boundary;
+- no recovery executor and no fake production-task executor;
+- main-page mount, CSS, lint coverage and regression tests.
+
+Do not mark the two tracker items complete until PR #174 is green and merged.
