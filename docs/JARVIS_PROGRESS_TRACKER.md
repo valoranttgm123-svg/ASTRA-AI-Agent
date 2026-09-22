@@ -16,7 +16,8 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [ ] GitHub adapter real target-runtime sync and notification evidence.
 - [x] Second real event source adapter — local Diagnostics/service-health transitions, PR #180 merged `3047ea30c060211c2c3c8aabc7b4920e0f7166d1`; PR CI #506 SUCCESS, main CI #507 SUCCESS. Repository adapter code is complete; this is not target-runtime delivery evidence.
 - [ ] Service-health source real target-runtime sync and notification evidence.
-- [ ] Third real event source adapter — PR #182 merged `d04876391483500dda4f0755c4f1c120a25eae07`; post-merge main CI #513 found one nondeterministic integration-test race. Hotfix PR #183 active on `fix/automation-event-bridge-ci-race`; real target-runtime notification evidence remains pending.
+- [x] Third real event source adapter — Automation lifecycle → Event Engine, PR #182 merged `d04876391483500dda4f0755c4f1c120a25eae07`; PR CI #512 SUCCESS. Post-merge CI #513 exposed only a nondeterministic async integration-test wait; PR #183 merged `0f1cff3723aeb30a56270b86d5b8dcfef713ca2a`, CI #516 SUCCESS, main CI #517 SUCCESS. Runtime bridge behavior was unchanged by the hotfix.
+- [ ] Automation lifecycle source real target-runtime notification/STOP/restart evidence.
 - [ ] Proactive notification delivery, failure/STOP and restart evidence on target PC.
 
 ## Phase 25 — Durable Background Task Manager
@@ -40,7 +41,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [ ] Provider health integration:
   - [x] Ollama/Codex/NVIDIA/Hermes/Cloud real status-probe wiring — PR #178 merged `dfc7d93fb02e8e32375dd7c3d8ebc7370232c078`; PR CI #500 SUCCESS, main CI #501 SUCCESS.
   - [ ] Sonor real health/search evidence on the target runtime; repository Diagnostics remains UNKNOWN rather than fabricating readiness.
-- [ ] Safe recovery execution through existing Tool Runtime.
+- [ ] Safe recovery execution through existing Tool Runtime — blocked until a real recovery-specific tool exists; current generic tools do not truthfully implement provider reconnect/service restart/cache-clear.
 - [ ] Offline/degradation scenario J8 evidence.
 
 ## Phase 22 — Identity / Trust / Secrets

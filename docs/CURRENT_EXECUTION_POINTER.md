@@ -4,7 +4,7 @@ Status date: **2026-09-22**. This is the authoritative short handoff for interru
 
 ## Resume in one sentence
 
-When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_SERVICE_HEALTH_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
+When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_AUTOMATION_EVENT_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
 
 ## Canonical repository checkpoint
 
@@ -18,6 +18,8 @@ Most recent merged repository refinement sequence:
 | #176 | Opt-in real GitHub Actions REST source adapter with local sync | `059241751f7b70ac5e4ad6b044f8e8cceeab5787` | PR #494, main #495 SUCCESS |
 | #178 | Diagnostics provider-health wiring (Ollama/Codex/NVIDIA/Hermes/Cloud) | `dfc7d93fb02e8e32375dd7c3d8ebc7370232c078` | PR #500, main #501 SUCCESS |
 | #180 | Local service-health → Event Engine source + Operations sync surface | `3047ea30c060211c2c3c8aabc7b4920e0f7166d1` | PR #506, main #507 SUCCESS |
+| #182 | Automation lifecycle → Event Engine runtime bridge | `d04876391483500dda4f0755c4f1c120a25eae07` | PR #512 SUCCESS; main #513 exposed test race |
+| #183 | Deterministic Automation Event integration-test hotfix | `0f1cff3723aeb30a56270b86d5b8dcfef713ca2a` | PR #516, main #517 SUCCESS |
 
 PR #176 is **MERGED**, not active. Phase 24 now has read-only GitHub source adapter code; real running-PC sync/polling/notifications remain unverified. GitHub adapter defaults OFF, public repo needs no token, private repo uses a local token. Never treat a passing fake-fetch test as evidence of actual target runtime.
 
@@ -102,7 +104,7 @@ Merged capability:
 
 Do not rebuild the service-health adapter or provider-health wiring.
 
-Remaining Phase 24 work is real-runtime evidence plus a genuinely distinct third source when a supported real mechanism exists. Do not invent Calendar/Email/provider adapters merely to satisfy the tracker.
+Phase 24 now has three real repository-side source integrations: GitHub Actions, local service-health, and Automation lifecycle. Remaining Phase 24 work is real target-runtime polling/notification/failure/STOP/restart evidence. Do not invent additional Calendar/Email/provider adapters merely to create progress.
 
 ## Current repository-side status
 
@@ -116,26 +118,48 @@ If the owner asks to continue while target-PC/provider access is unavailable:
 
 Codex continues to own target-PC sync/polling/proactive notification evidence, Phase 14/MEM-X/16/17/19/20 real execution, and real provider/device completion.
 
-## Automation lifecycle Event Engine checkpoint — PR #182 merged, PR #183 hotfix active
+## Automation lifecycle Event Engine checkpoint — PR #182 + #183 complete
 
 PR #182 merged as:
 `d04876391483500dda4f0755c4f1c120a25eae07`
 
-PR CI #512: **SUCCESS**.
+Capability:
+- adds an Automation lifecycle observer without changing runner authority;
+- attaches Event Engine bridge before Automation Service startup;
+- maps due/waiting-approval/claimed/started/completed/failed/cancelled into source `automation`;
+- preserves Event Engine subscription/dedupe/debounce/rate-limit/quiet-hours policy;
+- redacts lifecycle detail before persistence;
+- Event Engine publication failures cannot break Automation execution or global STOP;
+- exposes read-only bridge counters/status through the existing Automation Service API;
+- full service→bridge→canonical Event Store integration is regression-tested.
 
-Post-merge main CI #513:
-- build SUCCESS;
-- one unit/integration test failed;
-- failure is limited to the full Event Store integration test expecting async fire-and-forget publication to finish after `setTimeout(0)`;
-- mapping, attach-once, redaction and publication-failure isolation tests passed.
+Validation:
+- PR #182 CI #512: **SUCCESS**;
+- post-merge main CI #513 found one nondeterministic test wait only;
+- PR #183 fixed the test by awaiting the real canonical publish completion without changing runtime behavior;
+- PR #183 CI #516: **SUCCESS**;
+- main CI #517: **SUCCESS**;
+- PR #183 merge: `0f1cff3723aeb30a56270b86d5b8dcfef713ca2a`.
 
-Root cause:
-- runtime bridge intentionally does not block Automation execution on Event Store I/O;
-- the test wait was nondeterministic.
+Do not rebuild this bridge or reintroduce a blocking Event Store write into Automation execution.
 
-Active hotfix:
-- PR #183 / `fix/automation-event-bridge-ci-race`;
-- waits on an explicit completion Promise around the real canonical `publishIncomingEvent`;
-- runtime behavior is unchanged.
+## Phase 28 recovery audit boundary
 
-If interrupted, inspect PR #183 newest head + CI first. Do not recreate PR #182 or redesign the bridge.
+The existing Tool Runtime does **not** currently expose a truthful recovery tool for:
+- provider reconnect;
+- ASTRA service restart;
+- transient-cache clearing.
+
+Existing tools such as `computer.app.launch` are not equivalent recovery primitives. Therefore safe recovery execution remains pending until a real provider/service-specific tool exists with correct permission, cancellation and verification semantics. Do not fabricate recovery success by mapping proposals to unrelated generic tools.
+
+## Current repository-side status
+
+No open repository refinement is intentionally active at this checkpoint.
+
+If the owner says `lanjutkan yang belum selesai`:
+1. inspect current `main`, newest CI and open PRs;
+2. resume an open PR first if one exists;
+3. take a concrete verified repo defect/provider change if one exists;
+4. otherwise hand off to Codex for real target-PC/provider execution:
+   `Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`,
+   plus real Phase 24 notification evidence and later Phase 21/23/26/27/29/30 integration.
