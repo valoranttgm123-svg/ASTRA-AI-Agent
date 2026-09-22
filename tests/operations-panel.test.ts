@@ -88,3 +88,14 @@ test("event inbox only acknowledges delivered unacknowledged records", () => {
   assert.match(panel, /!event\.acknowledgedAt/);
   assert.match(panel, /ACKNOWLEDGE/);
 });
+
+
+test("GitHub Actions source UI is read-only toward GitHub and only triggers local sync", () => {
+  const panel = source("components/AstraOperationsPanel.tsx");
+
+  assert.match(panel, /fetch\("\/api\/events\/github"/);
+  assert.match(panel, /SYNC GITHUB/);
+  assert.match(panel, /body: JSON\.stringify\(\{ action: "sync" \}\)/);
+  assert.doesNotMatch(panel, /workflow_dispatch/);
+  assert.doesNotMatch(panel, /actions\/runs\/[^"']+\/rerun/);
+});
