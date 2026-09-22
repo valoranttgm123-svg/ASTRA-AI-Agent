@@ -158,3 +158,15 @@ A new session must **not** restart NVIDIA architecture work. Read `docs/NVIDIA_M
 3. a newly reproduced concrete defect/provider change.
 
 If none of those environments/evidence are available, NVIDIA repo-only work is blocked by design, not unfinished planning.
+
+## AUTHORITATIVE recovery pointer
+
+After checking current `main` + CI + open PRs, read:
+
+`docs/CURRENT_EXECUTION_POINTER.md`
+
+before interpreting older checkpoint sections in this file.
+
+As of the NVIDIA saturation checkpoint, PRs #159–#162 are merged and main CI #435 passed. Older text saying NVA-1 or NVA-2 is "next" is historical only.
+
+Current next work is target-PC/core release execution plus real NVIDIA backend integration against existing contracts.
