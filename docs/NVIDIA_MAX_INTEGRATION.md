@@ -414,3 +414,28 @@ The existing core release target-PC sequence still has priority when real PC acc
 `Phase 14 validation → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`.
 
 NVIDIA expansion must not be used to fake or bypass those release gates.
+
+## Implementation checkpoint — NVA-1 repository contract
+
+The repository-side NVA-1 state/cache contract is implemented on branch `feature/nvidia-skill-hub-state`:
+
+- `lib/nvidia/skill-catalog-cache.ts`
+  - provider-neutral injected discovery contract;
+  - no runtime HTML scraping;
+  - private bounded catalog snapshot;
+  - duplicate/schema validation;
+  - symlink rejection;
+  - cancellation-aware refresh;
+- `lib/nvidia/skill-state.ts`
+  - private truth-state registry;
+  - `available / installed / disabled / incompatible`;
+  - version/checksum/source/timestamps;
+  - dry-run install/update/disable/enable/remove plans;
+  - Permission Level 2 requirement for local mutation;
+  - symlink-safe bounded persistence;
+- `tests/nvidia-skill-state.test.ts`
+  - validation, persistence, merge truth, dry-run mutation, cancellation, and symlink tests.
+
+This does not install NVIDIA skills yet. Real installation/update/remove requires the actual supported NVIDIA/Codex mechanism on the target PC and must be recorded truthfully in the private registry.
+
+After NVA-1 repository merge, the next independent repo-side task is **NVA-2 AI-Q provider-neutral adapter contract**. Target-PC NVA-1 validation remains a Codex task when the real PC is available.
