@@ -116,3 +116,14 @@ If the owner says only:
 `lanjutkan yang belum selesai`
 
 resume from this pointer and repository truth. Do not ask the owner to reconstruct prior chat history.
+
+## Active JARVIS repo work — Phase 24
+
+The owner explicitly authorized independent Phase 21–30 repository foundation work while Codex/target-PC execution is unavailable.
+
+Current active slice:
+- branch: `feature/phase24-event-engine`;
+- goal: Phase 24 Event Engine foundation;
+- next after green merge: Phase 25 Durable Background Task Manager.
+
+If a new session starts while this branch/PR is unmerged, inspect it first. Do not create a replacement Event Engine implementation.
