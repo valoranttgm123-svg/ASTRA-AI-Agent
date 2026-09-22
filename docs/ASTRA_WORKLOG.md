@@ -689,3 +689,29 @@ Safety/truth boundaries:
 - real offline/recovery evidence remains target-PC work.
 
 Next after green merge: Phase 22 Identity / Trust / Secret boundary.
+
+## 2026-09-22 — Phase 22 Identity / Trust / Secret repository foundation
+
+After Phase 28 merged green, started `feature/phase22-identity-trust-secrets`.
+
+Implemented:
+- `lib/identity/contracts.ts`;
+- `lib/identity/policy.ts`;
+- `lib/identity/sessions.ts`;
+- `lib/identity/store.ts`;
+- `lib/identity/secrets.ts`;
+- `tests/identity-trust-secrets.test.ts`;
+- identity lint coverage;
+- private `.astra/trust.json` configuration.
+
+Security decisions:
+- session identity only sets a permission ceiling;
+- locked/guest session ceiling remains Level 1;
+- trusted user unlocked ceiling max Level 2;
+- owner unlocked ceiling max Level 3;
+- Level-3 action still requires normal scoped approval;
+- device registry stores fingerprint hash, not raw identity secret;
+- revoked devices fail closed;
+- secret values are not returned by status/presence and are not persisted by the broker.
+
+Next after green merge: Phase 27 Multi-device foundation.

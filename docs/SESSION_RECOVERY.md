@@ -210,3 +210,18 @@ If a PR exists for this branch, inspect its CI and continue/fix it rather than c
 
 After Phase 28 merges, continue the authorized repository sequence:
 `Phase 22 Identity/Trust → Phase 27 Multi-device → Phase 29 Generic Skill/Device Registry`.
+
+## JARVIS recovery checkpoint — Phase 22 active
+
+Repository truth:
+- Phase 24 merged PR #164;
+- Phase 25 merged PR #165;
+- Phase 28 merged PR #166 at `a01d40ff8e378b1b1881269f0568bb65793d2e17`;
+- Phase 28 main CI #445 SUCCESS.
+
+Active branch: `feature/phase22-identity-trust-secrets`.
+
+If a PR exists for this branch, inspect its CI and continue/fix it instead of starting another identity/security implementation.
+
+After Phase 22 merges, continue:
+`Phase 27 Multi-device → Phase 29 Generic Skill/Device Registry`.

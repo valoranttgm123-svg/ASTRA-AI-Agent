@@ -2052,3 +2052,32 @@ Truth boundary:
 - no provider/service is marked healthy unless an actual registered health check reports it;
 - recovery plans are proposals only; ASTRA Tool Runtime/approval remains execution authority;
 - Phase 28 final exit gate still needs real target-PC recovery/offline/audit evidence.
+
+## Phase 22 repository checkpoint — Identity / Trust / Secret boundary
+
+Repository-side Phase 22 foundation is implemented on `feature/phase22-identity-trust-secrets`.
+
+Implemented:
+- explicit roles `guest / trusted_user / owner`;
+- locked/unlocked session state;
+- bounded capability scopes;
+- identity-derived permission ceiling that never exceeds Level 3;
+- identity never substitutes for ASTRA plan/tool permission checks or scoped Level-3 approval;
+- ephemeral session registry with expiry and explicit unlock evidence contract;
+- private trusted-device metadata registry under `.astra/trust.json`;
+- device identity stores SHA-256 fingerprint hash only, not raw credentials;
+- pending/trusted/revoked states;
+- revoked device cannot silently become trusted again;
+- scoped Secret Broker;
+- secret presence check exposes configured/not-configured only;
+- secret value is provided only inside an authorized callback;
+- explicit environment-secret provider reads only registered env bindings;
+- no secret values are persisted to trust metadata, Memory, Graphify, Obsidian, telemetry, or ordinary logs by this foundation;
+- regression tests for permission ceilings, lock/unlock/expiry, device revoke rules, secret scope, secret presence, persistence, duplicate fingerprints, and symlink targets.
+
+Truth boundary:
+- no face/speaker recognition is claimed;
+- no OS identity provider is connected yet;
+- no Windows credential vault is claimed;
+- owner recognition never grants Level-3 action by itself;
+- high-impact actions still require existing ASTRA approval/security policy.

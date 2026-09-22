@@ -152,3 +152,15 @@ Current active slice:
 - next after green merge: Phase 22 Identity / Trust / Secret boundary.
 
 If this branch/PR is unmerged in a new session, resume/fix it first. Do not recreate Phase 24, 25, or 28 from chat memory.
+
+## JARVIS repo continuation update — Phase 22
+
+Phase 28 Diagnostics / Audit / Offline merged in PR #166 at `a01d40ff8e378b1b1881269f0568bb65793d2e17`; main CI #445 succeeded.
+
+Current active slice:
+- branch: `feature/phase22-identity-trust-secrets`;
+- goal: Identity / Trust / Secret boundary;
+- tracker: `docs/JARVIS_PROGRESS_TRACKER.md`;
+- next after green merge: Phase 27 Multi-device foundation.
+
+If this branch/PR is unmerged in a new session, resume/fix it first. Do not recreate Phase 22 from chat memory.
