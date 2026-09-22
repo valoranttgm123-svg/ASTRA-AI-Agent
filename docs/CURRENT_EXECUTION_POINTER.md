@@ -200,7 +200,7 @@ The next useful work is real execution/evidence:
 Then continue real provider/device integrations and Phase 30.
 
 Only deviate when a concrete new defect or explicit owner requirement makes another task genuinely actionable.
-  
+
 ## Repo-side refinement checkpoint — PR #174 merged
 
 PR #174 added the canonical ASTRA Operations surface:
