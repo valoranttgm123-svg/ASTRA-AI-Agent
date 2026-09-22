@@ -27,6 +27,7 @@ On every new session:
 - [x] regression tests
 - [x] PR #164 CI green
 - [x] PR #164 merged → `1327ee985c13c6486bcd9212cbfbc28b3d3187a0`
+- [ ] Event Inbox / subscription UI — active on `feature/event-inbox-ui` (mark complete only after green merge)
 
 Real adapters still required:
 - [ ] GitHub event source
@@ -58,7 +59,7 @@ Repository foundation:
 
 Real integration later:
 - [ ] production task executors connected
-- [ ] UI/runtime task presence — PR #174 active (mark complete only after green merge)
+- [x] UI/runtime task presence — PR #174 merged → `293216e9f94868d00b2636b125922ff09ec593db`; PR CI #483 green
 - [ ] restart evidence on target PC
 - [ ] approved Level 2/3 task-resume flow
 - [ ] long-running scenario J4 evidence
@@ -84,7 +85,7 @@ Real integration later:
 - [ ] Ollama/Codex/Sonor/NVIDIA health adapters from real runtime
 - [ ] safe recovery execution wired through Tool Runtime
 - [ ] offline degradation scenario J8 evidence
-- [ ] action-history UI / user-facing diagnostics panel — PR #174 active (mark complete only after green merge)
+- [x] action-history UI / user-facing diagnostics panel — PR #174 merged → `293216e9f94868d00b2636b125922ff09ec593db`; PR CI #483 green
 
 ## Phase 22 — Identity / Trust / Secret boundary
 
