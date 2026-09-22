@@ -84,53 +84,64 @@ export class AstraHealthRegistry {
       throw new Error("Invalid diagnostics capture time.");
     }
 
-    const samples: AstraHealthSample[] = [];
-    for (const check of this.checks.values()) {
-      if (signal?.aborted) {
-        throw signal.reason instanceof Error
-          ? signal.reason
-          : new DOMException("Diagnostics capture aborted.", "AbortError");
-      }
-
-      const started = Date.now();
-      try {
-        const result = await check.check(signal);
-        const latencyMs =
-          result.latencyMs === undefined
-            ? Date.now() - started
-            : Math.max(0, Math.floor(result.latencyMs));
-        samples.push({
-          id: check.id,
-          category: check.category,
-          status: result.status,
-          critical: check.critical,
-          checkedAt: now.toISOString(),
-          detail: safePublicDetail(
-            result.detail,
-            "Health check completed.",
-            700,
-          ),
-          latencyMs,
-        });
-      } catch (error) {
-        const cancelled =
-          signal?.aborted ||
-          (error instanceof Error && error.name === "AbortError");
-        if (cancelled) throw error;
-
-        samples.push({
-          id: check.id,
-          category: check.category,
-          status: "unavailable",
-          critical: check.critical,
-          checkedAt: now.toISOString(),
-          detail:
-            "Health check failed: " +
-            safeErrorDetail(error, "operation failed", 600),
-          latencyMs: Date.now() - started,
-        });
-      }
+    if (signal?.aborted) {
+      throw signal.reason instanceof Error
+        ? signal.reason
+        : new DOMException("Diagnostics capture aborted.", "AbortError");
     }
+
+    const checks = [...this.checks.values()];
+    const samples = await Promise.all(
+      checks.map(async (check): Promise<AstraHealthSample> => {
+        if (signal?.aborted) {
+          throw signal.reason instanceof Error
+            ? signal.reason
+            : new DOMException(
+                "Diagnostics capture aborted.",
+                "AbortError",
+              );
+        }
+
+        const started = Date.now();
+        try {
+          const result = await check.check(signal);
+          const latencyMs =
+            result.latencyMs === undefined
+              ? Date.now() - started
+              : Math.max(0, Math.floor(result.latencyMs));
+          return {
+            id: check.id,
+            category: check.category,
+            status: result.status,
+            critical: check.critical,
+            checkedAt: now.toISOString(),
+            detail: safePublicDetail(
+              result.detail,
+              "Health check completed.",
+              700,
+            ),
+            latencyMs,
+          };
+        } catch (error) {
+          const cancelled =
+            signal?.aborted ||
+            (error instanceof Error && error.name === "AbortError");
+          if (cancelled) throw error;
+
+          return {
+            id: check.id,
+            category: check.category,
+            status: "unavailable",
+            critical: check.critical,
+            checkedAt: now.toISOString(),
+            detail:
+              "Health check failed: " +
+              safeErrorDetail(error, "operation failed", 600),
+            latencyMs: Date.now() - started,
+          };
+        }
+      }),
+    );
 
     const count = (status: AstraHealthStatus) =>
       samples.filter((sample) => sample.status === status).length;
