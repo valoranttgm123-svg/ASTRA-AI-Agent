@@ -833,3 +833,17 @@ Required workflow:
 9. never commit, upload, log, paste into GitHub, or store the API key in docs/issues/PRs.
 
 The owner does not want to manually edit the NVIDIA secret into the project. Codex should perform the local file/configuration step when the PC checkout exists, while the owner supplies the secret only through the local target-PC session.
+
+## Owner delivery preference — zero-touch technical completion
+
+Read and follow `docs/READY_TO_USE_DELIVERY.md`.
+
+The owner wants Codex to perform 100% of the technically executable work and deliver ASTRA ready to use. Do not turn target-PC validation into a list of commands for the owner.
+
+When PC access is available, Codex must execute the repository sync, installation, dependency repair, local configuration, provider setup, Sonor integration, Windows startup/launcher work, target-runtime validation, defect repair, evidence collection, and final readiness checks itself.
+
+The owner should only be interrupted for unavoidable credential entry, account consent/MFA, UAC/security prompts, camera/microphone consent, physical-human-only observations, or a genuine high-impact approval.
+
+After each unavoidable owner input, continue automatically. Do not make the owner resume the technical workflow manually.
+
+The final target is not "code complete"; it is a truthfully validated, ready-to-use ASTRA installation on the target PC.
