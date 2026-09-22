@@ -2243,3 +2243,22 @@ Contract:
 - repeated polling must not destroy existing acknowledgement state.
 
 Codex later owns real background polling cadence, target-runtime proactive notification UX/evidence, and private-repo credential validation where required.
+
+## 2026-09-22 — Phase 24 three-source repository checkpoint
+
+- PR #178 provider-health diagnostics merged; main CI #501 SUCCESS.
+- PR #180 local service-health Event Engine source merged; main CI #507 SUCCESS.
+- PR #182 Automation lifecycle Event Engine bridge merged at `d04876391483500dda4f0755c4f1c120a25eae07`.
+- PR #182 CI #512 passed; post-merge main CI #513 exposed one nondeterministic integration-test wait, not a runtime defect.
+- PR #183 changed only that test to await canonical async Event Store publication; PR CI #516 SUCCESS.
+- PR #183 merged at `0f1cff3723aeb30a56270b86d5b8dcfef713ca2a`; main CI #517 SUCCESS.
+- Phase 24 now has three real repository-side source integrations: GitHub Actions, local service-health, and Automation lifecycle.
+- Target-PC polling/proactive notification/failure/STOP/restart evidence is still required; repository CI is not production readiness.
+- Phase 28 recovery execution remains intentionally pending because no recovery-specific Tool Runtime primitive currently exists. Do not substitute unrelated generic tools.
+
+Codex continuation:
+- use the merged source adapters rather than rebuilding them;
+- subscribe/configure them only through existing guarded policy;
+- collect real target-runtime evidence;
+- keep Automation approval/STOP authoritative;
+- do not implement recovery execution until a real recovery-specific Tool Runtime primitive is available.
