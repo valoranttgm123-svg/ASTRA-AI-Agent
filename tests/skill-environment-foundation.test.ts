@@ -20,15 +20,15 @@ import {
 } from "../lib/environment/registry";
 import { createToolRegistry } from "../lib/tools/registry";
 
-const originalSkillFile = process.env.ASTRA_SKILL_REGISTRY_FILE;
+const originalSkillFile = process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE;
 const originalEnvironmentFile =
   process.env.ASTRA_ENVIRONMENT_REGISTRY_FILE;
 
 afterEach(() => {
   if (originalSkillFile === undefined) {
-    delete process.env.ASTRA_SKILL_REGISTRY_FILE;
+    delete process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE;
   } else {
-    process.env.ASTRA_SKILL_REGISTRY_FILE = originalSkillFile;
+    process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE = originalSkillFile;
   }
   if (originalEnvironmentFile === undefined) {
     delete process.env.ASTRA_ENVIRONMENT_REGISTRY_FILE;
@@ -69,7 +69,7 @@ function toolRegistry() {
 
 test("generic skill starts untrusted/disabled and supports verified update rollback", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-skill-"));
-  process.env.ASTRA_SKILL_REGISTRY_FILE = path.join(root, "skills.json");
+  process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE = path.join(root, "skills.json");
 
   const created = await registerSkill({
     id: "room-helper",
@@ -158,7 +158,7 @@ test("generic skill starts untrusted/disabled and supports verified update rollb
 
 test("generic skill health fails closed on understated tool permission and missing requirements", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-skill-health-"));
-  process.env.ASTRA_SKILL_REGISTRY_FILE = path.join(root, "skills.json");
+  process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE = path.join(root, "skills.json");
 
   const created = await registerSkill({
     id: "unsafe-declaration",
@@ -376,7 +376,7 @@ test("skill and environment registries reject symbolic-link targets", async () =
   await symlink(target, skillLink);
   await symlink(target, environmentLink);
 
-  process.env.ASTRA_SKILL_REGISTRY_FILE = skillLink;
+  process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE = skillLink;
   const skills = await loadSkillStore();
   assert.equal(skills.available, false);
   assert.match(skills.detail, /symbolic link/i);
