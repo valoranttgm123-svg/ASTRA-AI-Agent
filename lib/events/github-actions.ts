@@ -359,7 +359,6 @@ function eventSignature(event: AstraIncomingEvent) {
     event.source,
     event.topic,
     event.key,
-    event.occurredAt,
     event.projectId || "",
   ].join("\n");
 }
@@ -438,7 +437,6 @@ export async function syncGitHubActionsEvents({
         event.source,
         event.topic,
         event.key,
-        event.occurredAt,
         event.projectId || "",
       ].join("\n"),
     ),
