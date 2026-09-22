@@ -2,6 +2,10 @@
 
 Status date: **2026-09-22**. This is the authoritative short handoff for interrupted ChatGPT/Codex sessions. Check the actual latest `main`, open PRs and CI first; do not assume this checkpoint is still the HEAD.
 
+## ChatGPT saturation / interruption checkpoint
+
+Read `docs/CHATGPT_SATURATION_CHECKPOINT_2026-09-22.md` before repeating any broad audit. PR #185 (NVIDIA Build API-key handoff) is merged at `a33b08351930e5e6674582811f531b32024bc143`; its PR CI passed. The durable checkpoint records what is repository-complete, what genuinely requires target-PC/provider evidence, and the rule for resuming safely after a chat interruption. A new session must finish any current open PR/CI issue first, but must **not** redo the historical branch reconciliation without a demonstrated capability mismatch.
+
 ## Resume in one sentence
 
 When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_AUTOMATION_EVENT_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.

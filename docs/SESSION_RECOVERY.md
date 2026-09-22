@@ -16,13 +16,16 @@ Do not reconstruct project state from chat first.
 
 Read in this order:
 
-1. current `main` commit and CI result;
+1. current `main` commit, newest CI result, and all open PRs;
 2. `AGENTS.md`;
-3. `docs/ASTRA_WORKLOG.md`;
-4. `docs/CODEX_PROGRESS_TRACKER.md`;
-5. latest section of `docs/CODEX_HANDOFF.md`;
+3. `docs/CURRENT_EXECUTION_POINTER.md`;
+4. `docs/CHATGPT_SATURATION_CHECKPOINT_2026-09-22.md`;
+5. `docs/CODEX_REFINEMENT_CONTRACT.md`;
 6. `docs/CODEX_NEXT_MISSION.md`;
-7. relevant validation/security document for the active phase.
+7. `docs/JARVIS_PROGRESS_TRACKER.md`;
+8. only then use `docs/ASTRA_WORKLOG.md`, `docs/CODEX_PROGRESS_TRACKER.md`, the latest section of `docs/CODEX_HANDOFF.md`, and task-specific validation/security documents when extra history is needed.
+
+Older checkpoint sections later in this file are chronological history. They must never override live GitHub state, `docs/CURRENT_EXECUTION_POINTER.md`, or the ChatGPT saturation checkpoint.
 
 Then:
 
