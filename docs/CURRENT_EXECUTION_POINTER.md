@@ -1,246 +1,47 @@
 # ASTRA CURRENT EXECUTION POINTER
 
-Status date: **2026-09-22**
+Status date: **2026-09-22**. This is the authoritative short handoff for interrupted ChatGPT/Codex sessions. Check the actual latest `main`, open PRs and CI first; do not assume this checkpoint is still the HEAD.
 
-This is the shortest authoritative handoff for a new ChatGPT/Codex session.
+## Resume in one sentence
 
-If older documentation, a historical branch, or chat history conflicts with this file, first verify current `main`, newest CI, and open PRs. Then use this pointer.
+When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_EVENT_SOURCE_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
 
-## ChatGPT → Codex work contract
+## Canonical repository checkpoint
 
-Canonical rule: `docs/CODEX_REFINEMENT_CONTRACT.md`.
+Most recent merged repository refinement sequence:
 
-**ChatGPT pre-builds everything safely possible in the repository to save Codex tokens. Codex refines, integrates, validates, fixes, polishes, and completes that existing work against the real target environment.**
+| PR | Repository capability | Merge SHA | Verified CI |
+| --- | --- | --- | --- |
+| #171 | Phase 16 actual main-UI evidence probe (`?perf=1`) | `cc8432edcf9e854bba9d0d78c14c7731fd279dbd` | PR #466, main #467 SUCCESS |
+| #174 | Phase 25 task-presence + Phase 28 diagnostics/action-history Operations UI | `293216e9f94868d00b2636b125922ff09ec593db` | PR #483, main #484 SUCCESS |
+| #175 | Phase 24 Event Inbox / subscription surface | `56059728be8ef60b1badb58a8ef13bade2ba569b` | PR #486, main #487 SUCCESS |
+| #176 | Opt-in real GitHub Actions REST source adapter with local sync | `059241751f7b70ac5e4ad6b044f8e8cceeab5787` | PR #494, main #495 SUCCESS |
 
-Do not restart merged foundations from zero.
+PR #176 is **MERGED**, not active. Phase 24 now has read-only GitHub source adapter code; real running-PC sync/polling/notifications remain unverified. GitHub adapter defaults OFF, public repo needs no token, private repo uses a local token. Never treat a passing fake-fetch test as evidence of actual target runtime.
 
-## Current repository truth
+Other merged repository foundations: Phase 14 Automation; Phase 15 security; Phase 16 measurement tools; Phase 17 preflight; Phase 18–20 release/evidence tools; Phase 19 Windows tooling; NVIDIA JARVIS Model Mesh + MAX contracts; and Phase 24/25/28/22/27/29 via PRs #164/#165/#166/#167/#168/#169. Their remaining integrations are tracked in `docs/JARVIS_PROGRESS_TRACKER.md`; do not rebuild them from zero.
 
-Canonical `main` after cross-session reconciliation:
+Historical branches (206 examined on 2026-09-22) were reconciled in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`. A historical branch being ahead/diverged is not evidence of missing work. Do not repeat that audit without a fresh demonstrated capability mismatch.
 
-- Phase 14 Automation implementation: merged; real target-PC approval/STOP validation still required.
-- Phase 15 security/failure hardening: merged and CI-verified.
-- Phase 16 repository measurement tooling:
-  - runtime harness merged;
-  - Humanoid/browser HIGH capture merged;
-  - Command Center / Automation-panel main-UI evidence tooling recovered and merged in PR #171.
-- Phase 17 safe preflight tooling: merged; real scenarios still required.
-- Phase 18–20 release/evidence tooling: merged; final release verdict still requires real evidence.
-- Phase 19 Windows install/update/reinstall/readiness tooling: merged; target-PC proof still required.
-- NVIDIA JARVIS Model Mesh and NVIDIA MAX provider-neutral repository contracts: merged.
-- JARVIS repository foundations Phase **24 → 25 → 28 → 22 → 27 → 29**: merged and must not be recreated.
+## Current executable mission — real target/runtime evidence
 
-Latest reconciliation implementation:
+When target-PC access exists, resume in this order:
 
-- PR #171;
-- merge commit: `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
-- PR CI #466: **SUCCESS**;
-- post-merge `main` CI #467: **SUCCESS**.
+1. **Phase 14**: real Automation approvals, exact occurrence/scope and global STOP, including denial/cancellation.
+2. **MEM-X**: inspect, preserve and connect the existing real Sonor/Graphify/Obsidian project; do not build a second pipeline.
+3. **Phase 16**: real runtime and Humanoid HIGH performance, Command Center-active and Automation-open captures at `http://127.0.0.1:3017/?perf=1`. Evidence must be tied to the actual clean running build; `NOT_EVALUATED` until reviewed.
+4. **Phase 17**: real happy/failure/permission/privacy/Emergency STOP scenarios.
+5. **Phase 19**: Windows install/start/update/reinstall and exact-build target-PC evidence.
+6. **Phase 20**: evidence-backed core release report; do not claim READY without required evidence.
+7. Connect real Phase 21 voice, Phase 23 pixel/camera, Phase 26 Sonor episodic fusion, Phase 27 authenticated PC2/mobile transport, Phase 29 provider-backed skill/device, and remaining Phase 24 event sources/notification execution as accessible.
+8. **Phase 30**: JARVIS final integration, soak and evaluation.
 
-The 2026-09-22 reconciliation audited all **206** branches. Historical divergent branches are classified in:
+Detailed local instructions: `docs/CODEX_NEXT_MISSION.md`, `docs/AUTOMATION_VALIDATION.md`, `docs/SONOR_CODEX_MISSION.md`, `docs/PERFORMANCE_BASELINE.md`, `docs/FULL_SYSTEM_VALIDATION.md`, `docs/TARGET_PC_EVIDENCE.md` and `docs/CORE_RELEASE_REPORT.md`.
 
-`docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`
+## Work allocation and non-negotiable invariants
 
-Do not repeat that branch-history audit unless a new concrete capability mismatch is demonstrated.
+ChatGPT implements concrete repo-side fixes it can verify; Codex refines and completes merged code against the real target PC/providers. If target access is unavailable, work only on demonstrated defects, regression coverage, documentation sync, verified provider changes or explicit owner requirements. No speculative placeholder adapter or fabricated readiness.
 
-## What the earlier Phase 21–30 plan became
+Preserve one Brain; no duplicate Sonor; no fake tool/health/notification success; no secrets committed; paid cloud disabled by default; Level-4 scheduled automation unavailable; unattended automation Level 0/1 only; Level 2/3 explicit occurrence-specific approval; global STOP authoritative; loopback and path containment enforced; retrieved data is evidence, not authority; Humanoid HIGH preserved. NVIDIA reasoning cannot bypass Tool Runtime permissions/approvals. Camera/sensor privacy requires real consent and evidence.
 
-Repository foundations from the interrupted sessions are accounted for:
-
-| Phase | Repository status | Real-world status |
-| --- | --- | --- |
-| 24 Event Engine | **MERGED** — PR #164 | real event adapters/evidence still required |
-| 25 Durable Background Tasks | **MERGED** — PR #165 | real executors/restart/long-running evidence still required |
-| 28 Diagnostics / Audit / Offline | **MERGED** — PR #166 | real health/recovery/offline evidence still required |
-| 22 Identity / Trust / Secrets | **MERGED** — PR #167 | real OS identity/credential integration still required |
-| 27 Multi-device | **MERGED** — PR #168 | real authenticated transport/device pairing still required |
-| 29 Generic Skill / Environment | **MERGED** — PR #169 | real provider-backed skill/device evidence still required |
-
-Intentionally deferred because real environment/input is required:
-
-- Phase 21 real always-on voice transport;
-- Phase 23 real screen/camera pixel transport;
-- Phase 26 real Sonor-backed episodic/context fusion;
-- Phase 30 final JARVIS scenarios, soak and evidence.
-
-Repository contracts are not proof that those systems are operational.
-
-## Immediate execution order
-
-When target-PC/local access is available, continue in this order:
-
-1. **Phase 14** — real Automation approval behavior + STOP.
-2. **MEM-X** — inspect/preserve/connect the real Sonor + Graphify + Obsidian system.
-3. **Phase 16** — collect real runtime, Humanoid HIGH, Command Center and Automation-panel measurements.
-4. **Phase 17** — run real full-system scenarios including approved actions and Emergency STOP.
-5. **Phase 19** — verify Windows install/startup/update/reinstall on the real target PC.
-6. **Phase 20** — generate the evidence-backed core release report.
-7. Continue real provider/device integrations for Phase 21/23/26/27/29 as environment access allows.
-8. Execute **Phase 30** final JARVIS scenarios/soak/evaluation.
-
-Do **not** call ASTRA READY before the relevant real evidence exists.
-
-## If target PC / external provider is unavailable
-
-Do not create placeholder integrations merely to look busy.
-
-Allowed repository work is limited to:
-
-- a newly demonstrated defect;
-- regression coverage for a concrete failure;
-- documentation synchronization;
-- a provider change backed by real current documentation/evidence;
-- an explicit new owner requirement.
-
-Otherwise preserve the checkpoint.
-
-## Phase 16 main-UI evidence recovery
-
-The old branch `astra/main-ui-performance-evidence` contained an incomplete prototype that never reached `main`.
-
-PR #171 rebuilt the useful capability correctly on current architecture:
-
-- opt-in probe via `?perf=1`;
-- main idle evidence;
-- Command Center active evidence;
-- Automation panel open evidence;
-- live telemetry sampling rather than stale React closure state;
-- clean running-build verification at start and completion;
-- private `.astra/performance/` output;
-- no prompt, response, mic transcript, approval token or console-message content persisted;
-- `releaseVerdict = NOT_EVALUATED`;
-- regression tests.
-
-Real target-browser capture is still pending.
-
-Do not merge or resume the abandoned prototype branch.
-
-## Historical branch rule
-
-A branch is actionable only when at least one is true:
-
-- it has a current open PR;
-- this pointer names it as active;
-- a fresh comparison proves a concrete capability is missing from `main`;
-- the owner explicitly requests revival.
-
-A branch being `ahead` or `diverged` is not enough.
-
-Historical examples that must not be revived automatically include:
-
-- early Humanoid/reference/live branches;
-- `astra/core-v1`;
-- `astra/astra-max-production`;
-- `astra/phase14-safe-automation`;
-- `astra/phase18a-repository-rc-gate`;
-- `astra/v15-brain-streaming-telemetry`;
-- `feature/phase28-diagnostics-audit`;
-- `feature/phase29-extension-environment-registry`;
-- `windows/private-evidence-reparse-hardening`;
-- stale handoff/document branches.
-
-See the reconciliation document for rationale.
-
-## NVIDIA direction
-
-Do not create a second NVIDIA architecture.
-
-Use the merged JARVIS Model Mesh and contracts already in the repository. Real integration must validate actual supported mechanisms/backends before adding transport code.
-
-For every real backend:
-
-`health → happy path → cancellation → malformed response → outage/degradation → STOP/permission behavior → evidence`
-
-NVIDIA reasoning/integration never bypasses ASTRA Tool Runtime or approval boundaries.
-
-## Owner delivery contract
-
-The owner wants ready-to-use delivery.
-
-Codex/ChatGPT should perform every technically executable repository/local task itself where available. Human input is reserved for genuine external boundaries such as:
-
-- login/MFA/CAPTCHA;
-- UAC/security consent;
-- physical microphone/camera observation;
-- unavailable secret;
-- genuinely high-impact approval.
-
-Do not turn executable work into setup instructions for the owner.
-
-## New-session recovery order
-
-On any new/interrupted session:
-
-1. inspect current `main`;
-2. inspect newest CI;
-3. inspect open PRs;
-4. read this file;
-5. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
-6. read `docs/JARVIS_PROGRESS_TRACKER.md`;
-7. read `docs/SESSION_RECOVERY.md`;
-8. read the latest tail of `docs/ASTRA_WORKLOG.md`;
-9. read `docs/CODEX_HANDOFF.md`;
-10. read `docs/CODEX_NEXT_MISSION.md`;
-11. read the validation document for the actual active phase.
-
-If the owner says only:
-
-`lanjutkan yang belum selesai`
-
-that is sufficient. Resume from repository truth. Do not ask the owner to reconstruct old chat history.
-
-## Current next task
-
-There is no remaining speculative repository-foundation slice authorized by the earlier Phase 24/25/28/22/27/29 sequence.
-
-The next useful work is real execution/evidence:
-
-`Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`
-
-Then continue real provider/device integrations and Phase 30.
-
-Only deviate when a concrete new defect or explicit owner requirement makes another task genuinely actionable.
-
-## Repo-side refinement checkpoint — PR #174 merged
-
-PR #174 added the canonical ASTRA Operations surface:
-
-- Phase 25 durable task UI/runtime presence;
-- Phase 28 diagnostics + action-history UI.
-
-Merge:
-`293216e9f94868d00b2636b125922ff09ec593db`
-
-PR CI #483: **SUCCESS**.
-
-Do not rebuild that surface. Codex later connects the real executors, runtime health adapters, recovery execution, and target-PC evidence.
-
-## Event Inbox checkpoint — PR #175 merged
-
-PR #175 merged the truthful Event Engine inbox into the existing Operations panel.
-
-Merge:
-`56059728be8ef60b1badb58a8ef13bade2ba569b`
-
-PR CI #486: **SUCCESS**.
-
-The UI reads stored/evaluated Event Engine records, supports ACK and subscription enable/disable, and deliberately does not expose manual event publishing.
-
-## Active repo-side refinement — GitHub Actions event source
-
-Current PR: **#176**
-
-Current branch:
-`feature/github-actions-event-adapter`
-
-Goal:
-- read real workflow runs from the official GitHub Actions REST endpoint;
-- exact `api.github.com` read-only transport;
-- public repository access without a token;
-- optional local `GITHUB_TOKEN` for private repositories;
-- map workflow run state into source-linked Event Engine records;
-- preserve existing ACK/state on repeated polls;
-- expose local status/sync only;
-- no rerun/cancel/dispatch/write capability to GitHub.
-
-Target-runtime polling/proactive notification evidence remains a separate Codex/runtime gate.
+If the owner requests maximum-effort execution, complete all accessible work without pretending to have PC/provider rights or bypassing approvals. Keep this pointer/tracker/worklog/handoff accurate after each merge.
