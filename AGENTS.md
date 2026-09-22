@@ -2,6 +2,16 @@
 
 This repository is the working source of truth for the ASTRA AI Agent project.
 
+## CODEX REFINEMENT CONTRACT — mandatory
+
+Read `docs/CODEX_REFINEMENT_CONTRACT.md` before implementation work.
+
+Operating model:
+
+**ChatGPT builds as much safe repository work as possible to save Codex tokens. Codex must refine, complete, integrate, validate, polish, and ship that existing work rather than restart it from zero.**
+
+Codex owns the real target-PC/provider/runtime work, evidence-driven fixes, end-to-end validation, and ready-to-use delivery.
+
 ## START HERE — current Codex mission
 
 Before changing any code:
@@ -9,12 +19,13 @@ Before changing any code:
 0. inspect current `main`, open PRs, and newest CI;
 1. read `docs/CURRENT_EXECUTION_POINTER.md` — **shortest authoritative current checkpoint**;
 2. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` — stale/divergent branch reconciliation;
-3. read `docs/CODEX_NEXT_MISSION.md` — executable mission and real-environment order;
-4. read `docs/JARVIS_PROGRESS_TRACKER.md` — Phase 21–30 repository-foundation truth;
-5. read `docs/ASTRA_WORKLOG.md` — durable chronological history;
-6. read `docs/SESSION_RECOVERY.md` — interruption/new-session protocol;
-7. read `docs/CODEX_HANDOFF.md` and `docs/CODEX_PROGRESS_TRACKER.md`;
-8. then read the validation/security document relevant to the active task.
+3. read `docs/CODEX_REFINEMENT_CONTRACT.md` — mandatory ChatGPT→Codex division of work;
+4. read `docs/CODEX_NEXT_MISSION.md` — executable mission and real-environment order;
+5. read `docs/JARVIS_PROGRESS_TRACKER.md` — Phase 21–30 repository-foundation truth;
+6. read `docs/ASTRA_WORKLOG.md` — durable chronological history;
+7. read `docs/SESSION_RECOVERY.md` — interruption/new-session protocol;
+8. read `docs/CODEX_HANDOFF.md` and `docs/CODEX_PROGRESS_TRACKER.md`;
+9. then read the validation/security document relevant to the active task.
 
 Supporting canonical documents:
 - `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done;
