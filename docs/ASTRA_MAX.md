@@ -1978,3 +1978,28 @@ It extends—not replaces—the Phase 21–30 JARVIS roadmap with these mapped c
 Repository foundation NVA-0 adds a canonical NVIDIA subsystem registry, bounded on-demand Skill Hub manifest, and regression tests. It does **not** claim AI-Q/Retriever/Voice/Vision/Guardrails are connected yet.
 
 Do not create another NVIDIA roadmap. Continue from `docs/NVIDIA_MAX_INTEGRATION.md` and preserve the existing Phase 14/MEM-X/16/17/19/20 target-PC release gates.
+
+## Phase 24 repository checkpoint — Event Engine foundation
+
+Repository-side Phase 24 foundation is implemented on branch `feature/phase24-event-engine`.
+
+Implemented:
+- bounded event/subscription contracts;
+- supported source kinds for GitHub/repository/calendar/email/automation/service/backup/business/custom;
+- severity floors;
+- notification vs record-only policy;
+- deterministic debounce + dedupe;
+- quiet hours with explicit timezone offset;
+- optional critical-event quiet-hours override;
+- per-subscription hourly rate limit;
+- acknowledgement state;
+- private bounded `.astra/events.json` persistence;
+- symlink rejection;
+- loopback/same-origin Event Engine API using existing ASTRA request guards;
+- regression tests for matching, severity, dedupe, debounce, quiet hours, rate limits, persistence, acknowledgement, malformed input, and symlink targets.
+
+Truth boundary:
+- this is the event engine itself, not proof that GitHub/calendar/email/service adapters are connected;
+- publishing an event never authorizes an external action;
+- real proactive adapters must authenticate/verify their own source before calling the Event Engine;
+- Phase 24 exit gate still requires at least three real event sources on the target runtime.
