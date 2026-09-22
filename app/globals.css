@@ -1059,3 +1059,19 @@ body {
   border-color: rgba(138,160,173,0.18);
   background: rgba(138,160,173,0.05);
 }
+
+
+.astra-operations__source {
+  margin-top: 10px;
+  padding: 9px;
+  border: 1px solid rgba(99,234,255,0.09);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.016);
+}
+
+.astra-operations__source p {
+  margin: 7px 0;
+  color: rgba(225,247,252,0.5);
+  font-size: 8px;
+  line-height: 1.45;
+}
