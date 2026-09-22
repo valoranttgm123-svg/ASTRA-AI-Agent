@@ -244,3 +244,21 @@ Do not treat “JARVIS-Class” as permission for fictional claims or unsafe aut
 A local Sonor workflow graph already exists on the user's target PC at `127.0.0.1:55127`. Reuse it. Do not build a duplicate Graphify/Obsidian system inside ASTRA.
 
 When local PC access is available, inspect Sonor's real server/API implementation and connect the existing `lib/memory/sonor.ts` adapter using the contract in `docs/SONOR_BRIDGE.md`. Do not guess endpoint paths and do not claim READY until the real end-to-end check passes.
+
+## NVIDIA JARVIS Mesh — PR #154
+
+The single NVIDIA Nemotron provider was upgraded to an adaptive four-profile NVIDIA Build/NIM mesh in PR #154, merge commit `ce5a5623867f443ffc931c6b4687b19e38412882`.
+
+Profiles:
+- Chief: `nvidia/nemotron-3-ultra-550b-a55b`
+- Deep: `z-ai/glm-5-3`
+- Fast: `nvidia/nemotron-3.5-lightning-30b-a3b`
+- Vision: `z-ai/glm-5-3-flash`
+
+Rules:
+- preserve deterministic routing in `lib/brain/nvidia.ts`;
+- NVIDIA remains reasoning/chat only and must not bypass Tool Runtime/Codex/Hermes approval boundaries;
+- AUTO fallback and private-memory forwarding remain explicit opt-ins;
+- Vision must not be reported as active perception until ASTRA carries an actual visual payload;
+- never commit `NVIDIA_API_KEY`;
+- read `docs/NVIDIA_NIM.md` before modifying NVIDIA routing.
