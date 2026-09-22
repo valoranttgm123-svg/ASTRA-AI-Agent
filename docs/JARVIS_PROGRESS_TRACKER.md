@@ -53,8 +53,8 @@ Repository foundation:
 - [x] global STOP propagation
 - [x] loopback task management API
 - [x] regression tests
-- [ ] PR CI green
-- [ ] merged to `main`
+- [x] PR #165 CI green
+- [x] merged to `main` → `2169d260ae4e52577053af442e10edc7ca1b6abf`
 
 Real integration later:
 - [ ] production task executors connected
@@ -65,14 +65,26 @@ Real integration later:
 
 ## Phase 28 — Diagnostics / Audit / Offline foundation
 
-- [ ] health registry
-- [ ] degraded/offline state model
-- [ ] bounded audit journal
-- [ ] safe recovery-plan contract
-- [ ] provider/service aggregation
-- [ ] action-history query contract
-- [ ] tests
+Repository foundation:
+- [x] health registry
+- [x] degraded/offline state model
+- [x] bounded audit journal
+- [x] safe recovery-plan contract
+- [x] provider/service aggregation from real local stores/services
+- [x] action-history query contract
+- [x] read-only diagnostics API
+- [x] secret/path redaction in audit records
+- [x] symlink-safe private audit persistence
+- [x] tests
+- [ ] PR CI green
 - [ ] merged
+
+Real integration later:
+- [ ] explicit real internet/connectivity probe
+- [ ] Ollama/Codex/Sonor/NVIDIA health adapters from real runtime
+- [ ] safe recovery execution wired through Tool Runtime
+- [ ] offline degradation scenario J8 evidence
+- [ ] action-history UI / user-facing diagnostics panel
 
 ## Phase 22 — Identity / Trust / Secret boundary
 
