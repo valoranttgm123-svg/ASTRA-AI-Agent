@@ -231,3 +231,45 @@ test("GitHub status fails safely without leaking token details", async () => {
   assert.doesNotMatch(status.detail, /github_pat_should_not_leak/);
   assert.match(status.detail, /redacted/i);
 });
+
+
+test("same workflow state is skipped even when GitHub updated_at changes", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "astra-github-state-"));
+  process.env.ASTRA_EVENT_FILE = path.join(root, "events.json");
+  process.env.ASTRA_GITHUB_EVENTS_ENABLED = "true";
+  process.env.ASTRA_GITHUB_EVENTS_REPOSITORY = "owner/repo";
+
+  await upsertEventSubscription(
+    {
+      id: "github-actions-state",
+      source: "github",
+      topic: "actions.workflow_run",
+      status: "enabled",
+      severityFloor: "info",
+      deliveryPolicy: "notify",
+      debounceMs: 0,
+      dedupeWindowMs: 60_000,
+      rateLimitPerHour: 20,
+    },
+    new Date("2026-09-22T09:00:00Z"),
+  );
+
+  await syncGitHubActionsEvents({
+    fetchImpl: async () => jsonResponse(payload()),
+    now: new Date("2026-09-22T10:06:00Z"),
+  });
+
+  const changedTimestamp = payload();
+  changedTimestamp.workflow_runs[0].updated_at =
+    "2026-09-22T10:06:30Z";
+
+  const second = await syncGitHubActionsEvents({
+    fetchImpl: async () => jsonResponse(changedTimestamp),
+    now: new Date("2026-09-22T10:07:00Z"),
+  });
+
+  assert.equal(second.skippedSeen, 1);
+  assert.equal(second.records, 0);
+  const loaded = await loadEventStore();
+  assert.equal(loaded.store.events.length, 1);
+});
