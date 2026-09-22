@@ -123,8 +123,8 @@ Repository foundation:
 - [x] no public/unauthenticated transport surface
 - [x] symlink-safe bounded persistence
 - [x] tests
-- [ ] PR CI green
-- [ ] merged
+- [x] PR #168 CI green (PR run #450; main run #451)
+- [x] merged → `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`
 
 Real integration later:
 - [ ] real second-device transport selected (LAN/SSH/authenticated relay)
@@ -136,15 +136,29 @@ Real integration later:
 
 ## Phase 29 — Generic Skill / Device Registry
 
-- [ ] generic skill manifest
-- [ ] provider/tool mapping
-- [ ] permission/network/secret requirements
-- [ ] enable/disable/version/health
-- [ ] update/rollback metadata
-- [ ] explicitly registered device/environment contract
-- [ ] no automatic trust for downloaded skills
-- [ ] tests
+Repository foundation:
+- [x] generic skill manifest
+- [x] provider/tool mapping through existing Tool Registry
+- [x] permission/network/secret-name requirements
+- [x] explicit untrusted → reviewed trust state
+- [x] install/enable/disable/version/health lifecycle
+- [x] verified update/rollback metadata and state transitions
+- [x] private bounded generic skill persistence
+- [x] explicitly registered device/environment contract
+- [x] device disabled-by-default behavior
+- [x] write operations require Level 3+ and preserve approval
+- [x] camera/sensor sensitive privacy classification + per-operation consent
+- [x] no automatic trust for downloaded skills
+- [x] no public unauthenticated environment endpoint
+- [x] tests
+- [x] PR #169 code CI run #453 green
 - [ ] merged
+
+Real integration later:
+- [ ] one real provider-backed generic skill installed/disabled/rolled back with evidence
+- [ ] one real safe environment/device provider connected
+- [ ] Tool Runtime invocation + real telemetry/verification
+- [ ] scenario J9 evidence
 
 ## Deferred because real environment is required
 
