@@ -228,12 +228,30 @@ Do not recreate Phase 24–29 foundations. New work must be driven by real targe
 
 A repository audit across historical ASTRA branches found that `astra/main-ui-performance-evidence` contained an incomplete, never-merged prototype for the two Phase 16 main-UI measurements still marked PENDING in `docs/PERFORMANCE_BASELINE.md`.
 
-Recovery implementation:
+Recovery implementation is **MERGED**:
 - PR: **#171**;
-- branch while PR remains open: `fix/cross-session-ui-performance-reconciliation`;
-- after PR #171 merges, treat the recovery as part of `main` and do not recreate this branch;
-- goal: port the useful intent onto current `main` without reviving the stale implementation;
+- merge commit: `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- PR CI #466: **SUCCESS**;
+- recovered Phase 16 main-UI evidence is now part of `main`;
+- do not recreate or resume `fix/cross-session-ui-performance-reconciliation`;
+- goal achieved: useful intent was ported onto current `main` without reviving the stale implementation;
 - required coverage: Command Center active + Automation panel open evidence;
 - requirements: opt-in only, clean-build provenance, private output, no prompt/response/console-message persistence, regression tests.
 
 Historical divergent branches are not automatically active work. Inspect `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` before reviving any old branch.
+
+
+## Post-reconciliation source-of-truth checkpoint
+
+Cross-session repository reconciliation is complete through PR #171.
+
+Verified:
+- all 206 historical/current branches were inventoried against `main`;
+- superseded divergent branches are classified in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
+- the only concrete repository-side omission found was Phase 16 main-UI performance evidence;
+- that omission is merged in PR #171 at `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- PR CI #466 passed build, tests, typecheck, lint, dependency audit and diff check.
+
+Current next work is not another branch-history reconstruction. Resume real evidence/integration work in this order:
+`Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`,
+then real provider/device integrations and Phase 30 as the environment allows.
