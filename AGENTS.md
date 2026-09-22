@@ -292,3 +292,11 @@ Repository rules:
 - do not claim voice/vision/provider readiness without real target-PC evidence.
 
 After NVA-0 merges, the next independent repository slice is NVA-1 from `docs/NVIDIA_MAX_INTEGRATION.md`.
+
+## Current execution pointer override
+
+Read `docs/CURRENT_EXECUTION_POINTER.md` immediately after checking current `main`.
+
+It supersedes older "next NVA-1/NVA-2" wording elsewhere in historical sections. NVIDIA repo-only architecture is saturated through PR #162. Future NVIDIA work must be driven by real backend/target-PC evidence or a concrete provider defect/change.
+
+Do not restart NVA-0…NVA-9 from old branch names or chat memory.
