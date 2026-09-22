@@ -71,6 +71,14 @@ function emit(
   callback?.(event);
 }
 
+type ClaimTaskResult =
+  | { claimed: false; detail: string }
+  | {
+      claimed: true;
+      task: AstraBackgroundTask;
+      detail: string;
+    };
+
 async function claimTask({
   taskId,
   maxConcurrency,
@@ -80,7 +88,7 @@ async function claimTask({
   maxConcurrency: number;
   now: Date;
 }) {
-  return mutateTaskStore((store) => {
+  return mutateTaskStore<ClaimTaskResult>((store) => {
     const index = store.tasks.findIndex(
       (task) => task.id.toLowerCase() === taskId.toLowerCase(),
     );
