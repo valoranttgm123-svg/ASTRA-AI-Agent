@@ -145,8 +145,8 @@ test("Phase 25 unattended runner never executes Permission Level 2/3 tasks", () 
     ["read"],
   );
   assert.deepEqual(
-    plan.waitingApproval.map((item) => item.taskId),
-    ["write", "external"],
+    plan.waitingApproval.map((item) => item.taskId).sort(),
+    ["external", "write"],
   );
 });
 
