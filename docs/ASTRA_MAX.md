@@ -2081,3 +2081,31 @@ Truth boundary:
 - no Windows credential vault is claimed;
 - owner recognition never grants Level-3 action by itself;
 - high-impact actions still require existing ASTRA approval/security policy.
+
+## Phase 27 repository checkpoint — Multi-device foundation
+
+Repository-side Phase 27 foundation is implemented on `feature/phase27-multi-device-foundation`.
+
+Implemented:
+- bounded paired-device contracts and private `.astra/devices.json` metadata registry;
+- device states `pending / paired / revoked`;
+- transports modeled as `local / lan / ssh / relay` without claiming any transport is configured;
+- per-device permission ceiling limited to Level 0-3;
+- capability advertisement with bounded TTL so stale nodes stop appearing online;
+- cryptographically random pairing challenge with SHA-256 token hash, timing-safe verification and single-use semantics;
+- pairing challenge is device-bound and expires;
+- device node may become `paired` only when its linked Phase-22 trusted-device identity is already `trusted`;
+- revoke is terminal for that node identity;
+- deterministic route planner selects only trusted + paired + online + unexpired + capability-matched devices within the required permission ceiling;
+- Level-2/3 routed tasks remain approval-bound;
+- local transport preference order is deterministic: local → LAN → SSH → relay;
+- bounded/symlink-safe persistence;
+- regression tests for pairing, expiry, revoke, capability presence, routing, permission ceilings and persistence.
+
+Truth/security boundary:
+- this foundation does not expose ASTRA on LAN/public internet;
+- no remote desktop/backdoor is created;
+- no SSH/LAN/relay credential is stored in the device registry;
+- pairing does not create trust by itself;
+- real encrypted/authenticated transport remains target-environment work;
+- real multi-device scenario J6 still requires a second device and target evidence.

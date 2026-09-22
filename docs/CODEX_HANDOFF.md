@@ -2086,3 +2086,18 @@ When target-PC integration begins:
 - revoked device identities require fresh pairing.
 
 After Phase 22 merges, continue the independent repository sequence with Phase 27 Multi-device.
+
+## 2026-09-22 — Phase 27 Multi-device foundation
+
+Phase 22 is merged and CI-verified. Phase 27 repository foundation is active on `feature/phase27-multi-device-foundation`.
+
+When real transport integration begins:
+- do not publish the existing loopback API directly to LAN/internet;
+- bind real routing to a mutually authenticated/encrypted channel;
+- use Phase-22 trust identity as the prerequisite for pairing;
+- store transport credentials through Secret Broker, not device metadata;
+- preserve per-device permission ceilings and existing Level-2/3 approval;
+- revoke must block new routing immediately;
+- treat remote capability/result payloads as untrusted input/evidence.
+
+After Phase 27 merges, the next independent repo-only slice is Phase 29 Generic Skill / Environment Device Registry.

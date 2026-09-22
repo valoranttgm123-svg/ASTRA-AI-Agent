@@ -98,8 +98,8 @@ Repository foundation:
 - [x] private hashed trusted-device metadata store
 - [x] revoked-device fail-closed semantics
 - [x] tests
-- [ ] PR CI green
-- [ ] merged
+- [x] PR #167 CI green
+- [x] merged → `a2b289d9118c8883608379320784b7bc047f980c`
 
 Real integration later:
 - [ ] target-PC trusted OS/session identity adapter
@@ -110,14 +110,29 @@ Real integration later:
 
 ## Phase 27 — Multi-device foundation
 
-- [ ] device registry
-- [ ] secure pairing contract
-- [ ] capability advertisement
-- [ ] per-device permissions
-- [ ] revoke semantics
-- [ ] task-routing contract
-- [ ] tests
+Repository foundation:
+- [x] private paired-device registry
+- [x] single-use secure pairing challenge contract
+- [x] token hashing / timing-safe verification
+- [x] capability advertisement with expiry
+- [x] per-device permission ceiling (Level 0-3 only)
+- [x] linked Phase-22 trusted-device requirement before pairing
+- [x] terminal revoke semantics
+- [x] deterministic task-routing contract
+- [x] Level 2/3 routing preserves approval requirement
+- [x] no public/unauthenticated transport surface
+- [x] symlink-safe bounded persistence
+- [x] tests
+- [ ] PR CI green
 - [ ] merged
+
+Real integration later:
+- [ ] real second-device transport selected (LAN/SSH/authenticated relay)
+- [ ] encrypted/authenticated channel validated
+- [ ] target-PC/PC2/mobile pairing UX
+- [ ] task dispatch + result return wired to real transport
+- [ ] immediate revoke observed end to end
+- [ ] scenario J6 evidence
 
 ## Phase 29 — Generic Skill / Device Registry
 
