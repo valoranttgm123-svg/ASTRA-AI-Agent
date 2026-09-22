@@ -4,7 +4,7 @@ Status date: **2026-09-22**. This is the authoritative short handoff for interru
 
 ## Resume in one sentence
 
-When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_EVENT_SOURCE_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
+When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_SERVICE_HEALTH_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
 
 ## Canonical repository checkpoint
 
@@ -16,6 +16,8 @@ Most recent merged repository refinement sequence:
 | #174 | Phase 25 task-presence + Phase 28 diagnostics/action-history Operations UI | `293216e9f94868d00b2636b125922ff09ec593db` | PR #483, main #484 SUCCESS |
 | #175 | Phase 24 Event Inbox / subscription surface | `56059728be8ef60b1badb58a8ef13bade2ba569b` | PR #486, main #487 SUCCESS |
 | #176 | Opt-in real GitHub Actions REST source adapter with local sync | `059241751f7b70ac5e4ad6b044f8e8cceeab5787` | PR #494, main #495 SUCCESS |
+| #178 | Diagnostics provider-health wiring (Ollama/Codex/NVIDIA/Hermes/Cloud) | `dfc7d93fb02e8e32375dd7c3d8ebc7370232c078` | PR #500, main #501 SUCCESS |
+| #180 | Local service-health → Event Engine source + Operations sync surface | `3047ea30c060211c2c3c8aabc7b4920e0f7166d1` | PR #506, main #507 SUCCESS |
 
 PR #176 is **MERGED**, not active. Phase 24 now has read-only GitHub source adapter code; real running-PC sync/polling/notifications remain unverified. GitHub adapter defaults OFF, public repo needs no token, private repo uses a local token. Never treat a passing fake-fetch test as evidence of actual target runtime.
 
@@ -78,20 +80,38 @@ No open repository refinement is intentionally active at this checkpoint.
 
 If the owner asks to continue without target-PC access, inspect current `main`, newest CI and open PRs, then take only a concrete repo-side defect, regression, verified provider change, or explicit owner requirement. Otherwise preserve the checkpoint for Codex real-runtime refinement.
 
+## Service-health Event Engine checkpoint — PR #180 merged
 
-## Active repo-side refinement — PR #180
+PR #180 merged as:
+`3047ea30c060211c2c3c8aabc7b4920e0f7166d1`
 
-PR #180 / `feature/service-health-event-adapter` is the active repository slice.
+Validation:
+- PR CI #506: **SUCCESS**;
+- main CI #507: **SUCCESS**.
 
-Scope:
-- second real Event Engine source from local Diagnostics;
-- source `service`, topic `health.state`;
-- healthy/not-configured initial baseline stays quiet;
-- degraded/unavailable/unknown emits;
-- unchanged state skips;
-- recovery to HEALTHY emits;
-- guarded local status/sync only;
+Merged capability:
+- Phase 24 now has a second real repository-backed source: local Diagnostics/service-health;
+- source is `service`, topic is `health.state`;
+- initial HEALTHY/NOT_CONFIGURED baseline is quiet;
+- degraded/unavailable/unknown state can generate Event Engine records;
+- unchanged state is skipped;
+- recovery back to HEALTHY can generate a recovery event;
+- status/sync surface is loopback/guarded and does not expose direct publish;
 - Operations EVENTS UI exposes source status and manual local sync;
-- no fabricated provider activity and no direct event publish control.
+- provider-health truth still comes from Diagnostics and preserves Sonor UNKNOWN/NOT_CONFIGURED until real evidence exists.
 
-If interrupted, inspect PR #180 newest head + CI first; fix only concrete failures and do not recreate Phase 24/28 foundations.
+Do not rebuild the service-health adapter or provider-health wiring.
+
+Remaining Phase 24 work is real-runtime evidence plus a genuinely distinct third source when a supported real mechanism exists. Do not invent Calendar/Email/provider adapters merely to satisfy the tracker.
+
+## Current repository-side status
+
+No open repository refinement is intentionally active at this checkpoint.
+
+If the owner asks to continue while target-PC/provider access is unavailable:
+1. inspect current `main`, newest CI and open PRs;
+2. fix a concrete defect/regression if one exists;
+3. implement only a genuinely supported real source/provider change or explicit owner requirement;
+4. otherwise preserve this checkpoint for Codex real-runtime refinement.
+
+Codex continues to own target-PC sync/polling/proactive notification evidence, Phase 14/MEM-X/16/17/19/20 real execution, and real provider/device completion.
