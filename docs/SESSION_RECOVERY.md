@@ -196,3 +196,17 @@ Latest sequence:
 - then Phase 28 → Phase 22 → Phase 27 → Phase 29.
 
 New sessions must inspect open PRs before starting the next slice.
+
+## JARVIS recovery checkpoint — Phase 28 active
+
+Repository truth before this slice:
+- Phase 24 merged PR #164;
+- Phase 25 merged PR #165 at `2169d260ae4e52577053af442e10edc7ca1b6abf`;
+- Phase 25 main CI #443 SUCCESS.
+
+Active branch: `feature/phase28-diagnostics-audit-offline`.
+
+If a PR exists for this branch, inspect its CI and continue/fix it rather than creating a duplicate diagnostics implementation.
+
+After Phase 28 merges, continue the authorized repository sequence:
+`Phase 22 Identity/Trust → Phase 27 Multi-device → Phase 29 Generic Skill/Device Registry`.
