@@ -81,12 +81,12 @@ export class AstraSecretBroker {
     reference: referenceInput,
     session,
     signal,
-    use,
+    consume,
   }: {
     reference: AstraSecretReference;
     session: AstraIdentitySession;
     signal?: AbortSignal;
-    use: (secret: string) => Promise<T>;
+    consume: (secret: string) => Promise<T>;
   }): Promise<T> {
     if (!sessionCanUseSecrets(session)) {
       throw new Error(
@@ -107,7 +107,7 @@ export class AstraSecretBroker {
     const value = await provider.read(reference, signal);
     if (!value) throw new Error("Secret reference is not configured.");
 
-    return use(value);
+    return consume(value);
   }
 }
 
