@@ -608,3 +608,29 @@ Fresh repository audit found Codex had already advanced beyond the interrupted N
 Added `docs/CURRENT_EXECUTION_POINTER.md` and latest-override notes so future ChatGPT/Codex sessions do not restart stale NVA-1/NVA-2 instructions.
 
 Next work is real target-PC/core release validation and real NVIDIA backend integration, not more speculative repository architecture.
+
+## 2026-09-22 — Phase 24 Event Engine repository foundation started
+
+Owner approved continued JARVIS repository foundation work while Codex/target-PC execution is unavailable.
+
+Started `feature/phase24-event-engine` from `main` `8fe4b6b0fa18705319ece5aade6cf77627608947`.
+
+Implemented in branch:
+- `lib/events/contracts.ts`;
+- `lib/events/engine.ts`;
+- `lib/events/store.ts`;
+- `lib/events/management.ts`;
+- `lib/events/http.ts`;
+- `app/api/events/route.ts`;
+- `tests/event-engine.test.ts`;
+- private store path in `.env.example`;
+- lint coverage for Event Engine/API.
+
+Safety properties:
+- proactive events are notifications/evidence only, never execution authority;
+- subscriptions default safely and can be disabled;
+- dedupe/debounce/quiet-hours/rate-limit are deterministic;
+- private state is bounded and symlink-safe;
+- source adapters are not falsely claimed as connected.
+
+Next after green merge: Phase 25 Durable Background Task Manager repository foundation.
