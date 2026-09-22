@@ -14,7 +14,8 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Event Inbox and subscription enable/disable/ACK UI: PR #175 merged `56059728be8ef60b1badb58a8ef13bade2ba569b`, CI #486 SUCCESS, main CI #487 SUCCESS.
 - [x] First real-source adapter code: read-only opt-in GitHub Actions workflow runs, exact GitHub API host, bounded fetch/timeout, local sync, mapped provenance and repeat-state dedupe. PR #176 merged `059241751f7b70ac5e4ad6b044f8e8cceeab5787`, PR CI #494 SUCCESS. This marks adapter code, NOT a completed target-PC live test.
 - [ ] GitHub adapter real target-runtime sync and notification evidence.
-- [ ] Second real event source adapter — PR #180 active on `feature/service-health-event-adapter`; real target-runtime evidence remains pending.
+- [x] Second real event source adapter — local Diagnostics/service-health transitions, PR #180 merged `3047ea30c060211c2c3c8aabc7b4920e0f7166d1`; PR CI #506 SUCCESS, main CI #507 SUCCESS. Repository adapter code is complete; this is not target-runtime delivery evidence.
+- [ ] Service-health source real target-runtime sync and notification evidence.
 - [ ] Third real event source and real evidence.
 - [ ] Proactive notification delivery, failure/STOP and restart evidence on target PC.
 
