@@ -2000,3 +2000,19 @@ Safety decisions:
 After NVA-0 merges, continue **NVA-1 Skill Hub discovery/install-state** as the next independent repository task.
 
 When target-PC access exists, core release gates Phase 14/MEM-X/16/17/19/20 still take precedence.
+
+## 2026-09-22 — NVIDIA NVA-1 Skill Hub state/cache handoff
+
+Baseline NVIDIA framework is on main via PR #159 / merge `e155c75f98da4e07ca3c07b7f15d46ceb655f417`.
+
+Current branch `feature/nvidia-skill-hub-state` implements the repository-side NVA-1 contract:
+- `lib/nvidia/skill-catalog-cache.ts`;
+- `lib/nvidia/skill-state.ts`;
+- `tests/nvidia-skill-state.test.ts`;
+- private paths documented in `.env.example`.
+
+The catalog provider is injected/provider-neutral on purpose. Do not add brittle request-time scraping of build.nvidia.com.
+
+Target-PC completion still needs the actual supported NVIDIA/Codex skill mechanism. Record installed state only after real verification.
+
+After this branch merges, next independent repo task is **NVA-2 AI-Q adapter contract** from `docs/NVIDIA_MAX_INTEGRATION.md`.

@@ -523,3 +523,28 @@ Important: this foundation does not claim AI-Q, Retriever, Voice, DeepStream/VSS
 Next repo task after merge: **NVA-1 Skill Hub discovery/install-state**.
 
 Next target-PC release sequence remains: **Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20**.
+
+## 2026-09-22 — NVIDIA NVA-1 Skill Hub state/cache contract
+
+After PR #159 merged at `e155c75f98da4e07ca3c07b7f15d46ceb655f417`, repository-side NVA-1 continued on `feature/nvidia-skill-hub-state`.
+
+Implemented:
+- private bounded NVIDIA skill catalog snapshot cache;
+- provider-neutral injected catalog discovery/refresh contract;
+- no normal-request HTML scraping;
+- private skill truth-state registry under `.astra/`;
+- truth states `available / installed / disabled / incompatible`;
+- optional source/version/checksum/install/update metadata;
+- dry-run install/update/disable/enable/remove plans;
+- local mutation requirement fixed at Permission Level 2;
+- symlink rejection and bounded file sizes;
+- cancellation-aware catalog refresh;
+- regression tests for malformed/duplicate data, state truth, persistence, dry-run policy, cancellation, and symlink targets;
+- `.env.example` documents private catalog/registry paths.
+
+Not claimed:
+- no NVIDIA skill is actually installed by this repository slice;
+- no target-PC Codex skill mechanism has been verified yet.
+
+Next repository task after merge: **NVA-2 AI-Q provider-neutral adapter contract**.
+Next target-PC NVA-1 task: validate the supported NVIDIA/Codex skill install mechanism and install only approved core skills.

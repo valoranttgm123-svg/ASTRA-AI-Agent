@@ -211,17 +211,25 @@ Canonical plan: `docs/NVIDIA_MAX_INTEGRATION.md`.
 - [x] regression tests added;
 - [x] NVIDIA framework included in lint gate;
 - [x] roadmap/recovery/handoff update prepared in feature branch;
-- [ ] PR CI green and merge commit on `main`.
+- [x] PR #159 CI green and merge commit `e155c75f98da4e07ca3c07b7f15d46ceb655f417` on `main`.
 
 ### NVA-1 — Skill Hub discovery/install-state
 
-- [ ] provider-neutral catalog discovery/cache contract;
-- [ ] private installed-skill registry under `.astra/`;
-- [ ] available/installed/disabled/incompatible truth states;
-- [ ] provenance/version/checksum when available;
-- [ ] dry-run install/update/remove planning;
-- [ ] permission/approval binding for mutations;
-- [ ] target-PC Codex skill mechanism verified against actual Codex version.
+Repository contract:
+- [x] provider-neutral catalog discovery/cache contract;
+- [x] private installed-skill registry under `.astra/`;
+- [x] available/installed/disabled/incompatible truth states;
+- [x] provenance/version/checksum fields when available;
+- [x] dry-run install/update/remove planning;
+- [x] local mutation plans require Permission Level 2;
+- [x] bounded/symlink-safe private catalog + state persistence;
+- [ ] NVA-1 repository PR CI green and merged.
+
+Target-PC completion:
+- [ ] real NVIDIA catalog provider/mechanism selected from supported NVIDIA tooling;
+- [ ] target-PC Codex skill mechanism verified against actual Codex version;
+- [ ] approved core skills installed and truth-state recorded;
+- [ ] rollback/update/remove tested without leaking secrets.
 
 ### NVA-2 through NVA-9
 

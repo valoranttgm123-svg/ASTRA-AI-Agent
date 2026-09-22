@@ -120,3 +120,13 @@ Repository foundation started as `feature/nvidia-max-framework` with:
 The next repository task after NVA-0 merges is NVA-1 Skill Hub discovery/install-state. The next target-PC release task remains the existing Phase 14/MEM-X/16/17/19/20 sequence.
 
 If this session is interrupted before merge, inspect the open PR/branch before creating replacement work.
+
+## Latest NVIDIA checkpoint — NVA-1
+
+NVA-0 merged in PR #159 at `e155c75f98da4e07ca3c07b7f15d46ceb655f417`.
+
+If `feature/nvidia-skill-hub-state` or its PR is still open, inspect it before starting new NVIDIA work. It contains the private catalog cache, installed-state registry, dry-run mutation policy, and safety tests.
+
+If it has merged, the next independent NVIDIA repo task is NVA-2 AI-Q adapter contract.
+
+Do not redo NVA-0/NVA-1 from chat memory.

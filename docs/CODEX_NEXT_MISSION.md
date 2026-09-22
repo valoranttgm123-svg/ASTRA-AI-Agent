@@ -899,3 +899,19 @@ Implement a safe, provider-neutral catalog/install-state layer. Requirements:
 Then continue NVA-2 onward only after NVA-1 exit gate is green.
 
 For all NVIDIA work, preserve zero-touch owner delivery: Codex performs technical setup/repair/validation itself and asks for owner involvement only when a genuine external authorization boundary cannot be satisfied from an already-authorized local session.
+
+## NVIDIA NVA-1 continuation checkpoint
+
+PR #159/NVA-0 is merged. Repository-side NVA-1 now has a private catalog/state contract on `feature/nvidia-skill-hub-state`.
+
+Do not implement skill installation by guessing shell commands or folder conventions.
+
+For target-PC NVA-1:
+1. inspect the actual installed Codex version and NVIDIA-supported skill workflow;
+2. use an official/supported mechanism;
+3. install only the approved core set first;
+4. record real installed/disabled/incompatible state in the private registry;
+5. test update/remove/rollback;
+6. never expose provider credentials.
+
+After NVA-1 repository merge, proceed with **NVA-2 AI-Q provider-neutral adapter contract** when target-PC gates are not available.
