@@ -243,3 +243,30 @@ Target-PC completion:
 - [ ] NVA-9 NeMo Evaluation / Quality Lab.
 
 These tasks do not replace target-PC core release evidence. When real PC access exists, Phase 14 → MEM-X → 16 → 17 → 19 → 20 remains the immediate release-gate sequence.
+
+## NVIDIA MAX repository contract saturation — NVA-2 through NVA-9
+
+Repository contracts implemented on `feature/nvidia-max-subsystem-contracts`:
+
+- [x] NVA-2 AI-Q bounded/cancellable research provider contract + safe fallback;
+- [x] NVA-3 Retriever project/namespace isolation contract;
+- [x] NVA-4 immutable bounded Document Intelligence contract;
+- [x] NVA-5 truthful Voice state/STOP contract;
+- [x] NVA-6 real-payload/consent Vision contract;
+- [x] NVA-7 NemoClaw learned-workflow permission/provenance contract;
+- [x] NVA-8 Guardrail no-authorization contract;
+- [x] NVA-9 evaluation exact-build evidence/no-self-READY contract;
+- [x] regression tests for the above;
+- [ ] subsystem-contract PR CI green and merged.
+
+Real integration remains:
+- [ ] actual AI-Q backend connected/validated;
+- [ ] actual NeMo Retriever/RAG connected under audited real Sonor;
+- [ ] actual OCR/parser backend connected;
+- [ ] actual Nemotron Voice/Speech connected and measured;
+- [ ] actual DeepStream/VSS pipeline connected with real pixels;
+- [ ] actual NemoClaw/Hermes workflow capture/replay validated;
+- [ ] actual NeMo Guardrails/content-safety backend/config validated;
+- [ ] actual evaluation suites run against exact target runtime/build.
+
+Once this PR merges, repository-only NVIDIA architecture should be considered saturated. Do not invent backend schemas to create more repo churn. Continue real target-PC/core release work when access is available.

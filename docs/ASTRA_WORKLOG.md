@@ -548,3 +548,30 @@ Not claimed:
 
 Next repository task after merge: **NVA-2 AI-Q provider-neutral adapter contract**.
 Next target-PC NVA-1 task: validate the supported NVIDIA/Codex skill install mechanism and install only approved core skills.
+
+## 2026-09-22 — NVIDIA NVA-2…NVA-9 repository contracts
+
+After PR #160 merged at `af7e05e1252b1b80e94b32cfbfedff6f2c7e006b`, started `feature/nvidia-max-subsystem-contracts`.
+
+Implemented provider-neutral contracts:
+- `lib/nvidia/aiq.ts`;
+- `lib/nvidia/retriever.ts`;
+- `lib/nvidia/document-intelligence.ts`;
+- `lib/nvidia/voice.ts`;
+- `lib/nvidia/vision.ts`;
+- `lib/nvidia/governance.ts`;
+- `tests/nvidia-subsystem-contracts.test.ts`.
+
+Key safety properties:
+- AI-Q is bounded/cancellable and can safely fall back to existing ASTRA research;
+- Retriever enforces project/namespace isolation;
+- Document Intelligence cannot mutate the original;
+- Voice STOP/interruption returns to idle and invalid transitions fail;
+- Vision requires consent and real positive-byte payload before perception is claimed;
+- NemoClaw learned skills begin disabled and cannot increase permission;
+- Guardrail decisions never become authorization;
+- NVIDIA evaluation cannot select release READY.
+
+No live NVIDIA backend readiness is claimed by this repository work.
+
+If merged green, the NVIDIA repository architecture is intentionally considered saturated. Remaining NVIDIA work requires actual supported backend/runtime/PC evidence and belongs to Codex target-environment execution rather than speculative contract design.

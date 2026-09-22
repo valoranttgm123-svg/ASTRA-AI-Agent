@@ -130,3 +130,15 @@ If `feature/nvidia-skill-hub-state` or its PR is still open, inspect it before s
 If it has merged, the next independent NVIDIA repo task is NVA-2 AI-Q adapter contract.
 
 Do not redo NVA-0/NVA-1 from chat memory.
+
+## NVIDIA MAX repository-saturation recovery note
+
+Current durable sequence:
+- PR #159 / NVA-0 merged: `e155c75f98da4e07ca3c07b7f15d46ceb655f417`;
+- PR #160 / NVA-1 merged: `af7e05e1252b1b80e94b32cfbfedff6f2c7e006b`;
+- branch `feature/nvidia-max-subsystem-contracts` contains NVA-2 through NVA-9 provider-neutral safety contracts.
+
+If a PR for that branch exists, inspect its CI before doing anything else.
+If it merged green, consider NVIDIA repo-only architecture saturated and continue actual target/backend integration rather than recreating these files.
+
+Canonical NVIDIA plan remains `docs/NVIDIA_MAX_INTEGRATION.md`.

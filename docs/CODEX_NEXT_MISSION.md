@@ -915,3 +915,25 @@ For target-PC NVA-1:
 6. never expose provider credentials.
 
 After NVA-1 repository merge, proceed with **NVA-2 AI-Q provider-neutral adapter contract** when target-PC gates are not available.
+
+## NVIDIA repository-saturation checkpoint
+
+After the NVA-2…NVA-9 subsystem-contract PR merges, stop designing additional NVIDIA abstractions unless a concrete integration test exposes a missing contract.
+
+When target-PC/backend access exists, Codex should execute the integration track using the contracts already in `lib/nvidia/`:
+
+1. finish the core release sequence first when possible:
+   `Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`;
+2. validate real NVIDIA/Codex Skill Hub installation mechanism from NVA-1;
+3. inspect the real AI-Q supported deployment/API and write only the necessary transport;
+4. audit real Sonor before connecting NeMo Retriever/RAG;
+5. select and validate real OCR/parser backend;
+6. connect real speech/voice transport and microphone evidence;
+7. connect actual visual payload transport before DeepStream/VSS;
+8. validate real Hermes/NemoClaw version before workflow learning;
+9. deploy/configure Guardrails as defense in depth only;
+10. run evaluation suites tied to exact target runtime/build.
+
+For every backend: health → happy path → cancellation → malformed response → outage/degradation → STOP/permission behavior → evidence.
+
+Do not claim READY from repository contracts alone.
