@@ -228,6 +228,8 @@ The UI reads stored/evaluated Event Engine records, supports ACK and subscriptio
 
 ## Active repo-side refinement — GitHub Actions event source
 
+Current PR: **#176**
+
 Current branch:
 `feature/github-actions-event-adapter`
 
