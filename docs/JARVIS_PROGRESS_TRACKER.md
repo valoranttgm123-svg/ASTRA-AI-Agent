@@ -58,7 +58,7 @@ Repository foundation:
 
 Real integration later:
 - [ ] production task executors connected
-- [ ] UI/runtime task presence
+- [ ] UI/runtime task presence — PR #174 active (mark complete only after green merge)
 - [ ] restart evidence on target PC
 - [ ] approved Level 2/3 task-resume flow
 - [ ] long-running scenario J4 evidence
@@ -84,7 +84,7 @@ Real integration later:
 - [ ] Ollama/Codex/Sonor/NVIDIA health adapters from real runtime
 - [ ] safe recovery execution wired through Tool Runtime
 - [ ] offline degradation scenario J8 evidence
-- [ ] action-history UI / user-facing diagnostics panel
+- [ ] action-history UI / user-facing diagnostics panel — PR #174 active (mark complete only after green merge)
 
 ## Phase 22 — Identity / Trust / Secret boundary
 
