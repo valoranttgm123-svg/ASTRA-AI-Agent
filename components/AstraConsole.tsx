@@ -261,12 +261,12 @@ export default function AstraConsole() {
             setProvider(event.target.value as AstraProviderChoice)
           }
           aria-label="Provider AI"
-          title="Auto memilih rute lokal; Ollama untuk chat privat; Codex untuk engineering; NVIDIA Nemotron Ultra untuk reasoning cloud opsional"
+          title="Auto memilih rute lokal; Ollama untuk chat privat; Codex untuk engineering; NVIDIA JARVIS Mesh untuk adaptive cloud reasoning"
         >
           <option value="auto">AUTO</option>
           <option value="ollama">OLLAMA</option>
           <option value="codex">CHATGPT / CODEX</option>
-          <option value="nvidia">NVIDIA · NEMOTRON ULTRA</option>
+          <option value="nvidia">NVIDIA · JARVIS MESH</option>
         </select>
 
         <button
