@@ -993,3 +993,69 @@ body {
     max-height: calc(100dvh - 130px);
   }
 }
+
+
+/* Phase 24 — Event Engine inbox surface */
+.astra-operations__event-subscriptions,
+.astra-operations__event-inbox {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.astra-operations__subscription,
+.astra-operations__event {
+  padding: 9px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.018);
+}
+
+.astra-operations__event p {
+  margin: 7px 0;
+  color: rgba(225,247,252,0.5);
+  font-size: 8px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astra-operations__severity {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 3px 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 6.8px;
+  letter-spacing: 0.08em;
+}
+
+.astra-operations__severity--info {
+  color: #9deeff;
+  border-color: rgba(99,234,255,0.22);
+  background: rgba(99,234,255,0.05);
+}
+
+.astra-operations__severity--warning {
+  color: #ffc45f;
+  border-color: rgba(245,185,66,0.22);
+  background: rgba(245,185,66,0.06);
+}
+
+.astra-operations__severity--error,
+.astra-operations__severity--critical {
+  color: #ff9da7;
+  border-color: rgba(255,95,109,0.24);
+  background: rgba(255,95,109,0.055);
+}
+
+.astra-operations__status--enabled {
+  color: #83ffbc;
+  border-color: rgba(131,255,188,0.22);
+  background: rgba(131,255,188,0.06);
+}
+
+.astra-operations__status--disabled {
+  color: #8aa0ad;
+  border-color: rgba(138,160,173,0.18);
+  background: rgba(138,160,173,0.05);
+}
