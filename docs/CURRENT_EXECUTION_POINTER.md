@@ -31,12 +31,22 @@ Other merged repository foundations: Phase 14 Automation; Phase 15 security; Pha
 
 Historical branches (206 examined on 2026-09-22) were reconciled in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`. A historical branch being ahead/diverged is not evidence of missing work. Do not repeat that audit without a fresh demonstrated capability mismatch.
 
+## Target-PC MEM-X validation — 2026-09-22
+
+Real target-PC evidence now confirms the existing Sonor bridge is live and read-only on loopback. ASTRA queried Sonor through the production bridge, received 6 bounded records including 4 graph-backed records, preserved `project` / `obsidian` / `graphify` provenance, and completed the turn through local Ollama `qwen3.5:4b`.
+
+The misleading healthy-Ollama status prefix from unavailable Hermes was fixed by PR #187 and merged as `016ac06f9f7363703e3ac312ea6b0dfe774bd9d5`; PR CI #526 passed.
+
+The Windows `ASTRA-Ollama` Scheduled Task was also verified on the target PC: it launches the existing loopback-only Ollama service, `/api/version` responds, the listener is `127.0.0.1:11434`, and the latest task result is success. Do not create a duplicate Ollama task.
+
+MEM-X runtime integration is therefore validated. Remaining MEM-X preservation work is limited to safe private backup/source preservation if desired plus any explicit failure/cancellation evidence required by later release gates. Do not upload Sonor runtime/user datasets, private notes, indexes, secrets, caches, or generated output to public GitHub.
+
 ## Current executable mission — real target/runtime evidence
 
 When target-PC access exists, resume in this order:
 
 1. **Phase 14**: real Automation approvals, exact occurrence/scope and global STOP, including denial/cancellation.
-2. **MEM-X**: inspect, preserve and connect the existing real Sonor/Graphify/Obsidian project; do not build a second pipeline.
+2. **MEM-X**: runtime bridge is validated. Preserve the existing Sonor/Graphify/Obsidian project; complete only safe private backup/source preservation and any explicit failure/cancellation evidence still required. Do not build a second pipeline.
 3. **Phase 16**: real runtime and Humanoid HIGH performance, Command Center-active and Automation-open captures at `http://127.0.0.1:3017/?perf=1`. Evidence must be tied to the actual clean running build; `NOT_EVALUATED` until reviewed.
 4. **Phase 17**: real happy/failure/permission/privacy/Emergency STOP scenarios.
 5. **Phase 19**: Windows install/start/update/reinstall and exact-build target-PC evidence.
