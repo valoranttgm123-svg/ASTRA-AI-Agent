@@ -200,23 +200,30 @@ The next useful work is real execution/evidence:
 Then continue real provider/device integrations and Phase 30.
 
 Only deviate when a concrete new defect or explicit owner requirement makes another task genuinely actionable.
+  
+## Repo-side refinement checkpoint — PR #174 merged
 
+PR #174 added the canonical ASTRA Operations surface:
 
-## Active repo-side refinement — PR #174
+- Phase 25 durable task UI/runtime presence;
+- Phase 28 diagnostics + action-history UI.
 
-Concrete non-provider work found after the foundation audit:
+Merge:
+`293216e9f94868d00b2636b125922ff09ec593db`
 
-- Phase 25 UI/runtime durable-task presence;
-- Phase 28 user-facing diagnostics + action-history panel.
+PR CI #483: **SUCCESS**.
 
-Active PR:
-- #174 — `feature/operations-task-diagnostics-ui`.
+Do not rebuild that surface. Codex later connects the real executors, runtime health adapters, recovery execution, and target-PC evidence.
 
-Scope is deliberately bounded:
-- reuse existing `/api/tasks` and `/api/diagnostics`;
-- expose task lifecycle state/controls, not production executors;
-- diagnostics remains read-only;
-- connectivity remains UNKNOWN until a real probe exists;
-- no recovery execution, provider health fabrication, or target-PC evidence claims.
+## Active repo-side refinement — Event Inbox
 
-If PR #174 is open in a new session, inspect its newest CI and resume/fix it before starting another repo-side refinement.
+Current branch:
+`feature/event-inbox-ui`
+
+Goal:
+- expose existing Event Engine subscriptions and evaluated records in the Operations panel;
+- allow acknowledgement and subscription enable/disable only;
+- do not expose manual event publishing;
+- do not fabricate GitHub/calendar/email/service source activity.
+
+After this slice, real event-source adapters can plug into the existing Event Engine.
