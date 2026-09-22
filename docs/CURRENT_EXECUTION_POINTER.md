@@ -176,3 +176,23 @@ Current active slice:
 - next after green merge: Phase 29 Generic Skill / Environment Device Registry.
 
 If this branch/PR is unmerged in a new session, resume/fix it first. Do not recreate Phase 27 from chat history.
+
+
+## JARVIS repo continuation update — Phase 29
+
+Phase 27 Multi-device foundation merged in PR #168 at `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`; main CI #451 succeeded.
+
+Current active slice:
+- branch: `feature/phase29-skill-environment-registry`;
+- PR: #169;
+- goal: generic Skill Ecosystem + provider-neutral Environment/IoT registry foundation;
+- code CI run #453: **SUCCESS** before continuity-doc updates;
+- architecture: `docs/SKILL_ENVIRONMENT_BRIDGE.md`;
+- tracker: `docs/JARVIS_PROGRESS_TRACKER.md`.
+
+Recovery rule:
+- if PR #169 is open, inspect its newest head SHA/CI and resume/fix it first;
+- do not create another generic skill registry or environment/device registry;
+- do not merge unless the newest PR head is green.
+
+After Phase 29 merges, the authorized repository-only Phase 21–30 foundation sequence is saturated. Do not invent speculative Phase 30 mocks. Continue with real target-PC/core gates, real provider integrations, and evidence-backed Phase 30 scenarios.

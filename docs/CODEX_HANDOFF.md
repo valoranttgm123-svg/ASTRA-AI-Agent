@@ -2101,3 +2101,37 @@ When real transport integration begins:
 - treat remote capability/result payloads as untrusted input/evidence.
 
 After Phase 27 merges, the next independent repo-only slice is Phase 29 Generic Skill / Environment Device Registry.
+
+
+## 2026-09-22 — Phase 29 Generic Skill + Environment foundation
+
+Branch: `feature/phase29-skill-environment-registry`
+PR: #169
+
+Implemented:
+- generic skill contracts/state in `lib/skills/`;
+- untrusted-by-default registration;
+- explicit review before install;
+- install remains disabled until explicit enable;
+- tool/provider/permission/network/secret-name/verification metadata;
+- health truth against the existing Tool Registry;
+- verified install/update/rollback/remove state transitions;
+- rollback version/checksum metadata;
+- provider-neutral explicit environment registry in `lib/environment/`;
+- devices disabled by default;
+- read/write capabilities map only to registered Tool Registry ids;
+- environment writes require Permission Level 3+;
+- writes preserve scoped approval;
+- camera/sensor devices require sensitive privacy class and per-operation consent;
+- private bounded symlink-safe stores;
+- dedicated `.astra/generic-skills.json` path to avoid collision with legacy `.astra/skills.json`;
+- regression coverage in `tests/skill-environment-foundation.test.ts`;
+- design contract in `docs/SKILL_ENVIRONMENT_BRIDGE.md`.
+
+Validation:
+- initial CI #452: 374/375 tests passed; one test used the pre-rename env var;
+- fixed test env var;
+- CI #453: build/tests/typecheck/lint/audit/diff-check all SUCCESS.
+
+Important next-session rule:
+If PR #169 remains open, inspect/fix its newest head rather than recreating Phase 29. After merge, repository-only Phase 21–30 foundation work is saturated; real target-PC/provider evidence is next.

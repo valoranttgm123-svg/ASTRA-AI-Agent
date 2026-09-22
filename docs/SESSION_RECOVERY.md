@@ -240,3 +240,33 @@ Active branch: `feature/phase27-multi-device-foundation`.
 If a PR exists for this branch, inspect its newest head SHA/CI and continue/fix it rather than building another device/pairing layer.
 
 After Phase 27 merges, continue the authorized repo-only sequence with **Phase 29 Generic Skill / Environment Device Registry**.
+
+
+## JARVIS recovery checkpoint — Phase 29 active
+
+Repository truth before this slice:
+- Phase 24 PR #164 merged;
+- Phase 25 PR #165 merged;
+- Phase 28 PR #166 merged;
+- Phase 22 PR #167 merged;
+- Phase 27 PR #168 merged at `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`;
+- Phase 27 main CI #451 SUCCESS.
+
+Active branch: `feature/phase29-skill-environment-registry`.
+Active PR: #169.
+
+Phase 29 now contains:
+- generic untrusted-by-default skill manifests;
+- provider/tool/permission/network/secret-name/verification metadata;
+- install/enable/disable/update/rollback lifecycle;
+- explicit provider-neutral environment device registration;
+- Level-3+ approval-bound writes;
+- sensitive camera/sensor privacy consent;
+- private bounded symlink-safe state;
+- regression tests.
+
+PR #169 code CI run #453 passed build, 375 tests, typecheck, lint, audit, and diff-check before continuity-doc updates.
+
+If PR #169 is still open, inspect its newest head and CI first and continue/fix it. Do not recreate Phase 29.
+
+After Phase 29 is merged, repository-only JARVIS foundation work authorized in this sequence is saturated. Return to real target-PC and provider-backed validation; Phase 30 must be evidence-backed, not mocked.

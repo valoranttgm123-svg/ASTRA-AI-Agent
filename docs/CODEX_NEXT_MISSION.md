@@ -969,3 +969,19 @@ The next meaningful work is real execution:
 3. concrete defect/provider-change repair only.
 
 If target access is unavailable, do not invent another NVIDIA wrapper merely to stay busy.
+
+
+## 2026-09-22 — Phase 29 continuation override
+
+Before doing any older mission text in this file, inspect current `main`, open PRs, and `docs/CURRENT_EXECUTION_POINTER.md`.
+
+If PR #169 (`feature/phase29-skill-environment-registry`) is still open:
+1. inspect its newest CI;
+2. fix only concrete failures;
+3. keep the generic skill/environment architecture in `docs/SKILL_ENVIRONMENT_BRIDGE.md`;
+4. do not build a duplicate registry;
+5. merge only after newest-head CI is green.
+
+Once PR #169 is merged, do **not** start speculative repository-only Phase 30 replacements. Resume real execution:
+`Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`,
+then provider-backed JARVIS scenarios (including Phase 29/J9 real skill/device evidence) as the target environment allows.
