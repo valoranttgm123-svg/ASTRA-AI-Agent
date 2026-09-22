@@ -2231,7 +2231,7 @@ Codex/refinement later connects real GitHub/calendar/email/service sources and t
 
 PR #175/Event Inbox is merged at `56059728be8ef60b1badb58a8ef13bade2ba569b` after green CI #486.
 
-ChatGPT is now implementing the first real Phase-24 event-source adapter on `feature/github-actions-event-adapter`.
+ChatGPT is now implementing the first real Phase-24 event-source adapter in PR #176 on `feature/github-actions-event-adapter`.
 
 Contract:
 - GitHub access is read-only;
