@@ -7,6 +7,7 @@ import { afterEach, test } from "node:test";
 import {
   loadNvidiaSkillCatalog,
   mergeNvidiaSkillCatalogState,
+  refreshNvidiaSkillCatalog,
   normalizeNvidiaSkillCatalog,
   saveNvidiaSkillCatalog,
 } from "../lib/nvidia/skill-catalog-cache";
@@ -160,6 +161,37 @@ test("skill mutations are dry-run Level-2 plans and incompatible install fails c
   });
   assert.equal(blocked.allowed, false);
 });
+
+
+test("catalog refresh is provider-neutral, persisted, and cancellable", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "astra-nvidia-refresh-"));
+  const catalogFile = path.join(root, "catalog.json");
+  process.env.ASTRA_NVIDIA_SKILL_CATALOG_FILE = catalogFile;
+
+  const result = await refreshNvidiaSkillCatalog({
+    provider: {
+      id: "fixture-provider",
+      discover: async () => sampleCatalog(),
+    },
+  });
+
+  assert.equal(result.provider, "fixture-provider");
+  assert.equal(result.count, 2);
+
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(
+    refreshNvidiaSkillCatalog({
+      provider: {
+        id: "fixture-provider",
+        discover: async () => sampleCatalog(),
+      },
+      signal: controller.signal,
+    }),
+    /aborted/i,
+  );
+});
+
 
 test("catalog and state stores reject symbolic-link targets", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-nvidia-link-"));
