@@ -2070,3 +2070,19 @@ Read `docs/JARVIS_PROGRESS_TRACKER.md` and `docs/CURRENT_EXECUTION_POINTER.md` b
 Do not duplicate merged foundations. Real provider/Windows/backend adapters should plug into the existing contracts and must preserve truthful health, permission boundaries, STOP/cancellation, and private evidence rules.
 
 After Phase 28 green merge, next independent repository slice is Phase 22 Identity / Trust / Secret boundary.
+
+## 2026-09-22 — Phase 22 Identity / Trust / Secret foundation
+
+Phase 28 is merged and CI-verified. Phase 22 repository foundation is active on `feature/phase22-identity-trust-secrets`.
+
+Do not wire speaker/face recognition as authorization. They may become convenience signals only.
+
+When target-PC integration begins:
+- use a real trusted OS/session identity mechanism;
+- preserve existing approval gates;
+- prefer local OS credential storage for secrets where appropriate;
+- never copy secret values into Memory/Sonor/Graphify/Obsidian/logs;
+- never expose secret values in status APIs;
+- revoked device identities require fresh pairing.
+
+After Phase 22 merges, continue the independent repository sequence with Phase 27 Multi-device.
