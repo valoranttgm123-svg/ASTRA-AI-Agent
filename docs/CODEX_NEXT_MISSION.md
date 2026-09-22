@@ -816,3 +816,20 @@ Before touching provider routing, read `docs/NVIDIA_NIM.md`.
 Treat the mesh as a completed repo-side enhancement. Do not spend target-gate time on speculative model churn unless a concrete test or NVIDIA deprecation forces a change. Real API-key validation belongs to the target PC and must never commit secrets.
 
 Existing target-runtime evidence remains the priority.
+
+## Target-PC NVIDIA key handling — owner preference
+
+When the target-PC phase begins, Codex should handle NVIDIA configuration locally.
+
+Required workflow:
+1. verify the correct ASTRA checkout and current `main`;
+2. create or update `.env.local` on the target PC;
+3. ask the owner to enter the NVIDIA API key only in the local PC session;
+4. write the key to `NVIDIA_API_KEY` in `.env.local` without printing it back;
+5. preserve the JARVIS mesh configuration from `.env.example`;
+6. verify only that the key is present, never display the secret value;
+7. confirm `.env.local` is gitignored and absent from `git status --short`;
+8. run live NVIDIA mesh health/runtime validation;
+9. never commit, upload, log, paste into GitHub, or store the API key in docs/issues/PRs.
+
+The owner does not want to manually edit the NVIDIA secret into the project. Codex should perform the local file/configuration step when the PC checkout exists, while the owner supplies the secret only through the local target-PC session.
