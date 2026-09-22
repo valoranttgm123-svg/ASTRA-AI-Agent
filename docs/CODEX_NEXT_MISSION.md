@@ -947,3 +947,25 @@ Do not ask the owner for another NVIDIA architecture decision. Do not create mor
 When target access exists, Codex must autonomously move from contracts to working services, fix concrete failures, collect evidence, and continue until the ready-to-use acceptance gates are met.
 
 If a provider/backend is unavailable, continue every independent core-release task rather than stopping.
+
+## AUTHORITATIVE CURRENT OVERRIDE — after NVIDIA repository saturation
+
+Read `docs/CURRENT_EXECUTION_POINTER.md` first.
+
+This section supersedes older NVIDIA continuation text above that still says "next NVA-1" or "next NVA-2".
+
+Repository truth:
+- NVA-0 merged in PR #159;
+- NVA-1 merged in PR #160;
+- NVA-2…NVA-9 contracts merged in PR #161;
+- saturation checkpoint merged in PR #162;
+- post-merge main CI run #435 succeeded.
+
+Do not repeat those repository slices.
+
+The next meaningful work is real execution:
+1. target-PC Phase 14 → MEM-X → 16 → 17 → 19 → 20;
+2. real NVIDIA backend integration against the existing contracts;
+3. concrete defect/provider-change repair only.
+
+If target access is unavailable, do not invent another NVIDIA wrapper merely to stay busy.
