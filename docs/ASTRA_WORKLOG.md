@@ -807,4 +807,21 @@ PR #174 adds:
 - no recovery executor and no fake production-task executor;
 - main-page mount, CSS, lint coverage and regression tests.
 
-Do not mark the two tracker items complete until PR #174 is green and merged.
+PR #174 final CI #483: SUCCESS.
+PR #174 merged to `main` as `293216e9f94868d00b2636b125922ff09ec593db`.
+The Phase 25 task-presence and Phase 28 diagnostics/action-history UI tracker items are complete.
+
+
+## 2026-09-22 — Event Inbox refinement
+
+Started `feature/event-inbox-ui` after PR #174 merged.
+
+Scope:
+- add Event Engine records/subscriptions to the existing Operations panel;
+- use canonical `GET /api/events`;
+- allow only guarded ACK and enable/disable subscription mutations;
+- do not expose manual publish/upsert controls;
+- display severity, disposition, acknowledgement, project and subscription provenance;
+- retain explicit truth text that source activity is not fabricated.
+
+Real GitHub/calendar/email/service adapters and proactive notification evidence remain separate integration gates.
