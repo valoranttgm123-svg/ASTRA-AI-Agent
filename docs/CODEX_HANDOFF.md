@@ -2168,3 +2168,26 @@ Do not revive old Phase 28/29, Windows private-evidence, V15 telemetry, Phase 14
 
 Next actual work remains:
 `Phase 14 → MEM-X → Phase 16 real evidence → Phase 17 → Phase 19 → Phase 20`.
+
+
+## 2026-09-22 — Codex refinement responsibility
+
+Canonical contract:
+
+`docs/CODEX_REFINEMENT_CONTRACT.md`
+
+The owner explicitly wants ChatGPT to consume as much repository-side implementation work as possible so Codex tokens are reserved for the work that requires the real PC/runtime/provider.
+
+Codex responsibility is therefore:
+
+- do not redo merged ChatGPT foundations;
+- inspect and improve them;
+- connect real providers/devices/runtime;
+- fix actual incompatibilities found in execution;
+- finish missing integration/UI/operational pieces;
+- run happy-path + failure + cancellation + STOP + permission/privacy validation;
+- gather exact-build evidence;
+- package/polish until ready-to-use;
+- keep handoff/tracker/worklog current.
+
+For NVIDIA, Phase 24/25/28/22/27/29, and other already-merged foundations, Codex is explicitly the **refinement/completion owner**, not the architecture restart owner.
