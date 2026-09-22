@@ -262,3 +262,13 @@ Rules:
 - Vision must not be reported as active perception until ASTRA carries an actual visual payload;
 - never commit `NVIDIA_API_KEY`;
 - read `docs/NVIDIA_NIM.md` before modifying NVIDIA routing.
+
+## Zero-touch owner delivery contract
+
+The owner wants a ready-to-use ASTRA, not a sequence of setup instructions.
+
+Read `docs/READY_TO_USE_DELIVERY.md` before target-PC work. Codex owns all technically executable setup, repair, configuration, testing, and release validation. Do not ask the owner to run commands or edit configuration that Codex can perform through its available local access.
+
+Only request human input for unavoidable secrets/login/MFA/consent, UAC/security prompts, physical observations, or genuinely high-impact approvals. Resume automatically after that input.
+
+Repository CI is not sufficient for "ready". Final readiness requires truthful target-PC evidence and no known reproducible release-blocking defect left unfixed.
