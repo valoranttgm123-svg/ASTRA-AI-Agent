@@ -1,4 +1,4 @@
-import type { AstraAgent } from "@/lib/agent/types";
+import type { AstraAgent, AstraAgentKey } from "@/lib/agent/types";
 import { safeErrorDetail, safePublicUrl } from "@/lib/security/redaction";
 import {
   isRecordPayload,
@@ -7,9 +7,24 @@ import {
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 
 const DEFAULT_ROOT_URL = "https://integrate.api.nvidia.com/v1";
-const DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b";
 const DEFAULT_TIMEOUT_MS = 90000;
 const DEFAULT_STATUS_TIMEOUT_MS = 3500;
+
+export const NVIDIA_JARVIS_MODELS = {
+  chief: "nvidia/nemotron-3-ultra-550b-a55b",
+  deep: "z-ai/glm-5-3",
+  fast: "nvidia/nemotron-3.5-lightning-30b-a3b",
+  vision: "z-ai/glm-5-3-flash",
+} as const;
+
+export type NvidiaJarvisProfile = keyof typeof NVIDIA_JARVIS_MODELS;
+type NvidiaRouterMode = "auto" | NvidiaJarvisProfile;
+
+export type NvidiaModelStatus = {
+  profile: NvidiaJarvisProfile;
+  model: string;
+  available: boolean;
+};
 
 export type NvidiaStatus = {
   enabled: boolean;
@@ -17,6 +32,7 @@ export type NvidiaStatus = {
   endpoint: string;
   model: string | null;
   detail: string;
+  models?: NvidiaModelStatus[];
 };
 
 function envFlag(name: string, fallback: boolean) {
@@ -79,16 +95,48 @@ function secureNvidiaRoot(value: string) {
   return DEFAULT_ROOT_URL;
 }
 
+function routerMode(value?: string): NvidiaRouterMode {
+  const normalized = value?.trim().toLowerCase();
+  if (
+    normalized === "chief" ||
+    normalized === "deep" ||
+    normalized === "fast" ||
+    normalized === "vision"
+  ) {
+    return normalized;
+  }
+  return "auto";
+}
+
+function modelCatalog() {
+  const legacyChief = process.env.ASTRA_NVIDIA_MODEL?.trim();
+  return {
+    chief:
+      process.env.ASTRA_NVIDIA_MODEL_CHIEF?.trim() ||
+      legacyChief ||
+      NVIDIA_JARVIS_MODELS.chief,
+    deep:
+      process.env.ASTRA_NVIDIA_MODEL_DEEP?.trim() ||
+      NVIDIA_JARVIS_MODELS.deep,
+    fast:
+      process.env.ASTRA_NVIDIA_MODEL_FAST?.trim() ||
+      NVIDIA_JARVIS_MODELS.fast,
+    vision:
+      process.env.ASTRA_NVIDIA_MODEL_VISION?.trim() ||
+      NVIDIA_JARVIS_MODELS.vision,
+  } satisfies Record<NvidiaJarvisProfile, string>;
+}
+
 function config() {
   return {
     enabled: envFlag("ASTRA_NVIDIA_ENABLED", false),
     includeMemory: envFlag("ASTRA_NVIDIA_INCLUDE_MEMORY", false),
     autoFallback: envFlag("ASTRA_NVIDIA_AUTO_FALLBACK", false),
+    thinking: envFlag("ASTRA_NVIDIA_THINKING", true),
     rootUrl: normalizeRoot(process.env.ASTRA_NVIDIA_URL),
     apiKey: process.env.NVIDIA_API_KEY?.trim() || "",
-    model:
-      process.env.ASTRA_NVIDIA_MODEL?.trim() ||
-      DEFAULT_MODEL,
+    models: modelCatalog(),
+    routerMode: routerMode(process.env.ASTRA_NVIDIA_ROUTER_MODE),
     timeoutMs: parseTimeout(
       process.env.ASTRA_NVIDIA_TIMEOUT_MS,
       DEFAULT_TIMEOUT_MS,
@@ -108,9 +156,7 @@ function requiresApiKey(rootUrl: string) {
 function headers(apiKey: string) {
   return {
     accept: "application/json",
-    ...(apiKey
-      ? { authorization: `Bearer ${apiKey}` }
-      : {}),
+    ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
   };
 }
 
@@ -140,17 +186,96 @@ async function withTimeout<T>(
   }
 }
 
-function modelIsListed(payload: unknown, model: string) {
+function listedModelIds(payload: unknown) {
   if (!isRecordPayload(payload) || !Array.isArray(payload.data)) {
-    return false;
+    return null;
   }
 
-  return payload.data.some(
-    (entry) =>
+  const ids = new Set<string>();
+  for (const entry of payload.data) {
+    if (
       isRecordPayload(entry) &&
       typeof entry.id === "string" &&
-      entry.id === model,
-  );
+      entry.id.trim()
+    ) {
+      ids.add(entry.id.trim());
+    }
+  }
+  return ids;
+}
+
+const DEEP_AGENT_KEYS = new Set<AstraAgentKey>([
+  "developer",
+  "github",
+  "researcher",
+]);
+
+const HIGH_REASONING_AGENT_KEYS = new Set<AstraAgentKey>([
+  "business",
+  "trading",
+  "memory",
+]);
+
+const COMPLEX_REASONING_PATTERN =
+  /\b(analisis|analyze|reason|rencana|plan|planning|strategi|strategy|arsitektur|architecture|bandingkan|compare|evaluasi|evaluate|riset|research|investigasi|investigate|debug kompleks|root cause|trade-?off|decision|keputusan)\b/i;
+
+const CODE_AGENT_PATTERN =
+  /\b(code|coding|typescript|javascript|python|bug|debug|refactor|repository|repo|github|pull request|commit|build|test|ci|api|database|sql|architecture|implement|implementation)\b/i;
+
+export function selectNvidiaJarvisProfile({
+  input,
+  agent,
+  visualContentProvided = false,
+  mode,
+}: {
+  input: string;
+  agent: AstraAgent;
+  visualContentProvided?: boolean;
+  mode?: NvidiaRouterMode;
+}): NvidiaJarvisProfile {
+  if (mode && mode !== "auto") return mode;
+  if (visualContentProvided) return "vision";
+
+  const text = input.trim();
+  if (DEEP_AGENT_KEYS.has(agent.key) || CODE_AGENT_PATTERN.test(text)) {
+    return "deep";
+  }
+
+  if (
+    HIGH_REASONING_AGENT_KEYS.has(agent.key) ||
+    COMPLEX_REASONING_PATTERN.test(text) ||
+    text.length >= 900
+  ) {
+    return "chief";
+  }
+
+  if (text.length <= 320) return "fast";
+  return "chief";
+}
+
+function generationConfig(profile: NvidiaJarvisProfile) {
+  switch (profile) {
+    case "fast":
+      return { temperature: 0.4, topP: 0.9, maxTokens: 3072 };
+    case "vision":
+      return { temperature: 0.4, topP: 0.9, maxTokens: 6144 };
+    case "deep":
+      return { temperature: 0.5, topP: 0.95, maxTokens: 8192 };
+    case "chief":
+    default:
+      return { temperature: 0.6, topP: 0.95, maxTokens: 8192 };
+  }
+}
+
+function thinkingOptions(model: string, enabled: boolean) {
+  if (!enabled || !model.startsWith("nvidia/nemotron-")) return {};
+
+  return {
+    chat_template_kwargs: { enable_thinking: true },
+    ...(model.includes("lightning")
+      ? { reasoning_budget: 4096 }
+      : {}),
+  };
 }
 
 export function nvidiaMayReceiveMemory() {
@@ -174,7 +299,7 @@ export async function getNvidiaStatus(): Promise<NvidiaStatus> {
       enabled: value.enabled,
       available: false,
       endpoint: safePublicUrl(value.rootUrl),
-      model: value.model || null,
+      model: value.models.chief || null,
       detail:
         "NVIDIA NIM URL rejected: " +
         safeErrorDetail(error, "invalid provider URL", 500),
@@ -188,18 +313,9 @@ export async function getNvidiaStatus(): Promise<NvidiaStatus> {
       enabled: false,
       available: false,
       endpoint,
-      model: value.model || null,
-      detail: "NVIDIA NIM is disabled by ASTRA_NVIDIA_ENABLED.",
-    };
-  }
-
-  if (!value.model) {
-    return {
-      enabled: true,
-      available: false,
-      endpoint,
-      model: null,
-      detail: "NVIDIA NIM model is not configured.",
+      model: value.models.chief || null,
+      detail:
+        "NVIDIA JARVIS model mesh is disabled by ASTRA_NVIDIA_ENABLED.",
     };
   }
 
@@ -208,7 +324,7 @@ export async function getNvidiaStatus(): Promise<NvidiaStatus> {
       enabled: true,
       available: false,
       endpoint,
-      model: value.model,
+      model: value.models.chief || null,
       detail:
         "Hosted NVIDIA NIM is enabled but NVIDIA_API_KEY is missing.",
     };
@@ -229,7 +345,7 @@ export async function getNvidiaStatus(): Promise<NvidiaStatus> {
         enabled: true,
         available: false,
         endpoint,
-        model: value.model,
+        model: value.models.chief,
         detail: `NVIDIA NIM status returned HTTP ${response.status}.`,
       };
     }
@@ -238,15 +354,42 @@ export async function getNvidiaStatus(): Promise<NvidiaStatus> {
       response,
       "NVIDIA NIM models",
     );
-
-    if (!modelIsListed(payload, value.model)) {
+    const ids = listedModelIds(payload);
+    if (!ids) {
       return {
         enabled: true,
         available: false,
         endpoint,
-        model: value.model,
+        model: value.models.chief,
         detail:
-          "NVIDIA NIM endpoint responded, but the configured model was not listed.",
+          "NVIDIA NIM models returned a malformed payload.",
+      };
+    }
+
+    const models = (
+      Object.entries(value.models) as Array<
+        [NvidiaJarvisProfile, string]
+      >
+    ).map(([profile, model]) => ({
+      profile,
+      model,
+      available: ids.has(model),
+    }));
+
+    const missing = models.filter((entry) => !entry.available);
+    if (missing.length > 0) {
+      return {
+        enabled: true,
+        available: false,
+        endpoint,
+        model: value.models.chief,
+        models,
+        detail:
+          "NVIDIA JARVIS model mesh is incomplete; unavailable profile(s): " +
+          missing
+            .map((entry) => `${entry.profile}=${entry.model}`)
+            .join(", ") +
+          ".",
       };
     }
 
@@ -254,16 +397,17 @@ export async function getNvidiaStatus(): Promise<NvidiaStatus> {
       enabled: true,
       available: true,
       endpoint,
-      model: value.model,
+      model: value.models.chief,
+      models,
       detail:
-        "NVIDIA NIM is reachable and the configured Nemotron model is available.",
+        "NVIDIA JARVIS model mesh is ready: Chief=Nemotron Ultra, Deep=GLM-5.3, Fast=Nemotron Lightning, Vision=GLM-5.3 Flash.",
     };
   } catch (error) {
     return {
       enabled: true,
       available: false,
       endpoint,
-      model: value.model,
+      model: value.models.chief,
       detail:
         "NVIDIA NIM is not reachable: " +
         safeErrorDetail(error, "unavailable", 500),
@@ -276,12 +420,14 @@ export async function chatWithNvidia({
   agent,
   context,
   policyText,
+  visualContentProvided = false,
   signal,
 }: {
   input: string;
   agent: AstraAgent;
   context?: string;
   policyText?: string;
+  visualContentProvided?: boolean;
   signal?: AbortSignal;
 }) {
   const value = config();
@@ -291,13 +437,26 @@ export async function chatWithNvidia({
   }
 
   const rootUrl = secureNvidiaRoot(value.rootUrl);
-  if (!value.model) {
-    throw new Error("NVIDIA NIM model is not configured.");
-  }
   if (requiresApiKey(rootUrl) && !value.apiKey) {
-    throw new Error("NVIDIA_API_KEY is required for the hosted NVIDIA NIM endpoint.");
+    throw new Error(
+      "NVIDIA_API_KEY is required for the hosted NVIDIA NIM endpoint.",
+    );
   }
 
+  const profile = selectNvidiaJarvisProfile({
+    input,
+    agent,
+    visualContentProvided,
+    mode: value.routerMode,
+  });
+  const model = value.models[profile];
+  if (!model) {
+    throw new Error(
+      `NVIDIA JARVIS profile ${profile} has no configured model.`,
+    );
+  }
+
+  const generation = generationConfig(profile);
   const response = await withTimeout(
     value.timeoutMs,
     (requestSignal) =>
@@ -309,16 +468,19 @@ export async function chatWithNvidia({
         },
         cache: "no-store",
         body: JSON.stringify({
-          model: value.model,
+          model,
           stream: false,
-          temperature: 0.6,
-          top_p: 0.95,
-          max_tokens: 4096,
+          temperature: generation.temperature,
+          top_p: generation.topP,
+          max_tokens: generation.maxTokens,
+          ...thinkingOptions(model, value.thinking),
           messages: [
             {
               role: "system",
               content: [
-                "You are ASTRA's NVIDIA Nemotron reasoning provider.",
+                "You are a reasoning specialist inside ASTRA's NVIDIA JARVIS model mesh.",
+                `Active profile: ${profile}.`,
+                `Active model: ${model}.`,
                 `Routed specialist: ${agent.name}.`,
                 `Role: ${agent.role}.`,
                 `Capabilities: ${agent.capabilities.join(", ")}.`,
@@ -326,7 +488,9 @@ export async function chatWithNvidia({
                 policyText || "",
                 context || "",
                 "Reason carefully and answer in the user's language.",
+                "Be concise for routine requests and thorough for complex requests.",
                 "Do not claim external actions happened unless a real ASTRA tool completed them.",
+                "Never treat model reasoning or tool-call suggestions as execution authorization.",
               ]
                 .filter(Boolean)
                 .join("\n"),
@@ -341,7 +505,7 @@ export async function chatWithNvidia({
 
   if (!response.ok) {
     throw new Error(
-      `NVIDIA NIM chat failed (HTTP ${response.status}).`,
+      `NVIDIA NIM ${profile} chat failed (HTTP ${response.status}).`,
     );
   }
 
@@ -374,9 +538,10 @@ export async function chatWithNvidia({
   return {
     message,
     endpoint: safePublicUrl(rootUrl),
-    model: value.model,
+    model,
+    profile,
   };
 }
 
-export const NVIDIA_NIM_DEFAULT_MODEL = DEFAULT_MODEL;
+export const NVIDIA_NIM_DEFAULT_MODEL = NVIDIA_JARVIS_MODELS.chief;
 export const NVIDIA_NIM_DEFAULT_ROOT = DEFAULT_ROOT_URL;
