@@ -222,3 +222,16 @@ Next execution priority:
 8. Phase 30 final JARVIS scenarios, soak, self-evaluation and release status.
 
 Do not recreate Phase 24–29 foundations. New work must be driven by real target/provider evidence, a concrete defect, or an explicit new owner requirement.
+
+
+## Cross-session reconciliation checkpoint — Phase 16 UI evidence
+
+A repository audit across historical ASTRA branches found that `astra/main-ui-performance-evidence` contained an incomplete, never-merged prototype for the two Phase 16 main-UI measurements still marked PENDING in `docs/PERFORMANCE_BASELINE.md`.
+
+Recovery action is active on:
+- branch: `fix/cross-session-ui-performance-reconciliation`;
+- goal: port the useful intent onto current `main` without reviving the stale implementation;
+- required coverage: Command Center active + Automation panel open evidence;
+- requirements: opt-in only, clean-build provenance, private output, no prompt/response/console-message persistence, regression tests.
+
+Historical divergent branches are not automatically active work. Inspect `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` before reviving any old branch.
