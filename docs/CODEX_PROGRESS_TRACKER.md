@@ -195,3 +195,43 @@ After each merged subphase:
 6. do not wait idle on an external/local-only blocker if independent repository work remains.
 
 After Phase 20 stabilizes, continue Phase 21–30 from `docs/ASTRA_MAX.md`.
+
+---
+
+## NVIDIA MAX integration track
+
+Canonical plan: `docs/NVIDIA_MAX_INTEGRATION.md`.
+
+### NVA-0 — governance/framework foundation
+
+- [x] canonical NVIDIA subsystem registry added;
+- [x] on-demand NVIDIA Skill Hub core manifest added;
+- [x] skill recommendation is bounded and advisory-only;
+- [x] NVIDIA integrations cannot claim direct execution authority;
+- [x] regression tests added;
+- [x] NVIDIA framework included in lint gate;
+- [x] roadmap/recovery/handoff update prepared in feature branch;
+- [ ] PR CI green and merge commit on `main`.
+
+### NVA-1 — Skill Hub discovery/install-state
+
+- [ ] provider-neutral catalog discovery/cache contract;
+- [ ] private installed-skill registry under `.astra/`;
+- [ ] available/installed/disabled/incompatible truth states;
+- [ ] provenance/version/checksum when available;
+- [ ] dry-run install/update/remove planning;
+- [ ] permission/approval binding for mutations;
+- [ ] target-PC Codex skill mechanism verified against actual Codex version.
+
+### NVA-2 through NVA-9
+
+- [ ] NVA-2 AI-Q Research adapter + real backend validation;
+- [ ] NVA-3 NeMo Retriever/RAG under real Sonor;
+- [ ] NVA-4 Document Intelligence;
+- [ ] NVA-5 Always-On Voice;
+- [ ] NVA-6 DeepStream/VSS real vision;
+- [ ] NVA-7 NemoClaw/Hermes governed learned workflows;
+- [ ] NVA-8 NeMo Guardrails + Content Safety;
+- [ ] NVA-9 NeMo Evaluation / Quality Lab.
+
+These tasks do not replace target-PC core release evidence. When real PC access exists, Phase 14 → MEM-X → 16 → 17 → 19 → 20 remains the immediate release-gate sequence.
