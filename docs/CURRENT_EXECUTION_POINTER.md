@@ -228,8 +228,10 @@ Do not recreate Phase 24–29 foundations. New work must be driven by real targe
 
 A repository audit across historical ASTRA branches found that `astra/main-ui-performance-evidence` contained an incomplete, never-merged prototype for the two Phase 16 main-UI measurements still marked PENDING in `docs/PERFORMANCE_BASELINE.md`.
 
-Recovery action is active on:
-- branch: `fix/cross-session-ui-performance-reconciliation`;
+Recovery implementation:
+- PR: **#171**;
+- branch while PR remains open: `fix/cross-session-ui-performance-reconciliation`;
+- after PR #171 merges, treat the recovery as part of `main` and do not recreate this branch;
 - goal: port the useful intent onto current `main` without reviving the stale implementation;
 - required coverage: Command Center active + Automation panel open evidence;
 - requirements: opt-in only, clean-build provenance, private output, no prompt/response/console-message persistence, regression tests.
