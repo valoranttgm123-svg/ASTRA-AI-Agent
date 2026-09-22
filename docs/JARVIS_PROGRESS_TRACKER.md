@@ -27,10 +27,11 @@ On every new session:
 - [x] regression tests
 - [x] PR #164 CI green
 - [x] PR #164 merged → `1327ee985c13c6486bcd9212cbfbc28b3d3187a0`
-- [ ] Event Inbox / subscription UI — active on `feature/event-inbox-ui` (mark complete only after green merge)
+- [x] Event Inbox / subscription UI — PR #175 merged → `56059728be8ef60b1badb58a8ef13bade2ba569b`; PR CI #486 green
 
 Real adapters still required:
-- [ ] GitHub event source
+- [ ] GitHub Actions event source adapter — PR #176 active on `feature/github-actions-event-adapter` (mark complete only after green merge)
+- [ ] real target-runtime GitHub sync evidence
 - [ ] second real event source
 - [ ] third real event source
 - [ ] target-runtime proactive notification evidence

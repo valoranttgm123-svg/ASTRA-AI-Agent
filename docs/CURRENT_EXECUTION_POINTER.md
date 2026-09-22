@@ -215,15 +215,32 @@ PR CI #483: **SUCCESS**.
 
 Do not rebuild that surface. Codex later connects the real executors, runtime health adapters, recovery execution, and target-PC evidence.
 
-## Active repo-side refinement — Event Inbox
+## Event Inbox checkpoint — PR #175 merged
+
+PR #175 merged the truthful Event Engine inbox into the existing Operations panel.
+
+Merge:
+`56059728be8ef60b1badb58a8ef13bade2ba569b`
+
+PR CI #486: **SUCCESS**.
+
+The UI reads stored/evaluated Event Engine records, supports ACK and subscription enable/disable, and deliberately does not expose manual event publishing.
+
+## Active repo-side refinement — GitHub Actions event source
+
+Current PR: **#176**
 
 Current branch:
-`feature/event-inbox-ui`
+`feature/github-actions-event-adapter`
 
 Goal:
-- expose existing Event Engine subscriptions and evaluated records in the Operations panel;
-- allow acknowledgement and subscription enable/disable only;
-- do not expose manual event publishing;
-- do not fabricate GitHub/calendar/email/service source activity.
+- read real workflow runs from the official GitHub Actions REST endpoint;
+- exact `api.github.com` read-only transport;
+- public repository access without a token;
+- optional local `GITHUB_TOKEN` for private repositories;
+- map workflow run state into source-linked Event Engine records;
+- preserve existing ACK/state on repeated polls;
+- expose local status/sync only;
+- no rerun/cancel/dispatch/write capability to GitHub.
 
-After this slice, real event-source adapters can plug into the existing Event Engine.
+Target-runtime polling/proactive notification evidence remains a separate Codex/runtime gate.

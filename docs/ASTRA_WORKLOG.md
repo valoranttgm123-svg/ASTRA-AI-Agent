@@ -825,3 +825,17 @@ Scope:
 - retain explicit truth text that source activity is not fabricated.
 
 Real GitHub/calendar/email/service adapters and proactive notification evidence remain separate integration gates.
+
+
+## 2026-09-22 — Event Inbox merged / GitHub Actions adapter started
+
+- PR #175 final CI #486: SUCCESS;
+- PR #175 merged as `56059728be8ef60b1badb58a8ef13bade2ba569b`;
+- Event Inbox is now canonical Operations UI;
+- started `feature/github-actions-event-adapter`;
+- adapter is read-only toward GitHub and local-write-only toward Event Engine;
+- public repositories require no token; private repositories may use local `GITHUB_TOKEN`;
+- exact GitHub Actions API endpoint/version is fixed in code;
+- repeated poll state is skipped before publishing so an existing delivered/acknowledged record is not overwritten by a duplicate poll;
+- opened PR #176 for the adapter;
+- real background polling/proactive target-runtime delivery remains pending.

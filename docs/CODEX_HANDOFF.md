@@ -2225,3 +2225,21 @@ The UI must:
 - never offer manual event publishing as if it were a real source.
 
 Codex/refinement later connects real GitHub/calendar/email/service sources and target-runtime proactive notification delivery.
+
+
+## 2026-09-22 — GitHub Actions Event Engine adapter
+
+PR #175/Event Inbox is merged at `56059728be8ef60b1badb58a8ef13bade2ba569b` after green CI #486.
+
+ChatGPT is now implementing the first real Phase-24 event-source adapter in PR #176 on `feature/github-actions-event-adapter`.
+
+Contract:
+- GitHub access is read-only;
+- exact official Actions workflow-runs endpoint only;
+- no token needed for public repositories;
+- private token stays local and is never surfaced;
+- ASTRA maps real workflow state into Event Engine records;
+- no GitHub workflow mutation capability is introduced;
+- repeated polling must not destroy existing acknowledgement state.
+
+Codex later owns real background polling cadence, target-runtime proactive notification UX/evidence, and private-repo credential validation where required.
