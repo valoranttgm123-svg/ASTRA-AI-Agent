@@ -116,3 +116,24 @@ The desired final owner handoff is short:
 5. the verified release status.
 
 The owner should not receive a development to-do list as the final product handoff.
+
+## Autonomous credential completion
+
+The owner's preferred operating mode is **no-interruption delivery**: Codex should not ask the owner to manually provision a provider secret if the credential can already be obtained or reused safely from an authorized local source.
+
+For NVIDIA and other providers, Codex should try these paths in order:
+
+1. reuse an existing valid secret already present in the canonical local `.env.local`;
+2. reuse an existing authorized local environment/secret source available to the ASTRA runtime;
+3. reuse an already-authenticated provider session on the target PC when Codex has legitimate access to that session and the provider flow permits creating/retrieving a new API credential without bypassing security;
+4. validate the resulting credential live, store it only in the intended local secret location, and ensure it is never committed/logged/uploaded.
+
+Codex must never:
+- invent a fake credential;
+- bypass login, MFA, account consent, CAPTCHA, UAC, or provider security;
+- extract unrelated passwords/tokens;
+- weaken account security to achieve zero-touch setup.
+
+If a required credential cannot be obtained from an already-authorized local source, Codex should continue every other independent setup/validation task instead of stopping the whole workflow. That credential remains an external blocker and ASTRA must not be labeled READY for that provider until the provider is actually authenticated.
+
+The intended owner experience is that Codex attempts every legitimate autonomous path first and only exposes a human-authentication blocker if no authorized credential/session exists.

@@ -847,3 +847,13 @@ The owner should only be interrupted for unavoidable credential entry, account c
 After each unavoidable owner input, continue automatically. Do not make the owner resume the technical workflow manually.
 
 The final target is not "code complete"; it is a truthfully validated, ready-to-use ASTRA installation on the target PC.
+
+## Autonomous credential rule
+
+For provider credentials, do not default to asking the owner to paste a key.
+
+First inspect the target PC for an already-authorized ASTRA credential source or an already-authenticated provider session that Codex can legitimately reuse. If a valid NVIDIA credential already exists, configure and validate it without exposing the secret.
+
+If the provider account/session permits Codex to create or retrieve the needed credential through an already-authenticated flow, do so and store it only in the local secret location.
+
+Never bypass login/MFA/CAPTCHA/account consent or fabricate credentials. If authentication truly requires the account owner and no authorized session exists, keep working on all independent tasks and record that one provider as an external blocker rather than turning the blocker into a setup checklist for the owner.
