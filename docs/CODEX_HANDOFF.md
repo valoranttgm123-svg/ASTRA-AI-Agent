@@ -2034,3 +2034,22 @@ After this branch merges:
 - collect exact target-PC evidence before marking a subsystem READY.
 
 Codex still owns zero-touch delivery. The owner should not receive setup commands.
+
+## 2026-09-22 — NVIDIA MAX repository work complete through PR #161
+
+Merged/CI-verified NVIDIA MAX repository checkpoints:
+- PR #159 / `e155c75f98da4e07ca3c07b7f15d46ceb655f417`;
+- PR #160 / `af7e05e1252b1b80e94b32cfbfedff6f2c7e006b`;
+- PR #161 / `84e5eb6aeb20dbdb737dc6d9ace149adfac73dbb`.
+
+Codex should treat the provider-neutral NVIDIA repository architecture as complete until real integration exposes a missing contract.
+
+Next work is execution, not redesign:
+- core target-PC release validation;
+- actual Skill Hub mechanism;
+- actual AI-Q transport;
+- real Sonor before Retriever;
+- real OCR/voice/vision/Hermes/Guardrails/evaluation services;
+- defect repair and evidence collection.
+
+Owner interaction remains zero-touch except unavoidable external authorization/physical boundaries.

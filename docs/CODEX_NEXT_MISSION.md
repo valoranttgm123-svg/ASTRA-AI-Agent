@@ -937,3 +937,13 @@ When target-PC/backend access exists, Codex should execute the integration track
 For every backend: health → happy path → cancellation → malformed response → outage/degradation → STOP/permission behavior → evidence.
 
 Do not claim READY from repository contracts alone.
+
+## Current NVIDIA execution status after PR #161
+
+NVIDIA repo-only design work is complete and CI-verified through PR #161.
+
+Do not ask the owner for another NVIDIA architecture decision. Do not create more provider-neutral wrappers until an actual backend integration proves one is missing.
+
+When target access exists, Codex must autonomously move from contracts to working services, fix concrete failures, collect evidence, and continue until the ready-to-use acceptance gates are met.
+
+If a provider/backend is unavailable, continue every independent core-release task rather than stopping.
