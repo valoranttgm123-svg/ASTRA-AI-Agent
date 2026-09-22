@@ -4,7 +4,7 @@ Status date: **2026-09-22**. This is the authoritative short handoff for interru
 
 ## Resume in one sentence
 
-When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work.
+When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_EVENT_SOURCE_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
 
 ## Canonical repository checkpoint
 
