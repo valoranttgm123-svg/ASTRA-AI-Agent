@@ -634,3 +634,27 @@ Safety properties:
 - source adapters are not falsely claimed as connected.
 
 Next after green merge: Phase 25 Durable Background Task Manager repository foundation.
+
+## 2026-09-22 — Phase 25 Durable Background Task Manager started
+
+Phase 24 Event Engine merged via PR #164 at `1327ee985c13c6486bcd9212cbfbc28b3d3187a0` after green CI.
+
+Started `feature/phase25-durable-task-manager`.
+
+Repository foundation includes:
+- durable dependency-aware task queue;
+- bounded concurrency + resource locks;
+- Level 0/1 unattended ceiling and Level 2/3 waiting-approval state;
+- pause/resume/cancel;
+- checkpointing;
+- retry/backoff;
+- restart recovery;
+- parallel execution for independent tasks;
+- STOP propagation via active AbortControllers;
+- private bounded/symlink-safe persistence;
+- loopback management API;
+- regression coverage.
+
+Added `docs/JARVIS_PROGRESS_TRACKER.md` so interrupted sessions resume exact repository state rather than recreate completed work.
+
+Next after merge: Phase 28 Diagnostics / Audit / Offline foundation.
