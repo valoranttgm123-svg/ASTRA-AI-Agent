@@ -2211,4 +2211,17 @@ Codex must still refine/complete later:
 - Tool Runtime recovery execution;
 - offline scenario evidence.
 
-If PR #174 is merged, do not rebuild this UI. Use it as the operations surface while connecting the real integrations.
+PR #174 is merged at `293216e9f94868d00b2636b125922ff09ec593db` with PR CI #483 green. Do not rebuild this UI. Use it as the operations surface while connecting the real integrations.
+
+
+## 2026-09-22 — Event Inbox refinement
+
+ChatGPT is consuming the remaining safe Event Engine UI slice on `feature/event-inbox-ui`.
+
+The UI must:
+- show only stored/evaluated Event Engine records;
+- preserve source/topic/subscription/disposition truth;
+- allow ACK and subscription enable/disable through the existing guarded API;
+- never offer manual event publishing as if it were a real source.
+
+Codex/refinement later connects real GitHub/calendar/email/service sources and target-runtime proactive notification delivery.

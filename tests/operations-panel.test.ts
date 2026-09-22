@@ -57,3 +57,34 @@ test("operations panel does not claim production executors or real restart evide
   assert.doesNotMatch(panel, /PRODUCTION EXECUTOR READY/);
   assert.doesNotMatch(panel, /RESTART VERIFIED/);
 });
+
+
+test("event inbox reads canonical Event Engine state without fabricating sources", () => {
+  const panel = source("components/AstraOperationsPanel.tsx");
+
+  assert.match(panel, /fetch\("\/api\/events"/);
+  assert.match(panel, /EVENT INBOX \+ SUBSCRIPTIONS/);
+  assert.match(panel, /RECENT EVENT RECORDS/);
+  assert.match(panel, /UNACKNOWLEDGED/);
+  assert.match(panel, /does not fabricate source activity/);
+  assert.match(panel, /does not expose\s+manual event publishing/);
+});
+
+test("event inbox mutations are limited to ack and subscription status", () => {
+  const panel = source("components/AstraOperationsPanel.tsx");
+
+  assert.match(panel, /action: "ack"/);
+  assert.match(panel, /action: "status"/);
+  assert.match(panel, /"x-astra-client": "1"/);
+  assert.doesNotMatch(panel, /action:\s*"publish"/);
+  assert.doesNotMatch(panel, /action:\s*"upsert"/);
+  assert.doesNotMatch(panel, /publishIncomingEvent/);
+});
+
+test("event inbox only acknowledges delivered unacknowledged records", () => {
+  const panel = source("components/AstraOperationsPanel.tsx");
+
+  assert.match(panel, /event\.disposition === "delivered"/);
+  assert.match(panel, /!event\.acknowledgedAt/);
+  assert.match(panel, /ACKNOWLEDGE/);
+});

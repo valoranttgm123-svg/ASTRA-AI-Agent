@@ -13,6 +13,10 @@ import type {
   AstraDiagnosticsSnapshot,
   AstraHealthStatus,
 } from "@/lib/diagnostics/contracts";
+import type {
+  AstraEventRecord,
+  AstraEventSubscription,
+} from "@/lib/events/contracts";
 
 type TaskStatusResponse = {
   ok: boolean;
@@ -20,6 +24,15 @@ type TaskStatusResponse = {
   detail: string;
   tasks: AstraBackgroundTask[];
   plan?: AstraTaskTickPlan;
+};
+
+type EventStatusResponse = {
+  ok: boolean;
+  available: boolean;
+  detail: string;
+  subscriptions: AstraEventSubscription[];
+  events: AstraEventRecord[];
+  unacknowledged: AstraEventRecord[];
 };
 
 type DiagnosticsResponse = {
@@ -33,7 +46,7 @@ type DiagnosticsResponse = {
   truthBoundary: string;
 };
 
-type Tab = "tasks" | "diagnostics";
+type Tab = "tasks" | "events" | "diagnostics";
 
 const HEALTH_ORDER: Record<AstraHealthStatus, number> = {
   unavailable: 0,
@@ -100,6 +113,7 @@ export default function AstraOperationsPanel() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("tasks");
   const [tasks, setTasks] = useState<TaskStatusResponse | null>(null);
+  const [events, setEvents] = useState<EventStatusResponse | null>(null);
   const [diagnostics, setDiagnostics] =
     useState<DiagnosticsResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -119,6 +133,18 @@ export default function AstraOperationsPanel() {
       throw new Error(message(payload, "Background task status failed."));
     }
     setTasks(payload as TaskStatusResponse);
+  }, []);
+
+  const refreshEvents = useCallback(async () => {
+    const response = await fetch("/api/events", {
+      method: "GET",
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as unknown;
+    if (!response.ok) {
+      throw new Error(message(payload, "Event Engine status failed."));
+    }
+    setEvents(payload as EventStatusResponse);
   }, []);
 
   const refreshDiagnostics = useCallback(async () => {
@@ -145,6 +171,7 @@ export default function AstraOperationsPanel() {
     setError(null);
     try {
       if (tab === "tasks") await refreshTasks();
+      else if (tab === "events") await refreshEvents();
       else await refreshDiagnostics();
     } catch (err) {
       setError(
@@ -153,7 +180,7 @@ export default function AstraOperationsPanel() {
     } finally {
       setLoading(false);
     }
-  }, [refreshDiagnostics, refreshTasks, tab]);
+  }, [refreshDiagnostics, refreshEvents, refreshTasks, tab]);
 
   useEffect(() => {
     if (!open) return;
@@ -203,6 +230,60 @@ export default function AstraOperationsPanel() {
     [refreshTasks],
   );
 
+  const mutateEvent = useCallback(
+    async (
+      body:
+        | { action: "ack"; id: string }
+        | {
+            action: "status";
+            id: string;
+            status: "enabled" | "disabled";
+          },
+    ) => {
+      const key =
+        body.action === "ack"
+          ? "ack:" + body.id
+          : "status:" + body.id;
+      setBusyKey(key);
+      setError(null);
+      setNotice(null);
+      try {
+        const response = await fetch("/api/events", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-astra-client": "1",
+          },
+          body: JSON.stringify(body),
+        });
+        const payload = (await response.json()) as unknown;
+        if (!response.ok) {
+          throw new Error(message(payload, "Event Engine mutation failed."));
+        }
+        setNotice(
+          body.action === "ack"
+            ? "Event acknowledged."
+            : body.id + " → " + body.status.toUpperCase(),
+        );
+        await refreshEvents();
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Event Engine mutation failed.",
+        );
+      } finally {
+        setBusyKey(null);
+      }
+    },
+    [refreshEvents],
+  );
+
+  const recentEvents = useMemo(
+    () => [...(events?.events ?? [])].reverse().slice(0, 100),
+    [events?.events],
+  );
+
   const sortedHealth = useMemo(
     () =>
       [...(diagnostics?.diagnostics.samples ?? [])].sort(
@@ -234,7 +315,7 @@ export default function AstraOperationsPanel() {
         <div>
           <div className="astra-operations__title">OPERATIONS</div>
           <div className="astra-operations__subtitle">
-            TASKS · DIAGNOSTICS · AUDIT
+            TASKS · EVENTS · DIAGNOSTICS · AUDIT
           </div>
         </div>
         <button
@@ -254,6 +335,13 @@ export default function AstraOperationsPanel() {
           onClick={() => setTab("tasks")}
         >
           TASKS
+        </button>
+        <button
+          type="button"
+          aria-pressed={tab === "events"}
+          onClick={() => setTab("events")}
+        >
+          EVENTS
         </button>
         <button
           type="button"
@@ -390,6 +478,177 @@ export default function AstraOperationsPanel() {
             This panel exposes durable task state and lifecycle controls only.
             Production executors and real restart evidence remain separate
             integration gates.
+          </p>
+        </section>
+      ) : tab === "events" ? (
+        <section className="astra-operations__section">
+          <div className="astra-operations__section-title">
+            EVENT INBOX + SUBSCRIPTIONS
+          </div>
+
+          <div className="astra-operations__summary">
+            <span>{events?.subscriptions.length ?? 0} SUBSCRIPTIONS</span>
+            <span>{events?.events.length ?? 0} RECORDS</span>
+            <span>{events?.unacknowledged.length ?? 0} UNACKNOWLEDGED</span>
+            <span>
+              {events?.available ? "STORE READY" : "STORE UNAVAILABLE"}
+            </span>
+          </div>
+
+          <p className="astra-operations__detail">
+            {events?.detail ??
+              "Event state is loaded from the private Event Engine store."}
+          </p>
+
+          <div className="astra-operations__event-subscriptions">
+            <div className="astra-operations__section-title">
+              SUBSCRIPTIONS
+            </div>
+            {(events?.subscriptions.length ?? 0) === 0 ? (
+              <div className="astra-operations__empty">
+                No event subscriptions are registered.
+              </div>
+            ) : (
+              events?.subscriptions.map((subscription) => (
+                <article
+                  className="astra-operations__subscription"
+                  key={subscription.id}
+                >
+                  <div className="astra-operations__item-head">
+                    <div>
+                      <strong>{subscription.id}</strong>
+                      <span>
+                        {subscription.source.toUpperCase()} ·{" "}
+                        {subscription.topic}
+                      </span>
+                    </div>
+                    <span
+                      className={
+                        "astra-operations__status astra-operations__status--" +
+                        subscription.status
+                      }
+                    >
+                      {subscription.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="astra-operations__meta">
+                    <span>FLOOR {subscription.severityFloor.toUpperCase()}</span>
+                    <span>
+                      {subscription.deliveryPolicy
+                        .replace("_", " ")
+                        .toUpperCase()}
+                    </span>
+                    <span>RATE {subscription.rateLimitPerHour}/H</span>
+                    {subscription.projectId ? (
+                      <span>PROJECT {subscription.projectId}</span>
+                    ) : null}
+                  </div>
+
+                  <div className="astra-operations__actions">
+                    <button
+                      type="button"
+                      disabled={busyKey !== null}
+                      onClick={() =>
+                        void mutateEvent({
+                          action: "status",
+                          id: subscription.id,
+                          status:
+                            subscription.status === "enabled"
+                              ? "disabled"
+                              : "enabled",
+                        })
+                      }
+                    >
+                      {busyKey === "status:" + subscription.id
+                        ? "WORKING"
+                        : subscription.status === "enabled"
+                          ? "DISABLE"
+                          : "ENABLE"}
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+
+          <div className="astra-operations__event-inbox">
+            <div className="astra-operations__section-title">
+              RECENT EVENT RECORDS
+            </div>
+            {recentEvents.length === 0 ? (
+              <div className="astra-operations__empty">
+                No Event Engine records are available.
+              </div>
+            ) : (
+              recentEvents.map((event) => (
+                <article
+                  className="astra-operations__event"
+                  key={event.id}
+                >
+                  <div className="astra-operations__item-head">
+                    <div>
+                      <strong>{event.title}</strong>
+                      <span>
+                        {event.source.toUpperCase()} · {event.topic} ·{" "}
+                        {displayTime(event.occurredAt)}
+                      </span>
+                    </div>
+                    <span
+                      className={
+                        "astra-operations__severity astra-operations__severity--" +
+                        event.severity
+                      }
+                    >
+                      {event.severity.toUpperCase()}
+                    </span>
+                  </div>
+
+                  {event.detail ? <p>{event.detail}</p> : null}
+
+                  <div className="astra-operations__meta">
+                    <span>
+                      {event.disposition.replaceAll("_", " ").toUpperCase()}
+                    </span>
+                    <span>SUB {event.subscriptionId}</span>
+                    {event.projectId ? (
+                      <span>PROJECT {event.projectId}</span>
+                    ) : null}
+                    <span>
+                      {event.acknowledgedAt
+                        ? "ACK " + displayTime(event.acknowledgedAt)
+                        : "NOT ACKNOWLEDGED"}
+                    </span>
+                  </div>
+
+                  {event.disposition === "delivered" &&
+                  !event.acknowledgedAt ? (
+                    <div className="astra-operations__actions">
+                      <button
+                        type="button"
+                        disabled={busyKey !== null}
+                        onClick={() =>
+                          void mutateEvent({
+                            action: "ack",
+                            id: event.id,
+                          })
+                        }
+                      >
+                        {busyKey === "ack:" + event.id
+                          ? "WORKING"
+                          : "ACKNOWLEDGE"}
+                      </button>
+                    </div>
+                  ) : null}
+                </article>
+              ))
+            )}
+          </div>
+
+          <p className="astra-operations__truth">
+            This inbox only displays records already evaluated by the Event
+            Engine. It does not fabricate source activity and does not expose
+            manual event publishing.
           </p>
         </section>
       ) : (
