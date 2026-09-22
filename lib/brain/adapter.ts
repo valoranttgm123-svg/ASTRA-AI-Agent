@@ -2180,7 +2180,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             ? "nvidia"
             : "routing_only",
         detail:
-          `${hermes.detail} ASTRA is using local Ollama model ${ollama.model}.` +
+          `ASTRA is using local Ollama model ${ollama.model}.` +
+          (hermes.enabled && !hermes.available
+            ? " Hermes is currently unavailable; Ollama remains the active local provider."
+            : "") +
           (nvidia.available
             ? " NVIDIA JARVIS Mesh is available as an optional reasoning provider."
             : ""),
