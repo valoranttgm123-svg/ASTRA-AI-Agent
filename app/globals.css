@@ -639,3 +639,357 @@ body {
     max-height: calc(100dvh - 150px);
   }
 }
+
+
+/* Phase 25/28 — durable tasks + diagnostics/audit operations surface */
+.astra-operations__launcher {
+  position: fixed;
+  left: clamp(14px, 2.4vw, 34px);
+  bottom: clamp(58px, calc(2.4vw + 44px), 72px);
+  z-index: 55;
+  border: 1px solid rgba(99, 234, 255, 0.32);
+  border-radius: 999px;
+  padding: 9px 14px;
+  color: #bff8ff;
+  background: rgba(4, 14, 22, 0.88);
+  box-shadow: 0 10px 34px rgba(0,0,0,0.36), 0 0 26px rgba(99,234,255,0.07);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.astra-operations {
+  position: fixed;
+  left: clamp(14px, 2.4vw, 34px);
+  top: 58px;
+  z-index: 59;
+  width: min(430px, calc(100vw - 28px));
+  max-height: calc(100dvh - 116px);
+  overflow: auto;
+  border: 1px solid rgba(99, 234, 255, 0.24);
+  border-radius: 16px;
+  color: rgba(235, 250, 255, 0.76);
+  background: rgba(3, 10, 18, 0.96);
+  box-shadow: 0 18px 62px rgba(0,0,0,0.55), 0 0 40px rgba(99,234,255,0.055);
+  font-family: var(--font-mono);
+}
+
+.astra-operations button,
+.astra-operations select {
+  font: inherit;
+}
+
+.astra-operations button {
+  border: 1px solid rgba(99, 234, 255, 0.2);
+  border-radius: 7px;
+  padding: 7px 9px;
+  color: #bff8ff;
+  background: rgba(99,234,255,0.055);
+  cursor: pointer;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.astra-operations button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.astra-operations__head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(99,234,255,0.12);
+  background: rgba(3, 10, 18, 0.98);
+}
+
+.astra-operations__title {
+  color: #c8f8ff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.astra-operations__subtitle {
+  margin-top: 3px;
+  color: rgba(190, 245, 255, 0.38);
+  font-size: 7px;
+  letter-spacing: 0.16em;
+}
+
+.astra-operations__close {
+  border: 0 !important;
+  padding: 4px 7px !important;
+  color: rgba(255,255,255,0.45) !important;
+  background: transparent !important;
+  font-size: 16px !important;
+}
+
+.astra-operations__tabs,
+.astra-operations__summary,
+.astra-operations__actions,
+.astra-operations__meta,
+.astra-operations__queue,
+.astra-operations__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.astra-operations__tabs {
+  position: sticky;
+  top: 56px;
+  z-index: 2;
+  padding: 9px 12px;
+  background: rgba(3, 10, 18, 0.96);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.astra-operations__tabs button[aria-pressed="true"] {
+  border-color: rgba(99,234,255,0.46);
+  background: rgba(99,234,255,0.12);
+}
+
+.astra-operations__tabs button:last-child {
+  margin-left: auto;
+}
+
+.astra-operations__error,
+.astra-operations__notice,
+.astra-operations__detail,
+.astra-operations__truth {
+  margin: 9px 12px 0;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.astra-operations__error { color: #ff9da7; }
+.astra-operations__notice { color: #83ffbc; }
+.astra-operations__detail { color: rgba(218, 242, 248, 0.42); }
+.astra-operations__truth {
+  color: rgba(203, 233, 240, 0.38);
+  border-top: 1px solid rgba(255,255,255,0.055);
+  padding-top: 9px;
+}
+
+.astra-operations__section {
+  margin: 8px 10px 10px;
+  padding: 10px;
+  border: 1px solid rgba(99,234,255,0.1);
+  border-radius: 10px;
+  background: rgba(99,234,255,0.018);
+}
+
+.astra-operations__section-title {
+  margin-bottom: 8px;
+  color: rgba(146,239,255,0.72);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.astra-operations__summary {
+  margin-bottom: 8px;
+}
+
+.astra-operations__summary span,
+.astra-operations__meta span,
+.astra-operations__queue span {
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 5px;
+  padding: 3px 5px;
+  color: rgba(225,247,252,0.48);
+  background: rgba(255,255,255,0.025);
+  font-size: 7px;
+  line-height: 1.35;
+}
+
+.astra-operations__list,
+.astra-operations__health,
+.astra-operations__audit {
+  display: grid;
+  gap: 8px;
+}
+
+.astra-operations__task,
+.astra-operations__audit-entry,
+.astra-operations__health-row {
+  padding: 9px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.018);
+}
+
+.astra-operations__item-head,
+.astra-operations__health-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.astra-operations__item-head > div,
+.astra-operations__health-row > div {
+  min-width: 0;
+}
+
+.astra-operations__item-head strong,
+.astra-operations__health-row strong {
+  display: block;
+  color: rgba(238,252,255,0.82);
+  font-size: 8.5px;
+  overflow-wrap: anywhere;
+}
+
+.astra-operations__item-head div > span,
+.astra-operations__health-row div > span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(215,244,250,0.38);
+  font-size: 7px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.astra-operations__task p,
+.astra-operations__audit-entry p {
+  margin: 7px 0;
+  color: rgba(225,247,252,0.5);
+  font-size: 8px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astra-operations__status,
+.astra-operations__health-status,
+.astra-operations__outcome {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 3px 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(230,245,250,0.62);
+  font-size: 6.8px;
+  letter-spacing: 0.08em;
+}
+
+.astra-operations__status--running,
+.astra-operations__health-status--healthy,
+.astra-operations__outcome--success {
+  color: #83ffbc;
+  border-color: rgba(131,255,188,0.22);
+  background: rgba(131,255,188,0.06);
+}
+
+.astra-operations__status--queued,
+.astra-operations__status--retry_wait,
+.astra-operations__health-status--degraded,
+.astra-operations__outcome--blocked {
+  color: #ffc45f;
+  border-color: rgba(245,185,66,0.22);
+  background: rgba(245,185,66,0.06);
+}
+
+.astra-operations__status--failed,
+.astra-operations__health-status--unavailable,
+.astra-operations__outcome--failure {
+  color: #ff9da7;
+  border-color: rgba(255,95,109,0.22);
+  background: rgba(255,95,109,0.05);
+}
+
+.astra-operations__status--cancelled,
+.astra-operations__outcome--cancelled,
+.astra-operations__health-status--unknown,
+.astra-operations__health-status--not_configured {
+  color: #8aa0ad;
+  border-color: rgba(138,160,173,0.18);
+  background: rgba(138,160,173,0.05);
+}
+
+.astra-operations__checkpoint,
+.astra-operations__failure {
+  margin: 7px 0;
+  border-radius: 6px;
+  padding: 6px 7px;
+  font-size: 7.5px;
+  line-height: 1.4;
+}
+
+.astra-operations__checkpoint {
+  color: rgba(163,240,255,0.72);
+  background: rgba(99,234,255,0.04);
+}
+
+.astra-operations__failure {
+  color: #ff9da7;
+  background: rgba(255,95,109,0.04);
+}
+
+.astra-operations__actions {
+  margin-top: 8px;
+}
+
+.astra-operations__danger {
+  border-color: rgba(255,95,109,0.22) !important;
+  color: #ff9da7 !important;
+  background: rgba(255,95,109,0.045) !important;
+}
+
+.astra-operations__queue {
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255,255,255,0.055);
+}
+
+.astra-operations__queue strong {
+  color: rgba(146,239,255,0.65);
+  font-size: 7px;
+  letter-spacing: 0.11em;
+}
+
+.astra-operations__filters {
+  margin-bottom: 9px;
+}
+
+.astra-operations__filters select {
+  min-width: 0;
+  border: 1px solid rgba(99,234,255,0.16);
+  border-radius: 7px;
+  padding: 7px 8px;
+  color: #bff8ff;
+  background: #08141e;
+  font-size: 7px;
+  letter-spacing: 0.07em;
+}
+
+.astra-operations__audit {
+  margin-top: 12px;
+}
+
+.astra-operations__empty {
+  padding: 9px 0;
+  color: rgba(220,244,250,0.34);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+  .astra-operations__launcher {
+    bottom: 126px;
+  }
+
+  .astra-operations {
+    left: 14px;
+    right: 14px;
+    top: 58px;
+    width: auto;
+    max-height: calc(100dvh - 130px);
+  }
+}

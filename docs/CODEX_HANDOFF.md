@@ -2191,3 +2191,24 @@ Codex responsibility is therefore:
 - keep handoff/tracker/worklog current.
 
 For NVIDIA, Phase 24/25/28/22/27/29, and other already-merged foundations, Codex is explicitly the **refinement/completion owner**, not the architecture restart owner.
+
+
+## 2026-09-22 — PR #174 operations UI refinement
+
+ChatGPT is consuming another concrete repo-side slice to conserve Codex tokens:
+
+- Phase 25 task UI/runtime presence;
+- Phase 28 diagnostics/action-history UI.
+
+PR #174 reuses existing canonical APIs and does not take over Codex's real-execution work.
+
+Codex must still refine/complete later:
+- production task executors;
+- restart evidence on the real target PC;
+- Level-2/3 real task-resume flow;
+- real connectivity probe;
+- real Ollama/Codex/Sonor/NVIDIA health adapters;
+- Tool Runtime recovery execution;
+- offline scenario evidence.
+
+If PR #174 is merged, do not rebuild this UI. Use it as the operations surface while connecting the real integrations.
