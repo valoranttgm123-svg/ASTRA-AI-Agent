@@ -440,7 +440,7 @@ function providerLabel(provider: AstraBrainProvider) {
     case "codex":
       return "Codex";
     case "nvidia":
-      return "NVIDIA Nemotron";
+      return "NVIDIA JARVIS Mesh";
     case "cloud":
       return "Cloud";
     default:
@@ -1168,6 +1168,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           agent,
           context: nvidiaContext,
           policyText: context.policyText,
+          visualContentProvided:
+            context.inputContext?.visualContentProvided === true,
           signal: options?.signal,
         });
         emitLiveProviderComplete(selected, "nvidia", options);
@@ -1181,6 +1183,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           requiresApproval: false,
           brain: {
             provider: "nvidia",
+            model: result.model,
             execution: "executed",
             requestedMode: "chat",
             route,
@@ -1331,7 +1334,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
 
     if (preferredProvider === "nvidia") {
       return blocked(
-        "NVIDIA Nemotron dipilih untuk chat/reasoning, bukan eksekusi side effect. Gunakan Codex atau Auto untuk perubahan nyata.",
+        "NVIDIA JARVIS Mesh dipilih untuk chat/reasoning, bukan eksekusi side effect. Gunakan Codex atau Auto untuk perubahan nyata.",
         "Explicit NVIDIA mode is reasoning-only. Real execution must stay behind ASTRA Tool Runtime/Codex approval paths.",
       );
     }
@@ -2178,7 +2181,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         detail:
           `${hermes.detail} ASTRA is using local Ollama model ${ollama.model}.` +
           (nvidia.available
-            ? " NVIDIA Nemotron is available as an optional reasoning provider."
+            ? " NVIDIA JARVIS Mesh is available as an optional reasoning provider."
             : ""),
         permissions: policy,
         capabilities,
