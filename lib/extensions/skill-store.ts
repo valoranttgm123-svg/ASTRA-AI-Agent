@@ -12,6 +12,7 @@ import type {
   AstraExtensionInstallState,
   AstraExtensionNetworkRequirement,
   AstraExtensionRollback,
+  AstraExtensionReviewEvidence,
   AstraExtensionSkillManifest,
   AstraExtensionSkillStore,
   AstraExtensionTrustState,
@@ -457,6 +458,59 @@ export async function recordVerifiedExtensionState({
           method: evidence.method,
           at: new Date(evidenceTime).toISOString(),
           detail: evidence.detail.trim(),
+        },
+      },
+    };
+  });
+}
+
+
+export async function recordExtensionReview({
+  skillId,
+  evidence,
+}: {
+  skillId: string;
+  evidence: AstraExtensionReviewEvidence;
+}) {
+  return mutateExtensionSkillStore((store) => {
+    const index = store.skills.findIndex(
+      (skill) => skill.id.toLowerCase() === skillId.trim().toLowerCase(),
+    );
+    if (index < 0) throw new Error("Extension skill was not found.");
+
+    const current = store.skills[index];
+    if (current.trust === "builtin") {
+      throw new Error("Builtin extension trust is repository-defined.");
+    }
+
+    const reviewedAt = Date.parse(evidence.at);
+    if (!Number.isFinite(reviewedAt)) {
+      throw new Error("Extension review timestamp is invalid.");
+    }
+    const reviewer = evidence.reviewer.trim();
+    const detail = evidence.detail.trim();
+    if (!reviewer || reviewer.length > 120) {
+      throw new Error("Extension reviewer is invalid.");
+    }
+    if (!detail || detail.length > 1000) {
+      throw new Error("Extension review detail is invalid.");
+    }
+
+    const updated: AstraExtensionSkillManifest = {
+      ...current,
+      trust: "local_reviewed",
+      updatedAt: new Date(reviewedAt).toISOString(),
+    };
+    const skills = [...store.skills];
+    skills[index] = updated;
+    return {
+      store: { schemaVersion: 1 as const, skills },
+      result: {
+        skill: updated,
+        review: {
+          reviewer,
+          at: new Date(reviewedAt).toISOString(),
+          detail,
         },
       },
     };
