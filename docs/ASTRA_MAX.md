@@ -2003,3 +2003,29 @@ Truth boundary:
 - publishing an event never authorizes an external action;
 - real proactive adapters must authenticate/verify their own source before calling the Event Engine;
 - Phase 24 exit gate still requires at least three real event sources on the target runtime.
+
+## Phase 25 repository checkpoint — Durable Background Task Manager
+
+Repository-side Phase 25 foundation is implemented on `feature/phase25-durable-task-manager`.
+
+Implemented:
+- durable task records with task IDs, agent, project, priority and permission ceiling;
+- dependency DAG validation and cycle rejection;
+- bounded concurrency planning;
+- resource-lock serialization for conflicting work;
+- Level 0/1 unattended execution ceiling;
+- Level 2/3 tasks remain approval-gated and are never run by the unattended runner;
+- private bounded `.astra/tasks.json` persistence;
+- pause/resume/cancel lifecycle;
+- retry with bounded exponential backoff;
+- checkpoints;
+- restart recovery that safely pauses orphaned running tasks;
+- parallel executor for independent tasks;
+- global STOP and per-task pause/cancel propagate through `AbortSignal`;
+- loopback management API;
+- regression tests.
+
+Truth boundary:
+- generic production executors are not invented in this slice;
+- real target-PC task continuation/restart evidence remains required;
+- approved Level 2/3 execution must reuse ASTRA's real approval path rather than bypass it.
