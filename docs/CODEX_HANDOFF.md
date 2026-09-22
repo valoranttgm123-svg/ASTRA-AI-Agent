@@ -2146,3 +2146,24 @@ Main push CI #458: SUCCESS.
 Repository-only JARVIS foundation work authorized in the Phase 24/25/28/22/27/29 sequence is complete.
 
 Codex must not rebuild these abstractions. The next useful work requires real target-PC/provider/device evidence or a concrete defect. Read `docs/CURRENT_EXECUTION_POINTER.md` before acting.
+
+
+## 2026-09-22 — Cross-session reconciliation complete
+
+Repository continuity has been reconciled across all 206 branches.
+
+Merged recovery:
+- PR #171;
+- merge commit `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- CI #466 SUCCESS.
+
+Recovered capability:
+- Phase 16 main-UI performance evidence for Command Center active and Automation panel open;
+- opt-in only with `?perf=1`;
+- evidence remains `NOT_EVALUATED` until real target-browser review;
+- no prompt/response/mic transcript/console message content is persisted.
+
+Do not revive old Phase 28/29, Windows private-evidence, V15 telemetry, Phase 14/18 prototype, early Humanoid, or stale handoff branches merely because they have unique commits. Their status is documented in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`.
+
+Next actual work remains:
+`Phase 14 → MEM-X → Phase 16 real evidence → Phase 17 → Phase 19 → Phase 20`.
