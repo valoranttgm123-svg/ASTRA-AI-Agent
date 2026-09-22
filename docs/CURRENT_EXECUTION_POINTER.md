@@ -46,18 +46,34 @@ Preserve one Brain; no duplicate Sonor; no fake tool/health/notification success
 
 If the owner requests maximum-effort execution, complete all accessible work without pretending to have PC/provider rights or bypassing approvals. Keep this pointer/tracker/worklog/handoff accurate after each merge.
 
+## Provider-health checkpoint — PR #178 merged
 
-## Active repo-side refinement — PR #178
+PR #178 merged as:
+`dfc7d93fb02e8e32375dd7c3d8ebc7370232c078`
 
-PR #178 / `feature/diagnostics-provider-health` is the only active repository refinement at this checkpoint.
+Validation:
+- PR CI #500: **SUCCESS**;
+- main CI #501: **SUCCESS**.
 
-Scope:
-- reuse existing real status probes for Ollama, Codex, NVIDIA, Hermes and optional Cloud;
-- map disabled providers to NOT_CONFIGURED and enabled-but-unavailable providers truthfully;
-- expose Sonor as NOT_CONFIGURED/UNKNOWN until real Sonor health/search evidence exists;
-- run independent health probes concurrently while preserving result order, cancellation and redaction;
-- no target-PC/provider readiness claim.
+Merged capability:
+- Diagnostics now reuses real status probes for Ollama, Codex, NVIDIA, Hermes and optional Cloud;
+- disabled providers map to NOT_CONFIGURED;
+- enabled but unreachable providers map truthfully to UNAVAILABLE;
+- Codex/Cloud use the same ASTRA permission policy;
+- Sonor remains NOT_CONFIGURED/UNKNOWN until real health/search evidence exists;
+- independent health checks execute concurrently while preserving deterministic result ordering and existing cancellation/redaction behavior.
 
-If a session is interrupted, inspect PR #178 head and newest CI first. Fix only the concrete failure shown by CI; do not recreate the diagnostics foundation or make a second provider-health architecture.
+Do not rebuild this provider-health wiring.
 
-After PR #178 is merged and main CI is green, remaining Phase 28 work is real connectivity probe, Sonor/target-runtime evidence, Tool Runtime recovery execution, and offline scenario evidence.
+Remaining Phase 28 work:
+- explicit real connectivity probe;
+- target-runtime provider observations;
+- real Sonor health/search evidence;
+- safe recovery execution through Tool Runtime;
+- offline/degradation scenario J8 evidence.
+
+## Current repository-side status
+
+No open repository refinement is intentionally active at this checkpoint.
+
+If the owner asks to continue without target-PC access, inspect current `main`, newest CI and open PRs, then take only a concrete repo-side defect, regression, verified provider change, or explicit owner requirement. Otherwise preserve the checkpoint for Codex real-runtime refinement.

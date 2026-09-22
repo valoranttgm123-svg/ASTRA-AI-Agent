@@ -37,7 +37,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] User-facing read-only health and action-history UI: PR #174 merged `293216e9f94868d00b2636b125922ff09ec593db`, CI #483 SUCCESS.
 - [ ] Explicit real connectivity probe.
 - [ ] Provider health integration:
-  - [ ] Ollama/Codex/NVIDIA/Hermes/Cloud real status-probe wiring — PR #178 active on `feature/diagnostics-provider-health`; mark complete only after green merge.
+  - [x] Ollama/Codex/NVIDIA/Hermes/Cloud real status-probe wiring — PR #178 merged `dfc7d93fb02e8e32375dd7c3d8ebc7370232c078`; PR CI #500 SUCCESS, main CI #501 SUCCESS.
   - [ ] Sonor real health/search evidence on the target runtime; repository Diagnostics remains UNKNOWN rather than fabricating readiness.
 - [ ] Safe recovery execution through existing Tool Runtime.
 - [ ] Offline/degradation scenario J8 evidence.
