@@ -104,3 +104,19 @@ At creation of this protocol:
 - repository cleanup before RC: complete;
 - Phase 19A read-only readiness self-check tooling: merged/CI verified;
 - current implementable repository work: **Phase 19B safe update/reinstall tooling**.
+
+## NVIDIA MAX recovery checkpoint — 2026-09-22
+
+ASTRA has one canonical NVIDIA expansion plan: `docs/NVIDIA_MAX_INTEGRATION.md`.
+
+A new session must not redesign NVIDIA from chat history. Inspect current `main`/open PRs first, then read that document.
+
+Repository foundation started as `feature/nvidia-max-framework` with:
+- `lib/nvidia/catalog.ts`;
+- `lib/nvidia/skill-hub.ts`;
+- `tests/nvidia-max-framework.test.ts`;
+- NVIDIA framework added to the lint gate.
+
+The next repository task after NVA-0 merges is NVA-1 Skill Hub discovery/install-state. The next target-PC release task remains the existing Phase 14/MEM-X/16/17/19/20 sequence.
+
+If this session is interrupted before merge, inspect the open PR/branch before creating replacement work.
