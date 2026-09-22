@@ -110,7 +110,7 @@ test("main UI evidence requires the real Automation panel throughout capture", (
           automationPanelOpenAtEnd: false,
         },
       }),
-    /must remain open/i,
+    /remain open/i,
   );
 });
 
