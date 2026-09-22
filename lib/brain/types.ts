@@ -104,6 +104,7 @@ export type AstraBrainFeatureStatus = {
 
 export type AstraBrainEnvelope = {
   provider: AstraBrainProvider;
+  model?: string;
   execution: "routing_only" | "executed" | "blocked";
   requestedMode?: "chat" | "execute";
   route: AstraAgentKey[];
