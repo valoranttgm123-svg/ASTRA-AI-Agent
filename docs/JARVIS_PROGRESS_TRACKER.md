@@ -151,8 +151,8 @@ Repository foundation:
 - [x] no automatic trust for downloaded skills
 - [x] no public unauthenticated environment endpoint
 - [x] tests
-- [x] PR #169 code CI run #453 green
-- [ ] merged
+- [x] PR #169 final CI run #457 green
+- [x] merged → `390a5c35e50a5020ccf34f317edcc25f4837dcb1`; main CI #458 green
 
 Real integration later:
 - [ ] one real provider-backed generic skill installed/disabled/rolled back with evidence
