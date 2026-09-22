@@ -504,3 +504,19 @@ Repository architecture/contracts may be complete, but real services remain unve
 Do not guess AI-Q, Retriever, OCR, Speech, DeepStream/VSS, NemoClaw, Guardrails, or evaluation endpoint schemas. Codex must inspect the actual NVIDIA-supported mechanism/version before writing a transport adapter.
 
 After this contract PR merges, further NVIDIA work should shift to real backend/target-PC integration rather than additional speculative architecture.
+
+## Repository saturation checkpoint — PR #161 merged
+
+NVA-0, NVA-1, and the NVA-2…NVA-9 provider-neutral repository contracts are now merged and CI-verified:
+
+- NVA-0: PR #159 → `e155c75f98da4e07ca3c07b7f15d46ceb655f417`;
+- NVA-1: PR #160 → `af7e05e1252b1b80e94b32cfbfedff6f2c7e006b`;
+- NVA-2…NVA-9 contracts: PR #161 → `84e5eb6aeb20dbdb737dc6d9ace149adfac73dbb`.
+
+PR #161 CI passed production build, unit/integration tests, typecheck, NVIDIA Brain lint coverage, dependency audit, and diff-check.
+
+**Repository-only NVIDIA architecture is now intentionally saturated.**
+
+The next valid NVIDIA changes must be driven by real integration evidence: an actual supported NVIDIA backend/runtime, real target-PC hardware, a concrete compatibility defect, or a provider deprecation/change. Do not create another abstraction layer merely because target access is unavailable.
+
+Target execution remains owned by Codex under the zero-touch delivery contract.
