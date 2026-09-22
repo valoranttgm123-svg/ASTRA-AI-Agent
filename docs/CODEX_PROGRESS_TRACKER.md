@@ -223,7 +223,7 @@ Repository contract:
 - [x] dry-run install/update/remove planning;
 - [x] local mutation plans require Permission Level 2;
 - [x] bounded/symlink-safe private catalog + state persistence;
-- [ ] NVA-1 repository PR CI green and merged.
+- [x] NVA-1 PR #160 CI green and merge commit `af7e05e1252b1b80e94b32cfbfedff6f2c7e006b` on `main`.
 
 Target-PC completion:
 - [ ] real NVIDIA catalog provider/mechanism selected from supported NVIDIA tooling;
@@ -257,7 +257,7 @@ Repository contracts implemented on `feature/nvidia-max-subsystem-contracts`:
 - [x] NVA-8 Guardrail no-authorization contract;
 - [x] NVA-9 evaluation exact-build evidence/no-self-READY contract;
 - [x] regression tests for the above;
-- [ ] subsystem-contract PR CI green and merged.
+- [x] NVA-2…NVA-9 PR #161 CI green and merge commit `84e5eb6aeb20dbdb737dc6d9ace149adfac73dbb` on `main`.
 
 Real integration remains:
 - [ ] actual AI-Q backend connected/validated;
