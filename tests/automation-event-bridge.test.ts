@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { mkdtemp } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, test } from "node:test";
 
 import {
   attachAutomationLifecycleEventBridge,
@@ -9,6 +12,18 @@ import {
 import { AstraAutomationService } from "../lib/automation/service";
 import type { AstraAutomationTickResult } from "../lib/automation/runner";
 import type { AstraIncomingEvent } from "../lib/events/contracts";
+import { upsertEventSubscription } from "../lib/events/management";
+import { loadEventStore } from "../lib/events/store";
+
+const originalEventFile = process.env.ASTRA_EVENT_FILE;
+
+afterEach(() => {
+  if (originalEventFile === undefined) {
+    delete process.env.ASTRA_EVENT_FILE;
+  } else {
+    process.env.ASTRA_EVENT_FILE = originalEventFile;
+  }
+});
 
 function tickResult(): AstraAutomationTickResult {
   return {
@@ -159,4 +174,58 @@ test("Event Engine publication failure is isolated from automation and redacted"
   assert.equal(status.publishFailures, 1);
   assert.doesNotMatch(status.lastError ?? "", /bridge-secret/);
   assert.match(status.lastError ?? "", /redacted/i);
+});
+
+
+test("automation lifecycle bridge persists through canonical Event Engine subscription", async () => {
+  const root = await mkdtemp(
+    path.join(os.tmpdir(), "astra-automation-events-"),
+  );
+  process.env.ASTRA_EVENT_FILE = path.join(root, "events.json");
+
+  await upsertEventSubscription(
+    {
+      id: "automation-lifecycle",
+      source: "automation",
+      topic: "*",
+      status: "enabled",
+      severityFloor: "info",
+      deliveryPolicy: "notify",
+      debounceMs: 0,
+      dedupeWindowMs: 60_000,
+      rateLimitPerHour: 120,
+    },
+    new Date("2020-01-01T00:00:00.000Z"),
+  );
+
+  const service = new AstraAutomationService({
+    enabled: true,
+    pollIntervalMs: 60_000,
+    async tick({ onEvent }) {
+      onEvent({
+        type: "automation.failed",
+        automationId: "fixture",
+        at: "2020-01-01T00:00:01.000Z",
+        scheduledFor: "2020-01-01T00:00:00.000Z",
+        detail: "fixture failure",
+      });
+      return tickResult();
+    },
+  });
+
+  attachAutomationLifecycleEventBridge(service);
+  await service.tickNow();
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+  const loaded = await loadEventStore();
+  assert.equal(loaded.available, true);
+  assert.equal(loaded.store.events.length, 1);
+  assert.equal(loaded.store.events[0].source, "automation");
+  assert.equal(loaded.store.events[0].topic, "automation.failed");
+  assert.equal(loaded.store.events[0].severity, "error");
+  assert.equal(loaded.store.events[0].disposition, "delivered");
+  assert.equal(
+    loaded.store.events[0].metadata?.automationId,
+    "fixture",
+  );
 });
