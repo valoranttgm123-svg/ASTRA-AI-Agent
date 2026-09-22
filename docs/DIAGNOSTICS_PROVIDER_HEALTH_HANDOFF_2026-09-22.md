@@ -1,9 +1,9 @@
 # Diagnostics Provider Health Handoff — 2026-09-22
 
-Active PR: **#178**
-Branch: `feature/diagnostics-provider-health`
+Merged PR: **#178**
+Merge: `dfc7d93fb02e8e32375dd7c3d8ebc7370232c078`
 
-This slice exists to save Codex target-runtime tokens by completing safe repository wiring first.
+This slice is merged and exists to save Codex target-runtime tokens by completing safe repository wiring first.
 
 Implemented:
 - existing Ollama/Codex/NVIDIA/Hermes/Cloud status probes are registered in Diagnostics;
@@ -23,3 +23,12 @@ Codex later refines/completes:
 - offline/degradation scenario J8 evidence.
 
 Do not mark provider or Sonor readiness from repository CI alone.
+
+
+Validation:
+- PR CI #500: SUCCESS;
+- main CI #501: SUCCESS.
+
+Repository status:
+- no additional provider-health repository wiring should be recreated;
+- Sonor real availability remains an evidence task, not a repository READY claim.
