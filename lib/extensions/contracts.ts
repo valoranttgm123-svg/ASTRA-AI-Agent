@@ -17,6 +17,18 @@ export type AstraExtensionTrustState =
   | "local_reviewed"
   | "unreviewed";
 
+export type AstraExtensionUpdateState =
+  | "current"
+  | "update_available"
+  | "unknown";
+
+export type AstraExtensionHealthState =
+  | "healthy"
+  | "degraded"
+  | "unavailable"
+  | "not_configured"
+  | "unknown";
+
 export type AstraExtensionVerificationMethod =
   | "none"
   | "health_check"
@@ -38,6 +50,7 @@ export type AstraExtensionSkillManifest = {
   checksum?: string;
   trust: AstraExtensionTrustState;
   installState: AstraExtensionInstallState;
+  updateState: AstraExtensionUpdateState;
   capabilities: string[];
   toolMappings: string[];
   permissionLevel: Exclude<AstraPermissionLevel, 4>;
@@ -60,6 +73,20 @@ export type AstraExtensionMutationAction =
   | "disable"
   | "remove"
   | "rollback";
+
+export type AstraExtensionVerificationEvidence = {
+  method: Exclude<AstraExtensionVerificationMethod, "none">;
+  verified: true;
+  at: string;
+  detail: string;
+};
+
+export type AstraExtensionHealthObservation = {
+  skillId: string;
+  state: AstraExtensionHealthState;
+  checkedAt: string;
+  detail: string;
+};
 
 export type AstraExtensionMutationPlan = {
   skillId: string;
