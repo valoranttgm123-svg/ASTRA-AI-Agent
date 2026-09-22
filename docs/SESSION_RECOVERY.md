@@ -287,3 +287,18 @@ Final repository truth for the authorized independent JARVIS foundation sequence
 Do not restart or duplicate these repository foundations.
 
 On a new session, after checking current `main` and open PRs, continue real-environment execution from `docs/CURRENT_EXECUTION_POINTER.md`. Phase 30 remains evidence-gated and must not be declared complete from mocks.
+
+
+## Cross-session branch rule — 2026-09-22
+
+The repository contains many historical branches from interrupted ASTRA sessions. A branch being ahead/diverged from `main` does **not** make it current work.
+
+Known superseded divergent branches include old Phase 28, old Phase 29 extensions, old Windows evidence hardening, and old V15 telemetry variants. Their useful safety/functionality was compared against later implementations on `main`.
+
+One genuine repository-side omission was identified: the old main-UI performance evidence prototype was never merged even though Phase 16 still requires Command Center and Automation-panel measurements. Recovery work is tracked on `fix/cross-session-ui-performance-reconciliation`.
+
+New sessions must:
+1. inspect `main`, open PRs and CI;
+2. read `docs/CURRENT_EXECUTION_POINTER.md`;
+3. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
+4. never resume a stale branch solely because it contains unique commits.
