@@ -200,3 +200,23 @@ The next useful work is real execution/evidence:
 Then continue real provider/device integrations and Phase 30.
 
 Only deviate when a concrete new defect or explicit owner requirement makes another task genuinely actionable.
+
+
+## Active repo-side refinement — PR #174
+
+Concrete non-provider work found after the foundation audit:
+
+- Phase 25 UI/runtime durable-task presence;
+- Phase 28 user-facing diagnostics + action-history panel.
+
+Active PR:
+- #174 — `feature/operations-task-diagnostics-ui`.
+
+Scope is deliberately bounded:
+- reuse existing `/api/tasks` and `/api/diagnostics`;
+- expose task lifecycle state/controls, not production executors;
+- diagnostics remains read-only;
+- connectivity remains UNKNOWN until a real probe exists;
+- no recovery execution, provider health fabrication, or target-PC evidence claims.
+
+If PR #174 is open in a new session, inspect its newest CI and resume/fix it before starting another repo-side refinement.
