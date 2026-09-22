@@ -12,7 +12,10 @@ import {
 import { AstraAutomationService } from "../lib/automation/service";
 import type { AstraAutomationTickResult } from "../lib/automation/runner";
 import type { AstraIncomingEvent } from "../lib/events/contracts";
-import { upsertEventSubscription } from "../lib/events/management";
+import {
+  publishIncomingEvent,
+  upsertEventSubscription,
+} from "../lib/events/management";
 import { loadEventStore } from "../lib/events/store";
 
 const originalEventFile = process.env.ASTRA_EVENT_FILE;
@@ -213,9 +216,21 @@ test("automation lifecycle bridge persists through canonical Event Engine subscr
     },
   });
 
-  attachAutomationLifecycleEventBridge(service);
+  let published!: () => void;
+  const didPublish = new Promise<void>((resolve) => {
+    published = resolve;
+  });
+
+  attachAutomationLifecycleEventBridge(
+    service,
+    async (event) => {
+      const result = await publishIncomingEvent(event);
+      published();
+      return result;
+    },
+  );
   await service.tickNow();
-  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  await didPublish;
 
   const loaded = await loadEventStore();
   assert.equal(loaded.available, true);
