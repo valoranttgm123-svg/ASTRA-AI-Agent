@@ -46,6 +46,7 @@ export type AstraAutomationServiceTick = (options: {
 }) => Promise<AstraAutomationTickResult>;
 
 type Listener = (event: AstraBrainEvent) => void;
+type LifecycleListener = (event: AstraAutomationLifecycleEvent) => void;
 
 function envFlag(name: string, fallback: boolean) {
   const value = process.env[name]?.trim().toLowerCase();
@@ -110,6 +111,7 @@ export class AstraAutomationService {
   private activeController: AbortController | null = null;
   private activePromise: Promise<AstraAutomationTickResult | null> | null = null;
   private listeners = new Set<Listener>();
+  private lifecycleListeners = new Set<LifecycleListener>();
   private recentEvents: AstraBrainEvent[] = [];
   private running = false;
   private startedAt: string | undefined;
@@ -156,6 +158,13 @@ export class AstraAutomationService {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
+    };
+  }
+
+  subscribeLifecycle(listener: LifecycleListener) {
+    this.lifecycleListeners.add(listener);
+    return () => {
+      this.lifecycleListeners.delete(listener);
     };
   }
 
@@ -245,6 +254,14 @@ export class AstraAutomationService {
   }
 
   private emitLifecycle(event: AstraAutomationLifecycleEvent) {
+    for (const listener of this.lifecycleListeners) {
+      try {
+        listener(event);
+      } catch {
+        // Lifecycle observers must never break automation execution.
+      }
+    }
+
     const brainEvent = automationEventToBrainEvent(event);
     this.recentEvents = [
       ...this.recentEvents,
