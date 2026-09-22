@@ -225,3 +225,18 @@ If a PR exists for this branch, inspect its CI and continue/fix it instead of st
 
 After Phase 22 merges, continue:
 `Phase 27 Multi-device → Phase 29 Generic Skill/Device Registry`.
+
+## JARVIS recovery checkpoint — Phase 27 active
+
+Repository truth:
+- Phase 24 PR #164 merged;
+- Phase 25 PR #165 merged;
+- Phase 28 PR #166 merged;
+- Phase 22 PR #167 merged at `a2b289d9118c8883608379320784b7bc047f980c`;
+- Phase 22 main CI #449 SUCCESS.
+
+Active branch: `feature/phase27-multi-device-foundation`.
+
+If a PR exists for this branch, inspect its newest head SHA/CI and continue/fix it rather than building another device/pairing layer.
+
+After Phase 27 merges, continue the authorized repo-only sequence with **Phase 29 Generic Skill / Environment Device Registry**.
