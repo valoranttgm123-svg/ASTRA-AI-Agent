@@ -52,7 +52,7 @@ test("operations panel does not claim production executors or real restart evide
 
   assert.match(
     panel,
-    /Production executors and real restart evidence remain separate\\s+integration gates/,
+    /Production executors and real restart evidence remain separate\s+integration gates/,
   );
   assert.doesNotMatch(panel, /PRODUCTION EXECUTOR READY/);
   assert.doesNotMatch(panel, /RESTART VERIFIED/);
