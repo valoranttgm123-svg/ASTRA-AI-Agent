@@ -715,3 +715,28 @@ Security decisions:
 - secret values are not returned by status/presence and are not persisted by the broker.
 
 Next after green merge: Phase 27 Multi-device foundation.
+
+## 2026-09-22 — Phase 27 Multi-device repository foundation
+
+After Phase 22 merged green, started `feature/phase27-multi-device-foundation`.
+
+Implemented:
+- `lib/devices/contracts.ts`;
+- `lib/devices/pairing.ts`;
+- `lib/devices/presence.ts`;
+- `lib/devices/store.ts`;
+- `lib/devices/routing.ts`;
+- `tests/multi-device-foundation.test.ts`;
+- lint coverage and private `.astra/devices.json` configuration.
+
+Security decisions:
+- pairing tokens are random, hashed, expiring and single-use;
+- pairing never substitutes for Phase-22 trust;
+- paired nodes require an already trusted device identity;
+- revoked nodes cannot be reactivated;
+- stale advertisements expire rather than remaining falsely online;
+- Level-2/3 remote routes preserve approval;
+- no Level-4 device ceiling;
+- no public unauthenticated ASTRA transport is introduced.
+
+Next after green merge: Phase 29 Generic Skill / Environment Device Registry.
