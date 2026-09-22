@@ -272,3 +272,23 @@ Read `docs/READY_TO_USE_DELIVERY.md` before target-PC work. Codex owns all techn
 Only request human input for unavoidable secrets/login/MFA/consent, UAC/security prompts, physical observations, or genuinely high-impact approvals. Resume automatically after that input.
 
 Repository CI is not sufficient for "ready". Final readiness requires truthful target-PC evidence and no known reproducible release-blocking defect left unfixed.
+
+## NVIDIA MAX canonical direction
+
+The owner approved one final NVIDIA architecture. Do not create a competing NVIDIA roadmap.
+
+Read `docs/NVIDIA_MAX_INTEGRATION.md` before NVIDIA-related work.
+
+Repository rules:
+- preserve the existing JARVIS Model Mesh;
+- use the NVIDIA Skill Hub as bounded discover/rank/select infrastructure, not as direct execution;
+- do not eagerly load the full NVIDIA skill catalog into prompts;
+- Sonor/Graphify/Obsidian remains canonical memory; NeMo Retriever/RAG is subordinate retrieval;
+- AI-Q is a research backend, not a second Brain;
+- DeepStream/VSS is read-only perception unless a separately approved tool acts on results;
+- NemoClaw/Hermes learned workflows must be reviewable/revocable and cannot self-elevate permissions;
+- NeMo Guardrails is defense in depth; ASTRA Tool Runtime/approval remains final authority;
+- NVIDIA evaluation may produce evidence but may not self-declare release READY;
+- do not claim voice/vision/provider readiness without real target-PC evidence.
+
+After NVA-0 merges, the next independent repository slice is NVA-1 from `docs/NVIDIA_MAX_INTEGRATION.md`.

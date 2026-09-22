@@ -857,3 +857,45 @@ First inspect the target PC for an already-authorized ASTRA credential source or
 If the provider account/session permits Codex to create or retrieve the needed credential through an already-authenticated flow, do so and store it only in the local secret location.
 
 Never bypass login/MFA/CAPTCHA/account consent or fabricate credentials. If authentication truly requires the account owner and no authorized session exists, keep working on all independent tasks and record that one provider as an external blocker rather than turning the blocker into a setup checklist for the owner.
+
+## Additional mission — NVIDIA MAX integration
+
+Canonical plan: `docs/NVIDIA_MAX_INTEGRATION.md`.
+
+The owner approved the full NVIDIA architecture: JARVIS Model Mesh, NVIDIA Skill Hub, AI-Q Research, NeMo Retriever/RAG under Sonor, Document Intelligence, Nemotron Voice Agent, DeepStream/VSS, NemoClaw for Hermes, NeMo Guardrails/Content Safety, and NeMo evaluation.
+
+### Resume order
+
+When real target-PC access exists, first finish the existing release gates:
+
+`Phase 14 validation → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`.
+
+Do not postpone those gates by adding speculative NVIDIA features.
+
+When repository work can proceed independently of PC access, continue the NVIDIA track:
+
+`NVA-0 → NVA-1 → NVA-2 ... NVA-9`
+
+NVA-0 is the repository framework slice in branch `feature/nvidia-max-framework`.
+
+After it merges, the exact next repo-side task is **NVA-1 Skill Hub discovery/install-state**.
+
+### NVA-1 Codex instructions
+
+Implement a safe, provider-neutral catalog/install-state layer. Requirements:
+
+- do not inject the whole NVIDIA catalog into every prompt;
+- no runtime HTML scraping on normal ASTRA requests;
+- keep a bounded cached/private catalog snapshot or use a supported NVIDIA mechanism;
+- installed-skill state lives under private `.astra/`;
+- truth states: `available / installed / disabled / incompatible`;
+- record provenance/version/checksum when the provider exposes them;
+- selection remains bounded;
+- install/update/remove mutations require the existing ASTRA permission model;
+- provide dry-run planning before mutations;
+- a skill never becomes execution authority;
+- validate the actual Codex skill installation mechanism/version on the target PC before claiming READY.
+
+Then continue NVA-2 onward only after NVA-1 exit gate is green.
+
+For all NVIDIA work, preserve zero-touch owner delivery: Codex performs technical setup/repair/validation itself and asks for owner involvement only when a genuine external authorization boundary cannot be satisfied from an already-authorized local session.

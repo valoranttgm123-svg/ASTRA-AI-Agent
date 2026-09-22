@@ -503,3 +503,23 @@ Exact next task: continue on the real target PC with Phase 14, MEM-X, Phase 16, 
 - Security/privacy preserved: provider OFF by default, AUTO fallback OFF by default, memory forwarding OFF by default, exact hosted NVIDIA endpoint enforcement, NVIDIA EXECUTE blocked.
 - Current multimodal truth boundary remains unchanged: image/camera/screen metadata is not pixel content. Vision is configured for the future real visual transport but is not falsely claimed as current perception.
 - Real hosted readiness still requires the user's private target-PC `NVIDIA_API_KEY` and live validation.
+
+## 2026-09-22 — NVIDIA MAX framework started
+
+Owner approved the consolidated NVIDIA architecture as the final NVIDIA direction for ASTRA.
+
+Started branch `feature/nvidia-max-framework` from `main` `f907c3e7e084d52922016a0163965880d77c79e2`.
+
+Repository work completed in the branch so far:
+- canonical `docs/NVIDIA_MAX_INTEGRATION.md`;
+- `lib/nvidia/catalog.ts` with 10 NVIDIA integration subsystems and phase/exit-gate mapping;
+- `lib/nvidia/skill-hub.ts` with bounded on-demand official core skill manifests;
+- tests for uniqueness, authority boundaries, phase mapping, bounded routing, research/RAG/voice/vision recommendations;
+- `lib/nvidia` included in lint;
+- ASTRA MAX roadmap, Codex tracker, session recovery, Codex mission, and handoff updated.
+
+Important: this foundation does not claim AI-Q, Retriever, Voice, DeepStream/VSS, NemoClaw, Guardrails, or Evaluation are connected. Those remain staged work with truthful exit gates.
+
+Next repo task after merge: **NVA-1 Skill Hub discovery/install-state**.
+
+Next target-PC release sequence remains: **Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20**.

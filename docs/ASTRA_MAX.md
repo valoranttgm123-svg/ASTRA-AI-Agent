@@ -1956,3 +1956,25 @@ Current post-Phase-14 status is:
 `IMPLEMENTATION COMPLETE / CI VERIFIED / TARGET-PC VALIDATION REQUIRED`
 
 Codex must not claim production-complete Automation until the target-PC validation in `docs/AUTOMATION_VALIDATION.md` has actually passed.
+
+---
+
+# NVIDIA MAX integration track — approved 2026-09-22
+
+The final NVIDIA architecture is canonical in `docs/NVIDIA_MAX_INTEGRATION.md`.
+
+It extends—not replaces—the Phase 21–30 JARVIS roadmap with these mapped capabilities:
+
+- Phase 21: Nemotron Voice Agent / speech transport;
+- Phase 22: identity/trust + NeMo Guardrails/content-safety hardening;
+- Phase 23: real visual payload + DeepStream/VSS perception;
+- Phase 24: AI-Q proactive/deep research;
+- Phase 25: AI-Q parallel workers + governed Hermes/NemoClaw workflows;
+- Phase 26: Sonor + NeMo Retriever/RAG + document intelligence;
+- Phase 28: Guardrails + quality/security evaluation;
+- Phase 29: NVIDIA Skill Hub and governed on-demand skills;
+- Phase 30: full NVIDIA integration/evaluation evidence.
+
+Repository foundation NVA-0 adds a canonical NVIDIA subsystem registry, bounded on-demand Skill Hub manifest, and regression tests. It does **not** claim AI-Q/Retriever/Voice/Vision/Guardrails are connected yet.
+
+Do not create another NVIDIA roadmap. Continue from `docs/NVIDIA_MAX_INTEGRATION.md` and preserve the existing Phase 14/MEM-X/16/17/19/20 target-PC release gates.

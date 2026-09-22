@@ -1967,3 +1967,36 @@ Do not collapse NVIDIA back to a single-model provider. Preserve:
 Real API validation is target-PC work because the user's key belongs only in `.env.local`.
 
 Continue the existing target-PC Phase 14 / MEM-X / 16 / 17 / 19 / 20 gate order; this model mesh does not waive any release gate.
+
+## 2026-09-22 — NVIDIA MAX framework handoff
+
+The owner approved a single final NVIDIA architecture and asked that future sessions continue it rather than produce new recommendation lists.
+
+Canonical architecture/implementation plan:
+
+`docs/NVIDIA_MAX_INTEGRATION.md`
+
+Repository foundation branch:
+
+`feature/nvidia-max-framework`
+
+Foundation contents:
+- `lib/nvidia/catalog.ts` — 10-subsystem integration registry mapped to ASTRA phases and exit gates;
+- `lib/nvidia/skill-hub.ts` — curated official NVIDIA core skill manifest plus bounded recommendation router;
+- `tests/nvidia-max-framework.test.ts` — registry/authority/router invariants;
+- `package.json` lint includes `lib/nvidia`;
+- roadmap/tracker/recovery/Codex mission updated.
+
+Safety decisions:
+- Skill Hub is advisory/discovery only, not an executor;
+- max recommended subset defaults to 3;
+- hundreds of skills are discoverable/on-demand, not eagerly placed in context;
+- NVIDIA cannot bypass ASTRA Tool Runtime/approval;
+- Sonor remains canonical memory;
+- NeMo Guardrails remains defense in depth, not execution authority;
+- Vision cannot claim perception without real pixels;
+- Voice cannot claim local/private audio unless that is actually true.
+
+After NVA-0 merges, continue **NVA-1 Skill Hub discovery/install-state** as the next independent repository task.
+
+When target-PC access exists, core release gates Phase 14/MEM-X/16/17/19/20 still take precedence.
