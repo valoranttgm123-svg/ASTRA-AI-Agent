@@ -103,3 +103,41 @@ A future branch is actionable only when one of these is true:
 - the owner explicitly requests revival.
 
 This document is the reconciliation map for interrupted-session history.
+
+
+## Full branch inventory audit
+
+The 2026-09-22 audit enumerated all **206** repository branches and compared each branch to current `main`.
+
+Branches with unique non-ancestor commits fell into these classes:
+
+### Superseded early ASTRA / Humanoid iterations
+
+Examples include:
+- `astra/core-v1`;
+- `astra/astra-max-production`;
+- early Humanoid lab/canvas/shader/visibility/reference branches;
+- `astra/humanoid-v9-image-stage1`;
+- `astra/v13-gesture-control`;
+- `astra/v15-brain-streaming-telemetry`.
+
+Their useful architecture or visual/runtime capabilities are represented by later current-main implementations: current Brain/runtime, current Sonor adapter boundary, current approved Humanoid asset/V15 runtime, current gesture input path, and current SSE telemetry. They are forensic history, not active work queues.
+
+### Superseded milestone implementation branches
+
+Examples include:
+- `astra/phase14-safe-automation` — replaced by the merged Phase 14 implementation sequence through PR #92 and later hardening;
+- `astra/phase18a-repository-rc-gate` — replaced by the current Phase 18/20 release-evidence tooling;
+- `astra/strategist-planner-generation` — later planner/orchestrator implementation on `main` is authoritative;
+- `docs/sync-phase20-codex-handoff` — stale documentation-only handoff;
+- old Phase 28 / Phase 29 / Windows-private-evidence branches already described above.
+
+### Genuine omission
+
+Only one concrete repository-side capability was found missing from current `main` while still required by current validation docs:
+
+- Phase 16 main-UI performance evidence for Command Center active and Automation panel open.
+
+That omission is recovered by PR #171. The abandoned old branch itself must not be merged.
+
+This branch inventory means future interrupted sessions do **not** need to re-audit every historical branch unless a new concrete mismatch is demonstrated.
