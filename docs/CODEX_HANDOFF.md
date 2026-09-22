@@ -2135,3 +2135,14 @@ Validation:
 
 Important next-session rule:
 If PR #169 remains open, inspect/fix its newest head rather than recreating Phase 29. After merge, repository-only Phase 21–30 foundation work is saturated; real target-PC/provider evidence is next.
+
+
+## 2026-09-22 — Phase 29 merged checkpoint
+
+PR #169 merged to `main` at `390a5c35e50a5020ccf34f317edcc25f4837dcb1`.
+Final PR CI #457: SUCCESS.
+Main push CI #458: SUCCESS.
+
+Repository-only JARVIS foundation work authorized in the Phase 24/25/28/22/27/29 sequence is complete.
+
+Codex must not rebuild these abstractions. The next useful work requires real target-PC/provider/device evidence or a concrete defect. Read `docs/CURRENT_EXECUTION_POINTER.md` before acting.
