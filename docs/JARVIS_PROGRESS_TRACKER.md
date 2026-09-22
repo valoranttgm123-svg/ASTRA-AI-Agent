@@ -16,7 +16,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [ ] GitHub adapter real target-runtime sync and notification evidence.
 - [x] Second real event source adapter — local Diagnostics/service-health transitions, PR #180 merged `3047ea30c060211c2c3c8aabc7b4920e0f7166d1`; PR CI #506 SUCCESS, main CI #507 SUCCESS. Repository adapter code is complete; this is not target-runtime delivery evidence.
 - [ ] Service-health source real target-runtime sync and notification evidence.
-- [ ] Third real event source and real evidence.
+- [ ] Third real event source adapter — Automation lifecycle → Event Engine, PR #182 active on `feature/automation-lifecycle-event-bridge`; real target-runtime notification evidence remains pending.
 - [ ] Proactive notification delivery, failure/STOP and restart evidence on target PC.
 
 ## Phase 25 — Durable Background Task Manager
