@@ -43,9 +43,9 @@ Repository-complete / merged on current `main`:
 - target-PC/runtime/preflight capture verifies the same clean running build at start and completion — PR #144;
 - browser/Humanoid HIGH capture verifies start/end runtime identity, server checkout/runtime agreement, and release-bundle provenance — PR #145.
 
-Latest merged continuity checkpoint before the active cross-session reconciliation:
+Latest merged continuity/reconciliation checkpoint:
 
-`10bc9f57aeeed4431207a11f8b3626e07560c505` (PR #170).
+`cc8432edcf9e854bba9d0d78c14c7731fd279dbd` (PR #171, CI #466 SUCCESS).
 
 Also merged and repository-complete:
 - Phase 24 Event Engine — PR #164;
@@ -79,7 +79,7 @@ Current execution rule:
 
 If this document conflicts with current `main`, `docs/ASTRA_WORKLOG.md` or `docs/CODEX_PROGRESS_TRACKER.md`, prefer the newest merged repository truth.
 
-Repository reconciliation note (2026-09-22): later work continued well beyond PR #145. Use `docs/CURRENT_EXECUTION_POINTER.md` and `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` as the current truth. One real missed repository slice—Phase 16 main-UI evidence instrumentation—was recovered in PR #171. After that, do not create speculative hardening merely to avoid real target-PC/provider gates.
+Repository reconciliation note (2026-09-22): later work continued well beyond PR #145. Use `docs/CURRENT_EXECUTION_POINTER.md` and `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` as the current truth. The missed Phase 16 main-UI evidence slice was recovered and merged in PR #171 (CI #466 green). The full 206-branch audit is complete. Do not repeat branch-history reconstruction or create speculative hardening merely to avoid real target-PC/provider gates.
 
 ---
 
