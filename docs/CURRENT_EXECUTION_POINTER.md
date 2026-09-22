@@ -164,3 +164,15 @@ Current active slice:
 - next after green merge: Phase 27 Multi-device foundation.
 
 If this branch/PR is unmerged in a new session, resume/fix it first. Do not recreate Phase 22 from chat memory.
+
+## JARVIS repo continuation update — Phase 27
+
+Phase 22 Identity / Trust / Secret merged in PR #167 at `a2b289d9118c8883608379320784b7bc047f980c`; main CI #449 succeeded.
+
+Current active slice:
+- branch: `feature/phase27-multi-device-foundation`;
+- goal: secure Multi-device foundation;
+- tracker: `docs/JARVIS_PROGRESS_TRACKER.md`;
+- next after green merge: Phase 29 Generic Skill / Environment Device Registry.
+
+If this branch/PR is unmerged in a new session, resume/fix it first. Do not recreate Phase 27 from chat history.
