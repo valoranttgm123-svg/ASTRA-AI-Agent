@@ -185,3 +185,14 @@ Recovery rule:
 - if Phase 24 PR exists, resume/fix/merge it instead of recreating files;
 - after merge, continue the next unchecked slice in the sequence;
 - do not claim target-PC READY from repository-only work.
+
+## JARVIS foundation durable tracker
+
+Use `docs/JARVIS_PROGRESS_TRACKER.md` for the repository-only JARVIS sequence authorized by the owner.
+
+Latest sequence:
+- Phase 24 Event Engine: merged PR #164;
+- Phase 25 Durable Task Manager: active on `feature/phase25-durable-task-manager`;
+- then Phase 28 → Phase 22 → Phase 27 → Phase 29.
+
+New sessions must inspect open PRs before starting the next slice.
