@@ -99,3 +99,14 @@ test("GitHub Actions source UI is read-only toward GitHub and only triggers loca
   assert.doesNotMatch(panel, /workflow_dispatch/);
   assert.doesNotMatch(panel, /actions\/runs\/[^"']+\/rerun/);
 });
+
+
+test("service-health source UI only triggers local guarded sync", () => {
+  const panel = source("components/AstraOperationsPanel.tsx");
+
+  assert.match(panel, /fetch\("\/api\/events\/health"/);
+  assert.match(panel, /LOCAL SERVICE HEALTH SOURCE/);
+  assert.match(panel, /SYNC HEALTH/);
+  assert.match(panel, /body: JSON\.stringify\(\{ action: "sync" \}\)/);
+  assert.doesNotMatch(panel, /action:\s*"publish"/);
+});
