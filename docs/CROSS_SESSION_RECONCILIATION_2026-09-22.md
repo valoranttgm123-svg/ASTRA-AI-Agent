@@ -89,6 +89,7 @@ The recovery implementation was rebuilt on current `main` and merged as PR #171.
 
 - PR CI #466: **SUCCESS**;
 - merge commit: `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- post-merge main CI #467: **SUCCESS**;
 - implementation is now canonical `main`;
 - the abandoned `astra/main-ui-performance-evidence` branch remains historical only.
 
@@ -141,6 +142,6 @@ Only one concrete repository-side capability was found missing from current `mai
 
 - Phase 16 main-UI performance evidence for Command Center active and Automation panel open.
 
-That omission is recovered and merged by PR #171 at `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`, with PR CI #466 green. The abandoned old branch itself must not be merged.
+That omission is recovered and merged by PR #171 at `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`, with PR CI #466 green and post-merge main CI #467 green. The abandoned old branch itself must not be merged.
 
 This branch inventory means future interrupted sessions do **not** need to re-audit every historical branch unless a new concrete mismatch is demonstrated.
