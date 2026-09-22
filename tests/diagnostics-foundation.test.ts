@@ -13,12 +13,17 @@ import {
 import type { AstraHealthSample } from "../lib/diagnostics/contracts";
 import { AstraHealthRegistry } from "../lib/diagnostics/health";
 import { planSafeRecovery } from "../lib/diagnostics/recovery";
-import { createLocalDiagnosticsRegistry } from "../lib/diagnostics/runtime";
+import {
+  createLocalDiagnosticsRegistry,
+  type AstraDiagnosticsProviderProbes,
+} from "../lib/diagnostics/runtime";
 
 const originalAuditFile = process.env.ASTRA_AUDIT_FILE;
 const originalEventFile = process.env.ASTRA_EVENT_FILE;
 const originalTaskFile = process.env.ASTRA_TASK_FILE;
 const originalAutomationFile = process.env.ASTRA_AUTOMATION_FILE;
+const originalSonorEnabled = process.env.ASTRA_SONOR_ENABLED;
+const originalSonorSearchPath = process.env.ASTRA_SONOR_SEARCH_PATH;
 
 afterEach(() => {
   const restore = (name: string, value: string | undefined) => {
@@ -29,7 +34,37 @@ afterEach(() => {
   restore("ASTRA_EVENT_FILE", originalEventFile);
   restore("ASTRA_TASK_FILE", originalTaskFile);
   restore("ASTRA_AUTOMATION_FILE", originalAutomationFile);
+  restore("ASTRA_SONOR_ENABLED", originalSonorEnabled);
+  restore("ASTRA_SONOR_SEARCH_PATH", originalSonorSearchPath);
 });
+
+const providerProbes: AstraDiagnosticsProviderProbes = {
+  ollama: async () => ({
+    enabled: true,
+    available: true,
+    detail: "Ollama responded.",
+  }),
+  codex: async () => ({
+    enabled: false,
+    available: false,
+    detail: "Codex is disabled.",
+  }),
+  nvidia: async () => ({
+    enabled: true,
+    available: false,
+    detail: "NVIDIA NIM is unavailable.",
+  }),
+  hermes: async () => ({
+    enabled: true,
+    available: true,
+    detail: "Hermes responded.",
+  }),
+  cloud: async () => ({
+    enabled: false,
+    available: false,
+    detail: "Cloud is disabled.",
+  }),
+};
 
 test("health registry reports online only from explicit online connectivity and healthy checks", async () => {
   const registry = new AstraHealthRegistry().register({
@@ -216,7 +251,11 @@ test("local diagnostics registry reads real private stores without claiming inte
   process.env.ASTRA_TASK_FILE = path.join(root, "tasks.json");
   process.env.ASTRA_AUTOMATION_FILE = path.join(root, "automations.json");
 
-  const snapshot = await createLocalDiagnosticsRegistry().capture({
+  process.env.ASTRA_SONOR_ENABLED = "false";
+
+  const snapshot = await createLocalDiagnosticsRegistry({
+    providerProbes,
+  }).capture({
     connectivity: "unknown",
     now: new Date("2026-09-22T08:30:00.000Z"),
   });
@@ -227,4 +266,102 @@ test("local diagnostics registry reads real private stores without claiming inte
   assert.ok(
     snapshot.samples.some((sample) => sample.id === "storage.automation"),
   );
+  assert.equal(
+    snapshot.samples.find((sample) => sample.id === "provider.ollama")?.status,
+    "healthy",
+  );
+  assert.equal(
+    snapshot.samples.find((sample) => sample.id === "provider.codex")?.status,
+    "not_configured",
+  );
+  assert.equal(
+    snapshot.samples.find((sample) => sample.id === "provider.nvidia")?.status,
+    "unavailable",
+  );
+  assert.equal(
+    snapshot.samples.find((sample) => sample.id === "memory.sonor")?.status,
+    "not_configured",
+  );
+});
+
+
+test("health registry starts independent checks concurrently and preserves registration order", async () => {
+  let started = 0;
+  let release!: () => void;
+  let bothStarted!: () => void;
+
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const both = new Promise<void>((resolve) => {
+    bothStarted = resolve;
+  });
+
+  const check = (detail: string) => async () => {
+    started += 1;
+    if (started === 2) bothStarted();
+    await gate;
+    return {
+      status: "healthy" as const,
+      detail,
+    };
+  };
+
+  const registry = new AstraHealthRegistry()
+    .register({
+      id: "provider.first",
+      category: "provider",
+      critical: false,
+      check: check("first"),
+    })
+    .register({
+      id: "provider.second",
+      category: "provider",
+      critical: false,
+      check: check("second"),
+    });
+
+  const capture = registry.capture({
+    connectivity: "unknown",
+    now: new Date("2026-09-22T08:30:00.000Z"),
+  });
+
+  try {
+    await Promise.race([
+      both,
+      new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error("health checks did not start concurrently")),
+          500,
+        );
+      }),
+    ]);
+    assert.equal(started, 2);
+  } finally {
+    release();
+  }
+
+  const snapshot = await capture;
+  assert.deepEqual(
+    snapshot.samples.map((sample) => sample.id),
+    ["provider.first", "provider.second"],
+  );
+});
+
+test("configured Sonor remains UNKNOWN until real health evidence exists", async () => {
+  process.env.ASTRA_SONOR_ENABLED = "true";
+  process.env.ASTRA_SONOR_SEARCH_PATH = "/search";
+
+  const snapshot = await createLocalDiagnosticsRegistry({
+    providerProbes,
+  }).capture({
+    connectivity: "unknown",
+    now: new Date("2026-09-22T08:30:00.000Z"),
+  });
+
+  const sonor = snapshot.samples.find(
+    (sample) => sample.id === "memory.sonor",
+  );
+  assert.equal(sonor?.status, "unknown");
+  assert.match(sonor?.detail ?? "", /does not claim live Sonor health/i);
 });
