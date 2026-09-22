@@ -323,6 +323,11 @@ export async function setTrustedDeviceState({
         "Revoked devices cannot be silently re-trusted; pair a new device identity.",
       );
     }
+    if (current.state === "trusted" && nextState === "pending") {
+      throw new Error(
+        "Trusted devices cannot return to pending; revoke and pair a new identity instead.",
+      );
+    }
 
     const updated: AstraTrustedDevice = {
       ...current,
