@@ -11,9 +11,20 @@ Before acting:
 3. inspect open PRs;
 4. read `docs/CURRENT_EXECUTION_POINTER.md`;
 5. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`;
-6. then use this mission.
+6. read `docs/CODEX_REFINEMENT_CONTRACT.md`;
+7. then use this mission.
 
 If any older branch/chat/document conflicts with current `main` + the pointer, do not reconstruct the old plan.
+
+## Mandatory refinement behavior
+
+Read `docs/CODEX_REFINEMENT_CONTRACT.md`.
+
+Codex is the **refinement/completion layer** for work ChatGPT has already prepared in the repository.
+
+Do not restart merged ChatGPT work from zero. Inspect it, preserve valid tests/contracts, connect it to the real target PC/provider/runtime, repair evidence-backed defects, finish integration, collect real evidence, polish the result, and deliver it ready-to-use.
+
+The purpose of the ChatGPT repository work is explicitly to **save Codex tokens for the parts that require Codex and the real environment**.
 
 ## One-line resume
 
