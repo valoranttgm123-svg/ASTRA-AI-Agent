@@ -74,6 +74,12 @@ export type AstraExtensionMutationAction =
   | "remove"
   | "rollback";
 
+export type AstraExtensionReviewEvidence = {
+  reviewer: string;
+  at: string;
+  detail: string;
+};
+
 export type AstraExtensionVerificationEvidence = {
   method: Exclude<AstraExtensionVerificationMethod, "none">;
   verified: true;
