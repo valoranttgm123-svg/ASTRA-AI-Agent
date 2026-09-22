@@ -45,6 +45,15 @@ type GitHubEventSourceStatusResponse = {
   runCount: number;
 };
 
+type ServiceHealthSourceStatusResponse = {
+  ok: boolean;
+  available: boolean;
+  detail: string;
+  sampleCount: number;
+  unhealthy: number;
+  capturedAt: string | null;
+};
+
 type DiagnosticsResponse = {
   ok: boolean;
   diagnostics: AstraDiagnosticsSnapshot;
@@ -126,6 +135,8 @@ export default function AstraOperationsPanel() {
   const [events, setEvents] = useState<EventStatusResponse | null>(null);
   const [githubEvents, setGithubEvents] =
     useState<GitHubEventSourceStatusResponse | null>(null);
+  const [healthEvents, setHealthEvents] =
+    useState<ServiceHealthSourceStatusResponse | null>(null);
   const [diagnostics, setDiagnostics] =
     useState<DiagnosticsResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -173,6 +184,20 @@ export default function AstraOperationsPanel() {
     setGithubEvents(payload as GitHubEventSourceStatusResponse);
   }, []);
 
+  const refreshHealthEvents = useCallback(async () => {
+    const response = await fetch("/api/events/health", {
+      method: "GET",
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as unknown;
+    if (!response.ok) {
+      throw new Error(
+        message(payload, "Service-health event status failed."),
+      );
+    }
+    setHealthEvents(payload as ServiceHealthSourceStatusResponse);
+  }, []);
+
   const refreshDiagnostics = useCallback(async () => {
     const params = new URLSearchParams({ limit: "50" });
     if (category) params.set("category", category);
@@ -198,7 +223,11 @@ export default function AstraOperationsPanel() {
     try {
       if (tab === "tasks") await refreshTasks();
       else if (tab === "events") {
-        await Promise.all([refreshEvents(), refreshGitHubEvents()]);
+        await Promise.all([
+          refreshEvents(),
+          refreshGitHubEvents(),
+          refreshHealthEvents(),
+        ]);
       } else await refreshDiagnostics();
     } catch (err) {
       setError(
@@ -211,6 +240,7 @@ export default function AstraOperationsPanel() {
     refreshDiagnostics,
     refreshEvents,
     refreshGitHubEvents,
+    refreshHealthEvents,
     refreshTasks,
     tab,
   ]);
@@ -356,6 +386,53 @@ export default function AstraOperationsPanel() {
       setBusyKey(null);
     }
   }, [refreshEvents, refreshGitHubEvents]);
+
+  const syncHealthEvents = useCallback(async () => {
+    setBusyKey("health-sync");
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await fetch("/api/events/health", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-astra-client": "1",
+        },
+        body: JSON.stringify({ action: "sync" }),
+      });
+      const payload = (await response.json()) as unknown;
+      if (!response.ok) {
+        throw new Error(
+          message(payload, "Service-health event sync failed."),
+        );
+      }
+      const result = payload as {
+        samples?: number;
+        records?: number;
+        skippedBaseline?: number;
+        skippedUnchanged?: number;
+      };
+      setNotice(
+        "Health sync: " +
+          (result.samples ?? 0) +
+          " samples · " +
+          (result.records ?? 0) +
+          " new record(s) · " +
+          ((result.skippedBaseline ?? 0) +
+            (result.skippedUnchanged ?? 0)) +
+          " quiet/unchanged.",
+      );
+      await Promise.all([refreshEvents(), refreshHealthEvents()]);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Service-health event sync failed.",
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }, [refreshEvents, refreshHealthEvents]);
 
   const recentEvents = useMemo(
     () => [...(events?.events ?? [])].reverse().slice(0, 100),
@@ -626,6 +703,46 @@ export default function AstraOperationsPanel() {
                 {busyKey === "github-sync"
                   ? "SYNCING"
                   : "SYNC GITHUB"}
+              </button>
+            </div>
+          </div>
+
+          <div className="astra-operations__source">
+            <div className="astra-operations__item-head">
+              <div>
+                <strong>LOCAL SERVICE HEALTH SOURCE</strong>
+                <span>
+                  {healthEvents?.capturedAt
+                    ? "CAPTURE " + displayTime(healthEvents.capturedAt)
+                    : "DIAGNOSTICS STATUS NOT LOADED"}
+                </span>
+              </div>
+              <span
+                className={
+                  "astra-operations__health-status astra-operations__health-status--" +
+                  (healthEvents?.available ? "healthy" : "degraded")
+                }
+              >
+                {healthEvents?.available ? "AVAILABLE" : "UNAVAILABLE"}
+              </span>
+            </div>
+            <p>
+              {healthEvents?.detail ??
+                "Local service-health source status has not been loaded."}
+            </p>
+            <div className="astra-operations__meta">
+              <span>{healthEvents?.sampleCount ?? 0} SAMPLES</span>
+              <span>{healthEvents?.unhealthy ?? 0} ATTENTION</span>
+            </div>
+            <div className="astra-operations__actions">
+              <button
+                type="button"
+                disabled={busyKey !== null || healthEvents?.available !== true}
+                onClick={() => void syncHealthEvents()}
+              >
+                {busyKey === "health-sync"
+                  ? "SYNCING"
+                  : "SYNC HEALTH"}
               </button>
             </div>
           </div>
