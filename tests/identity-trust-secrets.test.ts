@@ -271,7 +271,7 @@ test("secret broker exposes presence only and resolves values only inside author
         unlockedAt: undefined,
         unlockEvidence: undefined,
       }),
-      use: async () => "should-not-run",
+      consume: async () => "should-not-run",
     }),
     /not allowed to use secrets/i,
   );
@@ -279,7 +279,7 @@ test("secret broker exposes presence only and resolves values only inside author
   const result = await broker.withSecret({
     reference,
     session: unlockedSession(),
-    use: async (secret) => secret === "never-log-this-secret",
+    consume: async (secret) => secret === "never-log-this-secret",
   });
   assert.equal(result, true);
 });
