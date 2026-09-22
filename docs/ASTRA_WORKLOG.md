@@ -760,3 +760,13 @@ Remaining before repository completion:
 - newest PR #169 head must pass CI after documentation changes;
 - merge PR #169;
 - update post-merge continuity truth on `main`.
+
+
+## 2026-09-22 — Phase 29 merged / repository-foundation saturation
+
+- PR #169 final head `adf8bfa36c1d19726fa2304779ecdb918b220cb3` passed CI #457;
+- PR #169 merged to `main` as `390a5c35e50a5020ccf34f317edcc25f4837dcb1`;
+- main push CI #458 passed all gates;
+- Phase 29 is repository-complete;
+- authorized independent JARVIS repository sequence Phase 24/25/28/22/27/29 is saturated;
+- next work is real target-PC/provider integration and evidence, not another mock/foundation layer.
