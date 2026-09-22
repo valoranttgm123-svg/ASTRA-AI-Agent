@@ -658,3 +658,34 @@ Repository foundation includes:
 Added `docs/JARVIS_PROGRESS_TRACKER.md` so interrupted sessions resume exact repository state rather than recreate completed work.
 
 Next after merge: Phase 28 Diagnostics / Audit / Offline foundation.
+
+## 2026-09-22 — Phase 28 Diagnostics / Audit / Offline repository foundation
+
+Resumed after interruption and found Phase 24 and Phase 25 already merged.
+
+Verified:
+- PR #164 Phase 24 Event Engine merged;
+- PR #165 Phase 25 Durable Background Task Manager merged at `2169d260ae4e52577053af442e10edc7ca1b6abf`;
+- post-merge main CI #443 SUCCESS.
+
+Started `feature/phase28-diagnostics-audit-offline`.
+
+Implemented:
+- `lib/diagnostics/contracts.ts`;
+- `lib/diagnostics/health.ts`;
+- `lib/diagnostics/recovery.ts`;
+- `lib/diagnostics/audit.ts`;
+- `lib/diagnostics/runtime.ts`;
+- `app/api/diagnostics/route.ts`;
+- `tests/diagnostics-foundation.test.ts`;
+- lint coverage and private audit path configuration.
+
+Safety/truth boundaries:
+- connectivity defaults UNKNOWN;
+- health is check-backed, not synthetic telemetry;
+- audit redacts secrets/local paths;
+- recovery is non-executing planning only;
+- actual restart/recovery must pass Tool Runtime/approval;
+- real offline/recovery evidence remains target-PC work.
+
+Next after green merge: Phase 22 Identity / Trust / Secret boundary.
