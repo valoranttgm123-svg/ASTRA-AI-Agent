@@ -1168,8 +1168,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           agent,
           context: nvidiaContext,
           policyText: context.policyText,
-          visualContentProvided:
-            context.inputContext?.visualContentProvided === true,
+          visualContentProvided: Boolean(
+            context.inputContext?.visualContentProvided,
+          ),
           signal: options?.signal,
         });
         emitLiveProviderComplete(selected, "nvidia", options);
