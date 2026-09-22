@@ -740,3 +740,23 @@ Security decisions:
 - no public unauthenticated ASTRA transport is introduced.
 
 Next after green merge: Phase 29 Generic Skill / Environment Device Registry.
+
+
+## 2026-09-22 — Phase 29 generic skill/environment foundation
+
+- confirmed Phase 27 PR #168 merged at `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a` with main CI #451 SUCCESS;
+- created `feature/phase29-skill-environment-registry`;
+- added generic skill contracts/registry with untrusted-by-default state, review/install/enable/disable/update/rollback/remove lifecycle, health truth, permission/tool mapping, network/secret-name requirements, and private bounded persistence;
+- added provider-neutral explicit environment registry with disabled-by-default devices, Tool Registry capability mapping, Level-3+ writes, privacy controls for camera/sensor classes, and no public control endpoint;
+- added `tests/skill-environment-foundation.test.ts`;
+- avoided collision with legacy `ASTRA_SKILLS_FILE` by using `ASTRA_GENERIC_SKILL_REGISTRY_FILE=.astra/generic-skills.json`;
+- opened PR #169;
+- CI #452 exposed one stale test env-var name (374/375 tests passed);
+- patched the test;
+- CI #453 completed SUCCESS for build, 375 tests, typecheck, lint, dependency audit, and PR diff-check;
+- added `docs/SKILL_ENVIRONMENT_BRIDGE.md` and synchronized recovery/handoff trackers.
+
+Remaining before repository completion:
+- newest PR #169 head must pass CI after documentation changes;
+- merge PR #169;
+- update post-merge continuity truth on `main`.
