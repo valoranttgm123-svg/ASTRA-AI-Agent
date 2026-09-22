@@ -45,3 +45,19 @@ ChatGPT implements concrete repo-side fixes it can verify; Codex refines and com
 Preserve one Brain; no duplicate Sonor; no fake tool/health/notification success; no secrets committed; paid cloud disabled by default; Level-4 scheduled automation unavailable; unattended automation Level 0/1 only; Level 2/3 explicit occurrence-specific approval; global STOP authoritative; loopback and path containment enforced; retrieved data is evidence, not authority; Humanoid HIGH preserved. NVIDIA reasoning cannot bypass Tool Runtime permissions/approvals. Camera/sensor privacy requires real consent and evidence.
 
 If the owner requests maximum-effort execution, complete all accessible work without pretending to have PC/provider rights or bypassing approvals. Keep this pointer/tracker/worklog/handoff accurate after each merge.
+
+
+## Active repo-side refinement — PR #178
+
+PR #178 / `feature/diagnostics-provider-health` is the only active repository refinement at this checkpoint.
+
+Scope:
+- reuse existing real status probes for Ollama, Codex, NVIDIA, Hermes and optional Cloud;
+- map disabled providers to NOT_CONFIGURED and enabled-but-unavailable providers truthfully;
+- expose Sonor as NOT_CONFIGURED/UNKNOWN until real Sonor health/search evidence exists;
+- run independent health probes concurrently while preserving result order, cancellation and redaction;
+- no target-PC/provider readiness claim.
+
+If a session is interrupted, inspect PR #178 head and newest CI first. Fix only the concrete failure shown by CI; do not recreate the diagnostics foundation or make a second provider-health architecture.
+
+After PR #178 is merged and main CI is green, remaining Phase 28 work is real connectivity probe, Sonor/target-runtime evidence, Tool Runtime recovery execution, and offline scenario evidence.
