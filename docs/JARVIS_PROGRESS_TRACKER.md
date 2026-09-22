@@ -1,185 +1,78 @@
 # JARVIS REPOSITORY FOUNDATION TRACKER
 
-> This tracker covers repository-only foundations that the owner explicitly authorized while target-PC/Codex execution is unavailable.
->
-> It does not replace real target-PC release gates or `docs/ASTRA_MAX.md`.
+> Tracks merged repository foundations separately from real target-PC/provider evidence. Read `docs/CURRENT_EXECUTION_POINTER.md` first. Do not restart merged work based on old chats or branches.
 
-## Recovery rule
+## Recovery
 
-On every new session:
-
-1. inspect current `main`, open PRs and CI;
-2. read `docs/CURRENT_EXECUTION_POINTER.md`;
-3. read this tracker;
-4. resume the first active/unmerged slice;
-5. never recreate a merged slice from chat memory.
+Inspect current `main`, newest CI and open PRs first. Resume an existing open PR before starting new work. Treat historical branches as superseded unless a concrete missing capability is demonstrated. The 206-branch reconciliation is documented in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`.
 
 ## Phase 24 — Event Engine
 
-- [x] event/subscription contracts
-- [x] severity floors
-- [x] debounce/deduplication
-- [x] quiet hours
-- [x] rate limiting
-- [x] acknowledgement
-- [x] private bounded persistence
-- [x] loopback management/publish API
-- [x] regression tests
-- [x] PR #164 CI green
-- [x] PR #164 merged → `1327ee985c13c6486bcd9212cbfbc28b3d3187a0`
-- [x] Event Inbox / subscription UI — PR #175 merged → `56059728be8ef60b1badb58a8ef13bade2ba569b`; PR CI #486 green
-
-Real adapters still required:
-- [ ] GitHub Actions event source adapter — PR #176 active on `feature/github-actions-event-adapter` (mark complete only after green merge)
-- [ ] real target-runtime GitHub sync evidence
-- [ ] second real event source
-- [ ] third real event source
-- [ ] target-runtime proactive notification evidence
+- [x] Contracts, severity floors, debounce/deduplication, quiet hours, rate limits and ACK.
+- [x] Bounded private persistence, loopback management/publish API and regression tests.
+- [x] Foundation PR #164 merged: `1327ee985c13c6486bcd9212cbfbc28b3d3187a0`.
+- [x] Event Inbox and subscription enable/disable/ACK UI: PR #175 merged `56059728be8ef60b1badb58a8ef13bade2ba569b`, CI #486 SUCCESS, main CI #487 SUCCESS.
+- [x] First real-source adapter code: read-only opt-in GitHub Actions workflow runs, exact GitHub API host, bounded fetch/timeout, local sync, mapped provenance and repeat-state dedupe. PR #176 merged `059241751f7b70ac5e4ad6b044f8e8cceeab5787`, PR CI #494 SUCCESS. This marks adapter code, NOT a completed target-PC live test.
+- [ ] GitHub adapter real target-runtime sync and notification evidence.
+- [ ] Second real event source and real evidence.
+- [ ] Third real event source and real evidence.
+- [ ] Proactive notification delivery, failure/STOP and restart evidence on target PC.
 
 ## Phase 25 — Durable Background Task Manager
 
-Repository foundation:
-- [x] durable task contracts
-- [x] dependency DAG + cycle rejection
-- [x] bounded concurrency planning
-- [x] resource-lock serialization
-- [x] Level 0/1 unattended ceiling
-- [x] Level 2/3 approval waiting state
-- [x] private bounded task persistence
-- [x] pause/resume/cancel lifecycle
-- [x] active-task abort registry
-- [x] retry/backoff
-- [x] checkpoints
-- [x] restart recovery
-- [x] bounded parallel runner
-- [x] global STOP propagation
-- [x] loopback task management API
-- [x] regression tests
-- [x] PR #165 CI green
-- [x] merged to `main` → `2169d260ae4e52577053af442e10edc7ca1b6abf`
+- [x] Contracts, dependency DAG/cycle rejection, bounded concurrency and locks.
+- [x] Level 0/1 unattended ceiling, Level 2/3 approval waiting and global STOP.
+- [x] Bounded private store, pause/resume/cancel, active abort, retries/backoff, checkpoints, restart recovery and bounded runner.
+- [x] Loopback task management API and regression coverage; PR #165 merged `2169d260ae4e52577053af442e10edc7ca1b6abf`.
+- [x] Task-presence/queue/checkpoint UI: PR #174 merged `293216e9f94868d00b2636b125922ff09ec593db`, CI #483 SUCCESS, main CI #484 SUCCESS.
+- [ ] Production executors connected and validated.
+- [ ] Real target-PC restart evidence and approved Level 2/3 resume flow.
+- [ ] Long-running scenario J4 evidence.
 
-Real integration later:
-- [ ] production task executors connected
-- [x] UI/runtime task presence — PR #174 merged → `293216e9f94868d00b2636b125922ff09ec593db`; PR CI #483 green
-- [ ] restart evidence on target PC
-- [ ] approved Level 2/3 task-resume flow
-- [ ] long-running scenario J4 evidence
+## Phase 28 — Diagnostics / Audit / Offline
 
-## Phase 28 — Diagnostics / Audit / Offline foundation
+- [x] Health registry, degraded/offline state model, bounded audit journal, safe recovery-plan contract.
+- [x] Local-store/service aggregation, action-history query, read-only API, secret/path redaction and symlink-safe persistence.
+- [x] Regression tests; PR #166 merged `a01d40ff8e378b1b1881269f0568bb65793d2e17`.
+- [x] User-facing read-only health and action-history UI: PR #174 merged `293216e9f94868d00b2636b125922ff09ec593db`, CI #483 SUCCESS.
+- [ ] Explicit real connectivity probe.
+- [ ] Real Ollama/Codex/Sonor/NVIDIA health adapters.
+- [ ] Safe recovery execution through existing Tool Runtime.
+- [ ] Offline/degradation scenario J8 evidence.
 
-Repository foundation:
-- [x] health registry
-- [x] degraded/offline state model
-- [x] bounded audit journal
-- [x] safe recovery-plan contract
-- [x] provider/service aggregation from real local stores/services
-- [x] action-history query contract
-- [x] read-only diagnostics API
-- [x] secret/path redaction in audit records
-- [x] symlink-safe private audit persistence
-- [x] tests
-- [x] PR #166 CI green
-- [x] merged → `a01d40ff8e378b1b1881269f0568bb65793d2e17`
+## Phase 22 — Identity / Trust / Secrets
 
-Real integration later:
-- [ ] explicit real internet/connectivity probe
-- [ ] Ollama/Codex/Sonor/NVIDIA health adapters from real runtime
-- [ ] safe recovery execution wired through Tool Runtime
-- [ ] offline degradation scenario J8 evidence
-- [x] action-history UI / user-facing diagnostics panel — PR #174 merged → `293216e9f94868d00b2636b125922ff09ec593db`; PR CI #483 green
+- [x] Trusted-session/device contracts, capability scopes and lock/unlock state.
+- [x] Secret abstraction, opt-in environment provider, strict secret/memory separation, hashed private trusted-device metadata and terminal revoke.
+- [x] Tests; PR #167 merged `a2b289d9118c8883608379320784b7bc047f980c`.
+- [ ] Target-PC OS/session identity, owner/device pairing UX and OS secret store where appropriate.
+- [ ] Speaker recognition only as a convenience signal, never sole authorization.
+- [ ] Real lock/unlock and secret-use evidence.
 
-## Phase 22 — Identity / Trust / Secret boundary
+## Phase 27 — Multi-device
 
-Repository foundation:
-- [x] trusted session/device contracts
-- [x] capability scopes
-- [x] lock/unlock state
-- [x] secret-provider abstraction
-- [x] environment-backed explicit secret provider
-- [x] secret/memory separation invariants
-- [x] private hashed trusted-device metadata store
-- [x] revoked-device fail-closed semantics
-- [x] tests
-- [x] PR #167 CI green
-- [x] merged → `a2b289d9118c8883608379320784b7bc047f980c`
-
-Real integration later:
-- [ ] target-PC trusted OS/session identity adapter
-- [ ] owner/device pairing UX
-- [ ] Windows credential/secret provider where appropriate
-- [ ] speaker-recognition adapter only as convenience signal, never sole authorization
-- [ ] target-PC lock/unlock and secret-use evidence
-
-## Phase 27 — Multi-device foundation
-
-Repository foundation:
-- [x] private paired-device registry
-- [x] single-use secure pairing challenge contract
-- [x] token hashing / timing-safe verification
-- [x] capability advertisement with expiry
-- [x] per-device permission ceiling (Level 0-3 only)
-- [x] linked Phase-22 trusted-device requirement before pairing
-- [x] terminal revoke semantics
-- [x] deterministic task-routing contract
-- [x] Level 2/3 routing preserves approval requirement
-- [x] no public/unauthenticated transport surface
-- [x] symlink-safe bounded persistence
-- [x] tests
-- [x] PR #168 CI green (PR run #450; main run #451)
-- [x] merged → `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`
-
-Real integration later:
-- [ ] real second-device transport selected (LAN/SSH/authenticated relay)
-- [ ] encrypted/authenticated channel validated
-- [ ] target-PC/PC2/mobile pairing UX
-- [ ] task dispatch + result return wired to real transport
-- [ ] immediate revoke observed end to end
-- [ ] scenario J6 evidence
+- [x] Private registry, single-use expiring hashed pairing challenge, capability expiry and per-device Level 0–3 ceilings.
+- [x] Phase-22 trust prerequisite, terminal revoke, deterministic routing, approval preservation, no public unauthenticated transport and bounded symlink-safe storage.
+- [x] Tests; PR #168 merged `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`; main CI #451 SUCCESS.
+- [ ] Select and validate real LAN/SSH/authenticated-relay transport.
+- [ ] Actual PC2/mobile pairing, authenticated encryption, dispatch/result return and immediate revoke evidence.
+- [ ] Scenario J6 evidence.
 
 ## Phase 29 — Generic Skill / Device Registry
 
-Repository foundation:
-- [x] generic skill manifest
-- [x] provider/tool mapping through existing Tool Registry
-- [x] permission/network/secret-name requirements
-- [x] explicit untrusted → reviewed trust state
-- [x] install/enable/disable/version/health lifecycle
-- [x] verified update/rollback metadata and state transitions
-- [x] private bounded generic skill persistence
-- [x] explicitly registered device/environment contract
-- [x] device disabled-by-default behavior
-- [x] write operations require Level 3+ and preserve approval
-- [x] camera/sensor sensitive privacy classification + per-operation consent
-- [x] no automatic trust for downloaded skills
-- [x] no public unauthenticated environment endpoint
-- [x] tests
-- [x] PR #169 final CI run #457 green
-- [x] merged → `390a5c35e50a5020ccf34f317edcc25f4837dcb1`; main CI #458 green
+- [x] Generic manifests, Tool Registry mappings, permission/network/secret-name requirements and untrusted-by-default reviews.
+- [x] Install/enable/disable/version/health/update/rollback contract and private persistence.
+- [x] Explicit environment-device contracts, disabled-by-default devices, Level 3+ writes/approval, camera/sensor privacy and no unauthenticated public control.
+- [x] Tests; PR #169 merged `390a5c35e50a5020ccf34f317edcc25f4837dcb1`; main CI #458 SUCCESS.
+- [ ] One real provider-backed skill lifecycle with evidence.
+- [ ] One real environment/device provider and Tool Runtime invocation/telemetry/verification.
+- [ ] Scenario J9 evidence.
 
-Real integration later:
-- [ ] one real provider-backed generic skill installed/disabled/rolled back with evidence
-- [ ] one real safe environment/device provider connected
-- [ ] Tool Runtime invocation + real telemetry/verification
-- [ ] scenario J9 evidence
+## Deferred environment-gated work
 
-## Deferred because real environment is required
+- [ ] Phase 21 real always-on voice transport.
+- [ ] Phase 23 real screen/camera pixel transport.
+- [ ] Phase 26 real Sonor-backed episodic context fusion.
+- [ ] Phase 30 final JARVIS integration/soak/evaluation.
 
-- Phase 21 real always-on voice transport;
-- Phase 23 real pixels/screen/camera transport;
-- Phase 26 real Sonor-backed episodic context fusion;
-- Phase 30 final JARVIS integration/soak/evidence.
-
-Do not fake these with repository-only mocks and call them READY.
-
-
-## Cross-session reconciliation status
-
-The repository-only JARVIS foundation tracker was cross-checked against all 206 branches on 2026-09-22.
-
-Result:
-- Phase 24/25/28/22/27/29 foundations remain canonical and merged;
-- no alternate historical branch contains a missing replacement foundation;
-- PR #171 recovered the separate Phase 16 main-UI evidence omission and merged at `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
-- real environment items in this tracker remain intentionally unchecked until actual target/provider evidence exists.
-
-Do not convert unchecked real-integration items into repository-only mocks.
+Other real release gates retain the execution order `Phase 14 → MEM-X → Phase 16 → Phase 17 → Phase 19 → Phase 20`. See `docs/CODEX_NEXT_MISSION.md` and the canonical execution pointer. No repository CI or mocked response proves production readiness. Paid cloud stays opt-in, approval/STOP remain authoritative, and no new Brain or duplicate Sonor pipeline is allowed.
