@@ -664,7 +664,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
                 : provider === "hermes"
                   ? "Hermes"
                   : provider === "nvidia"
-                    ? "NVIDIA Nemotron"
+                    ? "NVIDIA JARVIS Mesh"
                     : "Cloud";
 
         return {
@@ -680,9 +680,10 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
               ? current?.features?.nvidia?.endpoint
               : current?.endpoint,
           model:
-            provider === "nvidia"
+            finalResult.brain.model ??
+            (provider === "nvidia"
               ? current?.features?.nvidia?.model
-              : current?.model,
+              : current?.model),
           fallback: current?.fallback ?? "routing_only",
           permissions: finalResult.brain.permissions ?? current?.permissions,
           features: current?.features,

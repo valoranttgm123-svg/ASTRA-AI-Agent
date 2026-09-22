@@ -103,7 +103,7 @@ The command console has four explicit provider modes:
 - `AUTO` remains local-first (Codex first for engineering, otherwise local paths; NVIDIA is used only when its explicit AUTO fallback flag is enabled);
 - `OLLAMA` forces the configured local model and never silently changes models;
 - `CHATGPT / CODEX` forces the authenticated local Codex CLI;
-- `NVIDIA · NEMOTRON ULTRA` forces the optional NVIDIA NIM reasoning provider and never becomes an execution bypass.
+- `NVIDIA · JARVIS MESH` enables ASTRA's adaptive NVIDIA model router (Chief / Deep / Fast / Vision) and never becomes an execution bypass.
 
 `SEND` is chat/read-only reasoning. `EXECUTE TASK` is a per-request approval and
 still cannot exceed the server-side permission policy.
@@ -114,7 +114,7 @@ Copy `.env.example` to `.env.local` and fill only the provider/integrations you 
 
 For full web search, point `ASTRA_SEARXNG_URL` at a loopback SearXNG JSON `/search` endpoint. ASTRA health-checks it before marking Researcher READY. Without SearXNG, `browser.fetch` can still read one explicit public URL, but ASTRA does not pretend general web search is configured.
 
-For NVIDIA Build/NIM, ASTRA supports the hosted NVIDIA endpoint with `nvidia/nemotron-3-ultra-550b-a55b` as the default model. It is disabled by default, keeps private memory out by default, and AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`. See `docs/NVIDIA_NIM.md`.
+For NVIDIA Build/NIM, ASTRA uses an adaptive model mesh: Nemotron Ultra (Chief), GLM-5.3 (Deep), Nemotron 3.5 Lightning (Fast), and GLM-5.3 Flash (Vision). It is disabled by default, keeps private memory out by default, and AUTO remains local-first unless `ASTRA_NVIDIA_AUTO_FALLBACK=true`. See `docs/NVIDIA_NIM.md`.
 
 ```bash
 cp .env.example .env.local
@@ -153,7 +153,7 @@ ASTRA Brain Adapter
    ├─ Hermes
    ├─ Ollama
    ├─ Codex engineering specialist
-   ├─ NVIDIA Nemotron Ultra (explicit opt-in)
+   ├─ NVIDIA JARVIS Mesh: Ultra / GLM-5.3 / Lightning / GLM-5.3 Flash (explicit opt-in)
    └─ optional generic cloud (explicit opt-in only)
    ↓
 real Brain events
