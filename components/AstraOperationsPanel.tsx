@@ -35,6 +35,16 @@ type EventStatusResponse = {
   unacknowledged: AstraEventRecord[];
 };
 
+type GitHubEventSourceStatusResponse = {
+  ok: boolean;
+  enabled: boolean;
+  available: boolean;
+  repository: string | null;
+  authenticated: boolean;
+  detail: string;
+  runCount: number;
+};
+
 type DiagnosticsResponse = {
   ok: boolean;
   diagnostics: AstraDiagnosticsSnapshot;
@@ -114,6 +124,8 @@ export default function AstraOperationsPanel() {
   const [tab, setTab] = useState<Tab>("tasks");
   const [tasks, setTasks] = useState<TaskStatusResponse | null>(null);
   const [events, setEvents] = useState<EventStatusResponse | null>(null);
+  const [githubEvents, setGithubEvents] =
+    useState<GitHubEventSourceStatusResponse | null>(null);
   const [diagnostics, setDiagnostics] =
     useState<DiagnosticsResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -147,6 +159,20 @@ export default function AstraOperationsPanel() {
     setEvents(payload as EventStatusResponse);
   }, []);
 
+  const refreshGitHubEvents = useCallback(async () => {
+    const response = await fetch("/api/events/github", {
+      method: "GET",
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as unknown;
+    if (!response.ok) {
+      throw new Error(
+        message(payload, "GitHub Actions event status failed."),
+      );
+    }
+    setGithubEvents(payload as GitHubEventSourceStatusResponse);
+  }, []);
+
   const refreshDiagnostics = useCallback(async () => {
     const params = new URLSearchParams({ limit: "50" });
     if (category) params.set("category", category);
@@ -171,8 +197,9 @@ export default function AstraOperationsPanel() {
     setError(null);
     try {
       if (tab === "tasks") await refreshTasks();
-      else if (tab === "events") await refreshEvents();
-      else await refreshDiagnostics();
+      else if (tab === "events") {
+        await Promise.all([refreshEvents(), refreshGitHubEvents()]);
+      } else await refreshDiagnostics();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Operations refresh failed.",
@@ -180,7 +207,13 @@ export default function AstraOperationsPanel() {
     } finally {
       setLoading(false);
     }
-  }, [refreshDiagnostics, refreshEvents, refreshTasks, tab]);
+  }, [
+    refreshDiagnostics,
+    refreshEvents,
+    refreshGitHubEvents,
+    refreshTasks,
+    tab,
+  ]);
 
   useEffect(() => {
     if (!open) return;
@@ -278,6 +311,51 @@ export default function AstraOperationsPanel() {
     },
     [refreshEvents],
   );
+
+  const syncGitHubEvents = useCallback(async () => {
+    setBusyKey("github-sync");
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await fetch("/api/events/github", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-astra-client": "1",
+        },
+        body: JSON.stringify({ action: "sync" }),
+      });
+      const payload = (await response.json()) as unknown;
+      if (!response.ok) {
+        throw new Error(
+          message(payload, "GitHub Actions event sync failed."),
+        );
+      }
+      const result = payload as {
+        fetchedRuns?: number;
+        records?: number;
+        skippedSeen?: number;
+      };
+      setNotice(
+        "GitHub sync: " +
+          (result.fetchedRuns ?? 0) +
+          " fetched · " +
+          (result.records ?? 0) +
+          " new record(s) · " +
+          (result.skippedSeen ?? 0) +
+          " already seen.",
+      );
+      await Promise.all([refreshEvents(), refreshGitHubEvents()]);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "GitHub Actions event sync failed.",
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }, [refreshEvents, refreshGitHubEvents]);
 
   const recentEvents = useMemo(
     () => [...(events?.events ?? [])].reverse().slice(0, 100),
@@ -499,6 +577,58 @@ export default function AstraOperationsPanel() {
             {events?.detail ??
               "Event state is loaded from the private Event Engine store."}
           </p>
+
+          <div className="astra-operations__source">
+            <div className="astra-operations__item-head">
+              <div>
+                <strong>GITHUB ACTIONS SOURCE</strong>
+                <span>
+                  {githubEvents?.repository ?? "NO REPOSITORY CONFIGURED"}
+                </span>
+              </div>
+              <span
+                className={
+                  "astra-operations__health-status astra-operations__health-status--" +
+                  (githubEvents?.available
+                    ? "healthy"
+                    : githubEvents?.enabled
+                      ? "degraded"
+                      : "not_configured")
+                }
+              >
+                {githubEvents?.available
+                  ? "AVAILABLE"
+                  : githubEvents?.enabled
+                    ? "UNAVAILABLE"
+                    : "DISABLED"}
+              </span>
+            </div>
+            <p>
+              {githubEvents?.detail ??
+                "GitHub Actions source status has not been loaded."}
+            </p>
+            <div className="astra-operations__meta">
+              <span>{githubEvents?.runCount ?? 0} RUNS READ</span>
+              <span>
+                {githubEvents?.authenticated
+                  ? "TOKEN AUTH"
+                  : "PUBLIC/NO TOKEN"}
+              </span>
+            </div>
+            <div className="astra-operations__actions">
+              <button
+                type="button"
+                disabled={
+                  busyKey !== null || githubEvents?.enabled !== true
+                }
+                onClick={() => void syncGitHubEvents()}
+              >
+                {busyKey === "github-sync"
+                  ? "SYNCING"
+                  : "SYNC GITHUB"}
+              </button>
+            </div>
+          </div>
 
           <div className="astra-operations__event-subscriptions">
             <div className="astra-operations__section-title">
