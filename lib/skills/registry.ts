@@ -42,10 +42,10 @@ async function withMutationLock<T>(run: () => Promise<T>) {
 }
 
 export function getSkillRegistryPath() {
-  const configured = process.env.ASTRA_SKILL_REGISTRY_FILE?.trim();
+  const configured = process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE?.trim();
   return configured
     ? path.resolve(configured)
-    : path.join(process.cwd(), ".astra", "skills.json");
+    : path.join(process.cwd(), ".astra", "generic-skills.json");
 }
 
 function object(value: unknown, field: string): Record<string, unknown> {
@@ -286,7 +286,7 @@ export async function loadSkillStore() {
         source,
         store: { schemaVersion: 1 as const, skills: [] },
         detail:
-          "Generic skill registry is ready; no private .astra/skills.json exists yet.",
+          "Generic skill registry is ready; no private .astra/generic-skills.json exists yet.",
       };
     }
     return {
