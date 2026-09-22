@@ -42,6 +42,10 @@ When target-PC access exists, resume in this order:
 
 Detailed local instructions: `docs/CODEX_NEXT_MISSION.md`, `docs/AUTOMATION_VALIDATION.md`, `docs/SONOR_CODEX_MISSION.md`, `docs/PERFORMANCE_BASELINE.md`, `docs/FULL_SYSTEM_VALIDATION.md`, `docs/TARGET_PC_EVIDENCE.md` and `docs/CORE_RELEASE_REPORT.md`.
 
+## NVIDIA Build credential handoff
+
+When Codex activates the hosted NVIDIA mesh, the intended credential source is **NVIDIA Build model access** at `https://build.nvidia.com/models`, used with the existing exact hosted endpoint `https://integrate.api.nvidia.com/v1`. Keep `NVIDIA_API_KEY` only in target-PC private/local configuration (for example `.env.local`); never commit it or place it in evidence. Missing NVIDIA Build credentials must leave NVIDIA optional/NOT_CONFIGURED rather than forcing a paid-provider substitution. Account login/MFA remains a genuine owner boundary.
+
 ## Work allocation and non-negotiable invariants
 
 ChatGPT implements concrete repo-side fixes it can verify; Codex refines and completes merged code against the real target PC/providers. If target access is unavailable, work only on demonstrated defects, regression coverage, documentation sync, verified provider changes or explicit owner requirements. No speculative placeholder adapter or fabricated readiness.

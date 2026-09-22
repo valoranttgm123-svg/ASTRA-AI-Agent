@@ -242,6 +242,20 @@ Run final scenarios, soak, evaluation, STOP/permission behavior, diagnostics/rec
 
 NVIDIA repository architecture is already complete.
 
+### NVIDIA Build API-key source
+
+For the hosted NVIDIA mesh already configured at `https://integrate.api.nvidia.com/v1`:
+
+- use an API key generated from **NVIDIA Build** model access at `https://build.nvidia.com/models`;
+- store the secret only on the target PC as `NVIDIA_API_KEY` in local/private configuration such as `.env.local`;
+- never commit, paste, log, or persist the key in repository evidence;
+- do not substitute a different paid NVIDIA/OpenAI-compatible provider merely because the NVIDIA Build key is absent;
+- if NVIDIA authentication/account access requires owner login/MFA, stop at that human boundary and request only that action;
+- free/prototyping endpoint availability, quotas, and terms are provider-controlled, so validate live availability rather than claiming permanent unlimited access.
+
+The existing NVIDIA provider remains optional. ASTRA must continue to work through local/fallback providers when NVIDIA Build is not configured.
+
+
 Do not create another NVIDIA roadmap or provider-neutral wrapper.
 
 For a real NVIDIA subsystem:
