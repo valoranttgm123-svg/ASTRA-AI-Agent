@@ -77,3 +77,21 @@ Remaining Phase 28 work:
 No open repository refinement is intentionally active at this checkpoint.
 
 If the owner asks to continue without target-PC access, inspect current `main`, newest CI and open PRs, then take only a concrete repo-side defect, regression, verified provider change, or explicit owner requirement. Otherwise preserve the checkpoint for Codex real-runtime refinement.
+
+
+## Active repo-side refinement — PR #180
+
+PR #180 / `feature/service-health-event-adapter` is the active repository slice.
+
+Scope:
+- second real Event Engine source from local Diagnostics;
+- source `service`, topic `health.state`;
+- healthy/not-configured initial baseline stays quiet;
+- degraded/unavailable/unknown emits;
+- unchanged state skips;
+- recovery to HEALTHY emits;
+- guarded local status/sync only;
+- Operations EVENTS UI exposes source status and manual local sync;
+- no fabricated provider activity and no direct event publish control.
+
+If interrupted, inspect PR #180 newest head + CI first; fix only concrete failures and do not recreate Phase 24/28 foundations.
