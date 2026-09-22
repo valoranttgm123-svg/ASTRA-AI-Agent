@@ -138,3 +138,17 @@ Current active slice:
 - next after green merge: Phase 28 Diagnostics / Audit / Offline foundation.
 
 If this branch/PR is unmerged in a new session, resume it first.
+
+## JARVIS repo continuation update — Phase 28
+
+Phase 24 Event Engine merged in PR #164 at `1327ee985c13c6486bcd9212cbfbc28b3d3187a0`.
+
+Phase 25 Durable Background Task Manager merged in PR #165 at `2169d260ae4e52577053af442e10edc7ca1b6abf`; main push CI #443 succeeded.
+
+Current active slice:
+- branch: `feature/phase28-diagnostics-audit-offline`;
+- goal: Phase 28 Diagnostics / Audit / Offline foundation;
+- tracker: `docs/JARVIS_PROGRESS_TRACKER.md`;
+- next after green merge: Phase 22 Identity / Trust / Secret boundary.
+
+If this branch/PR is unmerged in a new session, resume/fix it first. Do not recreate Phase 24, 25, or 28 from chat memory.
