@@ -50,22 +50,33 @@ export function planExtensionMutation({
           "Dry-run governance plan only. Installation requires a verified provider-specific mechanism and ASTRA local mutation approval.",
       };
     case "update":
-      return skill.installState === "installed" ||
-        skill.installState === "disabled"
-        ? {
-            ...base,
-            allowed: skill.trust !== "unreviewed",
-            targetState: skill.installState,
-            detail:
-              skill.trust === "unreviewed"
-                ? "Unreviewed skill cannot be updated automatically."
-                : "Dry-run update plan; provider-specific updater and verification remain required.",
-          }
-        : {
-            ...base,
-            allowed: false,
-            detail: "Only installed/disabled skills can be updated.",
-          };
+      if (
+        skill.installState !== "installed" &&
+        skill.installState !== "disabled"
+      ) {
+        return {
+          ...base,
+          allowed: false,
+          detail: "Only installed/disabled skills can be updated.",
+        };
+      }
+      if (skill.updateState !== "update_available") {
+        return {
+          ...base,
+          allowed: false,
+          detail:
+            "No verified update is currently marked available for this skill.",
+        };
+      }
+      return {
+        ...base,
+        allowed: skill.trust !== "unreviewed",
+        targetState: skill.installState,
+        detail:
+          skill.trust === "unreviewed"
+            ? "Unreviewed skill cannot be updated automatically."
+            : "Dry-run update plan; provider-specific updater and verification remain required.",
+      };
     case "enable":
       return skill.installState === "disabled"
         ? {
