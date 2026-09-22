@@ -127,3 +127,14 @@ Current active slice:
 - next after green merge: Phase 25 Durable Background Task Manager.
 
 If a new session starts while this branch/PR is unmerged, inspect it first. Do not create a replacement Event Engine implementation.
+
+## JARVIS repo continuation update — Phase 25
+
+Phase 24 Event Engine merged in PR #164 at `1327ee985c13c6486bcd9212cbfbc28b3d3187a0`.
+
+Current active slice:
+- branch: `feature/phase25-durable-task-manager`;
+- tracker: `docs/JARVIS_PROGRESS_TRACKER.md`;
+- next after green merge: Phase 28 Diagnostics / Audit / Offline foundation.
+
+If this branch/PR is unmerged in a new session, resume it first.
