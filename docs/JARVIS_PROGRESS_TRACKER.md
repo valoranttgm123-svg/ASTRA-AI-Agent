@@ -76,8 +76,8 @@ Repository foundation:
 - [x] secret/path redaction in audit records
 - [x] symlink-safe private audit persistence
 - [x] tests
-- [ ] PR CI green
-- [ ] merged
+- [x] PR #166 CI green
+- [x] merged → `a01d40ff8e378b1b1881269f0568bb65793d2e17`
 
 Real integration later:
 - [ ] explicit real internet/connectivity probe
@@ -88,13 +88,25 @@ Real integration later:
 
 ## Phase 22 — Identity / Trust / Secret boundary
 
-- [ ] trusted session/device contracts
-- [ ] capability scopes
-- [ ] lock/unlock state
-- [ ] secret-provider abstraction
-- [ ] secret/memory separation invariants
-- [ ] tests
+Repository foundation:
+- [x] trusted session/device contracts
+- [x] capability scopes
+- [x] lock/unlock state
+- [x] secret-provider abstraction
+- [x] environment-backed explicit secret provider
+- [x] secret/memory separation invariants
+- [x] private hashed trusted-device metadata store
+- [x] revoked-device fail-closed semantics
+- [x] tests
+- [ ] PR CI green
 - [ ] merged
+
+Real integration later:
+- [ ] target-PC trusted OS/session identity adapter
+- [ ] owner/device pairing UX
+- [ ] Windows credential/secret provider where appropriate
+- [ ] speaker-recognition adapter only as convenience signal, never sole authorization
+- [ ] target-PC lock/unlock and secret-use evidence
 
 ## Phase 27 — Multi-device foundation
 
