@@ -378,10 +378,14 @@ export async function registerEnvironmentDevice(
       throw new Error("Environment device id already exists.");
     }
 
-    const devices = [...store.devices, normalized];
+    const safeDevice: AstraEnvironmentDevice = {
+      ...normalized,
+      state: "disabled",
+    };
+    const devices = [...store.devices, safeDevice];
     return {
       store: { schemaVersion: 1 as const, devices },
-      result: normalized,
+      result: safeDevice,
     };
   });
 }
@@ -389,10 +393,12 @@ export async function registerEnvironmentDevice(
 export async function setEnvironmentDeviceState({
   id,
   state: nextState,
+  approvedPermissionLevel,
   now = new Date(),
 }: {
   id: string;
   state: AstraEnvironmentDeviceState;
+  approvedPermissionLevel: Exclude<AstraPermissionLevel, 4>;
   now?: Date;
 }) {
   if (!Number.isFinite(now.getTime())) {
@@ -405,6 +411,24 @@ export async function setEnvironmentDeviceState({
     if (index < 0) throw new Error("Environment device was not found.");
 
     const current = store.devices[index];
+    const requiredPermissionLevel =
+      nextState === "registered"
+        ? Math.max(
+            2,
+            ...current.capabilities.map(
+              (capability) => capability.permissionLevel,
+            ),
+          )
+        : 2;
+
+    if (approvedPermissionLevel < requiredPermissionLevel) {
+      throw new Error(
+        "Environment device state change requires permission Level-" +
+          requiredPermissionLevel +
+          ".",
+      );
+    }
+
     if (current.state === "revoked" && nextState !== "revoked") {
       throw new Error(
         "Revoked environment device cannot be reactivated; register a new identity.",
