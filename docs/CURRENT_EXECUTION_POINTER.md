@@ -6,6 +6,14 @@ This is the shortest authoritative handoff for a new ChatGPT/Codex session.
 
 If older documentation, a historical branch, or chat history conflicts with this file, first verify current `main`, newest CI, and open PRs. Then use this pointer.
 
+## ChatGPT → Codex work contract
+
+Canonical rule: `docs/CODEX_REFINEMENT_CONTRACT.md`.
+
+**ChatGPT pre-builds everything safely possible in the repository to save Codex tokens. Codex refines, integrates, validates, fixes, polishes, and completes that existing work against the real target environment.**
+
+Do not restart merged foundations from zero.
+
 ## Current repository truth
 
 Canonical `main` after cross-session reconciliation:
