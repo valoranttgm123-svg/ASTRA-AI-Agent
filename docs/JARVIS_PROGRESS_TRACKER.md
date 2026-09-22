@@ -168,3 +168,16 @@ Real integration later:
 - Phase 30 final JARVIS integration/soak/evidence.
 
 Do not fake these with repository-only mocks and call them READY.
+
+
+## Cross-session reconciliation status
+
+The repository-only JARVIS foundation tracker was cross-checked against all 206 branches on 2026-09-22.
+
+Result:
+- Phase 24/25/28/22/27/29 foundations remain canonical and merged;
+- no alternate historical branch contains a missing replacement foundation;
+- PR #171 recovered the separate Phase 16 main-UI evidence omission and merged at `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
+- real environment items in this tracker remain intentionally unchecked until actual target/provider evidence exists.
+
+Do not convert unchecked real-integration items into repository-only mocks.
