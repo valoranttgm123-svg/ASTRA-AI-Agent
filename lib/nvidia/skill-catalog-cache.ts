@@ -31,6 +31,11 @@ export type NvidiaSkillCatalogSnapshot = {
   skills: NvidiaSkillCatalogEntry[];
 };
 
+export type NvidiaSkillCatalogProvider = {
+  id: string;
+  discover: (signal?: AbortSignal) => Promise<NvidiaSkillCatalogSnapshot>;
+};
+
 export type NvidiaSkillCatalogContext = {
   available: boolean;
   source: string;
@@ -229,6 +234,33 @@ export async function loadNvidiaSkillCatalog(): Promise<NvidiaSkillCatalogContex
           : "NVIDIA skill catalog cache could not be loaded safely.",
     };
   }
+}
+
+export async function refreshNvidiaSkillCatalog({
+  provider,
+  signal,
+}: {
+  provider: NvidiaSkillCatalogProvider;
+  signal?: AbortSignal;
+}) {
+  if (signal?.aborted) {
+    throw new DOMException("NVIDIA skill catalog refresh aborted.", "AbortError");
+  }
+
+  const discovered = await provider.discover(signal);
+
+  if (signal?.aborted) {
+    throw new DOMException("NVIDIA skill catalog refresh aborted.", "AbortError");
+  }
+
+  const normalized = normalizeNvidiaSkillCatalog(discovered);
+  const saved = await saveNvidiaSkillCatalog(normalized);
+  return {
+    provider: provider.id,
+    snapshot: normalized,
+    source: saved.source,
+    count: saved.count,
+  };
 }
 
 export async function saveNvidiaSkillCatalog(
