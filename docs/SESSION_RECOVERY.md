@@ -170,3 +170,18 @@ before interpreting older checkpoint sections in this file.
 As of the NVIDIA saturation checkpoint, PRs #159–#162 are merged and main CI #435 passed. Older text saying NVA-1 or NVA-2 is "next" is historical only.
 
 Current next work is target-PC/core release execution plus real NVIDIA backend integration against existing contracts.
+
+## JARVIS repo-foundation continuation — 2026-09-22
+
+The owner explicitly authorized continued repository work for later JARVIS phases while Codex is unavailable.
+
+Sequence:
+`Phase 24 Event Engine → Phase 25 Durable Task Manager → Phase 28 Diagnostics/Audit → Phase 22 Identity/Trust → Phase 27 Multi-device → Phase 29 Generic Skill/Device Registry`.
+
+Active first slice: `feature/phase24-event-engine`.
+
+Recovery rule:
+- inspect current main + open PRs first;
+- if Phase 24 PR exists, resume/fix/merge it instead of recreating files;
+- after merge, continue the next unchecked slice in the sequence;
+- do not claim target-PC READY from repository-only work.
