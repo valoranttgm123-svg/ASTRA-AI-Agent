@@ -64,10 +64,7 @@ function boundedInteger(
 
 function repositoryName(value: string) {
   const cleaned = value.trim();
-  if (
-    !/^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$/.test(cleaned) ||
-    cleaned.includes("..")
-  ) {
+  if (!/^[A-Za-z0-9_.-]{1,100}\\/[A-Za-z0-9_.-]{1,100}$/.test(cleaned)) {
     throw new Error(
       "ASTRA GitHub event repository must use owner/repository form.",
     );
