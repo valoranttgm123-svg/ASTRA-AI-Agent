@@ -851,4 +851,3 @@ Real GitHub/calendar/email/service adapters and proactive notification evidence 
 - Phase 24 now has three real repository-side source integrations: GitHub Actions, local service-health, and Automation lifecycle.
 - Target-PC polling/proactive notification/failure/STOP/restart evidence is still required; repository CI is not production readiness.
 - Phase 28 recovery execution remains intentionally pending because no recovery-specific Tool Runtime primitive currently exists. Do not substitute unrelated generic tools.
-
