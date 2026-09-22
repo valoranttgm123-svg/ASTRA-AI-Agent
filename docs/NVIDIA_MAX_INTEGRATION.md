@@ -439,3 +439,68 @@ The repository-side NVA-1 state/cache contract is implemented on branch `feature
 This does not install NVIDIA skills yet. Real installation/update/remove requires the actual supported NVIDIA/Codex mechanism on the target PC and must be recorded truthfully in the private registry.
 
 After NVA-1 repository merge, the next independent repo-side task is **NVA-2 AI-Q provider-neutral adapter contract**. Target-PC NVA-1 validation remains a Codex task when the real PC is available.
+
+## Repository contract checkpoint — NVA-2 through NVA-9
+
+The remaining NVIDIA subsystems now have provider-neutral, fail-closed repository contracts. These contracts deliberately stop before inventing provider endpoints or claiming target-PC readiness.
+
+Implemented on `feature/nvidia-max-subsystem-contracts`:
+
+### NVA-2 — AI-Q Research
+- bounded shallow/deep request contract;
+- maximum 6 researcher workers and 20 sources;
+- cancellation + timeout propagation;
+- source URLs/provenance normalized and treated as untrusted evidence;
+- provider health before use;
+- optional fallback path to existing ASTRA research.
+
+### NVA-3 — NeMo Retriever/RAG
+- explicit project + namespace requirement;
+- bounded result/text sizes;
+- cross-project/cross-namespace results are dropped;
+- retrieved content is always untrusted evidence;
+- provider interface remains read-only.
+
+### NVA-4 — Document Intelligence
+- original file is immutable by contract;
+- bounded file size/pages/blocks;
+- source-id consistency check;
+- OCR/table/layout/text blocks carry references;
+- out-of-scope pages are dropped.
+
+### NVA-5 — Voice
+- truthful `idle → listening → thinking → speaking → idle` state contract;
+- interruption/STOP/error return to idle;
+- invalid state transitions fail closed;
+- provider status explicitly reports whether transport is truly local.
+
+### NVA-6 — Vision
+- real visual payload requires consent, positive byte payload, real frame count, timestamp, and source reference;
+- metadata-only/no-pixel requests cannot set `visualContentProvided=true`;
+- frame/payload limits are bounded.
+
+### NVA-7 — NemoClaw/Hermes governance
+- learned workflow skill candidates start disabled;
+- source workflow provenance is mandatory;
+- requested permission can never exceed the source workflow permission ceiling.
+
+### NVA-8 — Guardrails/Content Safety governance
+- input/retrieval/tool-input/tool-output/output decisions are modeled;
+- guardrail decisions have `authorizationEffect: none`;
+- Guardrails can never authorize an ASTRA tool action.
+
+### NVA-9 — Evaluation/Quality Lab
+- evaluation manifest binds results to exact Git commit + runtime build + capture timestamp;
+- suites are explicit;
+- release verdict is permanently `NOT_EVALUATED` at this layer;
+- NVIDIA evaluation evidence cannot declare ASTRA READY.
+
+Regression tests cover all above invariants.
+
+### Truth boundary after this checkpoint
+
+Repository architecture/contracts may be complete, but real services remain unverified until Codex connects and tests actual supported backends on the target environment.
+
+Do not guess AI-Q, Retriever, OCR, Speech, DeepStream/VSS, NemoClaw, Guardrails, or evaluation endpoint schemas. Codex must inspect the actual NVIDIA-supported mechanism/version before writing a transport adapter.
+
+After this contract PR merges, further NVIDIA work should shift to real backend/target-PC integration rather than additional speculative architecture.
