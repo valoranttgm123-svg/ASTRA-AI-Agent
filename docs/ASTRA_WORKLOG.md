@@ -487,3 +487,19 @@ Exact next task: continue on the real target PC with Phase 14, MEM-X, Phase 16, 
   - repository integration is CI verified;
   - real hosted NVIDIA readiness remains **NOT VERIFIED** until a valid `NVIDIA_API_KEY` is added only to target-PC `.env.local` and live runtime status succeeds.
 - documentation: `docs/NVIDIA_NIM.md`.
+
+## 2026-09-22 — NVIDIA JARVIS model mesh
+
+- PR #154 merged.
+- Merge commit: `ce5a5623867f443ffc931c6b4687b19e38412882`.
+- CI run #418: SUCCESS (build, tests, typecheck, lint, dependency audit, diff-check).
+- Replaced single-model NVIDIA routing with deterministic profiles:
+  - Chief = Nemotron 3 Ultra 550B A55B;
+  - Deep = GLM-5.3;
+  - Fast = Nemotron 3.5 Lightning 30B A3B;
+  - Vision = GLM-5.3 Flash.
+- Runtime now reports the actual selected NVIDIA submodel.
+- Health status requires the configured mesh models to be present and fails closed when a profile disappears.
+- Security/privacy preserved: provider OFF by default, AUTO fallback OFF by default, memory forwarding OFF by default, exact hosted NVIDIA endpoint enforcement, NVIDIA EXECUTE blocked.
+- Current multimodal truth boundary remains unchanged: image/camera/screen metadata is not pixel content. Vision is configured for the future real visual transport but is not falsely claimed as current perception.
+- Real hosted readiness still requires the user's private target-PC `NVIDIA_API_KEY` and live validation.

@@ -806,3 +806,13 @@ Important:
 Provider runbook: `docs/NVIDIA_NIM.md`.
 
 Continue Phase 14 / MEM-X / 16 / 17 / 19 / 20 target-PC evidence as previously documented.
+
+## NVIDIA mesh constraint after PR #154
+
+ASTRA now has an adaptive NVIDIA JARVIS model mesh at merge commit `ce5a5623867f443ffc931c6b4687b19e38412882`.
+
+Before touching provider routing, read `docs/NVIDIA_NIM.md`.
+
+Treat the mesh as a completed repo-side enhancement. Do not spend target-gate time on speculative model churn unless a concrete test or NVIDIA deprecation forces a change. Real API-key validation belongs to the target PC and must never commit secrets.
+
+Existing target-runtime evidence remains the priority.
