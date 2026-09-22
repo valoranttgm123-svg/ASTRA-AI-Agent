@@ -115,3 +115,21 @@ If the owner asks to continue while target-PC/provider access is unavailable:
 4. otherwise preserve this checkpoint for Codex real-runtime refinement.
 
 Codex continues to own target-PC sync/polling/proactive notification evidence, Phase 14/MEM-X/16/17/19/20 real execution, and real provider/device completion.
+
+
+## Active repo-side refinement — PR #182
+
+PR #182 / `feature/automation-lifecycle-event-bridge` is the active repository slice.
+
+Scope:
+- third real Event Engine source from the existing Automation Service lifecycle;
+- add a lifecycle observer without changing the Automation runner;
+- attach the bridge during server instrumentation before service start;
+- map due/waiting-approval/claimed/started/completed/failed/cancelled to source `automation`;
+- preserve explicit Event Engine subscriptions, rate limit, dedupe and quiet hours;
+- redact lifecycle detail before persistence;
+- Event Engine failure must never break Automation execution or global STOP;
+- expose bridge status read-only through the Automation Service API;
+- include full service→bridge→Event Engine integration coverage.
+
+If interrupted, inspect PR #182 newest head and CI first. Fix only concrete CI/runtime defects; do not rebuild Phase 14, Event Engine, GitHub source, service-health source or provider-health wiring.

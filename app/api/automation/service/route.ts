@@ -1,4 +1,6 @@
+import { getAutomationLifecycleEventBridgeStatus } from "@/lib/events/automation-lifecycle";
 import {
+  getAutomationService,
   getAutomationServiceStatus,
   runAutomationServiceTickNow,
   startAutomationServiceIfEnabled,
@@ -32,6 +34,9 @@ export async function GET(request: Request) {
     return Response.json({
       ok: true,
       service: getAutomationServiceStatus(),
+      eventBridge: getAutomationLifecycleEventBridgeStatus(
+        getAutomationService(),
+      ),
     });
   } catch (error) {
     return errorResponse(error);
@@ -49,6 +54,9 @@ export async function POST(request: Request) {
         ok: started,
         action,
         service: getAutomationServiceStatus(),
+        eventBridge: getAutomationLifecycleEventBridgeStatus(
+          getAutomationService(),
+        ),
       }, { status: started ? 200 : 409 });
     }
 
@@ -58,6 +66,9 @@ export async function POST(request: Request) {
         ok: true,
         action,
         service: getAutomationServiceStatus(),
+        eventBridge: getAutomationLifecycleEventBridgeStatus(
+          getAutomationService(),
+        ),
       });
     }
 
@@ -68,6 +79,9 @@ export async function POST(request: Request) {
         action,
         stopped,
         service: getAutomationServiceStatus(),
+        eventBridge: getAutomationLifecycleEventBridgeStatus(
+          getAutomationService(),
+        ),
       });
     }
 
@@ -79,6 +93,9 @@ export async function POST(request: Request) {
         action,
         result,
         service,
+        eventBridge: getAutomationLifecycleEventBridgeStatus(
+          getAutomationService(),
+        ),
       },
       { status: result ? 200 : 409 },
     );
