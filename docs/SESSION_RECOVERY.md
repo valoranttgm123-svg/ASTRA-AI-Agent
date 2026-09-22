@@ -142,3 +142,19 @@ If a PR for that branch exists, inspect its CI before doing anything else.
 If it merged green, consider NVIDIA repo-only architecture saturated and continue actual target/backend integration rather than recreating these files.
 
 Canonical NVIDIA plan remains `docs/NVIDIA_MAX_INTEGRATION.md`.
+
+## NVIDIA MAX merged saturation checkpoint — 2026-09-22
+
+Repository truth:
+- PR #159 merged: NVA-0 framework, `e155c75f98da4e07ca3c07b7f15d46ceb655f417`;
+- PR #160 merged: NVA-1 Skill Hub state/cache, `af7e05e1252b1b80e94b32cfbfedff6f2c7e006b`;
+- PR #161 merged: NVA-2…NVA-9 subsystem contracts, `84e5eb6aeb20dbdb737dc6d9ace149adfac73dbb`.
+
+All three PRs had green CI.
+
+A new session must **not** restart NVIDIA architecture work. Read `docs/NVIDIA_MAX_INTEGRATION.md` and continue only:
+1. real target-PC core gates Phase 14 → MEM-X → 16 → 17 → 19 → 20 when access exists;
+2. real NVIDIA backend integration against the existing contracts;
+3. a newly reproduced concrete defect/provider change.
+
+If none of those environments/evidence are available, NVIDIA repo-only work is blocked by design, not unfinished planning.
