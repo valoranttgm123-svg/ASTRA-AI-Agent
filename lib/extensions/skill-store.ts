@@ -15,6 +15,8 @@ import type {
   AstraExtensionSkillManifest,
   AstraExtensionSkillStore,
   AstraExtensionTrustState,
+  AstraExtensionUpdateState,
+  AstraExtensionVerificationEvidence,
   AstraExtensionVerificationMethod,
 } from "./contracts";
 
@@ -96,6 +98,17 @@ function installState(value: unknown): AstraExtensionInstallState {
     return value;
   }
   throw new Error("Extension installState is invalid.");
+}
+
+function updateState(value: unknown): AstraExtensionUpdateState {
+  if (
+    value === "current" ||
+    value === "update_available" ||
+    value === "unknown"
+  ) {
+    return value;
+  }
+  throw new Error("Extension updateState is invalid.");
 }
 
 function trust(value: unknown): AstraExtensionTrustState {
@@ -206,6 +219,7 @@ export function normalizeExtensionSkill(
     checksum: optionalString(source.checksum, "checksum", 256),
     trust: trust(source.trust),
     installState: state,
+    updateState: updateState(source.updateState),
     capabilities: idList(source.capabilities, "capabilities", 32),
     toolMappings: idList(source.toolMappings, "toolMappings", 24),
     permissionLevel: permission(source.permissionLevel),
@@ -377,6 +391,74 @@ export async function registerExtensionSkill(
     return {
       store: { schemaVersion: 1 as const, skills },
       result: safeManifest,
+    };
+  });
+}
+
+
+export async function recordVerifiedExtensionState({
+  skillId,
+  installState: nextInstallState,
+  version,
+  updateState: nextUpdateState,
+  evidence,
+}: {
+  skillId: string;
+  installState: AstraExtensionInstallState;
+  version?: string;
+  updateState?: AstraExtensionUpdateState;
+  evidence: AstraExtensionVerificationEvidence;
+}) {
+  return mutateExtensionSkillStore((store) => {
+    const index = store.skills.findIndex(
+      (skill) => skill.id.toLowerCase() === skillId.trim().toLowerCase(),
+    );
+    if (index < 0) throw new Error("Extension skill was not found.");
+
+    const current = store.skills[index];
+    if (current.verification === "none") {
+      throw new Error(
+        "Extension skill does not declare a verification method.",
+      );
+    }
+    if (evidence.method !== current.verification) {
+      throw new Error(
+        "Extension verification evidence does not match the declared method.",
+      );
+    }
+    const evidenceTime = Date.parse(evidence.at);
+    if (!Number.isFinite(evidenceTime)) {
+      throw new Error("Extension verification evidence timestamp is invalid.");
+    }
+    if (!evidence.detail.trim() || evidence.detail.trim().length > 1000) {
+      throw new Error("Extension verification evidence detail is invalid.");
+    }
+
+    const nextVersion = version?.trim() || current.version;
+    if (!nextVersion || nextVersion.length > 120) {
+      throw new Error("Extension verified version is invalid.");
+    }
+
+    const updated: AstraExtensionSkillManifest = {
+      ...current,
+      version: nextVersion,
+      installState: nextInstallState,
+      updateState: nextUpdateState ?? current.updateState,
+      updatedAt: new Date(evidenceTime).toISOString(),
+    };
+    const normalized = normalizeExtensionSkill(updated);
+    const skills = [...store.skills];
+    skills[index] = normalized;
+    return {
+      store: { schemaVersion: 1 as const, skills },
+      result: {
+        skill: normalized,
+        verification: {
+          method: evidence.method,
+          at: new Date(evidenceTime).toISOString(),
+          detail: evidence.detail.trim(),
+        },
+      },
     };
   });
 }
