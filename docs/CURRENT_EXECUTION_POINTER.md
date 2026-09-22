@@ -196,3 +196,29 @@ Recovery rule:
 - do not merge unless the newest PR head is green.
 
 After Phase 29 merges, the authorized repository-only Phase 21–30 foundation sequence is saturated. Do not invent speculative Phase 30 mocks. Continue with real target-PC/core gates, real provider integrations, and evidence-backed Phase 30 scenarios.
+
+
+## JARVIS repository-foundation saturation checkpoint — Phase 29 merged
+
+Phase 29 Generic Skill + Environment foundation merged in PR #169 at `390a5c35e50a5020ccf34f317edcc25f4837dcb1`.
+
+Verified:
+- PR final CI #457: **SUCCESS**;
+- main push CI #458: **SUCCESS**.
+
+The independently implementable repository-foundation sequence is now complete:
+`Phase 24 → 25 → 28 → 22 → 27 → 29`.
+
+There is **no next speculative repository-only JARVIS slice** authorized by this sequence.
+
+Next execution priority:
+1. Phase 14 real Automation validation / approvals / STOP;
+2. MEM-X real Sonor/Graphify/Obsidian inspection and connection;
+3. Phase 16 real target-PC/browser/Humanoid HIGH evidence;
+4. Phase 17 real integrated scenarios and STOP;
+5. Phase 19 Windows install/startup/update/reinstall evidence;
+6. Phase 20 evidence-backed core release report;
+7. real provider-backed Phase 21/23/26/27/29 integrations as environment access allows;
+8. Phase 30 final JARVIS scenarios, soak, self-evaluation and release status.
+
+Do not recreate Phase 24–29 foundations. New work must be driven by real target/provider evidence, a concrete defect, or an explicit new owner requirement.
