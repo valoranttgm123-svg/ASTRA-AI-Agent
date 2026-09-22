@@ -1,6 +1,6 @@
 # ASTRA ↔ Sonor Bridge
 
-Status: **Bridge foundation implemented. Existing Sonor UI confirmed. Real local Sonor endpoint contract still requires verification on the target PC.**
+Status: **LIVE TARGET-PC BRIDGE VALIDATED on 2026-09-22. Existing Sonor/Graphify/Obsidian remains the authoritative local knowledge system; ASTRA consumes it read-only over loopback.**
 
 ## Existing Sonor
 
@@ -63,7 +63,7 @@ Default local URL:
 
 ASTRA rejects non-loopback Sonor URLs by default. The user-facing LAN Sonor address should not be used by ASTRA when both services run on the same PC.
 
-The search path is intentionally blank until the real local Sonor endpoint is verified.
+The verified target-PC search path is `/api/astra/search`. The health endpoint is `/api/astra/health`. Keep both on loopback only.
 
 ## ASTRA-compatible bridge contract
 
@@ -113,37 +113,41 @@ Allowed provenance source types already supported by ASTRA include:
 
 This lets Sonor preserve the original Graphify/Obsidian source instead of flattening all context into an opaque blob.
 
-## What still requires local inspection
+## Target-PC validation — 2026-09-22
 
-The connected GitHub repositories do not currently contain the Sonor source, and this environment cannot open the user's `127.0.0.1:55127`.
+The real local Sonor source/network layer was inspected on the target PC and the existing implementation was preserved rather than rebuilt.
 
-On the target PC, inspect the actual Sonor source/network layer and determine:
+Verified runtime contract:
 
-1. whether an API already exists;
-2. existing search/graph endpoint paths;
-3. current request/response schema;
-4. project IDs/aliases;
-5. Graphify provenance fields;
-6. Obsidian note/reference fields;
-7. pagination and limits;
-8. cancellation/timeout behavior.
+- health: `GET http://127.0.0.1:55127/api/astra/health`;
+- search: `POST http://127.0.0.1:55127/api/astra/search`;
+- health reported `readOnly=true`, `ready=true`, and `cloudAutomatic=false`;
+- ASTRA uses `ASTRA_SONOR_ENABLED=true`, loopback URL `http://127.0.0.1:55127`, and `ASTRA_SONOR_SEARCH_PATH=/api/astra/search`;
+- a real project-scoped ASTRA request queried local memory, project context, and Sonor;
+- Sonor returned 6 bounded records;
+- 4 returned records were graph-backed;
+- the selected context preserved source types `project`, `obsidian`, and `graphify`;
+- Ollama then completed the final ASTRA response, proving the path `ASTRA → Memory Manager → Sonor → Graphify/Obsidian → Ollama` end-to-end.
 
-Preferred outcome:
-
-- adapt an existing Sonor endpoint to the ASTRA-compatible contract; or
-- add a small read-only compatibility endpoint inside Sonor.
-
-Do **not** scrape the visual graph DOM as the primary integration if a server-side data source exists.
+The ASTRA status/detail defect that prefixed a healthy Ollama status with an unrelated Hermes `fetch failed` message was fixed in PR #187 and merged to `main`.
 
 ## Truthful runtime state
 
-Until a real Sonor endpoint on the target PC is inspected and configured:
+As of 2026-09-22:
 
-- Sonor UI exists;
-- ASTRA Sonor bridge code exists;
-- Sonor is **not yet claimed as live/READY** in the user's actual runtime.
+- Sonor UI exists and the server-side read-only ASTRA bridge is live on the target PC;
+- ASTRA Sonor bridge code is configured and exercised against the real endpoint;
+- provenance-aware Graphify/Obsidian records are reaching the Brain context;
+- end-to-end reasoning through local Ollama completed successfully;
+- the existing Sonor project remains authoritative and must not be duplicated.
 
-Once the endpoint is configured and the production PC test passes, update this document and `docs/CODEX_HANDOFF.md`.
+Still pending for the broader MEM-X preservation mission:
+
+- establish a safe private backup/remote for the Sonor source if the owner wants repository backup;
+- keep runtime/user datasets, private notes, indexes, secrets, caches, and generated output out of public GitHub;
+- add explicit failure/cancellation evidence only if required by the release gate.
+
+Do **not** scrape the visual graph DOM as the primary integration because the verified server-side bridge exists.
 
 
 ## Authoritative continuation documents
