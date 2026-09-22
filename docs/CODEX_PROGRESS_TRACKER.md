@@ -233,14 +233,16 @@ Target-PC completion:
 
 ### NVA-2 through NVA-9
 
-- [ ] NVA-2 AI-Q Research adapter + real backend validation;
-- [ ] NVA-3 NeMo Retriever/RAG under real Sonor;
-- [ ] NVA-4 Document Intelligence;
-- [ ] NVA-5 Always-On Voice;
-- [ ] NVA-6 DeepStream/VSS real vision;
-- [ ] NVA-7 NemoClaw/Hermes governed learned workflows;
-- [ ] NVA-8 NeMo Guardrails + Content Safety;
-- [ ] NVA-9 NeMo Evaluation / Quality Lab.
+Repository contracts are complete and merged through PR #161. Real integration remains pending:
+
+- [ ] NVA-2 real AI-Q backend connected/validated;
+- [ ] NVA-3 real NeMo Retriever/RAG connected under audited Sonor;
+- [ ] NVA-4 real Document Intelligence backend connected;
+- [ ] NVA-5 real Nemotron Voice/Speech connected and measured;
+- [ ] NVA-6 real DeepStream/VSS vision connected with actual pixels;
+- [ ] NVA-7 real NemoClaw/Hermes learned workflow capture/replay validated;
+- [ ] NVA-8 real NeMo Guardrails/Content Safety deployment validated;
+- [ ] NVA-9 real evaluation suites executed against exact target runtime/build.
 
 These tasks do not replace target-PC core release evidence. When real PC access exists, Phase 14 → MEM-X → 16 → 17 → 19 → 20 remains the immediate release-gate sequence.
 
