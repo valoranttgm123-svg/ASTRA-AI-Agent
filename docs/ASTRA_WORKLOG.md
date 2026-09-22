@@ -837,4 +837,5 @@ Real GitHub/calendar/email/service adapters and proactive notification evidence 
 - public repositories require no token; private repositories may use local `GITHUB_TOKEN`;
 - exact GitHub Actions API endpoint/version is fixed in code;
 - repeated poll state is skipped before publishing so an existing delivered/acknowledged record is not overwritten by a duplicate poll;
+- opened PR #176 for the adapter;
 - real background polling/proactive target-runtime delivery remains pending.
