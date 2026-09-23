@@ -18,12 +18,18 @@ Set:
 
 The performance capture button is disabled when resolved quality is LOW.
 
-For a normal state baseline, select one of:
+Capture a normal state only while the real runtime is in that state:
 
 - IDLE
 - LISTENING
 - THINKING
 - SPEAKING
+
+Manual fake-state buttons were removed. IDLE is available without activating
+devices. LISTENING requires the owner's actual microphone session; THINKING
+requires a real pending task; SPEAKING requires actual enabled speech output.
+Do not synthesize a runtime state or enable microphone/camera access solely to
+complete a release checklist. Missing physical evidence leaves that gate open.
 
 For dynamic evidence, start:
 

@@ -7,6 +7,13 @@ provider persistence, read-only Hermes Runs and Sonor hardening slice.
 PR #188 is merged. Do not reimplement the newer JARVIS/NVIDIA foundations.
 Do not claim release READY before the combined build/runtime evidence passes.
 
+PR #189 is now merged at `2a5d2c40cddfa811c27b59aae2bfcf1795d28d8c`
+(CI #530 SUCCESS). The next Windows fix covers console-interruption exits,
+bounded startup probe timing and npm execution in the repository-gate script.
+Browser STOP returned IDLE/ERR_ABORTED; Level-2 unapproved occurrence stayed
+unclaimed. Physical voice/camera, approved occurrence STOP and final release
+measurements are still separate gates. See the detailed dated refinement note.
+
 ## 2026-09-20 — Phase 13 Command Center MAX
 
 Implemented on `astra/phase13-command-center-max`:

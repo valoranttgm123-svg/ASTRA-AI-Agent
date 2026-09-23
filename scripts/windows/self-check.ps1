@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$npm = (Get-Command npm.cmd -ErrorAction Stop).Source
 Push-Location $repoRoot
 try {
   $argsList = @(

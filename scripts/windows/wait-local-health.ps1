@@ -15,13 +15,21 @@ $lastAstraError = $null
 $lastOllamaError = $null
 $lastAutomationError = $null
 
+function Get-ProbeBudget {
+  # Brain status includes independently bounded provider probes. Three seconds
+  # can reject a healthy fallback while an optional provider takes five seconds.
+  $remaining = [math]::Floor($TimeoutSec - $watch.Elapsed.TotalSeconds)
+  if ($remaining -lt 1) { throw 'Startup health deadline reached.' }
+  return [int][math]::Min(15, $remaining)
+}
+
 while ($watch.Elapsed.TotalSeconds -lt $TimeoutSec) {
   $astraReady = $false
   $ollamaVersion = $null
   $automationService = $null
 
   try {
-    $astra = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/agent" -TimeoutSec 3
+    $astra = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/agent" -TimeoutSec (Get-ProbeBudget)
     $astraReady = $astra.ready -eq $true
     $lastAstraError = $null
   }
@@ -30,7 +38,7 @@ while ($watch.Elapsed.TotalSeconds -lt $TimeoutSec) {
   }
 
   try {
-    $ollama = Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/version" -TimeoutSec 3
+    $ollama = Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/version" -TimeoutSec (Get-ProbeBudget)
     if ($ollama.version) {
       $ollamaVersion = [string]$ollama.version
     }
@@ -41,7 +49,7 @@ while ($watch.Elapsed.TotalSeconds -lt $TimeoutSec) {
   }
 
   try {
-    $automation = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/automation/service" -TimeoutSec 3
+    $automation = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/api/automation/service" -TimeoutSec (Get-ProbeBudget)
     if ($null -ne $automation.service) {
       $automationService = $automation.service
     }

@@ -45,4 +45,6 @@ if ($ipv4Loopback.Count -gt 0) {
 
 $env:PORT = $Port.ToString()
 Set-Location -LiteralPath $repoRoot
-& (Get-Command node.exe -ErrorAction Stop).Source $nextCli start --hostname 127.0.0.1 -p $Port
+$server = Start-Process -FilePath (Get-Command node.exe -ErrorAction Stop).Source -ArgumentList ('"' + $nextCli + '" start --hostname 127.0.0.1 -p ' + $Port) -WorkingDirectory $repoRoot -WindowStyle Hidden -PassThru
+$server.WaitForExit()
+if ($server.ExitCode -ne 0) { throw "ASTRA server exited with code $($server.ExitCode)." }

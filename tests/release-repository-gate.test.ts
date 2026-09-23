@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
@@ -6,6 +7,7 @@ import { test } from "node:test";
 import {
   REPOSITORY_GATE_STEPS,
   repositoryGateExecutable,
+  repositoryGateArgs,
 } from "../lib/release/repository-gate";
 
 test("Phase 18A repository gate contains every required RC repository command", () => {
@@ -39,7 +41,7 @@ test("Phase 18A repository gate contains every required RC repository command", 
 test("Phase 18A repository gate uses platform-safe npm executable and no destructive Git command", () => {
   assert.equal(
     repositoryGateExecutable("npm", "win32"),
-    "npm.cmd",
+    process.execPath,
   );
   assert.equal(
     repositoryGateExecutable("npm", "linux"),
@@ -57,6 +59,14 @@ test("Phase 18A repository gate uses platform-safe npm executable and no destruc
     serialized,
     /reset|clean|checkout|rebase|push|merge|commit/i,
   );
+});
+
+test("Windows repository gate launches the bundled npm without a command shell", {skip: process.platform !== "win32"}, () => {
+  const step = {...REPOSITORY_GATE_STEPS[0], args:["--version"]};
+  const result = spawnSync(repositoryGateExecutable(step.executable), repositoryGateArgs(step), {shell:false, windowsHide:true, encoding:"utf8"});
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout.trim(), /^\d+\.\d+\.\d+/);
 });
 
 test("Phase 18A repository gate requires a clean working tree before evidence capture", () => {

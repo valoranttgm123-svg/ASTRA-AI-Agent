@@ -2,6 +2,13 @@
 
 ## 2026-09-23 — target-PC refinement in progress
 
+PR #189 merged after CI #530 SUCCESS as
+`2a5d2c40cddfa811c27b59aae2bfcf1795d28d8c`. Real mobile viewport, browser STOP,
+Sonor scope/provenance and negative Level-2 approval checks are recorded in
+`TARGET_PC_REFINEMENT_2026-09-23.md`. Follow-up fixes address observed Windows
+console-interruption shutdowns, a too-short startup probe and repository-gate
+npm EINVAL. No physical/approved-execution/full-release PASS is implied.
+
 Merged the green Sonor evidence PR #188 (`35ab5aa7398f6d3c2afbc0119baf9f690247040e`, CI #528 SUCCESS).
 Reconciled current main with the local Windows/provider/mobile fixes; see
 `TARGET_PC_REFINEMENT_2026-09-23.md`. Local tests pass at the recorded scope;
