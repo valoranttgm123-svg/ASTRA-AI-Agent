@@ -27,7 +27,10 @@ test("Phase 19D Windows validator checks tasks shortcut loopback and self-check"
   assert.match(source, /ollamaActions\.Count\s+-eq\s+1/i);
   assert.match(source, /agentTriggers\.Count\s+-eq\s+1/i);
   assert.match(source, /ollamaTriggers\.Count\s+-eq\s+1/i);
-  assert.match(source, /Principal\.UserId[\s\S]*currentUser/i);
+  assert.match(source, /Resolve-AccountSid/i);
+  assert.match(source, /SecurityIdentifier/i);
+  assert.match(source, /Principal\.UserId[\s\S]*agentPrincipalSid/i);
+  assert.match(source, /currentUserSid/i);
   assert.match(source, /LogonType[\s\S]*Interactive/i);
   assert.match(source, /MSFT_TaskLogonTrigger/i);
   assert.match(source, /TaskPath[\s\S]*root Task Scheduler/i);

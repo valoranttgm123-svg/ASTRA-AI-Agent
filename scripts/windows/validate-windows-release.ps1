@@ -45,7 +45,49 @@ $agentAction = $agentActions[0]
 $ollamaAction = $ollamaActions[0]
 $agentTrigger = $agentTriggers[0]
 $ollamaTrigger = $ollamaTriggers[0]
-$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+$currentIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+$currentUser = $currentIdentity.Name
+$currentUserSid = $currentIdentity.User.Value
+
+function Resolve-AccountSid {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$UserId
+  )
+
+  $candidates = [System.Collections.Generic.List[string]]::new()
+  $candidates.Add($UserId)
+
+  if ($UserId -notmatch "\\") {
+    if (-not [string]::IsNullOrWhiteSpace($env:COMPUTERNAME)) {
+      $candidates.Add("$env:COMPUTERNAME\$UserId")
+    }
+    if (
+      -not [string]::IsNullOrWhiteSpace($env:USERDOMAIN) -and
+      $env:USERDOMAIN -ine $env:COMPUTERNAME
+    ) {
+      $candidates.Add("$env:USERDOMAIN\$UserId")
+    }
+  }
+
+  foreach ($candidate in @($candidates | Select-Object -Unique)) {
+    try {
+      $account = [System.Security.Principal.NTAccount]::new($candidate)
+      return $account.Translate([System.Security.Principal.SecurityIdentifier]).Value
+    }
+    catch {
+      continue
+    }
+  }
+
+  return $null
+}
+
+$agentPrincipalSid = Resolve-AccountSid -UserId ([string]$agentTask.Principal.UserId)
+$ollamaPrincipalSid = Resolve-AccountSid -UserId ([string]$ollamaTask.Principal.UserId)
+$agentTriggerSid = Resolve-AccountSid -UserId ([string]$agentTrigger.UserId)
+$ollamaTriggerSid = Resolve-AccountSid -UserId ([string]$ollamaTrigger.UserId)
+
 $expectedPowerShell = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
 $expectedAstraScript = Join-Path $PSScriptRoot "run-astra.ps1"
 $expectedOllamaScript = Join-Path $PSScriptRoot "run-ollama.ps1"
@@ -54,16 +96,16 @@ $expectedOllamaArguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidd
 
 Assert-True -Condition ([string]$agentTask.TaskPath -eq "\") -Message "ASTRA-Agent harus berada pada root Task Scheduler."
 Assert-True -Condition ([string]$ollamaTask.TaskPath -eq "\") -Message "ASTRA-Ollama harus berada pada root Task Scheduler."
-Assert-True -Condition ([string]$agentTask.Principal.UserId -ieq $currentUser) -Message "ASTRA-Agent principal tidak cocok dengan user Windows aktif."
-Assert-True -Condition ([string]$ollamaTask.Principal.UserId -ieq $currentUser) -Message "ASTRA-Ollama principal tidak cocok dengan user Windows aktif."
+Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($agentPrincipalSid) -and $agentPrincipalSid -eq $currentUserSid) -Message "ASTRA-Agent principal tidak cocok dengan user Windows aktif."
+Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($ollamaPrincipalSid) -and $ollamaPrincipalSid -eq $currentUserSid) -Message "ASTRA-Ollama principal tidak cocok dengan user Windows aktif."
 Assert-True -Condition ([string]$agentTask.Principal.LogonType -eq "Interactive") -Message "ASTRA-Agent tidak memakai Interactive logon."
 Assert-True -Condition ([string]$ollamaTask.Principal.LogonType -eq "Interactive") -Message "ASTRA-Ollama tidak memakai Interactive logon."
 Assert-True -Condition ([string]$agentTask.Principal.RunLevel -eq "Limited") -Message "ASTRA-Agent tidak memakai RunLevel Limited."
 Assert-True -Condition ([string]$ollamaTask.Principal.RunLevel -eq "Limited") -Message "ASTRA-Ollama tidak memakai RunLevel Limited."
 Assert-True -Condition ([string]$agentTrigger.CimClass.CimClassName -eq "MSFT_TaskLogonTrigger") -Message "ASTRA-Agent trigger bukan logon trigger."
 Assert-True -Condition ([string]$ollamaTrigger.CimClass.CimClassName -eq "MSFT_TaskLogonTrigger") -Message "ASTRA-Ollama trigger bukan logon trigger."
-Assert-True -Condition ([string]$agentTrigger.UserId -ieq $currentUser) -Message "ASTRA-Agent logon trigger tidak cocok dengan user Windows aktif."
-Assert-True -Condition ([string]$ollamaTrigger.UserId -ieq $currentUser) -Message "ASTRA-Ollama logon trigger tidak cocok dengan user Windows aktif."
+Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($agentTriggerSid) -and $agentTriggerSid -eq $currentUserSid) -Message "ASTRA-Agent logon trigger tidak cocok dengan user Windows aktif."
+Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($ollamaTriggerSid) -and $ollamaTriggerSid -eq $currentUserSid) -Message "ASTRA-Ollama logon trigger tidak cocok dengan user Windows aktif."
 Assert-True -Condition ([string]$agentAction.Execute -ieq $expectedPowerShell) -Message "ASTRA-Agent action tidak memakai Windows PowerShell sistem."
 Assert-True -Condition ([string]$ollamaAction.Execute -ieq $expectedPowerShell) -Message "ASTRA-Ollama action tidak memakai Windows PowerShell sistem."
 Assert-True -Condition ([string]$agentAction.Arguments -ieq $expectedAstraArguments) -Message "ASTRA-Agent arguments berbeda dari kontrak installer."

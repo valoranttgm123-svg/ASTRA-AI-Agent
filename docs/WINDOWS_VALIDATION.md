@@ -22,7 +22,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\validate-windows-rele
 - `ASTRA-Ollama` Scheduled Task exists;
 - exactly one root-level `ASTRA-Agent` task and one root-level `ASTRA-Ollama` task exist;
 - each task has exactly one action and one current-user logon trigger;
-- both tasks use the current Windows user, `Interactive` logon, and `RunLevel Limited`;
+- both tasks resolve to the current Windows user by SID (so equivalent Task Scheduler forms such as `dhit1` and `PC1\\dhit1` are accepted), with `Interactive` logon and `RunLevel Limited`;
 - task PowerShell executable and full argument strings exactly match the installer contract, including ASTRA's validated port;
 - desktop `ASTRA.url` points to the loopback URL;
 - the ASTRA port has a listener;
