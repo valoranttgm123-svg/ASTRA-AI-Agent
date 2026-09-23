@@ -1536,7 +1536,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
               events: [
                 ...baseEvents(selected),
                 emitLiveEvent(options, {
-                  type: "policy.blocked",
+                  type: "agent.blocked",
                   agent: "computer",
                   visualNode: visualNodeForAgent("computer"),
                   label: "Owner Mode unavailable",
@@ -1575,7 +1575,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
               events: [
                 ...baseEvents(selected),
                 emitLiveEvent(options, {
-                  type: "policy.blocked",
+                  type: "agent.blocked",
                   agent: "computer",
                   visualNode: visualNodeForAgent("computer"),
                   label: "Owner Mode permission blocked",
@@ -1627,7 +1627,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         const completed = result.status === "completed" && result.verified;
         liveEvents.push(
           emitLiveEvent(options, {
-            type: completed ? "response.ready" : "execution.blocked",
+            type: completed ? "response.ready" : "agent.blocked",
             agent: "computer",
             visualNode: visualNodeForAgent("computer"),
             label: completed ? "Owner Mode response ready" : "Owner Mode command failed",
@@ -1677,7 +1677,23 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             requestedMode: "execute",
             route: directRoute,
             visualNodes: directRoute.map(visualNodeForAgent),
-            events: routingOnlyEvents(selected, "blocked", undefined, detail),
+            events: [
+              ...baseEvents(selected),
+              emitLiveEvent(options, {
+                type: "agent.blocked",
+                agent: "computer",
+                visualNode: visualNodeForAgent("computer"),
+                label: "Owner Mode execution failed",
+                detail,
+              }),
+              emitLiveEvent(options, {
+                type: "response.ready",
+                agent: selected,
+                visualNode: "chief_of_staff",
+                label: "Response ready",
+                detail: "Direct Owner Mode execution failed before verified completion.",
+              }),
+            ],
             context: {
               memoryEntries: 0,
               memorySources: [],
