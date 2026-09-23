@@ -1159,6 +1159,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         const result = await chatWithOllama({
           input,
           agent,
+          fastContext: fastChat,
           context: context.localContext,
           policyText: context.policyText,
           signal: options?.signal,
@@ -1236,6 +1237,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         const result = await chatWithOllama({
           input,
           agent,
+          fastContext: fastChat,
           context: context.localContext,
           policyText: context.policyText,
           signal: options?.signal,
