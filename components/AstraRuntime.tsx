@@ -81,6 +81,7 @@ type AstraRuntimeValue = {
   micError: string | null;
   activeAgent: string | null;
   lastResponse: AstraBrainChatResult | null;
+  streamingText: string;
   brainProvider: AstraBrainProvider | null;
   brainStatus: AstraBrainStatus | null;
   brainEvents: AstraBrainEvent[];
@@ -209,6 +210,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [micError, setMicError] = useState<string | null>(null);
   const [activeAgent, setActiveAgent] = useState<string | null>(null);
   const [lastResponse, setLastResponse] = useState<AstraBrainChatResult | null>(null);
+  const [streamingText, setStreamingText] = useState("");
   const [brainProvider, setBrainProvider] = useState<AstraBrainProvider | null>(null);
   const [brainStatus, setBrainStatus] = useState<AstraBrainStatus | null>(null);
   const [brainEvents, setBrainEvents] = useState<AstraBrainEvent[]>([]);
@@ -523,6 +525,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
     setMicError(null);
     setLastResponse(null);
+    setStreamingText("");
     setOrbState("thinking");
     setAvatarState("thinking");
     setSpeechLevel(0);
@@ -595,6 +598,20 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
           return;
         }
 
+        if (eventName === "token") {
+          const tokenPayload = payload as { text?: unknown };
+          if (
+            requestSequence === requestSequenceRef.current &&
+            typeof tokenPayload.text === "string" &&
+            tokenPayload.text
+          ) {
+            setStreamingText((current) =>
+              (current + tokenPayload.text).slice(-16000),
+            );
+          }
+          return;
+        }
+
         if (eventName === "result") {
           streamState.result = payload as AstraBrainChatResult;
           return;
@@ -636,6 +653,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       requestControllerRef.current = null;
       setBrainStreaming(false);
       setLastResponse(finalResult);
+      setStreamingText("");
       setActiveAgent(finalResult.agentName);
       setBrainProvider(finalResult.brain.provider);
 
@@ -713,6 +731,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
       requestControllerRef.current = null;
       setBrainStreaming(false);
+      setStreamingText("");
       if (error instanceof DOMException && error.name === "AbortError") {
         setOrbState("idle");
         setAvatarState("idle");
@@ -771,6 +790,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
     setMicError(null);
     setLastResponse(null);
+    setStreamingText("");
     setOrbState("thinking");
     setAvatarState("thinking");
     setSpeechLevel(0);
@@ -1080,6 +1100,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     setActiveAgent(null);
     setBrainStreaming(false);
     setAutomationStreaming(false);
+    setStreamingText("");
   }, [
     cancelSpeech,
     clearResetTimer,
@@ -1110,6 +1131,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       micError,
       activeAgent,
       lastResponse,
+      streamingText,
       brainProvider,
       brainStatus,
       brainEvents,
@@ -1142,6 +1164,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       micError,
       activeAgent,
       lastResponse,
+      streamingText,
       brainProvider,
       brainStatus,
       brainEvents,

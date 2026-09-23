@@ -1126,7 +1126,9 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div style={{ minHeight: 42, maxHeight: "22vh", overflowY: "auto", whiteSpace: "pre-wrap", overflowWrap: "anywhere", marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
             {runtime.micActive
               ? (runtime.micTranscript || "Silakan bicara...")
-              : runtime.lastResponse?.message ?? "Ketik perintah atau gunakan mikrofon. Animasi mengikuti aktivitas AI yang sebenarnya."}
+              : runtime.streamingText ||
+                runtime.lastResponse?.message ||
+                "Ketik perintah atau gunakan mikrofon. Animasi mengikuti aktivitas AI yang sebenarnya."}
           </div>
           <div style={{display:"flex",gap:8,marginTop:10}}>
             <select aria-label="Provider AI humanoid" value={runtime.providerPreference} onChange={event => runtime.setProviderPreference(event.target.value as "auto" | "ollama" | "codex" | "nvidia")} style={{...inputStyle,padding:6}}>

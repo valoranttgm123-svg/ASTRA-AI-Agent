@@ -4,6 +4,7 @@ import type { AstraAgent } from "@/lib/agent/types";
 import type { AstraBrainPermissionSnapshot } from "./types";
 import { safeErrorDetail, safePublicDetail } from "@/lib/security/redaction";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
+import { ASTRA_PERSONALITY_PROMPT } from "./personality";
 import {
   shouldDetachOwnedProcess,
   terminateOwnedProcessTree,
@@ -208,6 +209,7 @@ export async function chatWithCodex({
 
   const prompt = [
     "You are ASTRA's Codex engineering specialist.",
+    ASTRA_PERSONALITY_PROMPT,
     `Routed specialist: ${agent.name}.`,
     `Role: ${agent.role}.`,
     `Capabilities: ${agent.capabilities.join(", ")}.`,

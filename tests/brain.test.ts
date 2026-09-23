@@ -360,6 +360,23 @@ before(async () => {
         return;
       }
 
+      if (body.stream === true) {
+        response.setHeader("content-type", "application/x-ndjson");
+        response.write(
+          JSON.stringify({
+            message: { role: "assistant", content: "ASTRA " },
+            done: false,
+          }) + "\n",
+        );
+        response.end(
+          JSON.stringify({
+            message: { role: "assistant", content: "OLLAMA SIAP" },
+            done: true,
+          }) + "\n",
+        );
+        return;
+      }
+
       response.setHeader("content-type", "application/json");
       response.end(JSON.stringify({ message: { content: "ASTRA OLLAMA SIAP" } }));
       return;
@@ -494,7 +511,7 @@ test("permission policy defaults to approval and denies side effects", () => {
   assert.equal(policy.allowPaidCloud, false);
 });
 
-test("Ollama uses the exact configured model and responsive payload", async () => {
+test("Ollama uses the exact configured model and conversational prompt", async () => {
   const result = await chatWithOllama({
     input: "tes",
     agent: ASTRA_AGENT_MAP.chief_of_staff,
@@ -503,7 +520,29 @@ test("Ollama uses the exact configured model and responsive payload", async () =
   assert.equal(result.model, "fixture-model:local");
   assert.equal(chatCalls, 1);
   assert.equal(chatBodies[0].think, false);
+  assert.equal(chatBodies[0].stream, false);
   assert.deepEqual(chatBodies[0].options, { num_predict: 1024 });
+
+  const messages = chatBodies[0].messages as Array<{
+    role: string;
+    content: string;
+  }>;
+  const system = messages.find((message) => message.role === "system")?.content ?? "";
+  assert.match(system, /capable personal assistant/i);
+  assert.match(system, /natural everyday Indonesian/i);
+});
+
+test("Ollama streams response chunks while preserving the final message", async () => {
+  const tokens: string[] = [];
+  const result = await chatWithOllama({
+    input: "tes streaming",
+    agent: ASTRA_AGENT_MAP.chief_of_staff,
+    onToken: (token) => tokens.push(token),
+  });
+
+  assert.equal(result.message, "ASTRA OLLAMA SIAP");
+  assert.deepEqual(tokens, ["ASTRA ", "OLLAMA SIAP"]);
+  assert.equal(chatBodies[0].stream, true);
 });
 
 test("missing preferred Ollama model never silently switches", async () => {
@@ -538,17 +577,22 @@ test("AbortSignal cancels an in-flight Ollama request", async () => {
   await assert.rejects(pending, { name: "AbortError" });
 });
 
-test("explicit Ollama selection executes Ollama with live lifecycle events", async () => {
+test("explicit Ollama selection streams and uses fast chat for lightweight conversation", async () => {
   const events: AstraBrainEvent[] = [];
+  const tokens: string[] = [];
   const result = await astraBrain.chat("halo", {
     provider: "ollama",
     onEvent: (event) => events.push(event),
+    onToken: (token) => tokens.push(token),
   });
   assert.equal(result.state, "completed");
   assert.equal(result.brain.provider, "ollama");
+  assert.equal(result.brain.context?.memoryEntries, 0);
+  assert.deepEqual(tokens, ["ASTRA ", "OLLAMA SIAP"]);
   assert.equal(chatCalls, 1);
   assert.ok(events.some((event) => event.type === "agent.started"));
   assert.ok(events.some((event) => event.type === "agent.completed"));
+  assert.equal(events.some((event) => event.type === "memory.search.started"), false);
 });
 
 test("explicit disabled Codex does not silently fall back to Ollama", async () => {
