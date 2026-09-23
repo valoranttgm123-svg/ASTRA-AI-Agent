@@ -11,7 +11,11 @@ import { selectAgent } from "../lib/agent/orchestrator";
 import { astraBrain } from "../lib/brain/adapter";
 import { guardRequest, parseAgentRequest, readJson } from "../lib/brain/http";
 import { getMemoryContext } from "../lib/brain/memory";
-import { chatWithOllama, getOllamaStatus } from "../lib/brain/ollama";
+import {
+  chatWithOllama,
+  getOllamaStatus,
+  preloadOllamaModel,
+} from "../lib/brain/ollama";
 import { getPermissionPolicy } from "../lib/brain/policy";
 import { getSkillContext } from "../lib/brain/skills";
 import { ASTRA_AGENT_MAP } from "../lib/agent/roster";
@@ -421,6 +425,7 @@ beforeEach(() => {
   process.env.ASTRA_OLLAMA_THINKING = "false";
   process.env.ASTRA_OLLAMA_MAX_TOKENS = "1024";
   delete process.env.ASTRA_OLLAMA_KEEP_ALIVE;
+  delete process.env.ASTRA_OLLAMA_PRELOAD_ENABLED;
   process.env.ASTRA_MEMORY_FILE = path.join(root, "memory.json");
   process.env.ASTRA_PROJECTS_FILE = path.join(root, "projects.json");
   process.env.ASTRA_PROJECTS_ENABLED = "true";
@@ -530,6 +535,23 @@ test("permission policy defaults to approval and denies side effects", () => {
   assert.equal(policy.allowShell, false);
   assert.equal(policy.allowExternalActions, false);
   assert.equal(policy.allowPaidCloud, false);
+});
+
+test("Ollama startup preload loads the configured model without generating a reply", async () => {
+  const loaded = await preloadOllamaModel();
+  assert.equal(loaded, true);
+  assert.equal(chatCalls, 1);
+  assert.equal(chatBodies[0].model, "fixture-model:local");
+  assert.equal(chatBodies[0].stream, false);
+  assert.equal(chatBodies[0].keep_alive, "30m");
+  assert.deepEqual(chatBodies[0].messages, []);
+});
+
+test("Ollama startup preload can be disabled locally", async () => {
+  process.env.ASTRA_OLLAMA_PRELOAD_ENABLED = "false";
+  const loaded = await preloadOllamaModel();
+  assert.equal(loaded, false);
+  assert.equal(chatCalls, 0);
 });
 
 test("Ollama uses the exact configured model and conversational prompt", async () => {
