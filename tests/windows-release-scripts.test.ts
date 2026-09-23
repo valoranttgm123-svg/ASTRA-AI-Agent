@@ -10,6 +10,18 @@ function readWindowsScript(name: string) {
   );
 }
 
+test("Windows update stops only the exact checkout server, including an orphaned task child", () => {
+  const stop = readWindowsScript("stop-astra-runtime.ps1");
+  assert.match(stop, /Get-NetTCPConnection -LocalPort \$Port/);
+  assert.match(stop, /\[regex\]::Escape\(\$nextCli\)/);
+  assert.match(stop, /CommandLine -notmatch \$ownedPattern/);
+  assert.match(stop, /CreationDate -ne \$candidate.CreationDate/);
+  assert.match(stop, /Stop-Process -Id \$current.ProcessId/);
+  assert.doesNotMatch(stop, /Stop-Process\s+-Name|taskkill[^\n]*\/IM/i);
+  assert.match(readWindowsScript("update-local.ps1"), /stop-astra-runtime.ps1/);
+  assert.match(readWindowsScript("uninstall-local.ps1"), /stop-astra-runtime.ps1/);
+});
+
 test("Phase 19B updater is fast-forward only and preserves private runtime paths", () => {
   const source = readWindowsScript("update-local.ps1");
 

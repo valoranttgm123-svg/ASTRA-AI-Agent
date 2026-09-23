@@ -37,10 +37,6 @@ type BrainPlanExecutorOptions = {
   onToolEvent?: (event: AstraToolLifecycleEvent) => void;
 };
 
-function cleanOutput(value: string | undefined) {
-  return value?.trim().slice(0, 6000) || "";
-}
-
 function priorOutputsText(outputs: Readonly<Record<string, string>>) {
   return formatUntrustedStepOutputs(outputs);
 }

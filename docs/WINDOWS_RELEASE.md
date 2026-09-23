@@ -105,7 +105,7 @@ Updater behavior:
 3. requires the active branch to match the requested branch (default `main`);
 4. runs only:
    `git pull --ff-only origin main`;
-5. stops the ASTRA-Agent scheduled task before dependency/build refresh;
+5. stops the ASTRA-Agent task and its exact-checkout loopback server before dependency/build refresh;
 6. runs `npm ci`;
 7. runs `npm run build`;
 8. re-registers/restarts the existing local install through `install-local.ps1 -SkipBuild`;
@@ -125,6 +125,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\update-local.ps1 -Ski
 If the update/build fails, do not mark the installation updated. Fix the reported failure first, build successfully, then run the installer or updater again.
 
 The updater intentionally does not auto-reset or discard local tracked changes.
+
+`stop-astra-runtime.ps1` also handles an orphaned Next child after Task Scheduler
+stops its PowerShell wrapper. It refuses other checkouts/processes and checks PID
+creation time before stopping the observed server. It never terminates by name.
 
 ## Reinstall / repair startup integration
 

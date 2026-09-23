@@ -182,6 +182,35 @@ function createRequestSignal(signal: AbortSignal | undefined, timeoutMs: number)
   return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 }
 
+const MAX_RESPONSE_BYTES = 256_000;
+
+async function readSonorResponse(response: Response): Promise<unknown> {
+  if (Number(response.headers.get("content-length")) > MAX_RESPONSE_BYTES) {
+    await response.body?.cancel();
+    throw new Error("Sonor response exceeded the ASTRA size limit.");
+  }
+  if (!response.body) throw new Error("Sonor returned an empty response.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let raw = "";
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > MAX_RESPONSE_BYTES) {
+        await reader.cancel();
+        throw new Error("Sonor response exceeded the ASTRA size limit.");
+      }
+      raw += decoder.decode(value, { stream: true });
+    }
+    raw += decoder.decode();
+    try { return JSON.parse(raw) as unknown; }
+    catch { throw new Error("Sonor returned malformed JSON."); }
+  } finally { reader.releaseLock(); }
+}
+
 export const sonorMemorySource: AstraMemorySource = {
   id: "sonor",
   type: "sonor",
@@ -212,6 +241,7 @@ export const sonorMemorySource: AstraMemorySource = {
 
     const response = await fetch(config.baseUrl + config.searchPath, {
       method: "POST",
+      redirect: "error",
       headers: {
         "content-type": "application/json",
         accept: "application/json",
@@ -227,10 +257,11 @@ export const sonorMemorySource: AstraMemorySource = {
     });
 
     if (!response.ok) {
+      await response.body?.cancel();
       throw new Error("Sonor memory source is unavailable.");
     }
 
-    const payload = (await response.json()) as unknown;
+    const payload = await readSonorResponse(response);
     const records = parseSonorBridgeResponse(payload);
 
     return {

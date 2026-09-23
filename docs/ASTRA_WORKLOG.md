@@ -1,5 +1,12 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-23 — target-PC refinement in progress
+
+Merged the green Sonor evidence PR #188 (`35ab5aa7398f6d3c2afbc0119baf9f690247040e`, CI #528 SUCCESS).
+Reconciled current main with the local Windows/provider/mobile fixes; see
+`TARGET_PC_REFINEMENT_2026-09-23.md`. Local tests pass at the recorded scope;
+the implementation PR and new-build runtime gates are still pending.
+
 > Repository-owned chronological execution history.
 >
 > This file exists so Codex, ChatGPT, or a new local session can recover the project without relying on conversation history.

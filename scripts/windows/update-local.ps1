@@ -74,11 +74,7 @@ try {
     ) -FailureMessage "git pull --ff-only gagal."
   }
 
-  $astraTask = Get-ScheduledTask -TaskName "ASTRA-Agent" -ErrorAction SilentlyContinue
-  if ($astraTask) {
-    Stop-ScheduledTask -TaskName "ASTRA-Agent" -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 1
-  }
+  & (Join-Path $PSScriptRoot "stop-astra-runtime.ps1") -Port $Port | Out-Null
 
   if (-not $SkipBuild) {
     Invoke-Native -FilePath $npm -Arguments @("ci") -FailureMessage "npm ci gagal."

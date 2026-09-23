@@ -18,6 +18,7 @@ import { createExecutableToolRegistry } from "../lib/tools/executor";
 let server: Server;
 let base = "";
 const closedPaths = new Set<string>();
+const startedPaths = new Set<string>();
 
 const agent = ASTRA_AGENT_MAP.chief_of_staff;
 const cloudPolicy: AstraBrainPermissionSnapshot = {
@@ -33,6 +34,7 @@ function slowJson(
   response: import("node:http").ServerResponse,
   payload: unknown,
 ) {
+  startedPaths.add(path);
   const timer = setTimeout(() => {
     if (response.destroyed || response.writableEnded) return;
     response.setHeader("content-type", "application/json");
@@ -139,6 +141,7 @@ after(async () => {
 
 beforeEach(() => {
   closedPaths.clear();
+  startedPaths.clear();
 
   process.env.ASTRA_OLLAMA_ENABLED = "true";
   process.env.ASTRA_OLLAMA_URL = base;
@@ -167,16 +170,13 @@ async function expectUserAbort(
 ) {
   const controller = new AbortController();
   const pending = start(controller.signal);
-
-  setTimeout(
-    () =>
-      controller.abort(
-        new DOMException("global stop", "AbortError"),
-      ),
-    50,
-  );
-
-  await assert.rejects(pending, { name: "AbortError" });
+  // Observe an accepted request before testing in-flight cancellation. A fixed
+  // delay can abort before connection setup on a busy Windows build worker.
+  const rejection = assert.rejects(pending, { name: "AbortError" });
+  const started = await waitFor(() => startedPaths.has(path));
+  controller.abort(new DOMException("global stop", "AbortError"));
+  await rejection;
+  assert.equal(started, true, path + " request never reached the fixture");
   assert.equal(
     await waitFor(() => closedPaths.has(path)),
     true,

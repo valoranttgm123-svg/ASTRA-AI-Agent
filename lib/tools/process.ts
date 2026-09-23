@@ -95,5 +95,6 @@ export async function runBoundedProcess({
     };
 
     signal.addEventListener("abort", onAbort, { once: true });
+    if (signal.aborted) onAbort();
   });
 }

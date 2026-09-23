@@ -78,6 +78,11 @@ before(async () => {
       'const mode = process.env.ASTRA_FAKE_CODEX_MODE || "success";',
       'const pidFile = process.env.ASTRA_FAKE_CODEX_PID_FILE;',
       'if (pidFile) fs.writeFileSync(pidFile, String(process.pid));',
+      'if (mode === "tree") {',
+      '  const child = require("node:child_process").spawn(process.execPath,["-e","setInterval(()=>{},1000)"],{stdio:"ignore",windowsHide:true});',
+      '  fs.writeFileSync(pidFile+".descendant",String(child.pid));',
+      '  setInterval(()=>{},1000);',
+      '}',
       'if (mode === "success") {',
       '  console.log(JSON.stringify({type:"item.completed",item:{type:"agent_message",text:"fixture codex response"}}));',
       '  console.log(JSON.stringify({type:"turn.completed"}));',
@@ -104,7 +109,7 @@ before(async () => {
       '  setInterval(() => {}, 1000);',
       '} else if (mode === "hang") {',
       '  setInterval(() => {}, 1000);',
-      '} else {',
+      '} else if (mode !== "tree") {',
       '  process.exit(0);',
       '}',
       "",
@@ -114,7 +119,9 @@ before(async () => {
 });
 
 after(async () => {
-  if (root) await rm(root, { recursive: true, force: true });
+  // Windows can retain the fixture's current-directory handle briefly after
+  // process termination. Exit assertions above remain mandatory.
+  if (root) await rm(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 50 });
 });
 
 beforeEach(async () => {
@@ -268,4 +275,28 @@ test("Phase 15D2 global STOP cancels Codex and kills the owned child process", a
 
   await assert.rejects(pending, { name: "AbortError" });
   assert.equal(await waitForExit(pid), true);
+});
+
+test("Codex chat and verification never inherit global writable sandbox permission", async () => {
+  process.env.ASTRA_CODEX_SANDBOX = "danger-full-access";
+  process.env.ASTRA_CODEX_ALLOW_DANGER_FULL_ACCESS = "true";
+  const policy = { ...readOnlyPolicy, allowShell: true, allowFileWrite: true };
+  for (const verificationRequested of [false, true]) {
+    const response = await chatWithCodex({input: "inspect fixture", agent: ASTRA_AGENT_MAP.developer, policy, verificationRequested});
+    assert.equal(response.sandbox, "read-only");
+  }
+});
+
+test("Windows STOP terminates the owned Codex descendant without killing unrelated Node", {skip: process.platform !== "win32"}, async () => {
+  process.env.ASTRA_FAKE_CODEX_MODE = "tree";
+  const controller = new AbortController();
+  const pending = chatWithCodex({input: "fixture", agent: ASTRA_AGENT_MAP.developer, policy: readOnlyPolicy, signal: controller.signal});
+  const rejected = assert.rejects(pending, {name: "AbortError"});
+  const pid = await waitForPid(pidFile);
+  const descendant = await waitForPid(pidFile + ".descendant");
+  controller.abort();
+  await rejected;
+  assert.equal(await waitForExit(pid), true);
+  assert.equal(await waitForExit(descendant), true);
+  assert.equal(pidAlive(process.pid), true);
 });

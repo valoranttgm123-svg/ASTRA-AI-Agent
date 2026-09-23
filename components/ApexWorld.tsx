@@ -219,26 +219,12 @@ export default function ApexWorld() {
   const [selected, setSelected] = useState<NodeSel | null>(null);
   const [reduced, setReduced] = useState(false);
 
-  // A tap cycles idle → thinking → speaking → idle. That state drives the
-  // backdrop, the light-cast and the reasoning web's activity level.
-  const [showState, setShowState] = useState<OrbState>("idle");
-  const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const orbState: OrbState = runtime.orbState !== "idle" ? runtime.orbState : showState;
-
-  const boost = () => {
-    const next: OrbState = showState === "idle" ? "thinking" : showState === "thinking" ? "speaking" : "idle";
-    setShowState(next);
-    if (showTimer.current) clearTimeout(showTimer.current);
-    showTimer.current = setTimeout(() => setShowState("idle"), 8000);
+  const orbState: OrbState = runtime.orbState;
+  const activateCore = () => {
+    if (runtime.orbState === "thinking" || runtime.micActive || runtime.playbackActive) runtime.stopInteraction();
+    else if (runtime.micSupported) runtime.beginListening();
+    else document.querySelector<HTMLInputElement>('[aria-label="Perintah ASTRA"]')?.focus();
   };
-  useEffect(() => () => { if (showTimer.current) clearTimeout(showTimer.current); }, []);
-
-  useEffect(() => {
-    if (runtime.orbState === "idle") return;
-    if (showTimer.current) clearTimeout(showTimer.current);
-    showTimer.current = null;
-    setShowState("idle");
-  }, [runtime.orbState]);
 
   // Single entry point for opening an agent, shared by the SVG graph and the
   // hidden accessible list, so both routes behave identically.
@@ -363,9 +349,9 @@ export default function ApexWorld() {
       <div
         role="button"
         tabIndex={0}
-        aria-label="ASTRA core - tap to energize"
-        onClick={boost}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); boost(); } }}
+        aria-label="ASTRA core — mikrofon atau hentikan tugas aktif"
+        onClick={activateCore}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activateCore(); } }}
         onMouseDown={(e) => e.preventDefault()}
         style={{
           position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
