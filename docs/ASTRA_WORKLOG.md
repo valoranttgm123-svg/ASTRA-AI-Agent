@@ -858,3 +858,18 @@ Real GitHub/calendar/email/service adapters and proactive notification evidence 
 - Phase 24 now has three real repository-side source integrations: GitHub Actions, local service-health, and Automation lifecycle.
 - Target-PC polling/proactive notification/failure/STOP/restart evidence is still required; repository CI is not production readiness.
 - Phase 28 recovery execution remains intentionally pending because no recovery-specific Tool Runtime primitive currently exists. Do not substitute unrelated generic tools.
+
+
+## 2026-09-23 — User complaint / refinement tracker
+
+The following points are durable user-facing refinement requirements. Treat them as product acceptance criteria, not as reasons to replace the already-selected NVIDIA JARVIS model mesh.
+
+- **ASTRA still feels unresponsive.** The UI must not appear frozen while a provider is working.
+- **Provider response latency is too high.** Real target-PC evidence: NVIDIA FAST / Nemotron Lightning completed in about 42.44 s; NVIDIA DEEP / GLM-5.3 completed in about 286.26 s before latency tuning.
+- **Show useful output as soon as it exists.** NVIDIA chat should stream live tokens through the existing SSE path instead of waiting for the entire provider response.
+- **Do not spend heavy reasoning on lightweight conversation.** Short/simple turns should avoid unnecessary hidden thinking, planning, memory retrieval and specialist context loading.
+- **Use heavy models only when the task actually needs them.** Deep/Chief reasoning may take longer, but routine interaction must remain responsive.
+- **Do not arbitrarily change the agreed model lineup.** Keep Chief=Nemotron Ultra, Deep=GLM-5.3, Fast=Nemotron Lightning, Vision=GLM-5.3 Flash unless target evidence proves a model must change.
+- **Improve incrementally and verify on the target PC.** Fix one bottleneck at a time, preserve working configuration, and use measured end-to-end evidence before declaring the issue resolved.
+
+Current implementation work for these complaints is tracked in PR #194. Separate Humanoid/GPU performance work remains independent from Brain response-latency work.
