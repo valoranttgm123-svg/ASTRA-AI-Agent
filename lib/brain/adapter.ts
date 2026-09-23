@@ -1112,6 +1112,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           policyText: context.policyText,
           policy: context.policy,
           signal: options?.signal,
+          onToken: options?.onToken,
         });
         emitLiveProviderComplete(selected, "codex", options);
 
