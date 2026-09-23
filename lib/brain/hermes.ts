@@ -298,7 +298,7 @@ export async function chatWithHermes({
 
   if (config.runTransport) {
     if (executionRequested) throw new Error("Reviewed Hermes profile is read-only. Use an approved Codex/tool execution path for changes.");
-    return chatWithHermesRun(config, input, system, signal);
+    return chatWithHermesRun(config, input, system, signal, onToken);
   }
 
   const response = await withTimeout(config.chatTimeoutMs, (requestSignal) =>
