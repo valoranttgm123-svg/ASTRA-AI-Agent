@@ -151,12 +151,13 @@ async function buildExecutionContext(
   skipPlanning = false,
   inputContext?: AstraInputContext,
   fastChat = false,
+  forcePlanning = false,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
   const project = await resolveProjectContext(input);
   signal?.throwIfAborted();
 
-  const planningRequested = shouldGeneratePlan(input);
+  const planningRequested = forcePlanning || shouldGeneratePlan(input);
   const useFastContext =
     fastChat &&
     !project.match &&
@@ -1416,6 +1417,8 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       (event) => emitLiveMemoryLifecycle(event, options),
       Boolean(task.approvalToken),
       options?.inputContext,
+      false,
+      true,
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
@@ -2095,17 +2098,22 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       computer: {
         enabled: true,
         available:
+          toolRuntime.get("computer.system.info")?.availability === "READY" ||
           toolRuntime.get("computer.process.list")?.availability === "READY" ||
           toolRuntime.get("computer.app.launch")?.availability === "READY",
         state:
+          toolRuntime.get("computer.system.info")?.availability === "READY" ||
           toolRuntime.get("computer.process.list")?.availability === "READY" ||
           toolRuntime.get("computer.app.launch")?.availability === "READY"
             ? "READY"
-            : toolRuntime.get("computer.process.list")?.availability === "OFFLINE"
+            : toolRuntime.get("computer.system.info")?.availability === "OFFLINE" ||
+                toolRuntime.get("computer.process.list")?.availability === "OFFLINE"
               ? "OFFLINE"
               : "NOT_CONFIGURED",
         detail:
-          "Computer process list=" +
+          "Computer system info=" +
+          (toolRuntime.get("computer.system.info")?.availability ?? "NOT_CONFIGURED") +
+          ", process list=" +
           (toolRuntime.get("computer.process.list")?.availability ?? "NOT_CONFIGURED") +
           ", app launch=" +
           (toolRuntime.get("computer.app.launch")?.availability ?? "NOT_CONFIGURED") +
