@@ -81,6 +81,7 @@ export default function AstraConsole() {
     activeAgent,
     lastResponse,
     streamingText,
+    brainStreaming,
     send,
     execute,
     approve,
@@ -231,6 +232,13 @@ export default function AstraConsole() {
               {activeAgent ?? "ASTRA"} · MENJAWAB
             </div>
             <p>{streamingText}</p>
+          </>
+        ) : brainStreaming ? (
+          <>
+            <div className="astra-console__agent">
+              {activeAgent ?? "ASTRA"} · MEMPROSES
+            </div>
+            <p>Menyiapkan jawaban… hasil akan muncul saat provider mulai mengirim respons.</p>
           </>
         ) : lastResponse ? (
           <>
