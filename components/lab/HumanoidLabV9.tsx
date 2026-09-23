@@ -630,6 +630,50 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     }
   };
 
+  const captureAssemblyPerformanceEvidence = async () => {
+    if (
+      performanceCapture.capturing ||
+      resolvedQuality !== "high" ||
+      !data ||
+      !effects ||
+      reducedMotion
+    ) {
+      return;
+    }
+
+    if (sfxEnabledRef.current) void ensureSfxAudio();
+    setShockwaveActive(false);
+    setAssemblySkipped(false);
+    setAssemblyActive(true);
+    setAssemblyRun((currentRun) => currentRun + 1);
+
+    // Let React commit the replay state before frame sampling begins, while
+    // explicitly pinning the evidence scenario to assembly so fast manual
+    // click timing cannot accidentally save another idle capture.
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+
+    try {
+      await performanceCapture.capture(
+        {
+          state,
+          quality: resolvedQuality,
+          effects,
+          particleCount: data.count,
+          reducedMotion,
+          cameraEnabled: tracking.enabled,
+          assemblyActive: true,
+          shockwaveActive: false,
+          gpu: gpuInfo,
+        },
+        2_300,
+      );
+    } catch {
+      // The capture hook exposes a bounded status string in the UI.
+    }
+  };
+
   const showReferenceOnly = view === "reference" || !effects;
   const showParticles = view !== "reference" && effects;
   const referenceOpacity = showReferenceOnly
@@ -1092,6 +1136,30 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               {performanceCapture.capturing
                 ? "PERF CAPTURING"
                 : "PERF CAPTURE"}
+            </button>
+            <button
+              onClick={() => void captureAssemblyPerformanceEvidence()}
+              disabled={
+                performanceCapture.capturing ||
+                resolvedQuality !== "high" ||
+                !data ||
+                !effects ||
+                reducedMotion
+              }
+              title="Replay assembly and capture the assembly performance window in one action"
+              style={{
+                ...buttonStyle(false),
+                opacity:
+                  !performanceCapture.capturing &&
+                  resolvedQuality === "high" &&
+                  data &&
+                  effects &&
+                  !reducedMotion
+                    ? 1
+                    : 0.45,
+              }}
+            >
+              PERF ASSEMBLY
             </button>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
