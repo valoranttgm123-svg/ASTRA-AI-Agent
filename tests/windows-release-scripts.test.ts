@@ -10,6 +10,14 @@ function readWindowsScript(name: string) {
   );
 }
 
+test("standalone Windows self-check resolves npm without inheriting a caller variable", () => {
+  const source = readWindowsScript("self-check.ps1");
+  const resolve = source.indexOf("$npm = (Get-Command npm.cmd -ErrorAction Stop).Source");
+  assert.ok(resolve >= 0);
+  assert.ok(source.indexOf("& $npm @argsList") > resolve);
+  assert.match(source, /\$LASTEXITCODE -ne 0/);
+});
+
 test("Windows update stops only the exact checkout server, including an orphaned task child", () => {
   const stop = readWindowsScript("stop-astra-runtime.ps1");
   assert.match(stop, /Get-NetTCPConnection -LocalPort \$Port/);

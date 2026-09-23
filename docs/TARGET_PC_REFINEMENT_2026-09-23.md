@@ -80,6 +80,15 @@ Additional target-PC defects reproduced:
 - The repository release-gate wrapper also spawned `npm.cmd` with `shell:false`;
   a direct probe reproduced EINVAL. It now invokes the bundled npm CLI through
   Node, with a real Windows subprocess regression. No command shell was enabled.
+- Direct `powershell.exe -File scripts/windows/self-check.ps1` failed because
+  `$npm` existed only in its update/collector callers. The standalone wrapper now
+  resolves `npm.cmd` itself and retains native exit-code handling. A regression
+  prevents caller-scope dependence; installed runtime evidence is collected after
+  building this exact fix.
+
+Clean Windows repository gate at commit `578f4e6` passed all 420 tests, typecheck,
+lint, production build, dependency audit (zero vulnerabilities), and diff check.
+This is repository evidence; target runtime and physical gates are separate.
 
 Sonor recheck on 23 September: ASTRA and ALURKA each returned six scoped records
 with project/Obsidian/Graphify provenance; two-stage query times were 138 ms and
