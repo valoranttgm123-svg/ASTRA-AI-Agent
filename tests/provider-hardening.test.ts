@@ -134,6 +134,24 @@ before(async () => {
     }
 
     if (request.url === "/v1/chat/completions") {
+      let raw = "";
+      for await (const chunk of request) {
+        raw += chunk.toString();
+      }
+      const body = raw ? JSON.parse(raw) as Record<string, unknown> : {};
+
+      if (body.stream === true && hermesChatMode === "valid") {
+        response.setHeader("content-type", "text/event-stream");
+        response.write(
+          'data: {"choices":[{"delta":{"content":"hermes "}}]}\n\n',
+        );
+        response.write(
+          'data: {"choices":[{"delta":{"content":"fixture response"}}]}\n\n',
+        );
+        response.end("data: [DONE]\n\n");
+        return;
+      }
+
       writeMode(response, hermesChatMode, {
         choices: [
           {
@@ -316,6 +334,18 @@ test("Phase 15C2 Hermes chat fails closed on malformed empty oversized and HTTP-
       expected,
     );
   }
+});
+
+test("Hermes chat streams live response tokens when ASTRA requests SSE output", async () => {
+  const tokens: string[] = [];
+  const result = await chatWithHermes({
+    input: "fixture",
+    agent,
+    onToken: (token) => tokens.push(token),
+  });
+
+  assert.equal(result.message, "hermes fixture response");
+  assert.deepEqual(tokens, ["hermes ", "fixture response"]);
 });
 
 test("Phase 15C2 Hermes refuses non-loopback endpoints", async () => {
