@@ -192,6 +192,7 @@ export async function chatWithCodex({
   executionRequested = false,
   verificationRequested = false,
   signal,
+  onToken,
 }: {
   input: string;
   agent: AstraAgent;
@@ -201,6 +202,7 @@ export async function chatWithCodex({
   executionRequested?: boolean;
   verificationRequested?: boolean;
   signal?: AbortSignal;
+  onToken?: (token: string) => void;
 }) {
   // Chat and verification must stay read-only even when execution is enabled globally.
   const config = getCodexConfig(executionRequested && !verificationRequested ? policy : undefined);
@@ -264,6 +266,7 @@ export async function chatWithCodex({
     let stdoutBuffer = "";
     let stderr = "";
     let lastMessage = "";
+    let streamedAgentText = "";
     let streamChars = 0;
     let settled = false;
 
@@ -296,6 +299,27 @@ export async function chatWithCodex({
       finish(new Error("Codex specialist timed out."));
     }, config.timeoutMs);
 
+    const streamAgentMessage = (text: string) => {
+      if (!onToken || !text) return;
+
+      if (!streamedAgentText) {
+        streamedAgentText = text;
+        onToken(text);
+        return;
+      }
+
+      if (text.startsWith(streamedAgentText)) {
+        const suffix = text.slice(streamedAgentText.length);
+        streamedAgentText = text;
+        if (suffix) onToken(suffix);
+        return;
+      }
+
+      // If the CLI rewrites an in-progress message instead of extending it,
+      // stop token forwarding for that update rather than duplicating or
+      // fabricating text. The final response remains authoritative.
+    };
+
     const consumeLine = (line: string) => {
       const trimmed = line.trim();
       if (!trimmed) return;
@@ -303,11 +327,14 @@ export async function chatWithCodex({
       if (!event) return;
 
       if (
-        event.type === "item.completed" &&
+        (event.type === "item.updated" || event.type === "item.completed") &&
         event.item?.type === "agent_message" &&
         typeof event.item.text === "string"
       ) {
-        lastMessage = event.item.text;
+        streamAgentMessage(event.item.text);
+        if (event.type === "item.completed") {
+          lastMessage = event.item.text;
+        }
       }
 
       if (event.type === "turn.completed") {
