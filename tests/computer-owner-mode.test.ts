@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   COMPUTER_TOOL_DEFINITIONS,
   createComputerToolRegistrations,
+  parseDirectOwnerCommand,
   type AstraComputerTransport,
 } from "../lib/tools/computer";
 import { createExecutableToolRegistry } from "../lib/tools/executor";
@@ -99,4 +100,43 @@ test("Owner Mode registration executes only when shell policy allows it", async 
   assert.equal(completed.status, "completed");
   assert.equal(completed.verified, true);
   assert.equal(calls, 1);
+});
+
+
+test("explicit Owner Mode prefixes parse without natural-language planning", () => {
+  assert.deepEqual(
+    parseDirectOwnerCommand("powershell: Write-Output ASTRA_OWNER_OK"),
+    {
+      shell: "powershell",
+      command: "Write-Output ASTRA_OWNER_OK",
+    },
+  );
+
+  assert.deepEqual(
+    parseDirectOwnerCommand("jalankan owner mode cmd: whoami"),
+    {
+      shell: "cmd",
+      command: "whoami",
+    },
+  );
+
+  assert.deepEqual(
+    parseDirectOwnerCommand("run pwsh: Get-Date"),
+    {
+      shell: "powershell",
+      command: "Get-Date",
+    },
+  );
+});
+
+test("Owner Mode direct parser rejects ambiguous natural language and oversized commands", () => {
+  assert.equal(
+    parseDirectOwnerCommand("tolong hapus file sementara di komputer ini"),
+    null,
+  );
+  assert.equal(parseDirectOwnerCommand("powershell:"), null);
+  assert.equal(
+    parseDirectOwnerCommand("powershell: " + "x".repeat(8193)),
+    null,
+  );
 });
