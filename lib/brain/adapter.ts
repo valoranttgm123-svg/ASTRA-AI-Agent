@@ -19,6 +19,7 @@ import type { AstraPlan } from "@/lib/planner/contracts";
 import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
 import type { AstraToolDefinition, AstraToolLifecycleEvent } from "@/lib/tools/contracts";
 import { astraNativeToolRuntime, createDefaultToolRuntime } from "@/lib/tools/runtime";
+import { parseDirectOwnerCommand } from "@/lib/tools/computer";
 import { generateStrategistPlan, shouldGeneratePlan } from "@/lib/planner/generator";
 import {
   chatWithCodex,
@@ -968,6 +969,24 @@ function providerFromPlanEvents(events: AstraBrainEvent[]): AstraBrainProvider {
   return "routing_only";
 }
 
+function formatDirectOwnerCommandResult(output: unknown) {
+  if (!output || typeof output !== "object" || Array.isArray(output)) {
+    return "Owner Mode command finished without structured output.";
+  }
+
+  const record = output as Record<string, unknown>;
+  const shell = typeof record.shell === "string" ? record.shell : "shell";
+  const exitCode = typeof record.exitCode === "number" ? record.exitCode : -1;
+  const stdout = typeof record.stdout === "string" ? record.stdout.trimEnd() : "";
+  const stderr = typeof record.stderr === "string" ? record.stderr.trimEnd() : "";
+
+  return [
+    "Owner Mode " + shell + " selesai dengan exit code " + exitCode + ".",
+    stdout ? "STDOUT:\n" + stdout : "",
+    stderr ? "STDERR:\n" + stderr : "",
+  ].filter(Boolean).join("\n");
+}
+
 function directReadOnlyComputerTool(input: string): "computer.system.info" | "computer.process.list" | null {
   const text = input.trim().toLowerCase();
 
@@ -1471,6 +1490,261 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     emitLiveStart(selected, options);
 
     const preferredProvider = options?.provider ?? "auto";
+    const directOwnerCommand =
+      preferredProvider === "auto" &&
+      options?.requirePlan !== true &&
+      !task.approvalToken
+        ? parseDirectOwnerCommand(input)
+        : null;
+
+    if (directOwnerCommand) {
+      const policy = getPermissionPolicy();
+      const permissionResolution = resolveExecutionPermission({
+        requireApproval: policy.requireApproval,
+        approved: task.approved === true,
+        requirePlan: false,
+        permissionCeiling: options?.permissionCeiling,
+        hasApprovalToken: false,
+      });
+      const approvedPermissionLevel = permissionResolution.approvedPermissionLevel;
+      const directRoute = route.includes("computer")
+        ? route
+        : [...route, "computer" as const];
+
+      try {
+        const toolRuntime = await createDefaultToolRuntime(options?.signal);
+        const definition = toolRuntime.get("computer.owner.exec");
+
+        if (definition?.availability !== "READY") {
+          const detail =
+            "Direct Owner Mode command was explicit, but computer.owner.exec is not READY.";
+          emitLiveBlocked(selected, detail, options);
+          return {
+            ok: false,
+            agent: selected,
+            agentName: agent.name,
+            state: "blocked",
+            message:
+              "Owner Mode lokal belum READY. Aktifkan Computer Agent dan ASTRA_OWNER_MODE_ENABLED pada PC1 lalu restart ASTRA-Agent.",
+            requiresApproval: false,
+            brain: {
+              provider: "routing_only",
+              execution: "blocked",
+              requestedMode: "execute",
+              route: directRoute,
+              visualNodes: directRoute.map(visualNodeForAgent),
+              events: [
+                ...baseEvents(selected),
+                emitLiveEvent(options, {
+                  type: "agent.blocked",
+                  agent: "computer",
+                  visualNode: visualNodeForAgent("computer"),
+                  label: "Owner Mode unavailable",
+                  detail,
+                }),
+              ],
+              context: {
+                memoryEntries: 0,
+                memorySources: [],
+                skills: [],
+                input: options?.inputContext,
+              },
+              permissions: policy,
+            },
+          };
+        }
+
+        if (!policy.allowShell) {
+          const detail =
+            "Direct Owner Mode command requires ASTRA_ALLOW_SHELL=true.";
+          emitLiveBlocked(selected, detail, options);
+          return {
+            ok: false,
+            agent: selected,
+            agentName: agent.name,
+            state: "blocked",
+            message:
+              "Owner Mode lokal sudah terdaftar, tetapi shell execution masih dimatikan oleh policy. Aktifkan ASTRA_ALLOW_SHELL=true pada PC1.",
+            requiresApproval: false,
+            brain: {
+              provider: "routing_only",
+              execution: "blocked",
+              requestedMode: "execute",
+              route: directRoute,
+              visualNodes: directRoute.map(visualNodeForAgent),
+              events: [
+                ...baseEvents(selected),
+                emitLiveEvent(options, {
+                  type: "agent.blocked",
+                  agent: "computer",
+                  visualNode: visualNodeForAgent("computer"),
+                  label: "Owner Mode shell blocked",
+                  detail,
+                }),
+              ],
+              context: {
+                memoryEntries: 0,
+                memorySources: [],
+                skills: [],
+                input: options?.inputContext,
+              },
+              permissions: policy,
+            },
+          };
+        }
+
+        if (approvedPermissionLevel < 2) {
+          const detail =
+            "Direct Owner Mode command requires Level-2 local execution permission.";
+          emitLiveBlocked(selected, detail, options);
+          return {
+            ok: false,
+            agent: selected,
+            agentName: agent.name,
+            state: "blocked",
+            message:
+              "Owner Mode membutuhkan izin Level-2. Setujui eksekusi lokal atau naikkan permission ceiling untuk menjalankan command ini.",
+            requiresApproval: policy.requireApproval,
+            brain: {
+              provider: "routing_only",
+              execution: "blocked",
+              requestedMode: "execute",
+              route: directRoute,
+              visualNodes: directRoute.map(visualNodeForAgent),
+              events: [
+                ...baseEvents(selected),
+                emitLiveEvent(options, {
+                  type: "agent.blocked",
+                  agent: "computer",
+                  visualNode: visualNodeForAgent("computer"),
+                  label: "Owner Mode permission blocked",
+                  detail,
+                }),
+              ],
+              context: {
+                memoryEntries: 0,
+                memorySources: [],
+                skills: [],
+                input: options?.inputContext,
+              },
+              permissions: policy,
+            },
+          };
+        }
+
+        const liveEvents: AstraBrainEvent[] = [];
+        liveEvents.push(
+          emitLiveEvent(options, {
+            type: "policy.applied",
+            agent: "computer",
+            visualNode: visualNodeForAgent("computer"),
+            label: "Owner Mode direct execution",
+            detail:
+              "Explicit PowerShell/CMD Owner Mode path; no memory retrieval, model provider, or planner round-trip is required.",
+          }),
+        );
+
+        const result = await toolRuntime.execute(
+          "computer.owner.exec",
+          directOwnerCommand,
+          {
+            approvedPermissionLevel,
+            policy: {
+              allowShell: policy.allowShell,
+              allowFileWrite: policy.allowFileWrite,
+              allowExternalActions: policy.allowExternalActions,
+            },
+            signal: options?.signal,
+            onEvent: (event) => {
+              liveEvents.push(
+                emitLiveEvent(options, toolLifecycleEventFields(event)),
+              );
+            },
+          },
+        );
+
+        const completed = result.status === "completed" && result.verified;
+        liveEvents.push(
+          emitLiveEvent(options, {
+            type: completed ? "response.ready" : "agent.blocked",
+            agent: "computer",
+            visualNode: visualNodeForAgent("computer"),
+            label: completed ? "Owner Mode response ready" : "Owner Mode command failed",
+            detail: completed
+              ? "Verified Owner Mode result returned directly without model planning."
+              : result.detail,
+          }),
+        );
+
+        return {
+          ok: completed,
+          agent: selected,
+          agentName: agent.name,
+          state: completed ? "completed" : "blocked",
+          message: formatDirectOwnerCommandResult(result.output),
+          requiresApproval: false,
+          brain: {
+            provider: "routing_only",
+            execution: completed ? "executed" : "blocked",
+            requestedMode: "execute",
+            route: directRoute,
+            visualNodes: directRoute.map(visualNodeForAgent),
+            events: [...baseEvents(selected), ...liveEvents],
+            context: {
+              memoryEntries: 0,
+              memorySources: [],
+              skills: [],
+              input: options?.inputContext,
+            },
+            permissions: policy,
+          },
+        };
+      } catch (error) {
+        options?.signal?.throwIfAborted();
+        const detail = safeErrorDetail(error, "Direct Owner Mode execution failed.");
+        emitLiveBlocked(selected, detail, options);
+        return {
+          ok: false,
+          agent: selected,
+          agentName: agent.name,
+          state: "blocked",
+          message: detail,
+          requiresApproval: false,
+          brain: {
+            provider: "routing_only",
+            execution: "blocked",
+            requestedMode: "execute",
+            route: directRoute,
+            visualNodes: directRoute.map(visualNodeForAgent),
+            events: [
+              ...baseEvents(selected),
+              emitLiveEvent(options, {
+                type: "agent.blocked",
+                agent: "computer",
+                visualNode: visualNodeForAgent("computer"),
+                label: "Owner Mode execution failed",
+                detail,
+              }),
+              emitLiveEvent(options, {
+                type: "response.ready",
+                agent: selected,
+                visualNode: "chief_of_staff",
+                label: "Response ready",
+                detail: "Direct Owner Mode execution failed before verified completion.",
+              }),
+            ],
+            context: {
+              memoryEntries: 0,
+              memorySources: [],
+              skills: [],
+              input: options?.inputContext,
+            },
+            permissions: policy,
+          },
+        };
+      }
+    }
+
     const directComputerTool =
       preferredProvider === "auto" &&
       selected === "computer" &&

@@ -142,6 +142,35 @@ Before calling multi-PC Owner Mode complete, verify:
 - no private SSH material or secrets appear in logs, evidence, Git, or UI;
 - ASTRA never silently falls back from one target PC to another.
 
+## Current implementation status after PR #221
+
+Local Owner Mode on PC1 is now implemented in the repository:
+
+- PR #221 merged `computer.owner.exec` into `main` as a bounded, cancellable Level-2 local command executor;
+- `scripts/windows/enable-owner-mode.ps1` enables the required local runtime flags without committing secrets;
+- the follow-up branch `feat/local-owner-mode-direct-exec-20260923` adds an explicit no-model fast path for deterministic Owner Mode commands;
+- only explicit prefixes are eligible for the direct path: `powershell:`, `pwsh:`, `cmd:`, optionally prefixed with `jalankan`/`run`/`execute`/`eksekusi` and `owner mode`;
+- ambiguous natural-language requests are intentionally not interpreted as raw shell commands by this direct path;
+- direct Owner Mode still obeys the runtime permission ceiling and fails closed unless `computer.owner.exec` is READY and `ASTRA_ALLOW_SHELL=true`.
+
+PC1 target validation is still required on the actual Windows machine. The minimum validation command should be an explicit harmless command such as:
+
+```text
+powershell: Write-Output ASTRA_OWNER_DIRECT_OK
+```
+
+Expected evidence: `computer.owner.exec` executes, exit code is 0, stdout contains `ASTRA_OWNER_DIRECT_OK`, Brain provider is routing-only, memory retrieval is 0, and no planner/model round-trip is present.
+
+A target-PC validation helper now exists at `scripts/windows/validate-owner-mode.ps1`. Run it against the active ASTRA URL after enabling Owner Mode, for example:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\\scripts\\windows\\validate-owner-mode.ps1 -BaseUrl http://127.0.0.1:3017
+```
+
+Use the actual local ASTRA port if it differs. The script fails closed unless Owner Mode is READY and the direct probe returns verified tool lifecycle evidence without memory/planner/model use.
+
+After PC1 validation, Codex should continue with PC2-PC4 SSH transport/identity and remote Owner Mode. Do not reimplement the local executor first.
+
 ## Do not redo completed work
 
 Already completed on current main:
