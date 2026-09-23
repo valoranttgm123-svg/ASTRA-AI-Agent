@@ -6,7 +6,9 @@ Date: 2026-09-23
 
 ASTRA on the main/primary machine must be able to access three additional Windows computers from the same ASTRA UI.
 
-Treat the current machine as the ASTRA hub. The other machines become controlled Computer Agent nodes.
+Treat the current machine as the ASTRA hub. The other machines become trusted Computer Agent nodes.
+
+The user's latest requirement is **Owner Mode / full administrative control** on all registered trusted PCs. Once a node is explicitly trusted and authenticated, ASTRA should not be limited to the current read-only/allowlisted capability set or require approval for every normal administrative action.
 
 ## Critical context for Codex
 
@@ -16,15 +18,32 @@ Do **not** guess or hard-code PC2/PC3/PC4 aliases, IP addresses, usernames, priv
 
 Known operational pattern from prior work: Windows OpenSSH with key authentication has been used successfully. Preserve that model.
 
-## Security requirements
+## Owner Mode boundary
 
-- Reuse existing SSH key authentication.
-- Never store private keys, passwords, tokens, or private SSH config contents in Git.
-- Never expose raw private-key material through ASTRA telemetry/UI.
-- Preserve strict host verification. Do not silently disable host-key checking.
-- Keep remote execution constrained to ASTRA registered capabilities; do not expose an arbitrary command textbox as a remote shell.
-- Keep node configuration private/local (for example existing SSH aliases plus private ASTRA runtime configuration), not committed secrets.
-- Time out and fail closed when a node is unreachable.
+Owner Mode is intentionally broad. On a trusted node ASTRA may perform normal administrator-level work including:
+
+- arbitrary PowerShell/CMD execution;
+- read/write/create/delete/move files and directories;
+- launch/stop applications and processes;
+- inspect/change services and scheduled tasks;
+- install/update/uninstall software;
+- Git/project/build/dev tooling;
+- network and system administration;
+- restart/shutdown;
+- remote execution through the existing SSH transport.
+
+Do not keep the current fixed app allowlist or Level-1/Level-2 capability ceiling as the functional limit of Owner Mode.
+
+The security perimeter is the **trusted-node boundary**, not a per-command restriction:
+
+- reuse the existing SSH key authentication;
+- never store private keys, passwords, tokens, or private SSH config contents in Git;
+- preserve host verification;
+- keep node configuration private/local;
+- require an explicitly registered trusted node before full control is available;
+- provide a reliable STOP/KILL path so the user can terminate an active remote job;
+- keep truthful execution/audit telemetry without logging secrets;
+- if a node is unreachable or authentication fails, fail closed on that node and never silently execute on another machine.
 
 ## Required architecture
 
@@ -48,35 +67,42 @@ PC4   SSH     READY
 
 The displayed names may come from verified host identity / private node config; do not invent them.
 
-## Phase 1 — read-only only
+## Implementation order
 
-Implement and validate remote Level-1 read-only capabilities first:
+### Phase 1 — multi-node transport and identity
 
-1. `computer.system.info`
-   - computer/host name
-   - Windows release/version
-   - architecture
+First make PC1 plus the three existing SSH targets first-class ASTRA nodes. Reuse the SSH aliases/configuration Codex already knows. Verify host identity and health per node.
 
-2. `computer.process.list`
-   - bounded process list
+Keep the already validated local fast-path reads working while transport is added.
 
-The caller must specify or resolve one target node explicitly. Results must identify which node actually executed the tool.
+### Phase 2 — Owner Mode executor
 
-Do not route these deterministic read-only actions through Codex, Hermes, NVIDIA, memory retrieval, or an Ollama planning round-trip when a matching registered Computer Tool is already available.
+Add a general administrator executor for explicitly trusted nodes. It must be able to execute arbitrary user-requested local/remote administrative commands rather than requiring a predefined ASTRA tool for every possible operation.
 
-The local fast path added in PR #218 should remain fast and unchanged for the local node.
+The executor must return:
 
-## Phase 2 — safe Level-2 actions
+- selected target node;
+- transport used (LOCAL or SSH);
+- exit status / completion status;
+- bounded stdout/stderr or structured evidence;
+- truthful failure when the command did not complete.
 
-Only after Phase 1 is stable, extend approved allowlisted local actions to remote nodes, such as the existing app-launch capability.
+Owner Mode should not wake Codex/Hermes/NVIDIA merely to perform a deterministic command when ASTRA can execute it directly. Model reasoning may still be used to translate a natural-language request into an execution plan when needed.
 
-Requirements:
+### Phase 3 — multi-step tasks
 
-- preserve Level-2 approval behavior;
-- fixed allowlist only;
-- no arbitrary executable path;
-- no arbitrary shell command;
-- return verifiable completion evidence from the chosen node.
+Allow ASTRA to carry out compound tasks on trusted nodes, for example:
+
+- inspect a project;
+- edit files;
+- install dependencies;
+- build/test;
+- start/restart services;
+- move files between trusted PCs;
+- diagnose a failure and apply a repair;
+- reboot a selected PC when requested.
+
+The target node must remain explicit throughout a multi-step run so work cannot drift onto a different machine.
 
 ## Routing behavior
 
@@ -100,17 +126,21 @@ A failure on one remote node must not mark every Computer Agent node offline.
 
 Codex owns validation on the actual target PCs.
 
-Before calling multi-PC support complete, verify:
+Before calling multi-PC Owner Mode complete, verify:
 
 - existing SSH alias/config is reused;
 - each remote node authenticates with the existing key path without interactive password entry;
-- remote `system.info` returns the correct host identity;
-- remote `process.list` returns a bounded real process list;
+- ASTRA identifies the correct remote host before execution;
+- arbitrary administrator commands can execute on an explicitly trusted node;
+- file read/write/create/delete works on the selected trusted node;
+- process/service/app control works on the selected trusted node;
+- a multi-step project task can complete end-to-end on one selected node;
 - local node still completes direct Level-1 requests without planner/model latency;
 - wrong/unknown node fails closed;
 - unreachable node fails closed with bounded timeout;
-- no private SSH material appears in logs, evidence, Git, or UI;
-- no arbitrary remote command execution is exposed.
+- STOP/KILL can terminate an active remote execution;
+- no private SSH material or secrets appear in logs, evidence, Git, or UI;
+- ASTRA never silently falls back from one target PC to another.
 
 ## Do not redo completed work
 
