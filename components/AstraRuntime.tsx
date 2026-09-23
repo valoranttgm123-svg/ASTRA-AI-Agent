@@ -87,6 +87,8 @@ type AstraRuntimeValue = {
   brainEvents: AstraBrainEvent[];
   brainTrace: ReasoningTrace | null;
   brainStreaming: boolean;
+  brainFirstTokenLatencyMs: number | null;
+  brainTotalLatencyMs: number | null;
   automationStreaming: boolean;
   automationServiceStatus: AstraAutomationServiceStatus | null;
   refreshAutomationServiceStatus: () => Promise<AstraAutomationServiceStatus | null>;
@@ -216,6 +218,10 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   const [brainEvents, setBrainEvents] = useState<AstraBrainEvent[]>([]);
   const [brainTrace, setBrainTrace] = useState<ReasoningTrace | null>(null);
   const [brainStreaming, setBrainStreaming] = useState(false);
+  const [brainFirstTokenLatencyMs, setBrainFirstTokenLatencyMs] =
+    useState<number | null>(null);
+  const [brainTotalLatencyMs, setBrainTotalLatencyMs] =
+    useState<number | null>(null);
   const [automationStreaming, setAutomationStreaming] = useState(false);
   const [automationServiceStatus, setAutomationServiceStatus] =
     useState<AstraAutomationServiceStatus | null>(null);
@@ -522,7 +528,11 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     requestControllerRef.current?.abort();
     const controller = new AbortController();
     requestControllerRef.current = controller;
+    const requestStartedAt = performance.now();
+    let firstTokenObserved = false;
 
+    setBrainFirstTokenLatencyMs(null);
+    setBrainTotalLatencyMs(null);
     setMicError(null);
     setLastResponse(null);
     setStreamingText("");
@@ -605,6 +615,12 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
             typeof tokenPayload.text === "string" &&
             tokenPayload.text
           ) {
+            if (!firstTokenObserved) {
+              firstTokenObserved = true;
+              setBrainFirstTokenLatencyMs(
+                Math.round(performance.now() - requestStartedAt),
+              );
+            }
             setStreamingText((current) =>
               (current + tokenPayload.text).slice(-16000),
             );
@@ -652,6 +668,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
       requestControllerRef.current = null;
       setBrainStreaming(false);
+      setBrainTotalLatencyMs(
+        Math.round(performance.now() - requestStartedAt),
+      );
       setLastResponse(finalResult);
       setStreamingText("");
       setActiveAgent(finalResult.agentName);
@@ -731,6 +750,9 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
       requestControllerRef.current = null;
       setBrainStreaming(false);
+      setBrainTotalLatencyMs(
+        Math.round(performance.now() - requestStartedAt),
+      );
       setStreamingText("");
       if (error instanceof DOMException && error.name === "AbortError") {
         setOrbState("idle");
@@ -1137,6 +1159,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainEvents,
       brainTrace,
       brainStreaming,
+      brainFirstTokenLatencyMs,
+      brainTotalLatencyMs,
       automationStreaming,
       automationServiceStatus,
       refreshAutomationServiceStatus,
@@ -1170,6 +1194,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       brainEvents,
       brainTrace,
       brainStreaming,
+      brainFirstTokenLatencyMs,
+      brainTotalLatencyMs,
       automationStreaming,
       automationServiceStatus,
       refreshAutomationServiceStatus,

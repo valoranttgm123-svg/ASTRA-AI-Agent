@@ -1240,6 +1240,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div>Inference: {tracking.processingMs === null ? "..." : `${tracking.processingMs} ms`}</div>
           <div>Tracking privacy: frames processed locally; no recording/upload by ASTRA.</div>
           <div>Last request latency: {latency === null ? "not measured" : `${latency} ms`}</div>
+          <div>Brain first token: {runtime.brainFirstTokenLatencyMs === null ? "not measured" : `${runtime.brainFirstTokenLatencyMs} ms`}</div>
+          <div>Brain total latency: {runtime.brainTotalLatencyMs === null ? "not measured" : `${runtime.brainTotalLatencyMs} ms`}</div>
           <div>Brain request mode: {runtime.lastResponse?.brain.requestedMode?.toUpperCase() ?? "CHAT"}</div>
           <div>Brain execution: {runtime.lastResponse?.brain.execution.toUpperCase() ?? "STANDBY"}</div>
           <div>Brain provider: {(runtime.brainProvider ?? "standby").toUpperCase()}</div>
