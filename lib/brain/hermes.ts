@@ -182,6 +182,81 @@ export async function getHermesStatus(): Promise<HermesStatus> {
   }
 }
 
+async function readHermesStreamingChat(
+  response: Response,
+  onToken: (token: string) => void,
+) {
+  if (!response.body) {
+    throw new Error("Hermes streaming response body is unavailable.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let collected = "";
+  let receivedBytes = 0;
+  const maxBytes = 1_000_000;
+
+  const consumeLine = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed || !trimmed.startsWith("data:")) return;
+    const data = trimmed.slice(5).trim();
+    if (!data || data === "[DONE]") return;
+
+    let payload: unknown;
+    try {
+      payload = JSON.parse(data) as unknown;
+    } catch {
+      throw new Error("Hermes streaming response contained malformed JSON.");
+    }
+    if (!isRecordPayload(payload)) {
+      throw new Error("Hermes streaming response contained a malformed payload.");
+    }
+
+    const choices = payload.choices;
+    const first =
+      Array.isArray(choices) && choices.length > 0
+        ? choices[0]
+        : undefined;
+    const delta = isRecordPayload(first) ? first.delta : undefined;
+    const token =
+      isRecordPayload(delta) && typeof delta.content === "string"
+        ? delta.content
+        : "";
+
+    if (token) {
+      collected += token;
+      onToken(token);
+    }
+  };
+
+  while (true) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    receivedBytes += chunk.value.byteLength;
+    if (receivedBytes > maxBytes) {
+      throw new Error("Hermes streaming response exceeded the size limit.");
+    }
+
+    buffer += decoder.decode(chunk.value, { stream: true }).replace(/\r/g, "");
+    let newline = buffer.indexOf("\n");
+    while (newline >= 0) {
+      consumeLine(buffer.slice(0, newline));
+      buffer = buffer.slice(newline + 1);
+      newline = buffer.indexOf("\n");
+    }
+  }
+
+  buffer += decoder.decode().replace(/\r/g, "");
+  if (buffer.trim()) consumeLine(buffer);
+
+  const message = collected.trim();
+  if (!message) {
+    throw new Error("Hermes returned an empty streaming response.");
+  }
+  return message;
+}
+
 export async function chatWithHermes({
   input,
   agent,
@@ -189,6 +264,7 @@ export async function chatWithHermes({
   policyText,
   signal,
   executionRequested = false,
+  onToken,
 }: {
   input: string;
   agent: AstraAgent;
@@ -196,6 +272,7 @@ export async function chatWithHermes({
   policyText?: string;
   signal?: AbortSignal;
   executionRequested?: boolean;
+  onToken?: (token: string) => void;
 }) {
   const config = getHermesConfig();
   if (!config.enabled) {
@@ -232,7 +309,7 @@ export async function chatWithHermes({
       signal: requestSignal,
       body: JSON.stringify({
         model: config.model,
-        stream: false,
+        stream: Boolean(onToken),
         messages: [
           { role: "system", content: system },
           { role: "user", content: input },
@@ -245,29 +322,35 @@ export async function chatWithHermes({
     throw new Error(`Hermes chat failed (HTTP ${response.status}).`);
   }
 
-  const payload = await readBoundedProviderJson(
-    response,
-    "Hermes chat",
-  );
-  if (!isRecordPayload(payload)) {
-    throw new Error("Hermes returned a malformed chat payload.");
-  }
+  let message = "";
 
-  const choices = payload.choices;
-  const first =
-    Array.isArray(choices) && choices.length > 0
-      ? choices[0]
-      : undefined;
-  const rawMessage =
-    isRecordPayload(first) ? first.message : undefined;
-  const message =
-    isRecordPayload(rawMessage) &&
-    typeof rawMessage.content === "string"
-      ? rawMessage.content.trim()
-      : "";
+  if (onToken) {
+    message = await readHermesStreamingChat(response, onToken);
+  } else {
+    const payload = await readBoundedProviderJson(
+      response,
+      "Hermes chat",
+    );
+    if (!isRecordPayload(payload)) {
+      throw new Error("Hermes returned a malformed chat payload.");
+    }
 
-  if (!message) {
-    throw new Error("Hermes returned an empty chat response.");
+    const choices = payload.choices;
+    const first =
+      Array.isArray(choices) && choices.length > 0
+        ? choices[0]
+        : undefined;
+    const rawMessage =
+      isRecordPayload(first) ? first.message : undefined;
+    message =
+      isRecordPayload(rawMessage) &&
+      typeof rawMessage.content === "string"
+        ? rawMessage.content.trim()
+        : "";
+
+    if (!message) {
+      throw new Error("Hermes returned an empty chat response.");
+    }
   }
 
   return {
