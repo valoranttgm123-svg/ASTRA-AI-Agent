@@ -321,7 +321,7 @@ function ParticleScene({
         onGpuInfo({
           renderer,
           vendor,
-          software: /swiftshader|llvmpipe|software/i.test(renderer),
+          software: /swiftshader|llvmpipe|software|microsoft basic render driver|\bwarp\b/i.test(renderer),
         });
       }}
     >
