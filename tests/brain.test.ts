@@ -90,6 +90,7 @@ let fixture: Server;
 let base = "";
 let chatCalls = 0;
 let chatBodies: Array<Record<string, unknown>> = [];
+let providerOrder: string[] = [];
 
 before(async () => {
   root = await mkdtemp(path.join(os.tmpdir(), "astra-v15-tests-"));
@@ -250,6 +251,7 @@ before(async () => {
     }
 
     if (request.url === "/api/chat") {
+      providerOrder.push("ollama");
       chatCalls += 1;
       const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(Buffer.from(chunk));
@@ -382,6 +384,23 @@ before(async () => {
       return;
     }
 
+    if (request.url === "/v1/chat/completions") {
+      providerOrder.push("hermes");
+      response.setHeader("content-type", "application/json");
+      response.end(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: "HERMES SIAP",
+              },
+            },
+          ],
+        }),
+      );
+      return;
+    }
+
     response.statusCode = 404;
     response.end();
   });
@@ -419,6 +438,7 @@ beforeEach(() => {
   delete process.env.ASTRA_SEARXNG_URL;
   chatCalls = 0;
   chatBodies = [];
+  providerOrder = [];
 });
 
 after(async () => {
@@ -641,6 +661,35 @@ test("AUTO still routes repository engineering work to Codex path instead of fas
     ),
     true,
   );
+});
+
+test("AUTO follows the roadmap local-first order for general full-context chat", async () => {
+  process.env.ASTRA_HERMES_ENABLED = "true";
+  process.env.ASTRA_HERMES_URL = base;
+  process.env.ASTRA_HERMES_MODEL = "fixture-hermes";
+  delete process.env.ASTRA_HERMES_TRANSPORT;
+
+  const result = await astraBrain.chat("jelaskan keadaan hari ini secara umum", {
+    provider: "auto",
+  });
+
+  assert.equal(result.brain.provider, "ollama");
+  assert.deepEqual(providerOrder, ["ollama"]);
+});
+
+test("AUTO keeps the engineering fallback order Codex then Hermes then Ollama", async () => {
+  process.env.ASTRA_HERMES_ENABLED = "true";
+  process.env.ASTRA_HERMES_URL = base;
+  process.env.ASTRA_HERMES_MODEL = "fixture-hermes";
+  delete process.env.ASTRA_HERMES_TRANSPORT;
+
+  const result = await astraBrain.chat("cek repo TypeScript ini", {
+    provider: "auto",
+  });
+
+  assert.equal(result.agent, "github");
+  assert.equal(result.brain.provider, "hermes");
+  assert.deepEqual(providerOrder, ["hermes"]);
 });
 
 test("explicit disabled Codex does not silently fall back to Ollama", async () => {
