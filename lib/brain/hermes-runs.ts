@@ -41,7 +41,13 @@ export async function verifyHermesRunProfile(config: Gateway, signal: AbortSigna
   if (!isRecordPayload(toolsets) || !Array.isArray(toolsets.data) || toolsets.data.some(row => !isRecordPayload(row) || (row.enabled && !["sonor","mcp-sonor"].includes(String(row.name))))) throw new Error("Hermes gateway exposes tools outside the read-only Sonor profile.");
 }
 
-export async function chatWithHermesRun(config: Gateway, input: string, instructions: string, externalSignal?: AbortSignal) {
+export async function chatWithHermesRun(
+  config: Gateway,
+  input: string,
+  instructions: string,
+  externalSignal?: AbortSignal,
+  onToken?: (token: string) => void,
+) {
   const timeout = AbortSignal.timeout(config.chatTimeoutMs);
   const signal = externalSignal ? AbortSignal.any([externalSignal, timeout]) : timeout;
   await verifyHermesRunProfile(config, signal);
@@ -68,6 +74,28 @@ export async function chatWithHermesRun(config: Gateway, input: string, instruct
         while ((boundary = buffer.indexOf("\n\n")) >= 0) {
           const block = buffer.slice(0,boundary); buffer = buffer.slice(boundary+2);
           const type = block.match(/^event:\s*(.+)$/m)?.[1];
+          if (type === "assistant.delta" && onToken) {
+            const data = block
+              .split("\n")
+              .filter((line) => line.startsWith("data:"))
+              .map((line) => line.slice(5).trimStart())
+              .join("\n");
+            if (data) {
+              try {
+                const payload = JSON.parse(data) as unknown;
+                if (
+                  isRecordPayload(payload) &&
+                  typeof payload.delta === "string" &&
+                  payload.delta
+                ) {
+                  onToken(payload.delta);
+                }
+              } catch {
+                // Ignore malformed progress-only delta frames. The final
+                // verified run status remains authoritative.
+              }
+            }
+          }
           if (type && ["run.completed","run.failed","run.cancelled","run.interrupted"].includes(type)) terminal = true;
         }
       }
