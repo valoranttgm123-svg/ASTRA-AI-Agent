@@ -16,8 +16,12 @@ export const dynamic = "force-dynamic";
 
 function encodeSse(
   encoder: TextEncoder,
-  event: "brain" | "result" | "error",
-  payload: AstraBrainEvent | AstraBrainChatResult | { message: string },
+  event: "brain" | "token" | "result" | "error",
+  payload:
+    | AstraBrainEvent
+    | AstraBrainChatResult
+    | { text: string }
+    | { message: string },
 ) {
   return encoder.encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
 }
@@ -36,8 +40,12 @@ export async function POST(request: Request) {
     start(controller) {
       let closed = false;
       const send = (
-        event: "brain" | "result" | "error",
-        payload: AstraBrainEvent | AstraBrainChatResult | { message: string },
+        event: "brain" | "token" | "result" | "error",
+        payload:
+          | AstraBrainEvent
+          | AstraBrainChatResult
+          | { text: string }
+          | { message: string },
       ) => {
         if (closed) return;
         try {
@@ -63,6 +71,7 @@ export async function POST(request: Request) {
         inputContext: body.inputContext,
         signal: request.signal,
         onEvent: (event) => send("brain", event),
+        onToken: (token) => send("token", { text: token }),
       };
 
       void (async () => {
