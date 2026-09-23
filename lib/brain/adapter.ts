@@ -117,6 +117,24 @@ function isLocalExecutionRoute(selected: AstraAgentKey) {
   );
 }
 
+function isFastChatInput(
+  input: string,
+  selected: AstraAgentKey,
+  provider: AstraProviderChoice,
+) {
+  if (selected !== "chief_of_staff") return false;
+  if (provider !== "auto" && provider !== "ollama") return false;
+
+  const text = input.trim();
+  if (!text || text.length > 240 || shouldGeneratePlan(text)) return false;
+
+  // Keep project, memory, current-data and action-oriented requests on the
+  // full context path. Fast chat is only for lightweight conversation/Q&A.
+  return !/\b(project|proyek|memory|memori|ingat|remember|sonor|graphify|obsidian|file|folder|repo|github|codex|email|calendar|jadwal|research|riset|search|cari|web|internet|latest|terbaru|status|cek|check|buka|open|jalankan|run|buat|create|ubah|edit|update|hapus|delete|install|deploy|kirim|send|trading|trade|harga|price)\b/i.test(
+    text,
+  );
+}
+
 async function buildExecutionContext(
   input: string,
   selected: AstraAgentKey,
@@ -124,24 +142,50 @@ async function buildExecutionContext(
   onMemoryEvent?: (event: AstraMemoryLifecycleEvent) => void,
   skipPlanning = false,
   inputContext?: AstraInputContext,
+  fastChat = false,
 ): Promise<ExecutionContext> {
   const policy = getPermissionPolicy();
   const project = await resolveProjectContext(input);
   signal?.throwIfAborted();
 
+  const planningRequested = shouldGeneratePlan(input);
+  const useFastContext =
+    fastChat &&
+    !project.match &&
+    !planningRequested;
+
   const memoryLifecycle: AstraMemoryLifecycleEvent[] = [];
-  const [memory, skills] = await Promise.all([
-    getUnifiedMemoryContext(
-      input,
-      project.match?.project,
-      signal,
-      (event) => {
-        memoryLifecycle.push(event);
-        onMemoryEvent?.(event);
-      },
-    ),
-    getSkillContext(selected, input),
-  ]);
+  const [memory, skills] = useFastContext
+    ? [
+        {
+          enabled: true,
+          available: true,
+          source: "astra-fast-chat",
+          entries: [],
+          records: [],
+          text: "",
+          detail: "Fast chat skipped memory retrieval for this lightweight turn.",
+        } satisfies AstraMemoryContext,
+        {
+          enabled: true,
+          available: true,
+          skills: [],
+          text: "",
+          detail: "Fast chat skipped specialist skill loading for this lightweight turn.",
+        } satisfies AstraSkillContext,
+      ]
+    : await Promise.all([
+        getUnifiedMemoryContext(
+          input,
+          project.match?.project,
+          signal,
+          (event) => {
+            memoryLifecycle.push(event);
+            onMemoryEvent?.(event);
+          },
+        ),
+        getSkillContext(selected, input),
+      ]);
 
   const inputMetadata = inputContextPrompt(inputContext);
   const skillOnlyContext = [inputMetadata, skills.text]
@@ -154,8 +198,6 @@ async function buildExecutionContext(
   let plan: AstraPlan | undefined;
   let plannerDetail: string | undefined;
   let tools: readonly AstraToolDefinition[] = astraNativeToolRuntime.list();
-  const planningRequested = shouldGeneratePlan(input);
-
   if (planningRequested || skipPlanning) {
     try {
       const runtime = await createDefaultToolRuntime(signal);
@@ -1018,6 +1060,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const selected = selectAgent(input);
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
+    const preferredProvider = options?.provider ?? "auto";
+    const fastChat = isFastChatInput(
+      input,
+      selected,
+      preferredProvider,
+    );
+
     emitLiveStart(selected, options);
     const context = await buildExecutionContext(
       input,
@@ -1026,10 +1075,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       (event) => emitLiveMemoryLifecycle(event, options),
       false,
       options?.inputContext,
+      fastChat,
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
-    const preferredProvider = options?.provider ?? "auto";
 
     if (preferredProvider === "codex" || (preferredProvider === "auto" && (isEngineeringRoute(selected) || process.env.ASTRA_AUTO_PROVIDER === "codex"))) {
       emitLiveProviderStart(selected, "codex", options);
@@ -1075,7 +1124,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
     }
 
-    if (preferredProvider === "auto") {
+    if (preferredProvider === "auto" && !fastChat) {
       emitLiveProviderStart(selected, "hermes", options);
       try {
         const result = await chatWithHermes({
@@ -1121,6 +1170,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           context: context.localContext,
           policyText: context.policyText,
           signal: options?.signal,
+          onToken: options?.onToken,
         });
         emitLiveProviderComplete(selected, "ollama", options);
 
