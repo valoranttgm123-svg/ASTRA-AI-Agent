@@ -128,6 +128,9 @@ function isFastChatInput(
 
   const text = input.trim();
   if (!text || text.length > 240 || shouldGeneratePlan(text)) return false;
+  if (/\b(siapa saya|tentang saya|about me|preferensi|preference)\b/i.test(text)) {
+    return false;
+  }
 
   // Keep project, memory, current-data and action-oriented requests on the
   // full context path. Fast chat is only for lightweight conversation/Q&A.
@@ -1065,7 +1068,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     const preferredProvider = options?.provider ?? "auto";
-    const fastChat = isFastChatInput(
+    let fastChat = isFastChatInput(
       input,
       selected,
       preferredProvider,
@@ -1081,6 +1084,11 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       options?.inputContext,
       fastChat,
     );
+    fastChat =
+      fastChat &&
+      !context.project.match &&
+      context.memory.source === "astra-fast-chat";
+
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
 
