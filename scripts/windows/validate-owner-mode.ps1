@@ -18,11 +18,19 @@ if ($computerDetail -notmatch "owner exec=READY") {
     throw "computer.owner.exec is not READY. Current detail: $computerDetail"
 }
 
+if ([bool]$status.permissions.requireApproval) {
+    throw "Owner Mode validation requires ASTRA_REQUIRE_APPROVAL=false."
+}
+
+if (-not [bool]$status.permissions.allowShell) {
+    throw "Owner Mode validation requires ASTRA_ALLOW_SHELL=true."
+}
+
 $probe = "ASTRA_OWNER_DIRECT_OK"
 $body = @{
     message  = "powershell: Write-Output $probe"
     mode     = "execute"
-    approved = $true
+    approved = $false
     provider = "auto"
 } | ConvertTo-Json
 
