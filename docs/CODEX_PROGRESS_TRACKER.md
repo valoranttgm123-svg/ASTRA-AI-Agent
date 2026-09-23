@@ -48,6 +48,11 @@ the stricter production-outage/active-query cancellation check remains unchecked
 
 ## Phase 16 — Performance
 
+23 September target refinement: PR #213 was measured live; warm Ollama SSE
+first token 267–336 ms. An uncached system prefix, not model load, took 6.8 s in
+the direct trace. See `OLLAMA_PREFILL_REFINEMENT_2026-09-23.md` for the compact
+lightweight-prompt fix. Full browser/physical release gates remain open.
+
 - [x] P16A — repository runtime measurement harness implemented — PR #105
 - [ ] P16B — target-PC runtime measurements captured
 - [x] P16C-tooling — private browser/Humanoid HIGH evidence capture implemented — PR #124

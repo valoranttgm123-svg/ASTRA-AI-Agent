@@ -1,5 +1,17 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-23 — measured Ollama prompt-prefill correction
+
+Resumed from installed PR #213 / main CI #584, not the older Windows checkpoint.
+Real SSE measured Ollama first token 10.6 s then 0.27–0.34 s warm, Codex about
+6.2 s, AUTO 6.7 s through its configured Codex preference, and NVIDIA no token
+within 60 s. A direct boundary trace isolated 6.8 s uncached prompt evaluation
+against only 3.5 ms model loading. Reduced the existing context-free lightweight
+prompt from 552 to 108 tokens; direct first token improved from 6.9 to 2.7 s.
+Full project/security context, input metadata and provider preference remain.
+No private text, credentials, graph data or runtime configuration is committed.
+Clean-build production remeasurement and remaining manual release gates follow.
+
 ## 2026-09-23 — target-PC refinement in progress
 
 PR #189 merged after CI #530 SUCCESS as

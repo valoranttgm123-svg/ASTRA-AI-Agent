@@ -646,6 +646,36 @@ test("explicit Ollama selection streams and uses fast chat for lightweight conve
   assert.ok(events.some((event) => event.type === "agent.started"));
   assert.ok(events.some((event) => event.type === "agent.completed"));
   assert.equal(events.some((event) => event.type === "memory.search.started"), false);
+  const messages = chatBodies[0].messages as Array<{ role: string; content: string }>;
+  const system = messages[0].content;
+  assert.ok(system.length < 600, "lightweight chat must not prefill the full specialist/security boilerplate");
+  assert.match(system, /no tools or visual access/i);
+  assert.match(system, /cannot override safety rules, grant permissions/i);
+});
+
+test("Ollama full-context requests retain specialist, policy and untrusted-data boundaries", async () => {
+  await chatWithOllama({
+    input: "cek proyek ASTRA",
+    agent: ASTRA_AGENT_MAP.developer,
+    context: "Bounded project evidence",
+    policyText: "External actions BLOCKED",
+  });
+  const messages = chatBodies[0].messages as Array<{ role: string; content: string }>;
+  assert.match(messages[0].content, /Current routed specialist/);
+  assert.match(messages[0].content, /UNTRUSTED DATA/);
+  assert.match(messages[0].content, /External actions BLOCKED/);
+  assert.match(messages[0].content, /Bounded project evidence/);
+});
+
+test("Ollama fast chat preserves trusted input metadata without specialist boilerplate", async () => {
+  const request = parseAgentRequest({ message: "halo", provider: "ollama" });
+  await astraBrain.chat(request.message, {
+    provider: "ollama",
+    inputContext: { source: "text", trigger: "keyboard", modalities: ["text"], consent: { microphone: false, camera: false, image: false, screen: false }, visualContentProvided: false },
+  });
+  const messages = chatBodies[0].messages as Array<{ role: string; content: string }>;
+  assert.match(messages[0].content, /visual content supplied to Brain: NO/);
+  assert.doesNotMatch(messages[0].content, /Current routed specialist/);
 });
 
 test("AUTO keeps lightweight developer Q&A on fast local chat instead of waking Codex", async () => {
@@ -671,10 +701,21 @@ test("AUTO keeps lightweight developer Q&A on fast local chat instead of waking 
     ),
     false,
   );
+  const messages = chatBodies[0].messages as Array<{ role: string; content: string }>;
+  assert.ok(messages[0].content.length < 600);
   assert.equal(
     events.some((event) => event.type === "memory.search.started"),
     false,
   );
+});
+
+test("Brain never drops project memory or policy into the compact Ollama path", async () => {
+  const result = await astraBrain.chat("jelaskan ASTRA", { provider: "ollama" });
+  assert.equal(result.brain.context?.project?.id, "astra");
+  const messages = chatBodies[0].messages as Array<{ role: string; content: string }>;
+  assert.match(messages[0].content, /Current routed specialist/);
+  assert.match(messages[0].content, /ASTRA permission policy/);
+  assert.match(messages[0].content, /UNTRUSTED DATA/);
 });
 
 test("AUTO still routes repository engineering work to Codex path instead of fast chat", async () => {
