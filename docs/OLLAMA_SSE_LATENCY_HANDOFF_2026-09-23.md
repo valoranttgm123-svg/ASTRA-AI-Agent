@@ -115,6 +115,22 @@ PR #210 restored `lib/brain/ollama.ts` exactly to the pre-#209 version.
 - CI run #577: **SUCCESS**
 - merged main: `04667ec5f464547aa19b7377b8c01a265a267d4b`
 
+## Cold-load cause confirmed after the revert
+
+After PR #210 was installed on the target PC, the first explicit Ollama SSE turn produced:
+
+- first token: **10,996 ms**
+- total: **19,311 ms**
+
+Immediately before a second run, `ollama ps` showed `qwen3.5:4b` still resident with about three minutes remaining. The immediate warm SSE retest then produced:
+
+- first token: **238 ms**
+- total: **7,043 ms**
+
+This is strong target-PC evidence that model residency/cold loading is the dominant source of the intermittent 10–30 s first-token delay. Ollama's documented default residency is five minutes; ASTRA previously did not send an explicit `keep_alive`.
+
+The next measured fix is therefore to send a bounded/configurable Ollama `keep_alive` on ASTRA chat requests, defaulting to 30 minutes. This does not change provider routing or model selection. A later startup preload may still be useful for eliminating the very first cold turn after Ollama/Windows startup, but that is a separate optimization and should be measured independently.
+
 ## Next diagnostic step
 
 Do **not** make another speculative transport rewrite.
