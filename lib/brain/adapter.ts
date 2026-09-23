@@ -1418,7 +1418,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       Boolean(task.approvalToken),
       options?.inputContext,
       false,
-      true,
+      (options?.provider ?? "auto") === "auto",
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
