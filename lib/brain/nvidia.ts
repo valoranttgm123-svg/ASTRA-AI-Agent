@@ -128,12 +128,23 @@ function modelCatalog() {
   } satisfies Record<NvidiaJarvisProfile, string>;
 }
 
+type GlmReasoningEffort = "low" | "high" | "max";
+
+function glmReasoningEffort(value?: string): GlmReasoningEffort {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === "high" || normalized === "max") return normalized;
+  return "low";
+}
+
 function config() {
   return {
     enabled: envFlag("ASTRA_NVIDIA_ENABLED", false),
     includeMemory: envFlag("ASTRA_NVIDIA_INCLUDE_MEMORY", false),
     autoFallback: envFlag("ASTRA_NVIDIA_AUTO_FALLBACK", false),
     thinking: envFlag("ASTRA_NVIDIA_THINKING", true),
+    glmReasoningEffort: glmReasoningEffort(
+      process.env.ASTRA_NVIDIA_GLM_REASONING_EFFORT,
+    ),
     rootUrl: normalizeRoot(process.env.ASTRA_NVIDIA_URL),
     apiKey: process.env.NVIDIA_API_KEY?.trim() || "",
     models: modelCatalog(),
@@ -268,7 +279,22 @@ function generationConfig(profile: NvidiaJarvisProfile) {
   }
 }
 
-function thinkingOptions(model: string, enabled: boolean) {
+function reasoningOptions({
+  model,
+  enabled,
+  glmReasoningEffort,
+}: {
+  model: string;
+  enabled: boolean;
+  glmReasoningEffort: GlmReasoningEffort;
+}) {
+  if (model.startsWith("z-ai/glm-5.3")) {
+    return {
+      reasoning_effort: glmReasoningEffort,
+      chat_template_kwargs: { clear_thinking: true },
+    };
+  }
+
   if (!enabled || !model.startsWith("nvidia/nemotron-")) return {};
 
   return {
@@ -474,7 +500,11 @@ export async function chatWithNvidia({
           temperature: generation.temperature,
           top_p: generation.topP,
           max_tokens: generation.maxTokens,
-          ...thinkingOptions(model, value.thinking),
+          ...reasoningOptions({
+            model,
+            enabled: value.thinking,
+            glmReasoningEffort: value.glmReasoningEffort,
+          }),
           messages: [
             {
               role: "system",
