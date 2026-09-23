@@ -103,6 +103,7 @@ beforeEach(() => {
   process.env.ASTRA_NVIDIA_MODEL_VISION = NVIDIA_JARVIS_MODELS.vision;
   process.env.ASTRA_NVIDIA_ROUTER_MODE = "auto";
   process.env.ASTRA_NVIDIA_THINKING = "true";
+  process.env.ASTRA_NVIDIA_GLM_REASONING_EFFORT = "low";
   process.env.ASTRA_NVIDIA_AUTO_FALLBACK = "false";
   process.env.ASTRA_NVIDIA_INCLUDE_MEMORY = "false";
   process.env.ASTRA_NVIDIA_TIMEOUT_MS = "3000";
@@ -210,7 +211,24 @@ test("developer NVIDIA chat uses GLM-5.3 deep profile", async () => {
   assert.equal(result.profile, "deep");
   assert.equal(result.model, NVIDIA_JARVIS_MODELS.deep);
   assert.equal(lastBody?.model, NVIDIA_JARVIS_MODELS.deep);
-  assert.equal(lastBody?.chat_template_kwargs, undefined);
+  assert.equal(lastBody?.reasoning_effort, "low");
+  assert.deepEqual(lastBody?.chat_template_kwargs, {
+    clear_thinking: true,
+  });
+});
+
+test("GLM reasoning effort can be raised explicitly", async () => {
+  process.env.ASTRA_NVIDIA_GLM_REASONING_EFFORT = "high";
+  const result = await chatWithNvidia({
+    input: "debug TypeScript API ini",
+    agent: ASTRA_AGENT_MAP.developer,
+  });
+
+  assert.equal(result.profile, "deep");
+  assert.equal(lastBody?.reasoning_effort, "high");
+  assert.deepEqual(lastBody?.chat_template_kwargs, {
+    clear_thinking: true,
+  });
 });
 
 test("complex planning NVIDIA chat uses Nemotron Ultra chief profile", async () => {
@@ -238,6 +256,10 @@ test("real visual payload flag routes to GLM-5.3 Flash vision profile", async ()
   assert.equal(result.profile, "vision");
   assert.equal(result.model, NVIDIA_JARVIS_MODELS.vision);
   assert.equal(lastBody?.model, NVIDIA_JARVIS_MODELS.vision);
+  assert.equal(lastBody?.reasoning_effort, "low");
+  assert.deepEqual(lastBody?.chat_template_kwargs, {
+    clear_thinking: true,
+  });
 });
 
 test("router mode can pin a model profile without changing the public provider", async () => {
