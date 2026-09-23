@@ -49,12 +49,24 @@ before(async () => {
         raw += chunk.toString();
       }
       lastBody = JSON.parse(raw) as Record<string, unknown>;
-      assert.equal(lastBody.stream, false);
+      assert.equal(typeof lastBody.stream, "boolean");
       assert.ok(
         Object.values(NVIDIA_JARVIS_MODELS).includes(
           lastBody.model as (typeof NVIDIA_JARVIS_MODELS)[keyof typeof NVIDIA_JARVIS_MODELS],
         ),
       );
+
+      if (lastBody.stream === true) {
+        response.setHeader("content-type", "text/event-stream");
+        response.write(
+          'data: {"choices":[{"delta":{"content":"NVIDIA "}}]}\n\n',
+        );
+        response.write(
+          'data: {"choices":[{"delta":{"content":"JARVIS MESH SIAP"}}]}\n\n',
+        );
+        response.end("data: [DONE]\n\n");
+        return;
+      }
 
       response.setHeader("content-type", "application/json");
       response.end(
@@ -103,6 +115,7 @@ beforeEach(() => {
   process.env.ASTRA_NVIDIA_MODEL_VISION = NVIDIA_JARVIS_MODELS.vision;
   process.env.ASTRA_NVIDIA_ROUTER_MODE = "auto";
   process.env.ASTRA_NVIDIA_THINKING = "true";
+  process.env.ASTRA_NVIDIA_GLM_REASONING_EFFORT = "low";
   process.env.ASTRA_NVIDIA_AUTO_FALLBACK = "false";
   process.env.ASTRA_NVIDIA_INCLUDE_MEMORY = "false";
   process.env.ASTRA_NVIDIA_TIMEOUT_MS = "3000";
@@ -196,9 +209,9 @@ test("short NVIDIA chat uses Lightning fast profile", async () => {
   assert.equal(chatCalls, 1);
   assert.equal(lastBody?.model, NVIDIA_JARVIS_MODELS.fast);
   assert.deepEqual(lastBody?.chat_template_kwargs, {
-    enable_thinking: true,
+    enable_thinking: false,
   });
-  assert.equal(lastBody?.reasoning_budget, 4096);
+  assert.equal(lastBody?.reasoning_budget, undefined);
 });
 
 test("developer NVIDIA chat uses GLM-5.3 deep profile", async () => {
@@ -210,7 +223,24 @@ test("developer NVIDIA chat uses GLM-5.3 deep profile", async () => {
   assert.equal(result.profile, "deep");
   assert.equal(result.model, NVIDIA_JARVIS_MODELS.deep);
   assert.equal(lastBody?.model, NVIDIA_JARVIS_MODELS.deep);
-  assert.equal(lastBody?.chat_template_kwargs, undefined);
+  assert.equal(lastBody?.reasoning_effort, "low");
+  assert.deepEqual(lastBody?.chat_template_kwargs, {
+    clear_thinking: true,
+  });
+});
+
+test("GLM reasoning effort can be raised explicitly", async () => {
+  process.env.ASTRA_NVIDIA_GLM_REASONING_EFFORT = "high";
+  const result = await chatWithNvidia({
+    input: "debug TypeScript API ini",
+    agent: ASTRA_AGENT_MAP.developer,
+  });
+
+  assert.equal(result.profile, "deep");
+  assert.equal(lastBody?.reasoning_effort, "high");
+  assert.deepEqual(lastBody?.chat_template_kwargs, {
+    clear_thinking: true,
+  });
 });
 
 test("complex planning NVIDIA chat uses Nemotron Ultra chief profile", async () => {
@@ -238,6 +268,10 @@ test("real visual payload flag routes to GLM-5.3 Flash vision profile", async ()
   assert.equal(result.profile, "vision");
   assert.equal(result.model, NVIDIA_JARVIS_MODELS.vision);
   assert.equal(lastBody?.model, NVIDIA_JARVIS_MODELS.vision);
+  assert.equal(lastBody?.reasoning_effort, "low");
+  assert.deepEqual(lastBody?.chat_template_kwargs, {
+    clear_thinking: true,
+  });
 });
 
 test("router mode can pin a model profile without changing the public provider", async () => {
@@ -251,17 +285,22 @@ test("router mode can pin a model profile without changing the public provider",
   assert.equal(result.model, NVIDIA_JARVIS_MODELS.chief);
 });
 
-test("explicit NVIDIA mode reports the actual selected submodel", async () => {
+test("explicit NVIDIA mode streams live tokens and reports the selected submodel", async () => {
   const events: AstraBrainEvent[] = [];
+  const tokens: string[] = [];
   const result = await astraBrain.chat("halo", {
     provider: "nvidia",
     onEvent: (event) => events.push(event),
+    onToken: (token) => tokens.push(token),
   });
 
   assert.equal(result.state, "completed");
+  assert.equal(result.message, "NVIDIA JARVIS MESH SIAP");
   assert.equal(result.brain.provider, "nvidia");
   assert.equal(result.brain.model, NVIDIA_JARVIS_MODELS.fast);
   assert.equal(chatCalls, 1);
+  assert.equal(lastBody?.stream, true);
+  assert.equal(tokens.join(""), "NVIDIA JARVIS MESH SIAP");
   assert.ok(
     events.some(
       (event) =>
