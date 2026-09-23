@@ -2266,14 +2266,17 @@ class LocalPreferredBrainAdapter implements AstraBrain {
         available:
           toolRuntime.get("computer.system.info")?.availability === "READY" ||
           toolRuntime.get("computer.process.list")?.availability === "READY" ||
-          toolRuntime.get("computer.app.launch")?.availability === "READY",
+          toolRuntime.get("computer.app.launch")?.availability === "READY" ||
+          toolRuntime.get("computer.owner.exec")?.availability === "READY",
         state:
           toolRuntime.get("computer.system.info")?.availability === "READY" ||
           toolRuntime.get("computer.process.list")?.availability === "READY" ||
-          toolRuntime.get("computer.app.launch")?.availability === "READY"
+          toolRuntime.get("computer.app.launch")?.availability === "READY" ||
+          toolRuntime.get("computer.owner.exec")?.availability === "READY"
             ? "READY"
             : toolRuntime.get("computer.system.info")?.availability === "OFFLINE" ||
-                toolRuntime.get("computer.process.list")?.availability === "OFFLINE"
+                toolRuntime.get("computer.process.list")?.availability === "OFFLINE" ||
+                toolRuntime.get("computer.owner.exec")?.availability === "OFFLINE"
               ? "OFFLINE"
               : "NOT_CONFIGURED",
         detail:
@@ -2283,7 +2286,9 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           (toolRuntime.get("computer.process.list")?.availability ?? "NOT_CONFIGURED") +
           ", app launch=" +
           (toolRuntime.get("computer.app.launch")?.availability ?? "NOT_CONFIGURED") +
-          ". Computer Agent is OFF by default, accepts no arbitrary command string, and app launch is restricted to a fixed allowlist.",
+          ", owner exec=" +
+          (toolRuntime.get("computer.owner.exec")?.availability ?? "NOT_CONFIGURED") +
+          ". Owner Mode command execution is exposed only when explicitly enabled on a trusted local node.",
       },
       multimodal: {
         enabled: true,

@@ -161,7 +161,8 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "project.git.stage-files" ||
     toolId === "project.git.commit" ||
     toolId === "project.verify.npm-script" ||
-    toolId === "computer.app.launch"
+    toolId === "computer.app.launch" ||
+    toolId === "computer.owner.exec"
   ) {
     return 2;
   }
