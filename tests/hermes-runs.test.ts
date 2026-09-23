@@ -26,6 +26,8 @@ test("official Hermes runs validate read-only profile, final state and real serv
     else if(req.url?.endsWith("/events")) {
       res.setHeader("content-type","text/event-stream");res.flushHeaders();
       if(mode==="hang") {streaming?.();return;}
+      res.write('event: assistant.delta\ndata: {"delta":"Hermes "}\n\n');
+      res.write('event: assistant.delta\ndata: {"delta":"Runs siap"}\n\n');
       res.end("event: run.completed\ndata: {}\n\n");
     } else if(req.url?.endsWith("/stop")) {stopped++;res.end(JSON.stringify({status:"cancelled"}));}
     else res.end(JSON.stringify({status:mode==="malformed"?"failed":"completed",output:"fixture response",runtime:{model:"fixture-local"}}));
@@ -34,6 +36,16 @@ test("official Hermes runs validate read-only profile, final state and real serv
   const config={rootUrl:`http://127.0.0.1:${(server.address() as import("node:net").AddressInfo).port}`,apiKey:"fixture-key",chatTimeoutMs:2000,model:"fixture"};
   try {
     assert.equal((await chatWithHermesRun(config,"hello","read-only fixture")).message,"fixture response");
+    const tokens: string[] = [];
+    const streamed = await chatWithHermesRun(
+      config,
+      "hello",
+      "read-only fixture",
+      undefined,
+      (token) => tokens.push(token),
+    );
+    assert.equal(streamed.message,"fixture response");
+    assert.deepEqual(tokens,["Hermes ","Runs siap"]);
     assert.equal(stopped,0);
     mode="malformed";
     await assert.rejects(chatWithHermesRun(config,"hello","fixture"),/did not complete/);
