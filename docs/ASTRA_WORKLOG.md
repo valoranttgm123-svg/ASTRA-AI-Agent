@@ -865,3 +865,22 @@ Real GitHub/calendar/email/service adapters and proactive notification evidence 
 - Phase 24 now has three real repository-side source integrations: GitHub Actions, local service-health, and Automation lifecycle.
 - Target-PC polling/proactive notification/failure/STOP/restart evidence is still required; repository CI is not production readiness.
 - Phase 28 recovery execution remains intentionally pending because no recovery-specific Tool Runtime primitive currently exists. Do not substitute unrelated generic tools.
+
+
+## 2026-09-23 — User complaint / refinement tracker
+
+The following points are durable user-facing refinement requirements and are **not NVIDIA-only**. Treat them as product acceptance criteria for the whole ASTRA runtime.
+
+- **ASTRA is still not responsive enough across providers/models.** The owner reports the problem is broader than NVIDIA; local and remote model paths must be measured and improved end-to-end instead of assuming one provider is the problem.
+- **The UI must not appear frozen while any provider is working.** Every provider path that can stream should surface useful output as soon as it exists; non-streaming paths need truthful progress/working state rather than silence.
+- **Routine conversation must stay lightweight.** Short/simple turns should avoid unnecessary planning, memory retrieval, specialist context, hidden reasoning and heavyweight model routing.
+- **Provider/model selection must match task cost.** Heavy reasoning is acceptable only when the task actually needs it; routine interaction should take the fastest truthful path.
+- **Many user-facing features are still not working or not yet proven on the target PC.** Codex must audit real runtime behavior feature-by-feature, distinguish READY vs disabled/not-configured/broken, then fix concrete failures one at a time.
+- **Do not treat repository-complete contracts as working product features.** A feature is only accepted when the target runtime demonstrates its happy path plus relevant failure/permission/STOP behavior.
+- **Do not arbitrarily change the agreed NVIDIA lineup.** Keep Chief=Nemotron Ultra, Deep=GLM-5.3, Fast=Nemotron Lightning, Vision=GLM-5.3 Flash unless target evidence proves a change is necessary.
+- **Improve incrementally and preserve working configuration.** Fix one bottleneck or broken feature at a time, measure before/after on the target PC, and do not restart broad historical audits.
+- **Codex is expected to take over soon.** It should resume from this tracker and the current execution pointer, not restart the project or redo completed repository work.
+
+Observed target evidence that motivates the responsiveness work includes NVIDIA FAST around 42.44 s and NVIDIA DEEP around 286.26 s before tuning, but these numbers are examples of the broader responsiveness problem rather than the whole problem.
+
+Current implementation work for one slice of responsiveness is tracked in the post-Codex responsiveness PR. Humanoid/GPU performance and broader feature readiness remain separate but active refinement tracks.
