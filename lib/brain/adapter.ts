@@ -124,7 +124,11 @@ function isFastChatInput(
   provider: AstraProviderChoice,
 ) {
   if (selected !== "chief_of_staff") return false;
-  if (provider !== "auto" && provider !== "ollama") return false;
+  if (
+    provider !== "auto" &&
+    provider !== "ollama" &&
+    provider !== "nvidia"
+  ) return false;
 
   const text = input.trim();
   if (!text || text.length > 240 || shouldGeneratePlan(text)) return false;
@@ -1234,6 +1238,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             context.inputContext?.visualContentProvided,
           ),
           signal: options?.signal,
+          onToken: options?.onToken,
         });
         emitLiveProviderComplete(selected, "nvidia", options);
 
