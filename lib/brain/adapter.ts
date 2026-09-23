@@ -123,7 +123,7 @@ function isFastChatInput(
   selected: AstraAgentKey,
   provider: AstraProviderChoice,
 ) {
-  if (selected !== "chief_of_staff") return false;
+  if (selected !== "chief_of_staff" && selected !== "developer") return false;
   if (
     provider !== "auto" &&
     provider !== "ollama" &&
@@ -1096,7 +1096,16 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
 
-    if (preferredProvider === "codex" || (preferredProvider === "auto" && (isEngineeringRoute(selected) || process.env.ASTRA_AUTO_PROVIDER === "codex"))) {
+    if (
+      preferredProvider === "codex" ||
+      (
+        preferredProvider === "auto" &&
+        (
+          (!fastChat && isEngineeringRoute(selected)) ||
+          process.env.ASTRA_AUTO_PROVIDER === "codex"
+        )
+      )
+    ) {
       emitLiveProviderStart(selected, "codex", options);
       try {
         const codexContext = [
