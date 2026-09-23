@@ -39,6 +39,8 @@ export type UiPerformanceEvidence = {
     automationPanelOpenAtStart: boolean;
     automationPanelOpenAtEnd: boolean;
     brainStreamingObserved: boolean;
+    brainFirstTokenLatencyMs: number | null;
+    brainTotalLatencyMs: number | null;
     automationStreamingObserved: boolean;
     brainEventCountStart: number;
     brainEventCountEnd: number;
@@ -87,6 +89,11 @@ function bool(value: unknown, field: string) {
     throw new Error("UI performance boolean field " + field + " is invalid.");
   }
   return value;
+}
+
+function nullableLatency(value: unknown, field: string) {
+  if (value === null || value === undefined) return null;
+  return Math.round(finite(value, field, 0, 300_000));
 }
 
 function boundedString(value: unknown, max: number) {
@@ -212,6 +219,14 @@ export function parseUiPerformanceEvidence(
       brainStreamingObserved: bool(
         activity.brainStreamingObserved,
         "brainStreamingObserved",
+      ),
+      brainFirstTokenLatencyMs: nullableLatency(
+        activity.brainFirstTokenLatencyMs,
+        "brainFirstTokenLatencyMs",
+      ),
+      brainTotalLatencyMs: nullableLatency(
+        activity.brainTotalLatencyMs,
+        "brainTotalLatencyMs",
       ),
       automationStreamingObserved: bool(
         activity.automationStreamingObserved,
