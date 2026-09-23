@@ -21,10 +21,8 @@ const BASE_POINT_SIZE_LOW = 1.62;
 const GLOW_POINT_SIZE_HIGH = 3.65;
 const GLOW_POINT_SIZE_LOW = 2.28;
 const ASSEMBLY_DURATION_SECONDS = 2.6;
-const ASSEMBLY_WINDOW = 0.34;
 const SHOCKWAVE_DURATION_SECONDS = 2.35;
 
-const STATES: AstraAvatarState[] = ["idle", "listening", "thinking", "speaking"];
 
 type ViewMode = "reference" | "particles" | "compare";
 type QualityMode = "auto" | "low" | "high";
@@ -788,6 +786,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
 
   return (
     <main
+      className="astra-humanoid"
       style={{
         position: "relative",
         width: "100vw",
@@ -902,7 +901,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
         />
       )}
 
-      <header style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
+      <header className="astra-humanoid__heading" style={{ position: "absolute", top: 18, left: 20, zIndex: 20, textShadow: "0 1px 12px #000" }}>
         <div style={{ fontSize: 11, letterSpacing: ".28em", color: "#61efff" }}>ASTRA MAX // HUMANOID V15</div>
         <div style={{ marginTop: 6, fontSize: 10, letterSpacing: ".18em", color: "rgba(223,251,255,.55)" }}>
           REAL-TIME BRAIN TELEMETRY // SSE
@@ -910,6 +909,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       </header>
 
       <aside
+        className="astra-humanoid__status"
         aria-label="ASTRA Brain link status"
         style={{
           position: "absolute",
@@ -939,6 +939,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       <button onClick={exit} style={exitStyle}>EXIT</button>
 
       <section
+        className="astra-humanoid__controls"
         style={{
           position: "absolute",
           left: 18,
@@ -952,14 +953,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           pointerEvents: "none",
         }}
       >
-        <div style={{ display: "grid", gap: 9, pointerEvents: "auto" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-            {STATES.map((item) => (
-              <button key={item} onClick={() => runtime.setAvatarState(item)} style={buttonStyle(state === item)}>
-                {item.toUpperCase()}
-              </button>
-            ))}
-          </div>
+        <div className="astra-humanoid__tools" style={{ display: "grid", gap: 9, pointerEvents: "auto" }}>
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
             {(["reference", "particles", "compare"] as ViewMode[]).map((item) => (
               <button key={item} onClick={() => setView(item)} style={buttonStyle(view === item)}>
@@ -1115,7 +1109,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           )}
         </div>
 
-        <div style={consoleStyle}>
+        <div className="astra-humanoid__console" style={consoleStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 9, letterSpacing: ".18em", color: "#65eafb" }}>
             <span>{runtime.activeAgent ?? "ASTRA CORE"}</span>
             <span>
@@ -1129,16 +1123,23 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           <div style={{ marginTop: 5, color: "rgba(198,240,247,.42)", fontSize: 8.5, letterSpacing: ".05em" }}>
             BRAIN EVENT: {latestBrainEvent ? latestBrainEvent.type + " · " + latestBrainEvent.label : "standby"}
           </div>
-          <div style={{ minHeight: 42, marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
+          <div style={{ minHeight: 42, maxHeight: "22vh", overflowY: "auto", whiteSpace: "pre-wrap", overflowWrap: "anywhere", marginTop: 10, color: "rgba(225,250,255,.72)", fontSize: 11, lineHeight: 1.5 }}>
             {runtime.micActive
               ? (runtime.micTranscript || "Silakan bicara...")
-              : runtime.lastResponse?.message ?? "Approved artwork is driving the humanoid particle field."}
+              : runtime.lastResponse?.message ?? "Ketik perintah atau gunakan mikrofon. Animasi mengikuti aktivitas AI yang sebenarnya."}
+          </div>
+          <div style={{display:"flex",gap:8,marginTop:10}}>
+            <select aria-label="Provider AI humanoid" value={runtime.providerPreference} onChange={event => runtime.setProviderPreference(event.target.value as "auto" | "ollama" | "codex" | "nvidia")} style={{...inputStyle,padding:6}}>
+              <option value="auto">AUTO</option><option value="ollama">OLLAMA LOKAL</option><option value="codex">CHATGPT / CODEX</option><option value="nvidia">NVIDIA · JARVIS MESH</option>
+            </select>
+            <button type="button" onClick={runtime.stopInteraction} style={buttonStyle(true)}>STOP</button>
           </div>
           <form onSubmit={submit} style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <input
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Ketik perintah ASTRA..."
+              aria-label="Perintah ASTRA humanoid"
               style={inputStyle}
             />
             <button
@@ -1162,7 +1163,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
       </section>
 
       {technical && (
-        <aside style={technicalStyle}>
+        <aside className="astra-humanoid__technical" style={{...technicalStyle,maxHeight:"calc(100dvh - 140px)",overflowY:"auto"}}>
           <div style={{ color: "#5eeaff", letterSpacing: ".18em", marginBottom: 8 }}>TECHNICAL DETAILS</div>
           <div>Artwork: astra-idle-v1.webp</div>
           <div>Source: {sourceSize}</div>

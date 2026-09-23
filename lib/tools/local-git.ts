@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import path from "node:path";
 import type { AstraProjectRecord } from "@/lib/projects/contracts";
 import {
   resolveExistingProjectFile,
@@ -11,6 +10,7 @@ import type {
   AstraToolHandler,
 } from "./contracts";
 import { runBoundedProcess } from "./process";
+import { npmScriptCommand } from "./npm-command";
 
 async function registeredProject(
   projectId: string,
@@ -547,10 +547,9 @@ const npmVerify: AstraToolHandler = async (input, context) => {
     };
   }
 
-  const executable = process.platform === "win32" ? "npm.cmd" : "npm";
+  const invocation = await npmScriptCommand(script);
   const result = await runBoundedProcess({
-    command: executable,
-    args: ["run", script],
+    ...invocation,
     cwd: target.workspace,
     signal: context.signal,
     env: {

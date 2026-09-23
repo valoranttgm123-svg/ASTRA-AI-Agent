@@ -2,6 +2,9 @@ import {
   spawn,
   type ChildProcess,
 } from "node:child_process";
+import path from "node:path";
+
+const stopping = new WeakSet<ChildProcess>();
 
 export function shouldDetachOwnedProcess(
   platform: NodeJS.Platform = process.platform,
@@ -33,6 +36,8 @@ function killDirectChild(child: ChildProcess) {
 export function terminateOwnedProcessTree(
   child: ChildProcess,
 ) {
+  if (child.exitCode !== null || child.signalCode !== null || stopping.has(child)) return;
+  stopping.add(child);
   const pid = child.pid;
   if (!pid) {
     killDirectChild(child);
@@ -42,7 +47,7 @@ export function terminateOwnedProcessTree(
   if (process.platform === "win32") {
     try {
       const killer = spawn(
-        "taskkill.exe",
+        path.join(process.env.SystemRoot || "C:\\Windows", "System32", "taskkill.exe"),
         [...windowsTaskkillArgs(pid)],
         {
           shell: false,
@@ -53,6 +58,9 @@ export function terminateOwnedProcessTree(
 
       killer.once("error", () => {
         killDirectChild(child);
+      });
+      killer.once("close", (code) => {
+        if (code !== 0) killDirectChild(child);
       });
       killer.unref();
     } catch {

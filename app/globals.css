@@ -625,6 +625,20 @@ body {
   font-size: 8px;
 }
 
+.astra-humanoid__tools { min-width: 0; flex: 1; }
+.astra-humanoid__console { flex-shrink: 0; }
+@media (max-width: 760px) {
+  .astra-humanoid__heading { top: 14px !important; left: 12px !important; }
+  .astra-humanoid__heading > div:first-child { font-size: 8px !important; }
+  .astra-humanoid__heading > div:last-child { display: none; }
+  .astra-humanoid__status { top: 52px !important; right: 12px !important; left: 12px; min-width: 0 !important; text-align: left !important; }
+  .astra-humanoid__controls { left: 10px !important; right: 10px !important; bottom: 10px !important; flex-direction: column-reverse; gap: 8px !important; max-height: 51dvh; overflow-y: auto; pointer-events: auto !important; }
+  .astra-humanoid__console { width: 100% !important; min-width: 0 !important; box-sizing: border-box; }
+  .astra-humanoid__tools { width: 100%; }
+  .astra-humanoid__tools button { min-height: 36px; }
+  .astra-humanoid__technical { left: 12px; right: 12px !important; top: 105px !important; width: auto !important; max-height: 37dvh !important; z-index: 28 !important; }
+}
+
 @media (max-width: 700px) {
   .astra-automation__launcher {
     bottom: 84px;

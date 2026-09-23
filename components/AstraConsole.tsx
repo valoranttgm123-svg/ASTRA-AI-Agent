@@ -91,12 +91,14 @@ export default function AstraConsole() {
     micError,
     voiceEnabled,
     setVoiceEnabled,
+    stopInteraction,
+    providerPreference: provider,
+    setProviderPreference: setProvider,
   } = useAstraRuntime();
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [provider, setProvider] = useState<AstraProviderChoice>("auto");
   const [pendingExecution, setPendingExecution] =
     useState<PendingExecution | null>(null);
 
@@ -215,7 +217,7 @@ export default function AstraConsole() {
       <div className="astra-console__output" aria-live="polite">
         {error || micError ? (
           <p className="astra-console__error">{error ?? micError}</p>
-        ) : micActive || micTranscript ? (
+        ) : micActive ? (
           <>
             <div className="astra-console__agent">
               {micActive ? "MIC · LISTENING" : "VOICE INPUT"}
@@ -226,7 +228,7 @@ export default function AstraConsole() {
           <>
             <div className="astra-console__agent">
               {lastResponse.agentName} ·{" "}
-              {lastResponse.brain.execution.toUpperCase()}
+              {lastResponse.brain.requestedMode === "execute" ? lastResponse.brain.execution.toUpperCase() : "JAWABAN"}
             </div>
             <p>{lastResponse.message}</p>
             {approval ? (
@@ -304,6 +306,7 @@ export default function AstraConsole() {
         <button type="submit" disabled={runtimeBusy || !message.trim()}>
           {runtimeBusy ? "RUNNING" : "SEND"}
         </button>
+        <button type="button" onClick={() => { setPendingExecution(null); stopInteraction(); }} title="Hentikan tugas, mikrofon, dan suara aktif">STOP</button>
       </form>
     </section>
   );

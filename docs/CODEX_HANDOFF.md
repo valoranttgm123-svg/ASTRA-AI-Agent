@@ -1,5 +1,12 @@
 # ASTRA Codex Handoff
 
+## 2026-09-23 — current local refinement
+
+Read `TARGET_PC_REFINEMENT_2026-09-23.md` for the Windows npm/process shutdown,
+provider persistence, read-only Hermes Runs and Sonor hardening slice.
+PR #188 is merged. Do not reimplement the newer JARVIS/NVIDIA foundations.
+Do not claim release READY before the combined build/runtime evidence passes.
+
 ## 2026-09-20 — Phase 13 Command Center MAX
 
 Implemented on `astra/phase13-command-center-max`:

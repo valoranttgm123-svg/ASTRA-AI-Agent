@@ -1031,7 +1031,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const failures: string[] = [];
     const preferredProvider = options?.provider ?? "auto";
 
-    if (preferredProvider === "codex" || (preferredProvider === "auto" && isEngineeringRoute(selected))) {
+    if (preferredProvider === "codex" || (preferredProvider === "auto" && (isEngineeringRoute(selected) || process.env.ASTRA_AUTO_PROVIDER === "codex"))) {
       emitLiveProviderStart(selected, "codex", options);
       try {
         const codexContext = [
@@ -1778,6 +1778,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           "EXECUTION MODE: perform the requested task with real Hermes tools when available and permitted. Do not merely describe an action. Do not claim completion unless the tool actually completed it.",
         ].join("\n"),
         signal: options?.signal,
+        executionRequested: true,
       });
       emitLiveProviderComplete(selected, "hermes", options);
 

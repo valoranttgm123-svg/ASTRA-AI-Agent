@@ -1,4 +1,6 @@
 import type { AstraAgent } from "@/lib/agent/types";
+import { readFileSync } from "node:fs";
+import { chatWithHermesRun, verifyHermesRunProfile } from "./hermes-runs";
 import { isRecordPayload, isStructuredProviderPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 import { safeErrorDetail, safePublicUrl } from "@/lib/security/redaction";
@@ -47,10 +49,15 @@ function parseTimeout(value: string | undefined, fallback: number) {
 }
 
 export function getHermesConfig() {
+  let apiKey = process.env.ASTRA_HERMES_API_KEY?.trim() || "";
+  if (!apiKey && process.env.ASTRA_HERMES_API_KEY_FILE) {
+    try { apiKey = readFileSync(process.env.ASTRA_HERMES_API_KEY_FILE,"utf8").trim(); } catch { /* Readiness will fail truthfully. */ }
+  }
   return {
     enabled: envFlag("ASTRA_HERMES_ENABLED", true),
     rootUrl: normalizeRoot(process.env.ASTRA_HERMES_URL),
-    apiKey: process.env.ASTRA_HERMES_API_KEY?.trim() || "",
+    apiKey,
+    runTransport: process.env.ASTRA_HERMES_TRANSPORT === "runs",
     model: process.env.ASTRA_HERMES_MODEL?.trim() || DEFAULT_HERMES_MODEL,
     chatTimeoutMs: parseTimeout(
       process.env.ASTRA_HERMES_TIMEOUT_MS,
@@ -110,6 +117,10 @@ export async function getHermesStatus(): Promise<HermesStatus> {
 
   try {
     assertLocalRoot(config.rootUrl);
+    if (config.runTransport) {
+      await verifyHermesRunProfile(config, AbortSignal.timeout(config.statusTimeoutMs));
+      return {enabled:true,available:true,endpoint,model:config.model,detail:"Hermes run/STOP API and the reviewed read-only Sonor profile are reachable; model response speed requires a real request."};
+    }
     const response = await withTimeout(config.statusTimeoutMs, (signal) =>
       fetch(`${config.rootUrl}/v1/capabilities`, {
         method: "GET",
@@ -176,12 +187,14 @@ export async function chatWithHermes({
   context,
   policyText,
   signal,
+  executionRequested = false,
 }: {
   input: string;
   agent: AstraAgent;
   context?: string;
   policyText?: string;
   signal?: AbortSignal;
+  executionRequested?: boolean;
 }) {
   const config = getHermesConfig();
   if (!config.enabled) {
@@ -203,6 +216,11 @@ export async function chatWithHermes({
   ]
     .filter(Boolean)
     .join("\n");
+
+  if (config.runTransport) {
+    if (executionRequested) throw new Error("Reviewed Hermes profile is read-only. Use an approved Codex/tool execution path for changes.");
+    return chatWithHermesRun(config, input, system, signal);
+  }
 
   const response = await withTimeout(config.chatTimeoutMs, (requestSignal) =>
     fetch(`${config.rootUrl}/v1/chat/completions`, {

@@ -201,7 +201,8 @@ export async function chatWithCodex({
   verificationRequested?: boolean;
   signal?: AbortSignal;
 }) {
-  const config = getCodexConfig(policy);
+  // Chat and verification must stay read-only even when execution is enabled globally.
+  const config = getCodexConfig(executionRequested && !verificationRequested ? policy : undefined);
   if (!config.enabled) throw new Error("Codex specialist is disabled.");
   const writableSandbox = config.sandbox !== "read-only";
 
@@ -243,6 +244,12 @@ export async function chatWithCodex({
     "--cd",
     config.workdir,
   ];
+  // Optional isolation avoids unrelated MCP/config startup during interactive chat.
+  // Require an explicit model so isolating config cannot silently switch the user's model.
+  if (envFlag("ASTRA_CODEX_ISOLATE_CONFIG", false)) {
+    if (!config.model) throw new Error("Isolated Codex requests require ASTRA_CODEX_MODEL to preserve the selected model.");
+    args.push("--ignore-user-config");
+  }
   if (executionRequested && config.sandbox === "workspace-write") {
     args.push("--approve-for-me");
   } else {

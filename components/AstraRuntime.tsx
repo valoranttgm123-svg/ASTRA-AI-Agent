@@ -68,6 +68,8 @@ type ReasoningTrace = {
 };
 
 type AstraRuntimeValue = {
+  providerPreference: AstraProviderChoice;
+  setProviderPreference: (provider: AstraProviderChoice) => void;
   orbState: AstraOrbState;
   avatarState: AstraAvatarState;
   speechLevel: number;
@@ -181,6 +183,19 @@ function micErrorMessage(error?: string) {
 }
 
 export function AstraRuntimeProvider({ children }: { children: React.ReactNode }) {
+  const [providerPreference, setProviderState] = useState<AstraProviderChoice>("auto");
+  const providerRef = useRef<AstraProviderChoice>("auto");
+  const setProviderPreference = useCallback((value: AstraProviderChoice) => {
+    if (!["auto", "ollama", "codex", "nvidia"].includes(value)) return;
+    providerRef.current = value; setProviderState(value);
+    try { localStorage.setItem("astra-provider", value); } catch { /* Storage may be disabled. */ }
+  }, []);
+  useEffect(() => {
+    try {
+      const value = localStorage.getItem("astra-provider");
+      if (value === "auto" || value === "ollama" || value === "codex" || value === "nvidia") { providerRef.current = value; setProviderState(value); }
+    } catch { /* Default AUTO remains usable. */ }
+  }, []);
   const [orbState, setOrbState] = useState<AstraOrbState>("idle");
   const [avatarState, setAvatarState] = useState<AstraAvatarState>("idle");
   // Kept for renderer compatibility. It is now an event-driven playback gate:
@@ -536,7 +551,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
           mode: options?.mode ?? "chat",
           approved: Boolean(options?.approved),
           approvalToken: options?.approvalToken,
-          provider: options?.provider ?? "auto",
+          provider: options?.provider ?? providerRef.current,
           inputContext: options?.inputContext ?? textInputContext(),
         }),
         signal: controller.signal,
@@ -722,7 +737,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
   ]);
 
   const execute = useCallback(
-    (message: string, provider: AstraProviderChoice = "auto") =>
+    (message: string, provider?: AstraProviderChoice) =>
       send(message, { mode: "execute", approved: true, provider }),
     [send],
   );
@@ -731,7 +746,7 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
     (
       message: string,
       approvalToken: string,
-      provider: AstraProviderChoice = "auto",
+      provider?: AstraProviderChoice,
     ) =>
       send(message, {
         mode: "execute",
@@ -1082,6 +1097,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
 
   const value = useMemo(
     () => ({
+      providerPreference,
+      setProviderPreference,
       orbState,
       avatarState,
       speechLevel,
@@ -1112,6 +1129,8 @@ export function AstraRuntimeProvider({ children }: { children: React.ReactNode }
       setVoiceEnabled,
     }),
     [
+      providerPreference,
+      setProviderPreference,
       orbState,
       avatarState,
       speechLevel,

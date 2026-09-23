@@ -1796,7 +1796,7 @@ test("Phase 7 scoped file and local Git workflow is end-to-end verified", async 
       },
     },
   );
-  assert.equal(verify.status, "completed");
+  assert.equal(verify.status, "completed", verify.detail);
   assert.equal(verify.verified, true);
 
   const commit = await astraNativeToolRuntime.execute(

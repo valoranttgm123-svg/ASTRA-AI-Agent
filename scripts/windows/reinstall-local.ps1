@@ -51,7 +51,7 @@ if (-not $SkipBuild) {
   }
 }
 
-& $uninstaller
+& $uninstaller -Port $Port
 & $installer -Port $Port -SkipBuild
 
 if ($hadEnvLocal -and -not (Test-Path -LiteralPath $envLocal -PathType Leaf)) {
