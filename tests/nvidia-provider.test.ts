@@ -49,12 +49,24 @@ before(async () => {
         raw += chunk.toString();
       }
       lastBody = JSON.parse(raw) as Record<string, unknown>;
-      assert.equal(lastBody.stream, false);
+      assert.equal(typeof lastBody.stream, "boolean");
       assert.ok(
         Object.values(NVIDIA_JARVIS_MODELS).includes(
           lastBody.model as (typeof NVIDIA_JARVIS_MODELS)[keyof typeof NVIDIA_JARVIS_MODELS],
         ),
       );
+
+      if (lastBody.stream === true) {
+        response.setHeader("content-type", "text/event-stream");
+        response.write(
+          'data: {"choices":[{"delta":{"content":"NVIDIA "}}]}\n\n',
+        );
+        response.write(
+          'data: {"choices":[{"delta":{"content":"JARVIS MESH SIAP"}}]}\n\n',
+        );
+        response.end("data: [DONE]\n\n");
+        return;
+      }
 
       response.setHeader("content-type", "application/json");
       response.end(
@@ -197,9 +209,9 @@ test("short NVIDIA chat uses Lightning fast profile", async () => {
   assert.equal(chatCalls, 1);
   assert.equal(lastBody?.model, NVIDIA_JARVIS_MODELS.fast);
   assert.deepEqual(lastBody?.chat_template_kwargs, {
-    enable_thinking: true,
+    enable_thinking: false,
   });
-  assert.equal(lastBody?.reasoning_budget, 4096);
+  assert.equal(lastBody?.reasoning_budget, undefined);
 });
 
 test("developer NVIDIA chat uses GLM-5.3 deep profile", async () => {
@@ -273,17 +285,22 @@ test("router mode can pin a model profile without changing the public provider",
   assert.equal(result.model, NVIDIA_JARVIS_MODELS.chief);
 });
 
-test("explicit NVIDIA mode reports the actual selected submodel", async () => {
+test("explicit NVIDIA mode streams live tokens and reports the selected submodel", async () => {
   const events: AstraBrainEvent[] = [];
+  const tokens: string[] = [];
   const result = await astraBrain.chat("halo", {
     provider: "nvidia",
     onEvent: (event) => events.push(event),
+    onToken: (token) => tokens.push(token),
   });
 
   assert.equal(result.state, "completed");
+  assert.equal(result.message, "NVIDIA JARVIS MESH SIAP");
   assert.equal(result.brain.provider, "nvidia");
   assert.equal(result.brain.model, NVIDIA_JARVIS_MODELS.fast);
   assert.equal(chatCalls, 1);
+  assert.equal(lastBody?.stream, true);
+  assert.equal(tokens.join(""), "NVIDIA JARVIS MESH SIAP");
   assert.ok(
     events.some(
       (event) =>
