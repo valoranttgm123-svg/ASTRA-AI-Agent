@@ -131,6 +131,31 @@ This is strong target-PC evidence that model residency/cold loading is the domin
 
 The next measured fix is therefore to send a bounded/configurable Ollama `keep_alive` on ASTRA chat requests, defaulting to 30 minutes. This does not change provider routing or model selection. A later startup preload may still be useful for eliminating the very first cold turn after Ollama/Windows startup, but that is a separate optimization and should be measured independently.
 
+## Keep-alive confirmed; remaining delay is the first cold turn
+
+After PR #212 was installed on the target PC, Ollama had no resident model before the request:
+
+```
+NAME    ID    SIZE    PROCESSOR    CONTEXT    UNTIL
+```
+
+The first explicit ASTRA Ollama SSE turn was therefore cold:
+
+- first token: **28,382 ms**
+- total: **38,580 ms**
+
+Immediately after that turn, `ollama ps` showed:
+
+- `qwen3.5:4b`
+- 3.1 GB
+- 100% CPU
+- context 4096
+- **29 minutes remaining**
+
+This proves the new 30-minute `keep_alive` is working. It also proves `keep_alive` alone cannot remove the first cold request after Ollama/Windows startup.
+
+The next bounded fix is a background startup preload using Ollama's empty `/api/chat` request with the already-selected model and the same keep-alive. It must not block ASTRA HTTP startup and must fail open if Ollama is still starting.
+
 ## Next diagnostic step
 
 Do **not** make another speculative transport rewrite.

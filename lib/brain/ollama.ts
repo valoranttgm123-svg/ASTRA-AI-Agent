@@ -90,6 +90,7 @@ export function getOllamaConfig() {
       8192,
     ),
     keepAlive: parseKeepAlive(process.env.ASTRA_OLLAMA_KEEP_ALIVE),
+    preloadEnabled: envFlag("ASTRA_OLLAMA_PRELOAD_ENABLED", true),
   };
 }
 
@@ -167,6 +168,41 @@ function chooseModel(preferred: string, installed: string[]) {
   }
 
   return installed[0] ?? null;
+}
+
+export async function preloadOllamaModel() {
+  const config = getOllamaConfig();
+  if (!config.enabled || !config.preloadEnabled) return false;
+
+  const installedModels = await listInstalledModels(
+    config.rootUrl,
+    Math.max(config.statusTimeoutMs, 2000),
+  );
+  const model = chooseModel(config.preferredModel, installedModels);
+  if (!model) return false;
+
+  await withTimeout(config.chatTimeoutMs, async (signal) => {
+    const response = await fetch(`${config.rootUrl}/api/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      cache: "no-store",
+      signal,
+      body: JSON.stringify({
+        model,
+        stream: false,
+        keep_alive: config.keepAlive,
+        messages: [],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama preload failed (HTTP ${response.status}).`);
+    }
+
+    await readBoundedProviderJson(response, "Ollama preload");
+  });
+
+  return true;
 }
 
 export async function getOllamaStatus(): Promise<OllamaStatus> {
