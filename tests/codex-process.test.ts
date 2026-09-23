@@ -83,6 +83,14 @@ before(async () => {
       '  fs.writeFileSync(pidFile+".descendant",String(child.pid));',
       '  setInterval(()=>{},1000);',
       '}',
+      'if (mode === "stream") {',
+      '  console.log(JSON.stringify({type:"item.started",item:{type:"agent_message",text:""}}));',
+      '  console.log(JSON.stringify({type:"item.updated",item:{type:"agent_message",text:"fixture "}}));',
+      '  console.log(JSON.stringify({type:"item.updated",item:{type:"agent_message",text:"fixture codex "}}));',
+      '  console.log(JSON.stringify({type:"item.completed",item:{type:"agent_message",text:"fixture codex response"}}));',
+      '  console.log(JSON.stringify({type:"turn.completed"}));',
+      '  process.exit(0);',
+      '}',
       'if (mode === "success") {',
       '  console.log(JSON.stringify({type:"item.completed",item:{type:"agent_message",text:"fixture codex response"}}));',
       '  console.log(JSON.stringify({type:"turn.completed"}));',
@@ -168,6 +176,22 @@ test("Phase 15D2 fake Codex fixture exercises the real child-process path", asyn
 
   assert.equal(result.message, "fixture codex response");
   assert.equal(result.sandbox, "read-only");
+});
+
+test("Codex chat forwards incremental agent-message updates without duplicating text", async () => {
+  process.env.ASTRA_FAKE_CODEX_MODE = "stream";
+  const tokens: string[] = [];
+
+  const result = await chatWithCodex({
+    input: "inspect fixture",
+    agent: ASTRA_AGENT_MAP.developer,
+    policy: readOnlyPolicy,
+    onToken: (token) => tokens.push(token),
+  });
+
+  assert.equal(result.message, "fixture codex response");
+  assert.deepEqual(tokens, ["fixture ", "codex ", "response"]);
+  assert.equal(tokens.join(""), result.message);
 });
 
 test("Phase 15D2 malformed Codex JSONL cannot become a successful final response", async () => {
