@@ -149,6 +149,7 @@ export type AstraBrainStatus = {
     >
   >;
   features?: {
+    ollama?: AstraBrainFeatureStatus;
     memory: AstraBrainFeatureStatus;
     skills: AstraBrainFeatureStatus;
     codex: AstraBrainFeatureStatus;

@@ -1,5 +1,16 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — actual runtime recovery
+
+PR #222 is merged and CI #604 passed. Actual target inspection then found a
+development server returning HTTP 500 and no Ollama listener, despite older
+self-check evidence reporting Ollama READY from Hermes/Strategist availability.
+The focused correction isolates Node instrumentation, detaches the hidden Ollama
+console lifetime and exposes its independent readiness probe. Development HTTP
+recovery, live Ollama tags and the harmless Owner Mode marker were rechecked.
+See `RUNTIME_RECOVERY_2026-09-24.md`; clean production build/install and exact
+commit evidence are required before claiming a release. Sonor is unchanged.
+
 ## 2026-09-23 — target-PC prompt-prefill refinement
 
 After PR #213, warm Ollama SSE starts in 267–336 ms, but an uncached prompt prefix

@@ -128,6 +128,16 @@ export function extractBrainReadiness(
     typeof capabilityStates.strategist === "string"
       ? capabilityStates.strategist
       : "UNKNOWN";
+  const ollama = isRecord(features.ollama) ? features.ollama : null;
+  // Strategist may be served by Hermes/NVIDIA. Its readiness is not evidence
+  // that the local Ollama service is reachable. Retain older Ollama-only status
+  // compatibility, but fail unknown when an older alternate-provider payload
+  // has no independent Ollama probe.
+  const ollamaState = ollama
+    ? featureState(ollama)
+    : provider === "ollama" && (strategistState === "READY" || strategistState === "OFFLINE")
+      ? strategistState
+      : "UNKNOWN";
 
   return {
     brain: {
@@ -147,23 +157,19 @@ export function extractBrainReadiness(
       },
     },
     ollama: {
-      state:
-        strategistState === "READY"
-          ? ("READY" as const)
-          : strategistState === "OFFLINE"
-            ? ("OFFLINE" as const)
-            : ("UNKNOWN" as const),
-      detail:
-        "Ollama readiness is derived from the Strategist capability in the running ASTRA Brain status.",
+      state: ollamaState,
+      detail: ollama
+        ? "Ollama readiness uses the independent Ollama probe in the running Brain status."
+        : "Legacy status: Ollama readiness is inferred only when Ollama is the active provider; otherwise UNKNOWN.",
       data: {
         strategistState,
         activeProvider: provider,
         model:
-          provider === "ollama"
+          ollama ? stringValue(ollama.model) ?? null : provider === "ollama"
             ? stringValue(payload.model) ?? null
             : null,
         endpoint:
-          provider === "ollama"
+          ollama ? stringValue(ollama.endpoint) ?? null : provider === "ollama"
             ? stringValue(payload.endpoint) ?? null
             : null,
       },

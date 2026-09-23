@@ -2406,6 +2406,13 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     ]);
 
     const features: NonNullable<AstraBrainStatus["features"]> = {
+      ollama: {
+        enabled: ollama.enabled,
+        available: ollama.available,
+        detail: ollama.detail,
+        endpoint: ollama.endpoint,
+        model: ollama.model ?? undefined,
+      },
       memory: {
         enabled: memory.enabled,
         available: memory.available,

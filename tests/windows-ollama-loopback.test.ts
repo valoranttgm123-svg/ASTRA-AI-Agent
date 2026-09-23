@@ -24,3 +24,10 @@ test("Phase 19E Ollama loopback hardening does not mutate firewall network or mo
     /New-NetFirewallRule|Set-NetFirewallProfile|Remove-NetFirewallRule|netsh|Remove-Item|OLLAMA_MODELS\s*=/i,
   );
 });
+
+test("Ollama runner separates server console lifetime and observes its exit", () => {
+  assert.match(source, /Start-Process -FilePath \$ollama -ArgumentList 'serve' -WindowStyle Hidden -PassThru/);
+  assert.match(source, /\$server\.WaitForExit\(\)/);
+  assert.match(source, /\$server\.ExitCode -ne 0/);
+  assert.doesNotMatch(source, /&\s*\$ollama\s+serve/);
+});
