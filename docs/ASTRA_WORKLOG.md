@@ -884,3 +884,27 @@ The following points are durable user-facing refinement requirements and are **n
 Observed target evidence that motivates the responsiveness work includes NVIDIA FAST around 42.44 s and NVIDIA DEEP around 286.26 s before tuning, but these numbers are examples of the broader responsiveness problem rather than the whole problem.
 
 Current implementation work for one slice of responsiveness is tracked in the post-Codex responsiveness PR. Humanoid/GPU performance and broader feature readiness remain separate but active refinement tracks.
+
+
+## 2026-09-23 — Cross-provider responsiveness refinement merged
+
+Owner complaint remains broader than NVIDIA: ASTRA must feel responsive across all active provider paths and must not appear frozen while work is in progress.
+
+Merged repository refinements:
+- PR #196 — NVIDIA live-token path, Lightning hidden-thinking reduction, GLM low reasoning effort, fast-context support on the latest Codex Windows baseline.
+- PR #197 — OpenAI-compatible Hermes chat streaming through ASTRA SSE.
+- PR #198 — Codex incremental `agent_message` updates forwarded through ASTRA SSE.
+- PR #199 — lightweight conceptual Developer Q&A stays on the fast local path instead of waking Codex and long-term memory unnecessarily.
+- PR #201 — provider-neutral time-to-first-token and total Brain latency telemetry exposed in the Humanoid technical diagnostics without persisting prompt/response text.
+- PR #202 — the main ASTRA console shows a truthful `MEMPROSES` state before the first provider token, then switches to live response text when tokens arrive.
+- PR #204 — the reviewed Hermes Runs transport now forwards official `assistant.delta` SSE frames while final run status/output remains authoritative.
+- PR #206 — restores the documented local-first AUTO order: general chat `Ollama → Hermes → permitted cloud`; engineering `Codex → Hermes → Ollama`.
+
+All newest-head PR CI gates above passed before merge. These changes do not close the real target-PC performance gate: Codex/target validation must still measure the exact installed build and record time-to-first-token + total latency per active provider.
+
+Next responsiveness validation on the target PC:
+1. update/install the exact latest clean main;
+2. measure AUTO, Ollama, Codex, NVIDIA and Hermes with the same lightweight prompt class;
+3. record time-to-first-token and total latency;
+4. distinguish provider-generation delay from memory/routing/UI delay;
+5. fix only the measured remaining bottleneck.
