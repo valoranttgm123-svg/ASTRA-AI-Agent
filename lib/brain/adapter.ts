@@ -156,37 +156,40 @@ async function buildExecutionContext(
     !planningRequested;
 
   const memoryLifecycle: AstraMemoryLifecycleEvent[] = [];
-  const [memory, skills] = useFastContext
-    ? [
-        {
-          enabled: true,
-          available: true,
-          source: "astra-fast-chat",
-          entries: [],
-          records: [],
-          text: "",
-          detail: "Fast chat skipped memory retrieval for this lightweight turn.",
-        } satisfies AstraMemoryContext,
-        {
-          enabled: true,
-          available: true,
-          skills: [],
-          text: "",
-          detail: "Fast chat skipped specialist skill loading for this lightweight turn.",
-        } satisfies AstraSkillContext,
-      ]
-    : await Promise.all([
-        getUnifiedMemoryContext(
-          input,
-          project.match?.project,
-          signal,
-          (event) => {
-            memoryLifecycle.push(event);
-            onMemoryEvent?.(event);
-          },
-        ),
-        getSkillContext(selected, input),
-      ]);
+  let memory: AstraMemoryContext;
+  let skills: AstraSkillContext;
+
+  if (useFastContext) {
+    memory = {
+      enabled: true,
+      available: true,
+      source: "astra-fast-chat",
+      entries: [],
+      records: [],
+      text: "",
+      detail: "Fast chat skipped memory retrieval for this lightweight turn.",
+    };
+    skills = {
+      enabled: true,
+      available: true,
+      skills: [],
+      text: "",
+      detail: "Fast chat skipped specialist skill loading for this lightweight turn.",
+    };
+  } else {
+    [memory, skills] = await Promise.all([
+      getUnifiedMemoryContext(
+        input,
+        project.match?.project,
+        signal,
+        (event) => {
+          memoryLifecycle.push(event);
+          onMemoryEvent?.(event);
+        },
+      ),
+      getSkillContext(selected, input),
+    ]);
+  }
 
   const inputMetadata = inputContextPrompt(inputContext);
   const skillOnlyContext = [inputMetadata, skills.text]
