@@ -126,6 +126,28 @@ const APP_ALLOWLIST: Readonly<Record<string, string>> = {
   explorer: "explorer.exe",
 };
 
+export type AstraDirectOwnerCommand = {
+  shell: "powershell" | "cmd";
+  command: string;
+};
+
+export function parseDirectOwnerCommand(input: string): AstraDirectOwnerCommand | null {
+  const text = input.trim();
+  const match = text.match(
+    /^(?:(?:jalankan|run|execute|eksekusi)\s+)?(?:owner(?:\s+mode)?\s+)?(powershell|pwsh|cmd)\s*:\s*([\s\S]+)$/i,
+  );
+
+  if (!match) return null;
+
+  const command = (match[2] ?? "").trim();
+  if (!command || command.length > 8192) return null;
+
+  return {
+    shell: (match[1] ?? "").toLowerCase() === "cmd" ? "cmd" : "powershell",
+    command,
+  };
+}
+
 function envEnabled() {
   const value = process.env.ASTRA_COMPUTER_ENABLED?.trim().toLowerCase();
   return Boolean(value && !["0", "false", "off", "no"].includes(value));
