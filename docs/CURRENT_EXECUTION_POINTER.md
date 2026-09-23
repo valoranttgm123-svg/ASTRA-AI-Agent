@@ -1,5 +1,8 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Active responsiveness blocker — 2026-09-23
+
+Before touching Ollama streaming, read `docs/OLLAMA_SSE_LATENCY_HANDOFF_2026-09-23.md`. The raw Ollama endpoint is fast (~681 ms first token), the pre-#209 direct ASTRA adapter was fast (~448 ms), but the production Next/SSE path showed ~29.5 s first-token latency. PR #209's Node `http.request` experiment regressed the direct adapter and was reverted by PR #210. Next work is timing instrumentation at the exact Next/Ollama/SSE boundaries, not another transport rewrite.
 ## Target-PC continuation — 2026-09-23
 
 PR #188 Sonor evidence and PR #189 runtime fixes are merged. PR #189 merge:
