@@ -8,6 +8,7 @@ const DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434";
 const DEFAULT_CHAT_TIMEOUT_MS = 60000;
 const DEFAULT_STATUS_TIMEOUT_MS = 1200;
 const DEFAULT_MAX_TOKENS = 1024;
+const DEFAULT_KEEP_ALIVE = "30m";
 const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 
 export type OllamaStatus = {
@@ -42,6 +43,21 @@ function parsePositiveInt(value: string | undefined, fallback: number, max: numb
     : fallback;
 }
 
+function parseKeepAlive(value: string | undefined): string | number {
+  const normalized = value?.trim();
+  if (!normalized) return DEFAULT_KEEP_ALIVE;
+
+  if (/^-?\d+$/.test(normalized)) {
+    return Number(normalized);
+  }
+
+  if (/^-?(?:\d+(?:\.\d+)?(?:ns|us|µs|ms|s|m|h))+$/.test(normalized)) {
+    return normalized;
+  }
+
+  return DEFAULT_KEEP_ALIVE;
+}
+
 function assertLocalRoot(rootUrl: string) {
   let url: URL;
   try {
@@ -73,6 +89,7 @@ export function getOllamaConfig() {
       DEFAULT_MAX_TOKENS,
       8192,
     ),
+    keepAlive: parseKeepAlive(process.env.ASTRA_OLLAMA_KEEP_ALIVE),
   };
 }
 
@@ -279,6 +296,7 @@ export async function chatWithOllama({
           model,
           stream: streaming,
           think: config.thinking,
+          keep_alive: config.keepAlive,
           options: { num_predict: config.maxTokens },
           messages: [
             { role: "system", content: system },
