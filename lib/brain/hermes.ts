@@ -4,6 +4,7 @@ import { chatWithHermesRun, verifyHermesRunProfile } from "./hermes-runs";
 import { isRecordPayload, isStructuredProviderPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
 import { safeErrorDetail, safePublicUrl } from "@/lib/security/redaction";
+import { ASTRA_PERSONALITY_PROMPT } from "./personality";
 
 const DEFAULT_HERMES_URL = "http://127.0.0.1:8642";
 const DEFAULT_HERMES_MODEL = "hermes-agent";
@@ -207,6 +208,7 @@ export async function chatWithHermes({
     `Current routed specialist: ${agent.name}.`,
     `Specialist role: ${agent.role}.`,
     `Specialist capabilities: ${agent.capabilities.join(", ")}.`,
+    ASTRA_PERSONALITY_PROMPT,
     "Answer in the same language as the user unless they ask otherwise.",
     "Use Hermes tools only when they are available, appropriate, and allowed by ASTRA policy.",
     "Do not claim an external action happened unless the tool actually completed it.",
