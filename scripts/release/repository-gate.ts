@@ -4,6 +4,7 @@ import { writeFileSync } from "node:fs";
 import {
   REPOSITORY_GATE_STEPS,
   repositoryGateExecutable,
+  repositoryGateArgs,
 } from "../../lib/release/repository-gate";
 import {
   prepareReleaseEvidencePath,
@@ -50,7 +51,7 @@ function main() {
 
     const result = spawnSync(
       executable,
-      [...step.args],
+      repositoryGateArgs(step),
       {
         cwd: process.cwd(),
         env: process.env,

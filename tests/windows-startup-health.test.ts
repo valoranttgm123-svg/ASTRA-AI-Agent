@@ -10,6 +10,15 @@ function readWindowsScript(name: string) {
   );
 }
 
+test("Hermes runner reuses reviewed profile and isolates Windows console shutdown", () => {
+  const source = readWindowsScript("run-hermes.ps1");
+  assert.match(source, /Resolve-Path -LiteralPath \$HermesHome/);
+  assert.match(source, /HERMES_GATEWAY_DETACHED = '1'/);
+  assert.match(source, /Start-Process[^\n]*-WindowStyle Hidden -PassThru/);
+  assert.match(source, /Get-NetTCPConnection -LocalPort 8642/);
+  assert.doesNotMatch(source, /ReadAllText|Get-Content|Set-Content|Unregister-ScheduledTask/);
+});
+
 test("Phase 19G startup health waiter is bounded read-only and checks ASTRA Ollama Automation", () => {
   const source = readWindowsScript("wait-local-health.ps1");
 
@@ -21,6 +30,10 @@ test("Phase 19G startup health waiter is bounded read-only and checks ASTRA Olla
   assert.match(source, /\/api\/automation\/service/);
   assert.match(source, /Start-Sleep -Milliseconds \$PollIntervalMs/i);
   assert.match(source, /startup health timeout/i);
+  assert.match(source, /Get-ProbeBudget/);
+  assert.match(source, /Min\(15, \$remaining\)/);
+  assert.match(source, /\$TimeoutSec - \$watch.Elapsed.TotalSeconds/);
+  assert.doesNotMatch(source, /-TimeoutSec 3\b/);
 
   assert.doesNotMatch(
     source,

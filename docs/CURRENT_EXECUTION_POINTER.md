@@ -1,5 +1,14 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Target-PC continuation — 2026-09-23
+
+PR #188 Sonor evidence and PR #189 runtime fixes are merged. PR #189 merge:
+`2a5d2c40cddfa811c27b59aae2bfcf1795d28d8c`, CI #530 SUCCESS.
+Read `TARGET_PC_REFINEMENT_2026-09-23.md` for actual Windows/mobile/STOP/MEM-X
+evidence and newly reproduced startup-console/health/repository-gate fixes.
+Preserve all later foundations. Next is clean-build installation/evidence and
+the still-open M1–M6 gates, not reimplementation or a claim of full readiness.
+
 Status date: **2026-09-22**. This is the authoritative short handoff for interrupted ChatGPT/Codex sessions. Check the actual latest `main`, open PRs and CI first; do not assume this checkpoint is still the HEAD.
 
 ## ChatGPT saturation / interruption checkpoint

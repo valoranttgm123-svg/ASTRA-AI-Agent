@@ -32,17 +32,19 @@ Phase 15 result: **REPOSITORY COMPLETE ON GREEN MERGE / LOCAL RELEASE GATES REMA
 
 ## Memory integration gate
 
-- [ ] MEM-X — audit real existing Sonor
-- [ ] preserve/back up real Sonor source safely
-- [ ] verify minimal Sonor search API
-- [ ] ASTRA project retrieval test
-- [ ] ALURKA project-scoping test
-- [ ] Obsidian provenance test
-- [ ] Graphify provenance/relationship test
+- [x] MEM-X — audit real existing Sonor (PR #188/#189, dated target-PC refinement note)
+- [x] preserve/back up real Sonor source safely (local source-only backup and Git baseline; private GitHub remote still blocked)
+- [x] verify minimal Sonor search API (live loopback recheck 2026-09-23)
+- [x] ASTRA project retrieval test (6 scoped records)
+- [x] ALURKA project-scoping test (6 scoped records)
+- [x] Obsidian provenance test (live source type/reference preserved)
+- [x] Graphify provenance/relationship test (live source type/reference preserved)
 - [ ] Sonor unavailable degradation test
 - [ ] Sonor cancellation test
 
-Memory integration result: **PENDING / REAL LOCAL ACCESS REQUIRED**
+Memory integration result: **LIVE RETRIEVAL VERIFIED / PRIVATE REMOTE AND REMAINING RELEASE GATES OPEN**.
+Connection-refusal/pre-abort and HTTP-fixture in-flight cancellation passed;
+the stricter production-outage/active-query cancellation check remains unchecked.
 
 ## Phase 16 — Performance
 

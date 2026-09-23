@@ -1,3 +1,5 @@
+import path from "node:path";
+
 export type RepositoryGateStep = {
   id:
     | "test"
@@ -55,7 +57,13 @@ export function repositoryGateExecutable(
   platform = process.platform,
 ) {
   if (executable === "npm" && platform === "win32") {
-    return "npm.cmd";
+    return process.execPath;
   }
   return executable;
+}
+
+export function repositoryGateArgs(step: RepositoryGateStep, platform = process.platform) {
+  return step.executable === "npm" && platform === "win32"
+    ? [path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js"), ...step.args]
+    : [...step.args];
 }
