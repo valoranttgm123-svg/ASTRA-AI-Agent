@@ -43,6 +43,8 @@ function fixture() {
       automationPanelOpenAtStart: true,
       automationPanelOpenAtEnd: true,
       brainStreamingObserved: false,
+      brainFirstTokenLatencyMs: 420,
+      brainTotalLatencyMs: 1380,
       automationStreamingObserved: false,
       brainEventCountStart: 4,
       brainEventCountEnd: 4,
@@ -68,8 +70,34 @@ test("main UI evidence parser preserves structured telemetry and forces NOT_EVAL
   assert.equal(result.scenario, "automation-panel-open");
   assert.equal(result.runtime.commit, COMMIT);
   assert.equal(result.activity.automationPanelOpenAtStart, true);
+  assert.equal(result.activity.brainFirstTokenLatencyMs, 420);
+  assert.equal(result.activity.brainTotalLatencyMs, 1380);
   assert.equal("responseText" in result, false);
   assert.equal("micTranscript" in result, false);
+});
+
+test("main UI evidence accepts absent latency for old or idle captures and bounds invalid values", () => {
+  const legacy = fixture();
+  delete (legacy.activity as Partial<typeof legacy.activity>)
+    .brainFirstTokenLatencyMs;
+  delete (legacy.activity as Partial<typeof legacy.activity>)
+    .brainTotalLatencyMs;
+
+  const parsed = parseUiPerformanceEvidence(legacy);
+  assert.equal(parsed.activity.brainFirstTokenLatencyMs, null);
+  assert.equal(parsed.activity.brainTotalLatencyMs, null);
+
+  assert.throws(
+    () =>
+      parseUiPerformanceEvidence({
+        ...fixture(),
+        activity: {
+          ...fixture().activity,
+          brainFirstTokenLatencyMs: 999_999,
+        },
+      }),
+    /brainFirstTokenLatencyMs/i,
+  );
 });
 
 test("main UI evidence rejects fake Command Center active capture", () => {
@@ -124,6 +152,8 @@ test("main UI performance probe is opt-in, mounted, and stores no message text",
   assert.match(source, /get\("perf"\) === "1"/);
   assert.match(source, /automation-panel-open/);
   assert.match(source, /telemetryRef\.current/);
+  assert.match(source, /brainFirstTokenLatencyMs/);
+  assert.match(source, /brainTotalLatencyMs/);
   assert.match(source, /fetchRuntimeIdentity/);
   assert.equal((source.match(/await fetchRuntimeIdentity\(\)/g) ?? []).length, 2);
   assert.match(source, /document\.querySelector\("\.astra-automation"\)/);

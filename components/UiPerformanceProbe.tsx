@@ -20,6 +20,8 @@ type PerformanceMemory = {
 
 type LiveTelemetry = {
   brainStreaming: boolean;
+  brainFirstTokenLatencyMs: number | null;
+  brainTotalLatencyMs: number | null;
   automationStreaming: boolean;
   brainEventCount: number;
   orbState: string;
@@ -54,6 +56,8 @@ export default function UiPerformanceProbe() {
   const activeRef = useRef(false);
   const telemetryRef = useRef<LiveTelemetry>({
     brainStreaming: false,
+    brainFirstTokenLatencyMs: null,
+    brainTotalLatencyMs: null,
     automationStreaming: false,
     brainEventCount: 0,
     orbState: "idle",
@@ -66,6 +70,8 @@ export default function UiPerformanceProbe() {
   useEffect(() => {
     telemetryRef.current = {
       brainStreaming: runtime.brainStreaming,
+      brainFirstTokenLatencyMs: runtime.brainFirstTokenLatencyMs,
+      brainTotalLatencyMs: runtime.brainTotalLatencyMs,
       automationStreaming: runtime.automationStreaming,
       brainEventCount: runtime.brainEvents.length,
       orbState: runtime.orbState,
@@ -73,7 +79,9 @@ export default function UiPerformanceProbe() {
   }, [
     runtime.automationStreaming,
     runtime.brainEvents.length,
+    runtime.brainFirstTokenLatencyMs,
     runtime.brainStreaming,
+    runtime.brainTotalLatencyMs,
     runtime.orbState,
   ]);
 
@@ -113,6 +121,9 @@ export default function UiPerformanceProbe() {
     let longTaskCount = 0;
     let longTaskTotalMs = 0;
     let brainStreamingObserved = telemetryRef.current.brainStreaming;
+    let brainFirstTokenLatencyMs: number | null = null;
+    let brainTotalLatencyMs: number | null = null;
+    let brainRequestObserved = telemetryRef.current.brainStreaming;
     let automationStreamingObserved =
       telemetryRef.current.automationStreaming;
     const brainEventCountStart = telemetryRef.current.brainEventCount;
@@ -167,6 +178,21 @@ export default function UiPerformanceProbe() {
 
           const live = telemetryRef.current;
           brainStreamingObserved ||= live.brainStreaming;
+          brainRequestObserved ||=
+            live.brainStreaming ||
+            live.brainEventCount > brainEventCountStart;
+          if (
+            brainRequestObserved &&
+            live.brainFirstTokenLatencyMs !== null
+          ) {
+            brainFirstTokenLatencyMs = live.brainFirstTokenLatencyMs;
+          }
+          if (
+            brainRequestObserved &&
+            live.brainTotalLatencyMs !== null
+          ) {
+            brainTotalLatencyMs = live.brainTotalLatencyMs;
+          }
           automationStreamingObserved ||= live.automationStreaming;
           orbStates.add(live.orbState);
 
@@ -226,6 +252,8 @@ export default function UiPerformanceProbe() {
           automationPanelOpenAtStart: automationOpenStart,
           automationPanelOpenAtEnd: automationPanelOpen(),
           brainStreamingObserved,
+          brainFirstTokenLatencyMs,
+          brainTotalLatencyMs,
           automationStreamingObserved,
           brainEventCountStart,
           brainEventCountEnd: live.brainEventCount,
