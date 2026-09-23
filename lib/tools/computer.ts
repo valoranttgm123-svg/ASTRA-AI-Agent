@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { arch, hostname, platform, release, version } from "node:os";
 import type {
   AstraToolAvailability,
   AstraToolDefinition,
@@ -7,6 +8,7 @@ import type {
 import { runBoundedProcess } from "./process";
 
 export type AstraComputerCapability =
+  | "computer.system.info"
   | "computer.process.list"
   | "computer.app.launch";
 
@@ -34,6 +36,18 @@ export interface AstraComputerTransport {
 }
 
 const CATALOG: readonly AstraToolDefinition[] = [
+  {
+    id: "computer.system.info",
+    name: "Windows System Info",
+    category: "computer",
+    description:
+      "Read the local computer name and bounded operating-system identity without shell execution or file changes.",
+    permissionLevel: 1,
+    sideEffect: "read",
+    timeoutMs: 5_000,
+    supportsCancellation: true,
+    availability: "NOT_CONFIGURED",
+  },
   {
     id: "computer.process.list",
     name: "Windows Process List",
@@ -166,6 +180,7 @@ export class WindowsComputerTransport
       detail:
         "Controlled Windows Computer Agent is enabled with fixed allowlisted capabilities only.",
       capabilities: [
+        "computer.system.info",
         "computer.process.list",
         "computer.app.launch",
       ],
@@ -191,6 +206,21 @@ export class WindowsComputerTransport
         ok: false,
         verified: false,
         detail: "Computer Agent requires Windows.",
+      };
+    }
+
+    if (capability === "computer.system.info") {
+      return {
+        ok: true,
+        verified: true,
+        detail: "Read bounded local Windows system identity.",
+        output: {
+          computerName: hostname(),
+          platform: platform(),
+          release: release(),
+          version: version(),
+          architecture: arch(),
+        },
       };
     }
 
