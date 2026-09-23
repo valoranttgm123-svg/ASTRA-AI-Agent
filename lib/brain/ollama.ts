@@ -1,5 +1,3 @@
-import { request as httpRequest, type IncomingMessage } from "node:http";
-import { StringDecoder } from "node:string_decoder";
 import type { AstraAgent } from "@/lib/agent/types";
 import { isRecordPayload, readBoundedProviderJson } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
@@ -100,107 +98,6 @@ async function withTimeout<T>(
     clearTimeout(timer);
     externalSignal?.removeEventListener("abort", abort);
   }
-}
-
-async function streamOllamaChatViaNodeHttp(
-  rootUrl: string,
-  body: unknown,
-  signal: AbortSignal,
-  onToken: (token: string) => void,
-) {
-  assertLocalRoot(rootUrl);
-  const url = new URL(`${rootUrl}/api/chat`);
-
-  const response = await new Promise<IncomingMessage>((resolve, reject) => {
-    const request = httpRequest(
-      url,
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/x-ndjson",
-        },
-        signal,
-      },
-      resolve,
-    );
-
-    request.once("error", reject);
-    request.end(JSON.stringify(body));
-  });
-
-  if (
-    typeof response.statusCode !== "number" ||
-    response.statusCode < 200 ||
-    response.statusCode >= 300
-  ) {
-    response.resume();
-    throw new Error(
-      `Ollama chat failed (HTTP ${response.statusCode ?? "unknown"}).`,
-    );
-  }
-
-  const decoder = new StringDecoder("utf8");
-  let buffer = "";
-  let collected = "";
-  let receivedBytes = 0;
-  const maxBytes = 1_000_000;
-
-  const consumeLine = (line: string) => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-
-    let payload: unknown;
-    try {
-      payload = JSON.parse(trimmed) as unknown;
-    } catch {
-      throw new Error("Ollama streaming response contained malformed JSON.");
-    }
-    if (!isRecordPayload(payload)) {
-      throw new Error("Ollama streaming response contained a malformed payload.");
-    }
-
-    const rawMessage = payload.message;
-    const token =
-      isRecordPayload(rawMessage) &&
-      typeof rawMessage.content === "string"
-        ? rawMessage.content
-        : "";
-
-    if (token) {
-      collected += token;
-      onToken(token);
-    }
-  };
-
-  for await (const rawChunk of response) {
-    signal.throwIfAborted();
-    const chunk = Buffer.isBuffer(rawChunk)
-      ? rawChunk
-      : Buffer.from(rawChunk);
-    receivedBytes += chunk.byteLength;
-    if (receivedBytes > maxBytes) {
-      response.destroy();
-      throw new Error("Ollama streaming response exceeded the size limit.");
-    }
-
-    buffer += decoder.write(chunk);
-    let newline = buffer.indexOf("\n");
-    while (newline >= 0) {
-      consumeLine(buffer.slice(0, newline));
-      buffer = buffer.slice(newline + 1);
-      newline = buffer.indexOf("\n");
-    }
-  }
-
-  buffer += decoder.end();
-  if (buffer.trim()) consumeLine(buffer);
-
-  const text = collected.trim();
-  if (!text) {
-    throw new Error("Ollama returned an empty chat response.");
-  }
-  return text;
 }
 
 async function listInstalledModels(
@@ -373,58 +270,108 @@ export async function chatWithOllama({
     config.chatTimeoutMs,
     async (requestSignal) => {
       const streaming = Boolean(onToken);
-      const requestBody = {
-        model,
-        stream: streaming,
-        think: config.thinking,
-        options: { num_predict: config.maxTokens },
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: input },
-        ],
-      };
-
-      if (streaming && onToken) {
-        // Next.js patches global fetch inside the App Router runtime. On the
-        // target Windows/Node runtime that path delayed Ollama NDJSON chunks
-        // by tens of seconds even though the same adapter streamed immediately
-        // outside Next. Use the local Node HTTP transport only for Ollama's
-        // loopback streaming path so tokens can be forwarded as they arrive.
-        return await streamOllamaChatViaNodeHttp(
-          config.rootUrl,
-          requestBody,
-          requestSignal,
-          onToken,
-        );
-      }
-
       const response = await fetch(`${config.rootUrl}/api/chat`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         cache: "no-store",
         signal: requestSignal,
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          model,
+          stream: streaming,
+          think: config.thinking,
+          options: { num_predict: config.maxTokens },
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: input },
+          ],
+        }),
       });
 
       if (!response.ok) {
         throw new Error(`Ollama chat failed (HTTP ${response.status}).`);
       }
 
-      const payload = await readBoundedProviderJson(
-        response,
-        "Ollama chat",
-      );
-      if (!isRecordPayload(payload)) {
-        throw new Error("Ollama returned a malformed chat payload.");
+      if (!streaming) {
+        const payload = await readBoundedProviderJson(
+          response,
+          "Ollama chat",
+        );
+        if (!isRecordPayload(payload)) {
+          throw new Error("Ollama returned a malformed chat payload.");
+        }
+
+        const rawMessage = payload.message;
+        const text =
+          isRecordPayload(rawMessage) &&
+          typeof rawMessage.content === "string"
+            ? rawMessage.content.trim()
+            : "";
+
+        if (!text) {
+          throw new Error("Ollama returned an empty chat response.");
+        }
+        return text;
       }
 
-      const rawMessage = payload.message;
-      const text =
-        isRecordPayload(rawMessage) &&
-        typeof rawMessage.content === "string"
-          ? rawMessage.content.trim()
-          : "";
+      if (!response.body) {
+        throw new Error("Ollama streaming response body is unavailable.");
+      }
 
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let collected = "";
+      let receivedBytes = 0;
+      const maxBytes = 1_000_000;
+
+      const consumeLine = (line: string) => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        let payload: unknown;
+        try {
+          payload = JSON.parse(trimmed) as unknown;
+        } catch {
+          throw new Error("Ollama streaming response contained malformed JSON.");
+        }
+        if (!isRecordPayload(payload)) {
+          throw new Error("Ollama streaming response contained a malformed payload.");
+        }
+
+        const rawMessage = payload.message;
+        const token =
+          isRecordPayload(rawMessage) &&
+          typeof rawMessage.content === "string"
+            ? rawMessage.content
+            : "";
+
+        if (token) {
+          collected += token;
+          onToken?.(token);
+        }
+      };
+
+      while (true) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        receivedBytes += chunk.value.byteLength;
+        if (receivedBytes > maxBytes) {
+          throw new Error("Ollama streaming response exceeded the size limit.");
+        }
+
+        buffer += decoder.decode(chunk.value, { stream: true });
+        let newline = buffer.indexOf("\n");
+        while (newline >= 0) {
+          consumeLine(buffer.slice(0, newline));
+          buffer = buffer.slice(newline + 1);
+          newline = buffer.indexOf("\n");
+        }
+      }
+
+      buffer += decoder.decode();
+      if (buffer.trim()) consumeLine(buffer);
+
+      const text = collected.trim();
       if (!text) {
         throw new Error("Ollama returned an empty chat response.");
       }
