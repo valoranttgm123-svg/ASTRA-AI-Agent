@@ -1,5 +1,8 @@
 # ASTRA Codex Handoff
 
+## 2026-09-23 — Ollama / Next SSE latency handoff
+
+Read `OLLAMA_SSE_LATENCY_HANDOFF_2026-09-23.md` before changing the Ollama streaming path. It records the measured target-PC evidence, the failed PR #209 transport experiment, the PR #210 revert, the separate `ASTRA_AUTO_PROVIDER=codex` delay, and the exact next timing boundaries to instrument. Do not restart this investigation from zero or reintroduce the Node `http.request` experiment without new evidence.
 ## 2026-09-23 — current local refinement
 
 Read `TARGET_PC_REFINEMENT_2026-09-23.md` for the Windows npm/process shutdown,
