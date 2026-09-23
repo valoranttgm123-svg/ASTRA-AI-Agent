@@ -375,6 +375,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const preCameraFpsRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sfxEnabledRef = useRef(true);
+  const shockwaveActiveRef = useRef(false);
   const gestureHandledIdRef = useRef(0);
 
   useEffect(() => {
@@ -519,6 +520,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   }, []);
 
   const handleShockwaveChange = useCallback((active: boolean) => {
+    shockwaveActiveRef.current = active;
     setShockwaveActive(active);
     if (active) playShockwaveSfx();
   }, [playShockwaveSfx]);
@@ -668,6 +670,66 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
           gpu: gpuInfo,
         },
         2_300,
+      );
+    } catch {
+      // The capture hook exposes a bounded status string in the UI.
+    }
+  };
+
+  const captureShockwavePerformanceEvidence = async () => {
+    if (
+      performanceCapture.capturing ||
+      resolvedQuality !== "high" ||
+      !data ||
+      !effects ||
+      reducedMotion
+    ) {
+      return;
+    }
+
+    if (sfxEnabledRef.current) void ensureSfxAudio();
+    shockwaveActiveRef.current = false;
+    setShockwaveActive(false);
+    setAssemblySkipped(false);
+    setAssemblyActive(true);
+    setAssemblyRun((currentRun) => currentRun + 1);
+
+    // Shockwave is driven by the GPU particle clock immediately after the
+    // 2.6s assembly completes. Wait for that real callback instead of asking
+    // the operator to race a ~2.35s visual window manually.
+    const startedAt = performance.now();
+    await new Promise<void>((resolve) => {
+      const poll = () => {
+        if (
+          shockwaveActiveRef.current ||
+          performance.now() - startedAt >= 4_000
+        ) {
+          resolve();
+          return;
+        }
+        requestAnimationFrame(poll);
+      };
+      requestAnimationFrame(poll);
+    });
+
+    if (!shockwaveActiveRef.current) {
+      return;
+    }
+
+    try {
+      await performanceCapture.capture(
+        {
+          state,
+          quality: resolvedQuality,
+          effects,
+          particleCount: data.count,
+          reducedMotion,
+          cameraEnabled: tracking.enabled,
+          assemblyActive: false,
+          shockwaveActive: true,
+          gpu: gpuInfo,
+        },
+        2_200,
       );
     } catch {
       // The capture hook exposes a bounded status string in the UI.
@@ -1160,6 +1222,30 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
               }}
             >
               PERF ASSEMBLY
+            </button>
+            <button
+              onClick={() => void captureShockwavePerformanceEvidence()}
+              disabled={
+                performanceCapture.capturing ||
+                resolvedQuality !== "high" ||
+                !data ||
+                !effects ||
+                reducedMotion
+              }
+              title="Replay assembly, wait for the real final shockwave, then capture that performance window"
+              style={{
+                ...buttonStyle(false),
+                opacity:
+                  !performanceCapture.capturing &&
+                  resolvedQuality === "high" &&
+                  data &&
+                  effects &&
+                  !reducedMotion
+                    ? 1
+                    : 0.45,
+              }}
+            >
+              PERF SHOCKWAVE
             </button>
             <button onClick={() => setTechnical((value) => !value)} style={buttonStyle(technical)}>
               TECHNICAL
