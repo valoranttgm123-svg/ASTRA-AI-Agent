@@ -13,9 +13,9 @@ const DEFAULT_STATUS_TIMEOUT_MS = 3500;
 
 export const NVIDIA_JARVIS_MODELS = {
   chief: "nvidia/nemotron-3-ultra-550b-a55b",
-  deep: "z-ai/glm-5-3",
+  deep: "z-ai/glm-5.3",
   fast: "nvidia/nemotron-3.5-lightning-30b-a3b",
-  vision: "z-ai/glm-5-3-flash",
+  vision: "z-ai/glm-5.3-flash",
 } as const;
 
 export type NvidiaJarvisProfile = keyof typeof NVIDIA_JARVIS_MODELS;
