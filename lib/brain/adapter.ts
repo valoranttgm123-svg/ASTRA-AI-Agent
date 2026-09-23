@@ -134,7 +134,7 @@ function isFastChatInput(
 
   // Keep project, memory, current-data and action-oriented requests on the
   // full context path. Fast chat is only for lightweight conversation/Q&A.
-  return !/\b(project|proyek|memory|memori|ingat|remember|sonor|graphify|obsidian|file|folder|repo|github|codex|email|calendar|jadwal|research|riset|search|cari|web|internet|latest|terbaru|status|cek|check|buka|open|jalankan|run|buat|create|ubah|edit|update|hapus|delete|install|deploy|kirim|send|trading|trade|harga|price)\b/i.test(
+  return !/\b(project|proyek|memory|memori|ingat|remember|tadi|sebelumnya|previous|before|sonor|graphify|obsidian|file|folder|document|dokumen|database|repo|github|codex|email|calendar|jadwal|research|riset|search|cari|web|internet|latest|terbaru|current|sekarang|today|hari ini|tomorrow|besok|news|berita|weather|cuaca|time|waktu|date|tanggal|location|lokasi|status|cek|check|buka|open|jalankan|run|buat|create|ubah|edit|update|hapus|delete|install|deploy|kirim|send|trading|trade|harga|price|kurs|currency|score|skor)\b/i.test(
     text,
   );
 }
