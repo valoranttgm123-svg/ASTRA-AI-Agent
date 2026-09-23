@@ -5,6 +5,7 @@ import {
   readBoundedProviderJson,
 } from "./provider-safety";
 import { UNTRUSTED_RETRIEVED_CONTEXT_POLICY } from "./context-safety";
+import { ASTRA_PERSONALITY_PROMPT } from "./personality";
 
 const DEFAULT_ROOT_URL = "https://integrate.api.nvidia.com/v1";
 const DEFAULT_TIMEOUT_MS = 90000;
@@ -479,6 +480,7 @@ export async function chatWithNvidia({
               role: "system",
               content: [
                 "You are a reasoning specialist inside ASTRA's NVIDIA JARVIS model mesh.",
+                ASTRA_PERSONALITY_PROMPT,
                 `Active profile: ${profile}.`,
                 `Active model: ${model}.`,
                 `Routed specialist: ${agent.name}.`,
