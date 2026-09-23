@@ -128,12 +128,23 @@ function modelCatalog() {
   } satisfies Record<NvidiaJarvisProfile, string>;
 }
 
+type GlmReasoningEffort = "low" | "high" | "max";
+
+function glmReasoningEffort(value?: string): GlmReasoningEffort {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === "high" || normalized === "max") return normalized;
+  return "low";
+}
+
 function config() {
   return {
     enabled: envFlag("ASTRA_NVIDIA_ENABLED", false),
     includeMemory: envFlag("ASTRA_NVIDIA_INCLUDE_MEMORY", false),
     autoFallback: envFlag("ASTRA_NVIDIA_AUTO_FALLBACK", false),
     thinking: envFlag("ASTRA_NVIDIA_THINKING", true),
+    glmReasoningEffort: glmReasoningEffort(
+      process.env.ASTRA_NVIDIA_GLM_REASONING_EFFORT,
+    ),
     rootUrl: normalizeRoot(process.env.ASTRA_NVIDIA_URL),
     apiKey: process.env.NVIDIA_API_KEY?.trim() || "",
     models: modelCatalog(),
@@ -268,14 +279,32 @@ function generationConfig(profile: NvidiaJarvisProfile) {
   }
 }
 
-function thinkingOptions(model: string, enabled: boolean) {
+function reasoningOptions({
+  model,
+  enabled,
+  glmReasoningEffort,
+}: {
+  model: string;
+  enabled: boolean;
+  glmReasoningEffort: GlmReasoningEffort;
+}) {
+  if (model.startsWith("z-ai/glm-5.3")) {
+    return {
+      reasoning_effort: glmReasoningEffort,
+      chat_template_kwargs: { clear_thinking: true },
+    };
+  }
+
   if (!enabled || !model.startsWith("nvidia/nemotron-")) return {};
+
+  if (model.includes("lightning")) {
+    return {
+      chat_template_kwargs: { enable_thinking: false },
+    };
+  }
 
   return {
     chat_template_kwargs: { enable_thinking: true },
-    ...(model.includes("lightning")
-      ? { reasoning_budget: 4096 }
-      : {}),
   };
 }
 
@@ -416,6 +445,84 @@ export async function getNvidiaStatus(): Promise<NvidiaStatus> {
   }
 }
 
+async function readNvidiaStreamingChat(
+  response: Response,
+  onToken: (token: string) => void,
+) {
+  if (!response.body) {
+    throw new Error("NVIDIA NIM streaming response body is unavailable.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let collected = "";
+  let receivedBytes = 0;
+  const maxBytes = 2_000_000;
+
+  const consumeLine = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed || !trimmed.startsWith("data:")) return;
+
+    const data = trimmed.slice(5).trim();
+    if (!data || data === "[DONE]") return;
+
+    let payload: unknown;
+    try {
+      payload = JSON.parse(data) as unknown;
+    } catch {
+      throw new Error("NVIDIA NIM streaming response contained malformed JSON.");
+    }
+
+    if (!isRecordPayload(payload)) {
+      throw new Error("NVIDIA NIM streaming response contained a malformed payload.");
+    }
+
+    const choices = payload.choices;
+    const first =
+      Array.isArray(choices) && choices.length > 0
+        ? choices[0]
+        : undefined;
+    const delta = isRecordPayload(first) ? first.delta : undefined;
+    const token =
+      isRecordPayload(delta) && typeof delta.content === "string"
+        ? delta.content
+        : "";
+
+    if (token) {
+      collected += token;
+      onToken(token);
+    }
+  };
+
+  while (true) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+
+    receivedBytes += chunk.value.byteLength;
+    if (receivedBytes > maxBytes) {
+      throw new Error("NVIDIA NIM streaming response exceeded the size limit.");
+    }
+
+    buffer += decoder.decode(chunk.value, { stream: true });
+    let newline = buffer.indexOf("\n");
+    while (newline >= 0) {
+      consumeLine(buffer.slice(0, newline));
+      buffer = buffer.slice(newline + 1);
+      newline = buffer.indexOf("\n");
+    }
+  }
+
+  buffer += decoder.decode();
+  if (buffer.trim()) consumeLine(buffer);
+
+  const message = collected.trim();
+  if (!message) {
+    throw new Error("NVIDIA NIM returned an empty streaming response.");
+  }
+  return message;
+}
+
 export async function chatWithNvidia({
   input,
   agent,
@@ -423,6 +530,7 @@ export async function chatWithNvidia({
   policyText,
   visualContentProvided = false,
   signal,
+  onToken,
 }: {
   input: string;
   agent: AstraAgent;
@@ -430,6 +538,7 @@ export async function chatWithNvidia({
   policyText?: string;
   visualContentProvided?: boolean;
   signal?: AbortSignal;
+  onToken?: (token: string) => void;
 }) {
   const value = config();
 
@@ -470,11 +579,15 @@ export async function chatWithNvidia({
         cache: "no-store",
         body: JSON.stringify({
           model,
-          stream: false,
+          stream: Boolean(onToken),
           temperature: generation.temperature,
           top_p: generation.topP,
           max_tokens: generation.maxTokens,
-          ...thinkingOptions(model, value.thinking),
+          ...reasoningOptions({
+            model,
+            enabled: value.thinking,
+            glmReasoningEffort: value.glmReasoningEffort,
+          }),
           messages: [
             {
               role: "system",
@@ -511,30 +624,36 @@ export async function chatWithNvidia({
     );
   }
 
-  const payload = await readBoundedProviderJson(
-    response,
-    "NVIDIA NIM chat",
-  );
-  if (!isRecordPayload(payload)) {
-    throw new Error("NVIDIA NIM returned a malformed chat payload.");
-  }
+  let message = "";
 
-  const choices = payload.choices;
-  const first =
-    Array.isArray(choices) && choices.length > 0
-      ? choices[0]
+  if (onToken) {
+    message = await readNvidiaStreamingChat(response, onToken);
+  } else {
+    const payload = await readBoundedProviderJson(
+      response,
+      "NVIDIA NIM chat",
+    );
+    if (!isRecordPayload(payload)) {
+      throw new Error("NVIDIA NIM returned a malformed chat payload.");
+    }
+
+    const choices = payload.choices;
+    const first =
+      Array.isArray(choices) && choices.length > 0
+        ? choices[0]
+        : undefined;
+    const rawMessage = isRecordPayload(first)
+      ? first.message
       : undefined;
-  const rawMessage = isRecordPayload(first)
-    ? first.message
-    : undefined;
-  const message =
-    isRecordPayload(rawMessage) &&
-    typeof rawMessage.content === "string"
-      ? rawMessage.content.trim()
-      : "";
+    message =
+      isRecordPayload(rawMessage) &&
+      typeof rawMessage.content === "string"
+        ? rawMessage.content.trim()
+        : "";
 
-  if (!message) {
-    throw new Error("NVIDIA NIM returned an empty response.");
+    if (!message) {
+      throw new Error("NVIDIA NIM returned an empty response.");
+    }
   }
 
   return {
