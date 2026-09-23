@@ -336,6 +336,32 @@ Ask the owner only for a genuine human/external boundary:
 
 After the boundary is satisfied, resume the mission automatically.
 
+## Immediate owner-priority refinement before broad phase work
+
+When Codex resumes on the target PC, prioritize **real product usability** before starting another broad architecture/refoundation pass.
+
+1. **Responsiveness across every active model/provider**
+   - measure time-to-first-useful-output and total completion for AUTO, Ollama, Codex, NVIDIA and any enabled Hermes path;
+   - identify whether delay is routing, context/memory retrieval, planning, provider generation, non-streaming transport, or UI rendering;
+   - make routine chat use the shortest truthful path;
+   - stream tokens/progress wherever the provider supports it;
+   - do not optimize NVIDIA while leaving the rest of ASTRA sluggish.
+
+2. **Feature-by-feature runtime audit**
+   - start from the existing UI and canonical APIs, not from old branches;
+   - for each visible feature, record exactly one of: READY / DISABLED / NOT_CONFIGURED / BROKEN / NOT_EVALUATED;
+   - test the real happy path rather than presence of UI/contracts alone;
+   - fix only concrete broken or incomplete features, one at a time;
+   - preserve current Sonor, memory, approval, privacy, STOP and secret boundaries.
+
+3. **User-facing acceptance**
+   - no silent/frozen waiting state;
+   - no fake success or fabricated telemetry;
+   - no feature advertised as working until target-PC evidence exists;
+   - after each fix, capture concise before/after evidence and continue to the next blocker.
+
+The owner's explicit correction is that **the problem is not NVIDIA-only**: all model paths feel insufficiently responsive and many features are still not working. Treat this as the current product-refinement priority.
+
 ## Current exact next task
 
 No speculative repository foundation remains from the earlier Phase 24/25/28/22/27/29 sequence.
