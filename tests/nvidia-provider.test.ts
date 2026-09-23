@@ -122,6 +122,13 @@ beforeEach(() => {
   lastBody = null;
 });
 
+test("JARVIS model catalog matches NVIDIA live model IDs", () => {
+  assert.equal(NVIDIA_JARVIS_MODELS.chief, "nvidia/nemotron-3-ultra-550b-a55b");
+  assert.equal(NVIDIA_JARVIS_MODELS.fast, "nvidia/nemotron-3.5-lightning-30b-a3b");
+  assert.equal(NVIDIA_JARVIS_MODELS.deep, "z-ai/glm-5.3");
+  assert.equal(NVIDIA_JARVIS_MODELS.vision, "z-ai/glm-5.3-flash");
+});
+
 test("NVIDIA provider is accepted by the public request parser", () => {
   const parsed = parseAgentRequest({
     message: "reason about this",
