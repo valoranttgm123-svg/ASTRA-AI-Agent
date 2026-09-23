@@ -10,6 +10,7 @@ import type {
   AstraAgentKey,
   AstraApprovalRequest,
   AstraInputContext,
+  AstraProviderChoice,
 } from "@/lib/agent/types";
 import { resolveProjectContext } from "@/lib/projects/registry";
 import { safeErrorDetail, safePublicDetail } from "@/lib/security/redaction";
