@@ -30,4 +30,9 @@ if (-not (Test-Path -LiteralPath $ollama -PathType Leaf)) {
 # ASTRA owns this scheduled-task process boundary and forces Ollama to loopback.
 $env:OLLAMA_HOST = $loopbackHost
 
-& $ollama serve
+# Give the server its own hidden console, as with the ASTRA/Hermes runners.
+# An inherited console can close while the scheduled task is still needed
+# (STATUS_CONTROL_C_EXIT); do not tie the model server to that console lifetime.
+$server = Start-Process -FilePath $ollama -ArgumentList 'serve' -WindowStyle Hidden -PassThru
+$server.WaitForExit()
+if ($server.ExitCode -ne 0) { throw "Ollama server exited with code $($server.ExitCode)." }

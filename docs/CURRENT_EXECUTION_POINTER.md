@@ -1,5 +1,15 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Target runtime recovery — 2026-09-24
+
+Baseline: PR #222 / `0b07a4c`, main CI #604 SUCCESS; no open PR.
+Local Owner Mode is already merged. Read `RUNTIME_RECOVERY_2026-09-24.md`
+for the reproduced development HTTP 500, stopped Ollama task, and false-positive
+Ollama readiness fix. Install a clean production build before release capture.
+Read `CODEX_MULTI_PC_SSH_HANDOFF_2026-09-23.md` for pending remote-node work;
+do not recreate local execution. Physical voice, remote transport and M1–M6
+evidence gates remain separate from this startup repair.
+
 ## Active responsiveness blocker — 2026-09-23
 
 Latest target diagnosis after PR #213: a resident model can still spend seconds

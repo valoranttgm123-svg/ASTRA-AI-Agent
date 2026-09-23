@@ -87,6 +87,29 @@ test("Phase 19A feature readiness fails conservatively", () => {
   assert.equal(featureState("bad"), "UNKNOWN");
 });
 
+test("Hermes or another healthy Strategist cannot stand in for Ollama health", () => {
+  for (const provider of ["hermes", "nvidia", "codex", "routing_only"]) {
+    const payload = { ready: true, provider, capabilities: { strategist: { state: "READY" } } };
+    assert.equal(extractBrainReadiness(payload).ollama.state, "UNKNOWN");
+    for (const available of [false, true]) {
+      const result = extractBrainReadiness({
+        ...payload,
+        features: { ollama: { enabled: true, available, detail: "private diagnostic", model: "local-model" } },
+      });
+      assert.equal(result.ollama.state, available ? "READY" : "OFFLINE");
+      assert.equal(result.ollama.data?.model, "local-model");
+      assert.equal(JSON.stringify(result).includes("private diagnostic"), false);
+    }
+  }
+});
+
+test("independent Ollama probe overrides a healthy legacy provider and preserves disabled state", () => {
+  const payload = { ready: true, provider: "ollama", capabilities: { strategist: { state: "READY" } } };
+  assert.equal(extractBrainReadiness({ ...payload, features: { ollama: { enabled: true, available: false } } }).ollama.state, "OFFLINE");
+  assert.equal(extractBrainReadiness({ ...payload, features: { ollama: { enabled: false, available: false } } }).ollama.state, "NOT_CONFIGURED");
+  assert.equal(extractBrainReadiness({ ...payload, features: { ollama: {} } }).ollama.state, "UNKNOWN");
+});
+
 test("Phase 19A automation readiness distinguishes store and service opt-in", () => {
   const store = automationStoreReadiness({
     available: true,

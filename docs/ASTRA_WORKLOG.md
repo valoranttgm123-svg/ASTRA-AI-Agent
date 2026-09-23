@@ -1,5 +1,20 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — runtime recovery after PR #222
+
+- Inspected main `0b07a4c`, CI #604 SUCCESS, no open PR, clean checkout.
+- Reproduced HTTP 500 (`node:child_process` in Edge instrumentation compilation)
+  on the active development server; Ollama task had exited `3221225786` and
+  port 11434 had no listener.
+- Moved Node startup dependencies behind an explicit compile-time Node guard;
+  retained background preload and existing Automation opt-in policy.
+- Isolated the Ollama server in a hidden console and added independent provider
+  readiness, preventing healthy Hermes from being counted as healthy Ollama.
+- Added regression coverage. Development HTTP recovery, live Ollama 0.34.2 and
+  `ASTRA_OWNER_DIRECT_OK` completed locally with routing-only/no memory/no planner.
+- Production validation/PR result must be recorded against the final clean SHA;
+  see `RUNTIME_RECOVERY_2026-09-24.md`. No Sonor data or permission flags changed.
+
 ## 2026-09-23 — measured Ollama prompt-prefill correction
 
 Resumed from installed PR #213 / main CI #584, not the older Windows checkpoint.

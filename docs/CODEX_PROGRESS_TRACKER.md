@@ -1,6 +1,10 @@
 # CODEX PROGRESS TRACKER — Phase 15 → Phase 20
 
 > Update this checklist only from real merged/verified work.
+
+24 September refinement: reproduced runtime HTTP 500 and stopped Ollama after
+PR #222. See `RUNTIME_RECOVERY_2026-09-24.md`. The development repair and harmless
+local Owner Mode probe pass; these do not complete physical/multi-PC/core gates.
 >
 > Detailed implementation instructions live in `docs/CODEX_NEXT_MISSION.md`.
 
