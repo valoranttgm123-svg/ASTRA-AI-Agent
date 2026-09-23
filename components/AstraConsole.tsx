@@ -80,6 +80,7 @@ export default function AstraConsole() {
     orbState,
     activeAgent,
     lastResponse,
+    streamingText,
     send,
     execute,
     approve,
@@ -223,6 +224,13 @@ export default function AstraConsole() {
               {micActive ? "MIC · LISTENING" : "VOICE INPUT"}
             </div>
             <p>{micTranscript || "Silakan bicara..."}</p>
+          </>
+        ) : streamingText ? (
+          <>
+            <div className="astra-console__agent">
+              {activeAgent ?? "ASTRA"} · MENJAWAB
+            </div>
+            <p>{streamingText}</p>
           </>
         ) : lastResponse ? (
           <>
