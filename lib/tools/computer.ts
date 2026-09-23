@@ -10,7 +10,8 @@ import { runBoundedProcess } from "./process";
 export type AstraComputerCapability =
   | "computer.system.info"
   | "computer.process.list"
-  | "computer.app.launch";
+  | "computer.app.launch"
+  | "computer.owner.exec";
 
 export type AstraComputerStatus = {
   configured: boolean;
@@ -61,6 +62,37 @@ const CATALOG: readonly AstraToolDefinition[] = [
     availability: "NOT_CONFIGURED",
   },
   {
+    id: "computer.owner.exec",
+    name: "Windows Owner Command",
+    category: "computer",
+    description:
+      "Execute an arbitrary PowerShell or CMD command on the explicitly trusted local Windows node when Owner Mode is enabled.",
+    permissionLevel: 2,
+    sideEffect: "local_write",
+    timeoutMs: 120_000,
+    supportsCancellation: true,
+    availability: "NOT_CONFIGURED",
+    inputSchema: {
+      type: "object",
+      required: ["command"],
+      properties: {
+        command: {
+          type: "string",
+          minLength: 1,
+          maxLength: 8192,
+        },
+        shell: {
+          type: "string",
+          enum: ["powershell", "cmd"],
+        },
+        cwd: {
+          type: "string",
+          maxLength: 1024,
+        },
+      },
+    },
+  },
+  {
     id: "computer.app.launch",
     name: "Windows Launch Allowlisted App",
     category: "computer",
@@ -96,6 +128,11 @@ const APP_ALLOWLIST: Readonly<Record<string, string>> = {
 
 function envEnabled() {
   const value = process.env.ASTRA_COMPUTER_ENABLED?.trim().toLowerCase();
+  return Boolean(value && !["0", "false", "off", "no"].includes(value));
+}
+
+function ownerModeEnabled() {
+  const value = process.env.ASTRA_OWNER_MODE_ENABLED?.trim().toLowerCase();
   return Boolean(value && !["0", "false", "off", "no"].includes(value));
 }
 
@@ -178,11 +215,14 @@ export class WindowsComputerTransport
       available: true,
       provider: this.provider,
       detail:
-        "Controlled Windows Computer Agent is enabled with fixed allowlisted capabilities only.",
+        ownerModeEnabled()
+          ? "Controlled Windows Computer Agent is enabled with trusted local Owner Mode command execution."
+          : "Controlled Windows Computer Agent is enabled with fixed allowlisted capabilities only.",
       capabilities: [
         "computer.system.info",
         "computer.process.list",
         "computer.app.launch",
+        ...(ownerModeEnabled() ? (["computer.owner.exec"] as const) : []),
       ],
     };
   }
@@ -250,6 +290,96 @@ export class WindowsComputerTransport
           " bounded Windows process" +
           (processes.length === 1 ? "." : "es."),
         output: { processes },
+      };
+    }
+
+    if (capability === "computer.owner.exec") {
+      if (!ownerModeEnabled()) {
+        return {
+          ok: false,
+          verified: false,
+          detail: "Owner Mode is disabled by configuration.",
+        };
+      }
+
+      if (!isObject(input)) {
+        return {
+          ok: false,
+          verified: false,
+          detail: "computer.owner.exec input must be an object.",
+        };
+      }
+
+      const command =
+        typeof input.command === "string" ? input.command.trim() : "";
+      if (!command) {
+        return {
+          ok: false,
+          verified: false,
+          detail: "Owner Mode command is required.",
+        };
+      }
+      if (command.length > 8192) {
+        return {
+          ok: false,
+          verified: false,
+          detail: "Owner Mode command exceeded the 8192-character limit.",
+        };
+      }
+
+      const requestedShell =
+        typeof input.shell === "string"
+          ? input.shell.trim().toLowerCase()
+          : "powershell";
+      if (requestedShell !== "powershell" && requestedShell !== "cmd") {
+        return {
+          ok: false,
+          verified: false,
+          detail: "Owner Mode shell must be powershell or cmd.",
+        };
+      }
+
+      const requestedCwd =
+        typeof input.cwd === "string" && input.cwd.trim()
+          ? input.cwd.trim()
+          : process.cwd();
+
+      const executable =
+        requestedShell === "cmd" ? "cmd.exe" : "powershell.exe";
+      const args =
+        requestedShell === "cmd"
+          ? ["/d", "/s", "/c", command]
+          : [
+              "-NoLogo",
+              "-NoProfile",
+              "-NonInteractive",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-Command",
+              command,
+            ];
+
+      const result = await runBoundedProcess({
+        command: executable,
+        args,
+        cwd: requestedCwd,
+        signal,
+      });
+
+      return {
+        ok: result.exitCode === 0,
+        verified: true,
+        detail:
+          "Owner Mode command completed with exit code " +
+          result.exitCode +
+          ".",
+        output: {
+          shell: requestedShell,
+          cwd: requestedCwd,
+          exitCode: result.exitCode,
+          stdout: result.stdout,
+          stderr: result.stderr,
+        },
       };
     }
 
