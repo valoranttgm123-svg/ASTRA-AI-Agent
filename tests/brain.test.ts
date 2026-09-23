@@ -595,6 +595,54 @@ test("explicit Ollama selection streams and uses fast chat for lightweight conve
   assert.equal(events.some((event) => event.type === "memory.search.started"), false);
 });
 
+test("AUTO keeps lightweight developer Q&A on fast local chat instead of waking Codex", async () => {
+  const events: AstraBrainEvent[] = [];
+  const tokens: string[] = [];
+
+  const result = await astraBrain.chat("jelaskan TypeScript secara singkat", {
+    provider: "auto",
+    onEvent: (event) => events.push(event),
+    onToken: (token) => tokens.push(token),
+  });
+
+  assert.equal(result.agent, "developer");
+  assert.equal(result.brain.provider, "ollama");
+  assert.equal(result.brain.context?.memoryEntries, 0);
+  assert.deepEqual(tokens, ["ASTRA ", "OLLAMA SIAP"]);
+  assert.equal(chatCalls, 1);
+  assert.equal(
+    events.some(
+      (event) =>
+        event.type === "provider.unavailable" &&
+        event.provider === "codex",
+    ),
+    false,
+  );
+  assert.equal(
+    events.some((event) => event.type === "memory.search.started"),
+    false,
+  );
+});
+
+test("AUTO still routes repository engineering work to Codex path instead of fast chat", async () => {
+  const events: AstraBrainEvent[] = [];
+
+  const result = await astraBrain.chat("cek repo TypeScript ini", {
+    provider: "auto",
+    onEvent: (event) => events.push(event),
+  });
+
+  assert.equal(result.agent, "github");
+  assert.equal(
+    events.some(
+      (event) =>
+        event.type === "provider.unavailable" &&
+        event.provider === "codex",
+    ),
+    true,
+  );
+});
+
 test("explicit disabled Codex does not silently fall back to Ollama", async () => {
   const result = await astraBrain.chat("halo", { provider: "codex" });
   assert.equal(result.state, "needs_provider");
