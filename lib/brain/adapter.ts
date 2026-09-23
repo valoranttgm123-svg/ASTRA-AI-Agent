@@ -1150,6 +1150,48 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
     }
 
+    if (
+      preferredProvider === "ollama" ||
+      (preferredProvider === "auto" && !isEngineeringRoute(selected))
+    ) {
+      emitLiveProviderStart(selected, "ollama", options);
+      try {
+        const result = await chatWithOllama({
+          input,
+          agent,
+          context: context.localContext,
+          policyText: context.policyText,
+          signal: options?.signal,
+          onToken: options?.onToken,
+        });
+        emitLiveProviderComplete(selected, "ollama", options);
+
+        return {
+          ok: true,
+          agent: selected,
+          agentName: agent.name,
+          state: "completed",
+          message: result.message,
+          requiresApproval: false,
+          brain: {
+            provider: "ollama",
+            execution: "executed",
+            requestedMode: "chat",
+            route,
+            visualNodes: route.map(visualNodeForAgent),
+            events: providerEvents(selected, "ollama", context),
+            ...envelopeContext(context),
+          },
+        };
+      } catch (error) {
+        options?.signal?.throwIfAborted();
+        const detail = "Ollama: " + safeErrorDetail(error, "unavailable", 700);
+        failures.push(detail);
+        emitLiveProviderUnavailable(selected, "ollama", detail, options);
+      }
+    }
+
+
     if (preferredProvider === "auto" && !fastChat) {
       emitLiveProviderStart(selected, "hermes", options);
       try {
@@ -1188,7 +1230,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
     }
 
-    if (preferredProvider === "auto" || preferredProvider === "ollama") {
+    if (preferredProvider === "auto" && isEngineeringRoute(selected)) {
       emitLiveProviderStart(selected, "ollama", options);
       try {
         const result = await chatWithOllama({
