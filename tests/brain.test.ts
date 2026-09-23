@@ -420,6 +420,7 @@ beforeEach(() => {
   process.env.ASTRA_OLLAMA_MODEL = "fixture-model:local";
   process.env.ASTRA_OLLAMA_THINKING = "false";
   process.env.ASTRA_OLLAMA_MAX_TOKENS = "1024";
+  delete process.env.ASTRA_OLLAMA_KEEP_ALIVE;
   process.env.ASTRA_MEMORY_FILE = path.join(root, "memory.json");
   process.env.ASTRA_PROJECTS_FILE = path.join(root, "projects.json");
   process.env.ASTRA_PROJECTS_ENABLED = "true";
@@ -541,6 +542,7 @@ test("Ollama uses the exact configured model and conversational prompt", async (
   assert.equal(chatCalls, 1);
   assert.equal(chatBodies[0].think, false);
   assert.equal(chatBodies[0].stream, false);
+  assert.equal(chatBodies[0].keep_alive, "30m");
   assert.deepEqual(chatBodies[0].options, { num_predict: 1024 });
 
   const messages = chatBodies[0].messages as Array<{
@@ -550,6 +552,15 @@ test("Ollama uses the exact configured model and conversational prompt", async (
   const system = messages.find((message) => message.role === "system")?.content ?? "";
   assert.match(system, /capable personal assistant/i);
   assert.match(system, /natural everyday Indonesian/i);
+});
+
+test("Ollama keep-alive is configurable without changing provider routing", async () => {
+  process.env.ASTRA_OLLAMA_KEEP_ALIVE = "45m";
+  await chatWithOllama({
+    input: "tes keep alive",
+    agent: ASTRA_AGENT_MAP.chief_of_staff,
+  });
+  assert.equal(chatBodies[0].keep_alive, "45m");
 });
 
 test("Ollama streams response chunks while preserving the final message", async () => {
