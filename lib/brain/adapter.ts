@@ -968,6 +968,65 @@ function providerFromPlanEvents(events: AstraBrainEvent[]): AstraBrainProvider {
   return "routing_only";
 }
 
+function directReadOnlyComputerTool(input: string): "computer.system.info" | "computer.process.list" | null {
+  const text = input.trim().toLowerCase();
+
+  if (
+    /\b(?:versi\s+windows|windows\s+version|versi\s+os|os\s+version|nama\s+komputer|computer\s+name|hostname|system\s+info|informasi\s+sistem)\b/i.test(text)
+  ) {
+    return "computer.system.info";
+  }
+
+  if (
+    /\b(?:daftar\s+proses|process\s+list|proses\s+berjalan|running\s+process(?:es)?|tasklist|aplikasi\s+yang\s+sedang\s+berjalan)\b/i.test(text)
+  ) {
+    return "computer.process.list";
+  }
+
+  return null;
+}
+
+function formatDirectComputerReadResult(
+  toolId: "computer.system.info" | "computer.process.list",
+  output: unknown,
+) {
+  if (!output || typeof output !== "object" || Array.isArray(output)) {
+    return "ASTRA completed the read-only computer inspection.";
+  }
+
+  const record = output as Record<string, unknown>;
+
+  if (toolId === "computer.system.info") {
+    const computerName = typeof record.computerName === "string" ? record.computerName : "unknown";
+    const release = typeof record.release === "string" ? record.release : "unknown";
+    const version = typeof record.version === "string" ? record.version : "unknown";
+    const architecture = typeof record.architecture === "string" ? record.architecture : "unknown";
+
+    return [
+      "Nama komputer: " + computerName,
+      "Windows release: " + release,
+      "Windows version: " + version,
+      "Arsitektur: " + architecture,
+    ].join("\n");
+  }
+
+  const processes = Array.isArray(record.processes) ? record.processes : [];
+  const names = processes
+    .slice(0, 40)
+    .map((item) =>
+      item && typeof item === "object" && !Array.isArray(item) &&
+      typeof (item as Record<string, unknown>).imageName === "string"
+        ? (item as Record<string, unknown>).imageName as string
+        : ""
+    )
+    .filter(Boolean);
+
+  return [
+    "ASTRA membaca " + processes.length + " proses Windows secara read-only.",
+    names.length > 0 ? "Contoh proses: " + names.join(", ") : "",
+  ].filter(Boolean).join("\n");
+}
+
 function routeFromPlan(
   selected: AstraAgentKey,
   plan: AstraPlan,
@@ -1410,6 +1469,114 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     const agent = ASTRA_AGENT_MAP[selected];
     const route = routeFor(selected);
     emitLiveStart(selected, options);
+
+    const preferredProvider = options?.provider ?? "auto";
+    const directComputerTool =
+      preferredProvider === "auto" &&
+      selected === "computer" &&
+      options?.requirePlan !== true &&
+      !task.approvalToken
+        ? directReadOnlyComputerTool(input)
+        : null;
+
+    if (directComputerTool) {
+      const policy = getPermissionPolicy();
+      const approvedPermissionLevel = Math.min(
+        1,
+        options?.permissionCeiling ?? 1,
+      ) as 0 | 1;
+
+      if (approvedPermissionLevel >= 1) {
+        try {
+          const toolRuntime = await createDefaultToolRuntime(options?.signal);
+          const definition = toolRuntime.get(directComputerTool);
+
+          if (definition?.availability === "READY") {
+            const liveEvents: AstraBrainEvent[] = [];
+
+            liveEvents.push(
+              emitLiveEvent(options, {
+                type: "policy.applied",
+                agent: selected,
+                visualNode: visualNodeForAgent(selected),
+                label: "Permission policy applied",
+                detail:
+                  "Direct Level-1 read-only Computer Tool path; no shell, file write, external action, memory retrieval, or model planning is required.",
+              }),
+            );
+
+            const result = await toolRuntime.execute(
+              directComputerTool,
+              {},
+              {
+                approvedPermissionLevel,
+                policy: {
+                  allowShell: policy.allowShell,
+                  allowFileWrite: policy.allowFileWrite,
+                  allowExternalActions: policy.allowExternalActions,
+                },
+                signal: options?.signal,
+                onEvent: (event) => {
+                  liveEvents.push(
+                    emitLiveEvent(
+                      options,
+                      toolLifecycleEventFields(event),
+                    ),
+                  );
+                },
+              },
+            );
+
+            if (result.status === "completed" && result.verified) {
+              const responseEvent = emitLiveEvent(options, {
+                type: "response.ready",
+                agent: selected,
+                visualNode: "chief_of_staff",
+                label: "Response ready",
+                detail:
+                  "Verified read-only Computer Tool result returned directly without model planning.",
+              });
+              liveEvents.push(responseEvent);
+
+              return {
+                ok: true,
+                agent: selected,
+                agentName: agent.name,
+                state: "completed",
+                message: formatDirectComputerReadResult(
+                  directComputerTool,
+                  result.output,
+                ),
+                requiresApproval: false,
+                brain: {
+                  provider: "routing_only",
+                  execution: "executed",
+                  requestedMode: "execute",
+                  route,
+                  visualNodes: route.map(visualNodeForAgent),
+                  events: [
+                    ...baseEvents(selected),
+                    ...liveEvents,
+                  ],
+                  context: {
+                    memoryEntries: 0,
+                    memorySources: [],
+                    skills: [],
+                    input: options?.inputContext,
+                  },
+                  permissions: policy,
+                },
+              };
+            }
+          }
+        } catch (error) {
+          options?.signal?.throwIfAborted();
+          // Fall through to the bounded planner/executor path when the
+          // controlled Computer Tool is unavailable or fails unexpectedly.
+        }
+      }
+    }
+
     const context = await buildExecutionContext(
       input,
       selected,
@@ -1422,7 +1589,6 @@ class LocalPreferredBrainAdapter implements AstraBrain {
     );
     emitLiveContext(selected, context, options);
     const failures: string[] = [];
-    const preferredProvider = options?.provider ?? "auto";
 
     const blocked = (
       message: string,
