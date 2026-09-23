@@ -182,6 +182,7 @@ function knownToolPermission(toolId: string | undefined) {
     toolId === "email.read" ||
     toolId === "drive.search" ||
     toolId === "drive.read" ||
+    toolId === "computer.system.info" ||
     toolId === "computer.process.list"
   ) {
     return 1;
