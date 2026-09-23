@@ -161,6 +161,14 @@ powershell: Write-Output ASTRA_OWNER_DIRECT_OK
 
 Expected evidence: `computer.owner.exec` executes, exit code is 0, stdout contains `ASTRA_OWNER_DIRECT_OK`, Brain provider is routing-only, memory retrieval is 0, and no planner/model round-trip is present.
 
+A target-PC validation helper now exists at `scripts/windows/validate-owner-mode.ps1`. Run it against the active ASTRA URL after enabling Owner Mode, for example:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\\scripts\\windows\\validate-owner-mode.ps1 -BaseUrl http://127.0.0.1:3017
+```
+
+Use the actual local ASTRA port if it differs. The script fails closed unless Owner Mode is READY and the direct probe returns verified tool lifecycle evidence without memory/planner/model use.
+
 After PC1 validation, Codex should continue with PC2-PC4 SSH transport/identity and remote Owner Mode. Do not reimplement the local executor first.
 
 ## Do not redo completed work
