@@ -1554,6 +1554,45 @@ class LocalPreferredBrainAdapter implements AstraBrain {
           };
         }
 
+        if (!policy.allowShell) {
+          const detail =
+            "Direct Owner Mode command requires ASTRA_ALLOW_SHELL=true.";
+          emitLiveBlocked(selected, detail, options);
+          return {
+            ok: false,
+            agent: selected,
+            agentName: agent.name,
+            state: "blocked",
+            message:
+              "Owner Mode lokal sudah terdaftar, tetapi shell execution masih dimatikan oleh policy. Aktifkan ASTRA_ALLOW_SHELL=true pada PC1.",
+            requiresApproval: false,
+            brain: {
+              provider: "routing_only",
+              execution: "blocked",
+              requestedMode: "execute",
+              route: directRoute,
+              visualNodes: directRoute.map(visualNodeForAgent),
+              events: [
+                ...baseEvents(selected),
+                emitLiveEvent(options, {
+                  type: "agent.blocked",
+                  agent: "computer",
+                  visualNode: visualNodeForAgent("computer"),
+                  label: "Owner Mode shell blocked",
+                  detail,
+                }),
+              ],
+              context: {
+                memoryEntries: 0,
+                memorySources: [],
+                skills: [],
+                input: options?.inputContext,
+              },
+              permissions: policy,
+            },
+          };
+        }
+
         if (approvedPermissionLevel < 2) {
           const detail =
             "Direct Owner Mode command requires Level-2 local execution permission.";
