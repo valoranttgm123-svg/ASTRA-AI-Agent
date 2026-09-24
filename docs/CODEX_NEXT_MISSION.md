@@ -51,6 +51,17 @@ Current work:
 
 For official release evidence, obey `docs/ASTRA_COLLABORATION_PROTOCOL.md` section "Exact-build evidence freeze": choose a final clean commit, install/build it on PC1, freeze `main`, and capture all commit-bound evidence without intervening merges.
 
+## Prepared target/release runbooks — draft PR #241
+
+Use these draft files as execution aids while the PR remains unmerged:
+
+- `docs/MULTI_PC_TARGET_EVIDENCE_RUNBOOK_2026-09-24.md`;
+- `docs/FINAL_RELEASE_EXECUTION_MATRIX_2026-09-24.md`.
+
+The multi-PC runbook gives PASS/FAIL/rollback boundaries for the remaining remote admin/file/process/service, unreachable/wrong-identity, STOP/KILL and pinned multi-step gates.
+
+Do not merge PR #241 merely to make these instructions visible on `main` while commit-bound evidence is active.
+
 ## Shared work ownership rule
 
 Before choosing a mission item, apply `docs/ASTRA_COLLABORATION_PROTOCOL.md`:
