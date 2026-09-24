@@ -14,7 +14,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Synchronize stale MEM-X/Sonor status in AGENTS / ASTRA_MAX / CODEX_NEXT_MISSION / TARGET_PC_EVIDENCE.
 - [x] Normalize duplicate/non-task tracker entries, including duplicate NVIDIA NVA-2…NVA-9 real-integration gates.
 - [x] Harden SSH bootstrap with temp-validate-replace semantics and reject nested secret/unknown node-config fields.
-- [ ] Review CI warnings; fix safe non-visual technical debt and the HumanoidLabV9 hook dependency warning without regressing approved visuals.
+- [x] Review CI warnings: removed safe unused code/imports and fixed the HumanoidLabV9 gesture-hook dependency path without changing approved visuals. Raw `<img>` optimization warnings remain intentionally visible until an equivalent fidelity-preserving migration is proven.
 
 ## Project continuity / ChatGPT ↔ Codex collaboration
 
