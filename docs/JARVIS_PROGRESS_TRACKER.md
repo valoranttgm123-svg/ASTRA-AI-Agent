@@ -17,6 +17,10 @@
 - [x] Prepare multi-PC target evidence runbook with bounded rollback and fail-closed criteria.
 - [x] Prepare final release execution matrix covering core M1-M6 and extended JARVIS/NVIDIA gates.
 - [x] Prepare non-destructive branch hygiene plan; no branch deletion authorized during target evidence.
+- [x] Prepare public-safe multi-PC evidence result template; private topology/results stay under `.astra/`.
+- [x] Prepare final release freeze checklist.
+- [x] Prepare post-Codex reconciliation checklist.
+- [x] Verify 12 recent merged branch candidates have `ahead_by = 0` against current main; re-check before any future deletion.
 - [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
 - [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
 
