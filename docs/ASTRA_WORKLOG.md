@@ -1,5 +1,13 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — authoritative status-drift cleanup
+
+- Audited current authoritative draft docs for stale multi-PC/PR #239 language.
+- Updated current pointer, collaboration baseline, Codex mission and multi-PC handoff to the post-bootstrap reality: PC1 LOCAL; three remotes privately registered/marker-validated; remaining deep remote evidence only.
+- Marked old PR #239/#233/full-audit handoff snapshots that still looked ACTIVE as HISTORICAL/SUPERSEDED instead of rewriting chronological evidence.
+- Preserved ASTRA_WORKLOG historical entries as history.
+- No runtime code and no `main` state changed.
+
 ## 2026-09-24 — private SSH/evidence leak audit
 
 - Scanned all 15 current PR #241 files plus five SSH/config core files directly on the draft branch.
