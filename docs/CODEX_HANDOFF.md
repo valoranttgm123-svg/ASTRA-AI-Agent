@@ -1,5 +1,27 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — no-competition work ownership addendum
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: project collaboration / work ownership
+STATE: DONE
+CHANGED:
+- ChatGPT is responsible for completing all safe repository-side work it can verify.
+- Target-PC/provider/runtime-only remainder must be explicitly handed to Codex.
+- Codex must refine/finish incomplete ChatGPT work rather than create a competing implementation by default.
+- ACTIVE work must be inspected/continued before either agent starts another implementation in the same subsystem.
+- Parallel work is allowed only for independent slices.
+VALIDATED:
+- collaboration documents updated together on one branch.
+BLOCKER:
+- none for the policy itself.
+NEXT:
+- apply this relay model to every subsequent ASTRA task.
+DO NOT REPEAT:
+- do not duplicate another agent's ACTIVE, merged, BLOCKED or REPO_DONE_TARGET_PENDING work.
+
+
 ## 2026-09-24 — mandatory ChatGPT ↔ Codex collaboration handoff
 
 ACTOR: ChatGPT
