@@ -1,5 +1,13 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — owner mandates checkpoint after every completed task
+
+- Owner explicitly requires a durable checkpoint after every completed ASTRA work slice.
+- Rule applies equally to ChatGPT and Codex.
+- Checkpoint must be written before the next task begins and must include completion, validation, state, exact next action and DO NOT REPEAT scope.
+- During commit-bound evidence freeze, checkpoint updates remain on the active draft branch/PR rather than moving `main`.
+- Collaboration protocol, session recovery, current pointer and handoff were updated accordingly.
+
 ## 2026-09-24 — additional draft evidence/release preparation
 
 - Added a public-safe multi-PC evidence result template; real topology/results remain private under `.astra/`.
