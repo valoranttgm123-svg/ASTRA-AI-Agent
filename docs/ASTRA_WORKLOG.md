@@ -1,5 +1,33 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — Codex resumes against the latest ChatGPT handoff
+
+- ACTOR: Codex; STATE: ACTIVE; PR #239.
+- Merged current main `63bdd14` (CI #646 SUCCESS) into the existing native probe
+  fix, retaining PR #225-#238 transport, hardening and collaboration work.
+- Interrupted the older-base repository gate after 453 passing tests; those
+  results are not evidence for the combined build. Re-run all gates on the
+  exact combined commit, install it, then validate the existing remote transport.
+- Earlier morning SSH observations below are historical and need a fresh check.
+
+## 2026-09-24 — native Windows startup inspection
+
+- PR #224 merged `0a0962a3494f066c14eb40850dcb1597e8178c3a`, CI #607/#608
+  SUCCESS. Production `ffb4caa` installed; 449 tests and repository gate passed;
+  private configuration/project/automation hashes unchanged.
+- Real Codex chat and UI STOP passed with deliberate WebGL denial in only the
+  test browser. Approved Humanoid image and disabled capture controls verified
+  at 390x844, with no browser errors in the final scenario. Not physical HP/HIGH.
+- Self-check repeatedly timed out loading the Windows CIM task module despite
+  two running startup tasks. Replaced only the read-only query with native COM,
+  retaining hidden five-second subprocess and propagating non-missing errors.
+- Ten focused tests and live self-check passed; actual child-process probe
+  completed in 964 ms. Unknown states no longer produce READY.
+- Existing strict SSH aliases identify PC2 and SNRPC2; DeviceSNR DNS fails.
+  This is not ASTRA remote transport completion. Sonor unchanged.
+- See `WINDOWS_TASK_PROBE_2026-09-24.md`; final PR/build/install evidence must
+  be recorded before handoff. Physical and comprehensive gates remain open.
+
 ## 2026-09-24 — PC1 confirmed as ASTRA local hub
 
 - Owner confirmed that PC1 is the current PC and ASTRA hub/local machine.

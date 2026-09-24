@@ -2,6 +2,12 @@
 
 > Update this checklist only from real merged/verified work.
 
+24 September installed follow-up: PR #224 merged, CI #607/#608 SUCCESS,
+449 tests; real Codex chat/UI STOP and mobile-sized fallback verified on production
+`ffb4caa`. This does not prove physical HP/voice/HIGH performance. Native Windows
+task-probe refinement resolves the reproduced CIM cold-start timeout without
+changing services; see `WINDOWS_TASK_PROBE_2026-09-24.md` for scope and evidence.
+
 24 September browser refinement: PR #223 production is verified (446 tests;
 CI #605/#606). Graphics denial still caused repeated async initialization errors.
 The follow-up availability fallback preserves artwork and blocks false 3D

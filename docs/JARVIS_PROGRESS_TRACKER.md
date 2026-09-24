@@ -1,5 +1,14 @@
 # JARVIS REPOSITORY FOUNDATION TRACKER
 
+## Active target refinement — 2026-09-24, PR #239
+
+Native read-only Windows startup inspection replaces a reproduced five-second
+CIM timeout. Focused Windows tests and live self-check passed on the earlier
+baseline. STATE: ACTIVE until the combined build (including main `63bdd14` and
+all ChatGPT multi-PC hardening) passes full gates, merges and is installed.
+Then continue verified remote registry/bootstrap and real target evidence;
+do not rebuild transport or mark physical voice/HP/HIGH gates complete.
+
 > Tracks merged repository foundations separately from real target-PC/provider evidence. Read `docs/CURRENT_EXECUTION_POINTER.md` first. Do not restart merged work based on old chats or branches.
 
 ## Recovery

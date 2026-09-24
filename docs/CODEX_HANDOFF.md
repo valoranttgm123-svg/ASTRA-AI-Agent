@@ -1,5 +1,31 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — Codex active PR #239, preserve newer main
+
+ACTOR: Codex
+STATE: ACTIVE
+BRANCH/PR: `fix/windows-task-probe-20260924` / #239
+CHANGED: combining the reproduced native startup-probe fix with current main
+`63bdd14` (CI #646 SUCCESS); retaining all PR #225-#238 transport and hardening.
+VALIDATED: earlier probe tests and runtime evidence below; the combined exact
+build still needs a fresh full repository gate and install.
+NEXT: finish PR #239 and install the combined clean build; verify current SSH
+identities, bootstrap only real remote nodes, and validate the existing transport.
+DO NOT REPEAT: do not rebuild SSH architecture or treat morning DNS as current.
+
+## 2026-09-24 — native task inspection and installed fallback
+
+PR #224 merged as `0a0962a`; CI #607/#608 SUCCESS, 449 local tests and all repository
+gates passed. Production `ffb4caa` preserved private configuration/project/automation
+hashes. Codex chat and UI STOP passed under deliberately denied WebGL; the approved
+image and unavailable label render at mobile size, with GPU captures disabled.
+Windows self-check then falsely errored because its five-second PowerShell probe
+loaded the slow CIM module. Native read-only Task Scheduler lookup completes in
+under one second and now preserves missing/disabled/unknown/error distinctions.
+See `WINDOWS_TASK_PROBE_2026-09-24.md`; final gate/install evidence belongs on its PR.
+Existing SSH identities PC2/SNRPC2 respond; DeviceSNR DNS remains unavailable.
+Physical voice, HP hardware, HIGH performance and full release gates remain open.
+
 ## 2026-09-24 — PC1 confirmed LOCAL hub
 
 ACTOR: ChatGPT

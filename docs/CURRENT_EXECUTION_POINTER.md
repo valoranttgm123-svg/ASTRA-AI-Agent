@@ -1,5 +1,26 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Codex active continuation — PR #239
+
+STATE: **ACTIVE**. The native startup-probe correction is being combined with
+current main `63bdd14` (CI #646 SUCCESS), including all newer ChatGPT SSH/security
+work. Finish the combined clean repository gate, merge green CI and install the
+exact build before continuing the remote target sequence below. Morning remote
+observations in the next section are historical, not current reachability.
+Do not recreate the multi-PC transport already merged in PR #225-#238.
+
+## Native Windows readiness probe — 2026-09-24
+
+PR #224 is merged (`0a0962a`, PR CI #607 / main #608 SUCCESS), production
+`ffb4caa` installed. Real Codex chat and UI STOP passed with WebGL deliberately
+denied in the test browser; the approved Humanoid image remains visible at
+390x844 and GPU capture stays disabled. This is not a physical HP/GPU test.
+The next reproduced defect is the read-only self-check timing out while loading
+the Windows ScheduledTasks CIM module. See `WINDOWS_TASK_PROBE_2026-09-24.md`.
+Do not recreate either startup task or change Automation opt-in to repair a probe.
+PC2 and SNRPC2 identities now respond through existing strict SSH aliases;
+DeviceSNR still fails name resolution. ASTRA remote UI transport is not yet proven.
+
 ## SSH target update — owner reports four connected Codex targets
 
 State: **PC1 CONFIRMED LOCAL HUB / REMOTE IDENTITY + PRIVATE REGISTRY VERIFICATION PENDING**
