@@ -1,5 +1,14 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — exact-build evidence freeze prepared
+
+- Live repository review after Codex PR #239 found stale pointer/mission instructions that still told Codex to repeat install/SSH verification/bootstrap already completed on PC1.
+- Release documents require the running ASTRA build, repository gate/evidence and clean repository HEAD to match the same commit throughout official capture.
+- ChatGPT therefore prepared a collaboration rule that freezes `main` during official commit-bound target/release evidence capture.
+- While Codex continues target evidence, ChatGPT cleanup work must remain on branch/draft PR and must not move `main`.
+- The draft also advances the current multi-PC mission to administrator/file/service, unreachable/wrong-node, remote STOP/KILL and pinned multi-step evidence.
+- No runtime code changes are included.
+
 ## 2026-09-24 — PR #239 merged; remote evidence continues
 
 - Codex PR #239 merged as `290164a8787cf895a9c1a32018c700cf8d6ad551`.
