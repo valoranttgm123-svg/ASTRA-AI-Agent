@@ -1,5 +1,28 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — ChatGPT parallel work saturated
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: safe parallel repository preparation
+STATE: BLOCKED
+BRANCH/PR: #241
+BLOCKER:
+- further useful repository work now depends on new target evidence or would overlap/duplicate Codex's active target slice.
+COMPLETED:
+- all draft runbooks/templates/freeze/reconciliation/hygiene preparation;
+- private topology leak audit PASS;
+- stale current-status cleanup;
+- mandatory per-task checkpoint rule.
+NEXT:
+- Codex continues target evidence;
+- ChatGPT resumes only on new target evidence/defect or checkpoint completion.
+DO NOT REPEAT:
+- do not manufacture new parallel architecture/docs;
+- do not merge #241 during active evidence freeze;
+- do not treat this BLOCKED/waiting state as NOT_STARTED.
+
+
 ## 2026-09-24 — authoritative status-drift cleanup checkpoint
 
 ACTOR: ChatGPT
