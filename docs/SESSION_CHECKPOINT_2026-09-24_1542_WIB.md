@@ -387,6 +387,36 @@ DO NOT REPEAT:
 - do not merge #241 or move main merely because CI is green;
 - do not overlap Codex-owned target/runtime execution.
 
+
+## Checkpoint update — 22-file private-evidence revalidation after AGENTS synchronization
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: private evidence / continuity remediation validation
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+COMPLETED:
+- detected that synchronizing `AGENTS.md` increased PR #241 from 17 to 18 changed files;
+- re-inspected all 18 current PR files plus 4 additional baseline security/configuration files, 22 unique files total;
+- synchronized current audit scope in the audit document, execution pointer, tracker, handoff and worklog.
+VALIDATED:
+- no private-key header/token/API-key/private RFC1918 host/real IdentityFile assignment/credential value found in the 22-file inspected scope;
+- scanner hits were deliberate documentation examples only: RFC1918 CIDR examples and literal explanatory wording;
+- exact private SSH topology remains outside Git.
+FAILED:
+- none.
+BLOCKED:
+- no new repository blocker from this revalidation;
+- target/runtime evidence remains Codex-owned.
+NEXT:
+- inspect CI on the newest #241 remediation head;
+- if green, keep #241 draft/unmerged and return ChatGPT to BLOCKED + SATURATED_WAITING_FOR_TARGET_EVIDENCE.
+DO NOT REPEAT:
+- do not rerun this audit unless the evidence-bearing PR scope changes again or a leak is suspected;
+- do not expose exact aliases/IPs/usernames/key paths/credentials in Git;
+- do not merge #241 merely because this documentation remediation passes CI.
+
 ## Resume phrase
 
 **RESUME FROM PR #241 + THIS CHECKPOINT. DO NOT RESTART ASTRA WORK.**
