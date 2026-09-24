@@ -3,6 +3,7 @@
 ## 2026-09-24 — full re-audit continuity remediation on draft PR #241
 
 - Re-audited live `main`, open PRs, current #241 diff/CI, canonical recovery/pointer/mission/tracker/handoff documents, relevant SSH/target branches, private-secret hygiene, and the critical PR #233 code safeguards.
+- After `AGENTS.md` joined the draft diff, revalidated private-evidence hygiene across **22 unique files**: all 18 current PR #241 files plus 4 additional baseline security/configuration files; only deliberate documentation examples matched the scanner.
 - Confirmed `main` remains `c5d89375ef25601132b47da7d1c064df22d2d98f`; PR #241 is the only open PR and remains draft/mergeable.
 - Confirmed predecessor draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701 in build, tests, typecheck, lint, dependency audit and PR diff check.
 - Confirmed critical current-main safeguards remain present: explicit remote `nodeId` preservation/fail-closed routing, 15s system-info timeout vs SSH ConnectTimeout=8, recursive forbidden-secret rejection, and temp-validate-replace private registry writes.
@@ -16,7 +17,7 @@
 ## 2026-09-24 — PR #241 consistency cleanup after audit revalidation
 
 - Reconciled the draft after the private-evidence audit scope grew from 15 to 17 PR files.
-- Current audit scope is 21 unique files: all 17 PR #241 files plus 4 additional baseline security/configuration files.
+- Current audit scope is now 22 unique files: all 18 PR #241 files plus 4 additional baseline security/configuration files; the earlier 21-file result was superseded when `AGENTS.md` joined the draft diff.
 - Corrected stale audit counts/status wording in tracker/handoff/worklog; no runtime code, target-PC state, SSH topology, or `main` was changed.
 - Confirmed ASTRA CI #698 succeeded on draft head `f6d41233820217e25bc81b806b8e6cb96f95be2e` before this consistency-cleanup slice.
 - ChatGPT remains `SATURATED_WAITING_FOR_TARGET_EVIDENCE`; Codex retains the active remote admin/file/process/service/STOP-KILL/pinned-task slice.
@@ -40,7 +41,7 @@
 
 ## 2026-09-24 — private SSH/evidence leak audit
 
-- Revalidated all 17 current PR #241 files plus 4 additional baseline SSH/config/security files, 21 unique files total.
+- Revalidated all current PR #241 files plus the additional baseline SSH/config/security files; latest scope is 18 PR files + 4 baseline files = 22 unique files.
 - Checked current private alias strings, private-key material, IdentityFile/key paths, RFC1918 addresses, obvious credential assignments and literal SSH user@host topology.
 - Result: PASS; no matching private topology/credential material was found in the inspected public/draft scope.
 - Exact aliases/topology remain private and private evidence remains under gitignored `.astra/`.
