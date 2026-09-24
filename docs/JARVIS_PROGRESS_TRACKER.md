@@ -8,8 +8,13 @@
 - [x] Private registry contains only three individually reverified remote Windows targets; PC1 remains LOCAL.
 - [x] Direct ASTRA marker checks passed on all three registered remotes.
 - [x] Unknown-node fail-closed check passed.
-- [ ] Remote administrator/file/service-control evidence on each selected trusted node.
-- [ ] Unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
+- [ ] Remote administrator-context evidence on each selected trusted node.
+- [ ] Bounded remote file mutation/readback/rollback evidence.
+- [ ] Remote process-control evidence using an owned disposable process.
+- [ ] Safe service-control evidence, or truthful BLOCKED when no disposable test service exists.
+- [ ] Unreachable-node fail-closed evidence.
+- [ ] Wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS.
+- [ ] Long-running remote STOP/KILL proving the remote work itself terminates.
 - [ ] One pinned-target multi-step project task end-to-end.
 
 ## Draft preparation while Codex owns target evidence
@@ -26,7 +31,7 @@
 - [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
 - [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
 
-Current ChatGPT parallel state: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**. ASTRA CI #698 passed on draft head `f6d41233820217e25bc81b806b8e6cb96f95be2e` before the latest consistency-only cleanup. Do not create duplicate preparation work; resume when new Codex evidence or a reproduced defect arrives.
+Current ChatGPT canonical state: **BLOCKED**; substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**. ASTRA CI #701 passed on draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` before this full re-audit remediation. Do not create duplicate preparation work; resume when new Codex evidence or a reproduced defect arrives.
 
 ## Recovery
 
@@ -68,8 +73,8 @@ Ongoing invariant: every future meaningful change must preserve these synchroniz
 - [x] Verify the owner-reported connected targets: PC1 is LOCAL and three remote Windows targets were individually reverified; exact aliases remain private.
 - [x] Identify the ASTRA hub/local machine: owner confirms PC1 is LOCAL/current hub; PC1 must not be duplicated into the SSH remote registry.
 - [x] Bootstrap only the three verified remote targets into the private registry and pass direct ASTRA marker validation on each.
-- [ ] Real remote administrator/file/service control evidence on each selected trusted node.
-- [ ] Unknown-node fail-closed is proven; still capture unreachable/wrong-node evidence plus long-running remote STOP/KILL.
+- [ ] Real remote administrator context, bounded file rollback, disposable process-control, and safe service-control evidence on selected trusted nodes.
+- [ ] Unknown-node fail-closed is proven; still capture unreachable-node and wrong-identity fail-closed evidence plus long-running remote STOP/KILL.
 - [ ] One pinned-target multi-step project task end-to-end.
 Completion invariant: do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
 
