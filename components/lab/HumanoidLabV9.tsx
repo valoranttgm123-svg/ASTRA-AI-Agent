@@ -799,6 +799,11 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     if (next) void ensureSfxAudio();
   };
 
+  const gestureMicSupported = runtime.micSupported;
+  const gestureMicActive = runtime.micActive;
+  const gestureBeginListening = runtime.beginListening;
+  const gestureStopInteraction = runtime.stopInteraction;
+
   useEffect(() => {
     const event = tracking.gestureEvent;
     if (!event) return;
@@ -823,31 +828,31 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     }
 
     if (event.gesture === "open_palm") {
-      if (!runtime.micSupported) {
+      if (!gestureMicSupported) {
         setLastGestureAction("OPEN PALM → MIC N/A");
         return;
       }
-      if (runtime.micActive) {
+      if (gestureMicActive) {
         setLastGestureAction("OPEN PALM → ALREADY LISTENING");
         return;
       }
       setLastGestureAction("OPEN PALM → LISTENING");
-      runtime.beginListening("gesture_open_palm");
+      gestureBeginListening("gesture_open_palm");
       return;
     }
 
     if (event.gesture === "fist") {
       setLastGestureAction("FIST → STOP");
-      runtime.stopInteraction();
+      gestureStopInteraction();
     }
   }, [
     effects,
     gesturesEnabled,
     reducedMotion,
-    runtime.beginListening,
-    runtime.micActive,
-    runtime.micSupported,
-    runtime.stopInteraction,
+    gestureBeginListening,
+    gestureMicActive,
+    gestureMicSupported,
+    gestureStopInteraction,
     tracking.gestureEvent,
   ]);
 
