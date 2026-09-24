@@ -127,6 +127,15 @@ test("explicit Owner Mode prefixes parse without natural-language planning", () 
       command: "Get-Date",
     },
   );
+
+  assert.deepEqual(
+    parseDirectOwnerCommand("run owner mode @pc2 powershell: hostname"),
+    {
+      nodeId: "pc2",
+      shell: "powershell",
+      command: "hostname",
+    },
+  );
 });
 
 test("Owner Mode direct parser rejects ambiguous natural language and oversized commands", () => {
@@ -135,6 +144,7 @@ test("Owner Mode direct parser rejects ambiguous natural language and oversized 
     null,
   );
   assert.equal(parseDirectOwnerCommand("powershell:"), null);
+  assert.equal(parseDirectOwnerCommand("@-bad powershell: whoami"), null);
   assert.equal(
     parseDirectOwnerCommand("powershell: " + "x".repeat(8193)),
     null,
