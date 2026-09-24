@@ -1,5 +1,12 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — safe parallel evidence/release preparation
+
+- On draft PR #241, ChatGPT prepared a target evidence runbook for the remaining multi-PC gates without changing runtime code or `main`.
+- Prepared a final release execution matrix that orders M1-M6, extended JARVIS phases and NVIDIA real-backend gates without duplicate work.
+- Prepared a branch hygiene plan from current branch-family inventory; no deletion is authorized during active target evidence.
+- These artifacts remain draft-only so Codex can continue target work without moving the commit used for evidence.
+
 ## 2026-09-24 — exact-build evidence freeze prepared
 
 - Live repository review after Codex PR #239 found stale pointer/mission instructions that still told Codex to repeat install/SSH verification/bootstrap already completed on PC1.
