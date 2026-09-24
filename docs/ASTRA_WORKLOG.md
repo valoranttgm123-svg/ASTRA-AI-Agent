@@ -7,6 +7,7 @@
 - Private computer-node registry now rejects root-level secret-like fields and unsupported root metadata, in addition to the existing per-node strict schema.
 - Added root-schema regression tests.
 - This is a focused extension of PR #233 hardening, not a replacement Computer architecture.
+- Validation passed: 460 tests / 458 pass / 0 fail / 2 Windows-only skips; build/typecheck/lint/audit/diff checks PASS; 0 dependency vulnerabilities.
 
 ## 2026-09-24 — stale audit pointer closed
 
