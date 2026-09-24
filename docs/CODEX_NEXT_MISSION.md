@@ -36,17 +36,19 @@ That is a complete instruction.
 
 Resume automatically from repository truth. Do not ask the owner to restate the roadmap.
 
-## Audit hold before fresh multi-PC target evidence
+## Audit remediation merged — resume exact-build target evidence
 
-The 2026-09-24 full audit found repository defects that ChatGPT owns. Read `docs/FULL_AUDIT_2026-09-24.md`.
+The 2026-09-24 repository follow-up is complete in PR #233, merge `52135e16f4113460807ff9005a72ba7efc53d911`.
 
-Before Codex performs fresh final PC2-PC4 evidence, wait for the focused repository follow-up(s) that fix:
-- direct read-only remote target preservation;
-- system-info/SSH timeout mismatch;
-- canonical MEM-X/Sonor status drift;
-- tracker/bootstrap/config hardening identified by the audit.
+Codex must now:
+- update/install the exact clean current `main` build on the target PC;
+- verify runtime build identity before collecting evidence;
+- resolve/verify the existing SSH aliases without inventing replacements;
+- bootstrap the private node registry;
+- continue PC2-PC4 Owner Mode/admin/file/service/STOP-KILL/multi-step evidence;
+- continue remaining release gates from the canonical order.
 
-Codex must not rebuild the Computer Agent or Sonor while these fixes are being prepared. After the fixes merge, install/verify the exact clean current build and resume target-PC validation.
+Do not rebuild the Computer Agent, SSH transport, or Sonor retrieval/provenance work.
 
 ## Shared work ownership rule
 

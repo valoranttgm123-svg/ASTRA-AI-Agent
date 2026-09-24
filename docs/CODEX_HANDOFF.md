@@ -1,5 +1,39 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — PR #233 merged; target validation resumes
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent / SSH hardening / continuity
+STATE: REPO_DONE_TARGET_PENDING
+BRANCH/PR: #233
+MERGE/COMMIT: `52135e16f4113460807ff9005a72ba7efc53d911`
+CHANGED:
+- explicit remote read-only node targeting is preserved;
+- system-info timeout now safely exceeds SSH connect timeout;
+- nested secret/unknown node fields fail closed;
+- SSH node registry uses temp-validate-replace semantics;
+- MEM-X/Sonor status and tracker duplication were synchronized;
+- safe warning cleanup completed without changing approved humanoid artwork paths.
+VALIDATED:
+- PR #233 ASTRA CI SUCCESS;
+- 459 tests / 457 pass / 0 fail / 2 Windows-only skips;
+- build/typecheck/lint/dependency audit/diff check PASS;
+- dependency audit: 0 vulnerabilities.
+BLOCKER:
+- physical SSH alias/name resolution and target evidence remain outside Git.
+NEXT:
+- install/update exact clean current main on target PC;
+- verify runtime build identity;
+- resolve verified SSH aliases and bootstrap the private node registry;
+- run PC2-PC4 Owner Mode/admin/file/service/wrong-node/offline/STOP-KILL/multi-step evidence.
+DO NOT REPEAT:
+- do not recreate PR #233;
+- do not rebuild multi-PC transport;
+- do not redo PC1 Owner Mode;
+- do not repeat broad Sonor retrieval/provenance validation.
+
+
 ## 2026-09-24 — audit remediation PR #233 handoff
 
 ACTOR: ChatGPT

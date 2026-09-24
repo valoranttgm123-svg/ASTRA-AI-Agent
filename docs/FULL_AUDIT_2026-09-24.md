@@ -454,4 +454,4 @@ Still intentionally target-only after merge:
 - reliable remote STOP/KILL evidence;
 - remaining release/provider/device gates.
 
-Do not mark these remediation items DONE until PR #233 newest-head CI is green and the PR is merged.
+PR #233 newest-head CI passed and merged as `52135e16f4113460807ff9005a72ba7efc53d911`; the repository remediation items above are DONE. Remaining items are target/runtime/provider evidence.

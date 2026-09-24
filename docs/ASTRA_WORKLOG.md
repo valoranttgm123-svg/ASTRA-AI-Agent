@@ -11,7 +11,7 @@
 - Canonical MEM-X docs now preserve already-validated Sonor retrieval/project scope/Graphify/Obsidian provenance and leave only degradation/cancellation/Diagnostics/release evidence pending.
 - NVIDIA and JARVIS tracker duplication/non-task checkbox drift was normalized; historical recovery branch wording was relabeled.
 - Safe warning cleanup removed unused non-visual code/imports and made Humanoid V9 gesture dependencies explicit. Approved raw image rendering was not changed merely to silence optimization warnings.
-- PR: #233. Status remains ACTIVE until newest-head CI passes and merge completes.
+- PR #233 newest-head CI passed and merged as `52135e16f4113460807ff9005a72ba7efc53d911`. Repository remediation is complete; remaining work is target/runtime evidence.
 
 ## 2026-09-24 — full repository/runtime-readiness audit
 
