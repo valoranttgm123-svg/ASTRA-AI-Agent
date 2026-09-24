@@ -2,7 +2,8 @@
 
 ## Parallel ChatGPT repository status
 
-State: **SAFE PARALLEL WORK SATURATED / WAITING FOR NEW CODEX TARGET EVIDENCE**
+State: **BLOCKED**  
+Substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**
 
 Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. Draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 21 unique files (17 current PR files + 4 additional baseline files). Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
 
@@ -205,7 +206,7 @@ evidence and newly reproduced startup-console/health/repository-gate fixes.
 Preserve all later foundations. Next is clean-build installation/evidence and
 the still-open M1–M6 gates, not reimplementation or a claim of full readiness.
 
-Historical checkpoint date: **2026-09-22**. The canonical latest checkpoint at the top of this file supersedes this older status block. Always inspect actual `main`, open PRs and CI first.
+Historical checkpoint date: **2026-09-22**. The live state at the top of this file supersedes this older status block. Always inspect actual `main`, open PRs and CI first.
 
 ## ChatGPT saturation / interruption checkpoint
 
