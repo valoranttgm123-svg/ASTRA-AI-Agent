@@ -347,7 +347,9 @@ export class MultiNodeWindowsComputerTransport
 
     return {
       configured: localStatus.configured || nodes.length > 0,
-      available: localStatus.available || trustedRemote.length > 0,
+      // ASTRA_COMPUTER_ENABLED remains the global kill switch. Merely placing
+      // a private node file on disk must never enable remote execution.
+      available: localStatus.available,
       provider: this.provider,
       detail:
         localStatus.detail +
@@ -610,6 +612,27 @@ export class MultiNodeWindowsComputerTransport
     signal: AbortSignal,
   ) {
     signal.throwIfAborted();
+
+    const localStatus = await this.local().status(signal);
+    if (!localStatus.configured) {
+      return {
+        ok: false,
+        verified: false,
+        detail:
+          "Computer Agent is disabled by configuration. ASTRA did not attempt remote execution.",
+      };
+    }
+    if (
+      capability === "computer.owner.exec" &&
+      !localStatus.capabilities.includes("computer.owner.exec")
+    ) {
+      return {
+        ok: false,
+        verified: false,
+        detail:
+          "Owner Mode is disabled by configuration. ASTRA did not attempt remote execution.",
+      };
+    }
 
     if (capability === "computer.nodes.list") {
       return {
