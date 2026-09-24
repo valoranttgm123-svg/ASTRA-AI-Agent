@@ -289,7 +289,7 @@ Build on the audited real Sonor/Graphify/Obsidian system. Do not create a compet
 
 ### Phase 27 — real multi-device transport
 
-PC-to-PC SSH transport is selected and repository-implemented through PR #225/#226. Validate the real PC2-PC4 targets rather than selecting another PC transport. The broader Phase-27 device work still requires actual pairing/authenticated dispatch/result return/revoke evidence, especially for mobile or non-SSH devices. Do not expose the current loopback API directly.
+PC-to-PC SSH transport is selected and repository-implemented through PR #225/#226. PC1 is LOCAL and three remote Windows targets are already privately registered and marker-validated; finish the remaining deep remote evidence instead of selecting another PC transport. The broader Phase-27 device work still requires actual pairing/authenticated dispatch/result return/revoke evidence, especially for mobile or non-SSH devices. Do not expose the current loopback API directly.
 
 ### Phase 29 — real skills/environment devices
 
