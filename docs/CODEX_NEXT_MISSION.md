@@ -98,16 +98,18 @@ Cross-session reconciliation:
 
 ### Active owner-priority override — multi-PC target evidence
 
-The repository implementation for PC1 and multi-PC SSH is already merged. If the owner is continuing the current multi-PC thread, finish this real-environment sequence before starting another repository architecture pass:
+The repository implementation for local and multi-PC SSH is already merged. The owner now reports four PC targets connected in Codex, superseding the older name-resolution observation. Finish this real-environment sequence before starting another repository architecture pass:
 
-1. resolve/verify the existing SSH aliases on the hub;
-2. run `scripts/windows/configure-ssh-computer-nodes.ps1` using only verified existing aliases;
-3. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
-4. validate PC2-PC4 administrator/file/service execution;
-5. validate wrong/unreachable-node fail-closed behavior and long-running remote STOP/KILL;
-6. complete one pinned-target multi-step task end-to-end.
+1. use the owner's current private SSH/Codex aliases from the local runtime; do not commit them;
+2. verify each alias with `ssh -G` and remote `$env:COMPUTERNAME`;
+3. identify which connected machine is the ASTRA hub/local machine and exclude it from the remote registry;
+4. run `scripts/windows/configure-ssh-computer-nodes.ps1` using only verified remote aliases;
+5. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
+6. validate administrator/file/service execution independently on each verified remote node;
+7. validate wrong/unreachable-node fail-closed behavior and long-running remote STOP/KILL;
+8. complete one pinned-target multi-step task end-to-end.
 
-Latest physical observation: the intended remote aliases failed name resolution. Treat that as a target/network/configuration blocker, not a missing transport implementation. Do not invent replacement aliases/IPs and do not rebuild the Computer Agent.
+Do not invent replacement aliases/IPs, expose private SSH topology in Git, or rebuild the Computer Agent.
 
 When the multi-PC target gate is not the active owner thread or is blocked by unavailable physical targets, execute the first actionable task below.
 
