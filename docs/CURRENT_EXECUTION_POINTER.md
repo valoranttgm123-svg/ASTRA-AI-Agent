@@ -1,14 +1,19 @@
 # ASTRA CURRENT EXECUTION POINTER
 
-## Active post-remediation hardening
+## Post-remediation hardening complete
 
-State: **ACTIVE / CHATGPT-OWNED**
+State: **REPOSITORY HARDENING COMPLETE / TARGET EVIDENCE PENDING**
 
-A focused follow-up is hardening two additional fail-closed boundaries discovered after PR #233:
-- explicit remote read failure/unavailability must stop on the requested node rather than fall through to planner reinterpretation;
-- private node-registry root fields must use a strict schema and reject root-level secrets/unknown metadata.
+The focused follow-up after PR #233 now also:
+- fails closed on explicit remote read failure/unavailability instead of falling through to planner reinterpretation;
+- rejects secret-like and unsupported fields at the root of the private node registry.
 
-Codex should not duplicate this focused repository slice. Target-PC evidence remains pending after the follow-up merges.
+Validation before final merge:
+- ASTRA CI PASS;
+- 460 tests / 458 pass / 0 fail / 2 Windows-only skips;
+- dependency audit 0 vulnerabilities.
+
+Do not recreate this hardening. Remaining work is target/runtime/provider evidence.
 
 ## Audit remediation merged — PR #233
 
