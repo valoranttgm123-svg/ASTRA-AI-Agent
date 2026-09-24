@@ -9,11 +9,11 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 ## 2026-09-24 full-audit follow-up
 
 - [x] Full repository/runtime-readiness audit recorded in `docs/FULL_AUDIT_2026-09-24.md`.
-- [ ] Fix direct read-only Computer fast path so explicit remote target is never silently converted to LOCAL.
-- [ ] Fix remote `computer.system.info` timeout mismatch with SSH connect timeout and add regression coverage.
-- [ ] Synchronize stale MEM-X/Sonor status in AGENTS / ASTRA_MAX / CODEX_NEXT_MISSION / TARGET_PC_EVIDENCE.
-- [ ] Normalize duplicate/non-task tracker entries, including duplicate NVIDIA NVA-2…NVA-9 real-integration gates.
-- [ ] Harden SSH bootstrap write semantics/wording and nested-secret node-config rejection.
+- [x] Fix direct read-only Computer fast path so explicit remote target is never silently converted to LOCAL.
+- [x] Fix remote `computer.system.info` timeout mismatch with SSH connect timeout and add regression coverage.
+- [x] Synchronize stale MEM-X/Sonor status in AGENTS / ASTRA_MAX / CODEX_NEXT_MISSION / TARGET_PC_EVIDENCE.
+- [x] Normalize duplicate/non-task tracker entries, including duplicate NVIDIA NVA-2…NVA-9 real-integration gates.
+- [x] Harden SSH bootstrap with temp-validate-replace semantics and reject nested secret/unknown node-config fields.
 - [ ] Review CI warnings; fix safe non-visual technical debt and the HumanoidLabV9 hook dependency warning without regressing approved visuals.
 
 ## Project continuity / ChatGPT ↔ Codex collaboration
@@ -24,7 +24,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Explicit no-repeat rule for merged, active, blocked and repo-complete/target-pending work.
 - [x] No-competition division: ChatGPT handles safe repository work; Codex refines/completes target/runtime/provider remainder. Better evidence-backed Codex proposals are accepted; only unjustified competing replacements are prohibited.
 - [x] Mandatory transfer trail records what is complete, what remains, why, branch/PR/commit, validation, exact next action and DO NOT REPEAT scope.
-- [ ] Ongoing rule: every future meaningful change must preserve these synchronization and work-ownership requirements.
+Ongoing invariant: every future meaningful change must preserve these synchronization and work-ownership requirements.
 
 ## Computer Agent / Multi-PC — 2026-09-24
 
@@ -39,7 +39,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [ ] Real remote administrator/file/service control evidence on each selected trusted node.
 - [ ] Real unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
 - [ ] One pinned-target multi-step project task end-to-end.
-- [ ] Do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
+Completion invariant: do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
 
 ## Phase 24 — Event Engine
 
@@ -73,7 +73,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Regression tests; PR #166 merged `a01d40ff8e378b1b1881269f0568bb65793d2e17`.
 - [x] User-facing read-only health and action-history UI: PR #174 merged `293216e9f94868d00b2636b125922ff09ec593db`, CI #483 SUCCESS.
 - [ ] Explicit real connectivity probe.
-- [ ] Provider health integration:
+Provider health integration:
   - [x] Ollama/Codex/NVIDIA/Hermes/Cloud real status-probe wiring — PR #178 merged `dfc7d93fb02e8e32375dd7c3d8ebc7370232c078`; PR CI #500 SUCCESS, main CI #501 SUCCESS.
   - [ ] Sonor real health/search evidence on the target runtime; repository Diagnostics remains UNKNOWN rather than fabricating readiness.
 - [ ] Safe recovery execution through existing Tool Runtime — blocked until a real recovery-specific tool exists; current generic tools do not truthfully implement provider reconnect/service restart/cache-clear.
@@ -94,7 +94,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Phase-22 trust prerequisite, terminal revoke, deterministic routing, approval preservation, no public unauthenticated transport and bounded symlink-safe storage.
 - [x] Tests; PR #168 merged `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`; main CI #451 SUCCESS.
 - [x] Select SSH as the real PC-to-PC transport and merge its repository implementation through the Computer Agent — PR #225/#226. This does not prove physical target readiness.
-- [ ] Validate actual PC2-PC4 SSH nodes on the physical environment and separately complete PC2/mobile pairing, authenticated dispatch/result return and immediate revoke evidence required by the broader Phase-27 device contract.
+- [ ] Complete the broader Phase-27 paired-device/mobile contract: pairing, authenticated dispatch/result return and immediate revoke evidence. PC2-PC4 SSH target validation is owned only by the Computer Agent / Multi-PC section above.
 - [ ] Scenario J6 evidence.
 
 ## Phase 29 — Generic Skill / Device Registry
