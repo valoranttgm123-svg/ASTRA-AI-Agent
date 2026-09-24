@@ -63,6 +63,50 @@ If the change affects Codex execution order, also update:
 
 A meaningful code/runtime/provider change is not considered properly handed off until these state documents are synchronized.
 
+## 3A. Mandatory checkpoint after every completed work slice
+
+Owner rule: **every completed ASTRA work slice must immediately produce a durable checkpoint before the next work slice begins.**
+
+This applies to both ChatGPT and Codex.
+
+A completed work slice means any of:
+- a PR/branch implementation is finished;
+- a target-PC/runtime validation step reaches PASS/FAIL/BLOCKED;
+- a documentation/release-preparation slice is finished;
+- a bug fix or refinement is merged;
+- a target evidence checkpoint is completed.
+
+The checkpoint must be written to GitHub and must include:
+
+```text
+ACTOR:
+DATE:
+AREA:
+STATE:
+BRANCH/PR:
+HEAD/MERGE COMMIT:
+COMPLETED:
+VALIDATED:
+FAILED:
+BLOCKED:
+NEXT:
+DO NOT REPEAT:
+```
+
+Minimum durable update:
+- update `docs/CURRENT_EXECUTION_POINTER.md`;
+- update `docs/JARVIS_PROGRESS_TRACKER.md`;
+- update `docs/ASTRA_WORKLOG.md`;
+- update the relevant handoff;
+- when the work slice is a meaningful session boundary, create/update a dedicated session checkpoint and make `docs/SESSION_RECOVERY.md` point to it.
+
+Rules:
+- checkpoint **before** starting the next task;
+- do not rely on chat history as the checkpoint;
+- do not mark work DONE until the checkpoint is written;
+- if `main` is frozen for commit-bound evidence, write the checkpoint on the existing active draft branch/PR and do not move `main`;
+- the next session/agent resumes from the newest checkpoint and must not reconstruct completed work from scratch.
+
 ## 4. Required task states
 
 Every active ASTRA task must be treated as one of:
