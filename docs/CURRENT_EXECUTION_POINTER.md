@@ -1,5 +1,15 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Active post-remediation hardening
+
+State: **ACTIVE / CHATGPT-OWNED**
+
+A focused follow-up is hardening two additional fail-closed boundaries discovered after PR #233:
+- explicit remote read failure/unavailability must stop on the requested node rather than fall through to planner reinterpretation;
+- private node-registry root fields must use a strict schema and reject root-level secrets/unknown metadata.
+
+Codex should not duplicate this focused repository slice. Target-PC evidence remains pending after the follow-up merges.
+
 ## Audit remediation merged — PR #233
 
 State: **REPOSITORY FIXES DONE / TARGET EVIDENCE PENDING**
