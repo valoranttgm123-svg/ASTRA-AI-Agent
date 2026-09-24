@@ -102,7 +102,7 @@ The repository implementation for local and multi-PC SSH is already merged. The 
 
 1. use the owner's current private SSH/Codex aliases from the local runtime; do not commit them;
 2. verify each alias with `ssh -G` and remote `$env:COMPUTERNAME`;
-3. identify which connected machine is the ASTRA hub/local machine and exclude it from the remote registry;
+3. treat PC1 as the confirmed ASTRA hub/local machine and exclude it from the remote registry;
 4. run `scripts/windows/configure-ssh-computer-nodes.ps1` using only verified remote aliases;
 5. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
 6. validate administrator/file/service execution independently on each verified remote node;
