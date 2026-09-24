@@ -1,5 +1,9 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Owner continuity rule — checkpoint every completed task
+
+Every completed ASTRA work slice by ChatGPT or Codex must create a durable GitHub checkpoint **before the next task starts**. During the current evidence freeze, checkpoints belong on the existing draft PR #241 rather than moving `main`.
+
 ## Session checkpoint — 2026-09-24 15:42 WIB
 
 Resume from `docs/SESSION_CHECKPOINT_2026-09-24_1542_WIB.md` and open draft PR #241. Do not recreate or merge the draft merely because a new chat/session started.
