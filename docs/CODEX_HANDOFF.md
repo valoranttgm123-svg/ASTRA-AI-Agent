@@ -152,10 +152,10 @@ DO NOT REPEAT:
 - do not expose private aliases/topology/credentials.
 
 
-## 2026-09-24 — Codex active PR #239, preserve newer main
+## 2026-09-24 — HISTORICAL: Codex PR #239 active snapshot — SUPERSEDED
 
 ACTOR: Codex
-STATE: ACTIVE
+STATE: SUPERSEDED
 BRANCH/PR: `fix/windows-task-probe-20260924` / #239
 CHANGED: combining the reproduced native startup-probe fix with current main
 `63bdd14` (CI #646 SUCCESS); retaining all PR #225-#238 transport and hardening.
@@ -165,7 +165,7 @@ NEXT: finish PR #239 and install the combined clean build; verify current SSH
 identities, bootstrap only real remote nodes, and validate the existing transport.
 DO NOT REPEAT: do not rebuild SSH architecture or treat morning DNS as current.
 
-## 2026-09-24 — native task inspection and installed fallback
+## 2026-09-24 — HISTORICAL: native task inspection and installed fallback — SUPERSEDED BY PR #239 MERGE
 
 PR #224 merged as `0a0962a`; CI #607/#608 SUCCESS, 449 local tests and all repository
 gates passed. Production `ffb4caa` preserved private configuration/project/automation
@@ -187,9 +187,9 @@ STATE: REPO_DONE_TARGET_PENDING
 CHANGED:
 - owner confirms PC1 is the current ASTRA hub/local machine;
 - PC1 must not be added as a remote SSH registry node.
-NEXT:
+NEXT (historical at this checkpoint; later superseded):
 - update/install exact clean current main on PC1;
-- verify the remaining connected private aliases with `ssh -G` and remote `COMPUTERNAME`;
+- verify remaining connected private aliases;
 - bootstrap only true remote nodes;
 - run per-node Owner Mode/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.
 DO NOT REPEAT:
@@ -208,13 +208,11 @@ CHANGED:
 - exact SSH aliases remain private and were not committed to Git.
 VALIDATED:
 - connection state is owner-provided UI evidence, not yet ASTRA identity/Owner-Mode proof.
-NEXT:
-- on the real ASTRA hub, use the owner's current private aliases;
-- verify each alias with `ssh -G` and remote `COMPUTERNAME`;
+NEXT (historical at this checkpoint; later superseded):
+- verify private aliases and identities;
 - identify LOCAL/hub versus true remote nodes;
-- bootstrap only verified remote nodes into `.astra/computer-nodes.json`;
-- restart ASTRA-Agent and run the multi-PC validator;
-- continue per-node admin/file/service/wrong-node/offline/STOP-KILL/multi-step evidence.
+- bootstrap verified remote nodes;
+- continue per-node deep evidence.
 DO NOT REPEAT:
 - do not revive the old "all aliases fail name resolution" status unless it is reproduced again;
 - do not commit private aliases/IPs/usernames/key paths;
@@ -284,13 +282,12 @@ VALIDATED:
 - 459 tests / 457 pass / 0 fail / 2 Windows-only skips;
 - build/typecheck/lint/dependency audit/diff check PASS;
 - dependency audit: 0 vulnerabilities.
-BLOCKER:
-- physical SSH alias/name resolution and target evidence remain outside Git.
-NEXT:
-- install/update exact clean current main on target PC;
-- verify runtime build identity;
-- resolve verified SSH aliases and bootstrap the private node registry;
-- run PC2-PC4 Owner Mode/admin/file/service/wrong-node/offline/STOP-KILL/multi-step evidence.
+BLOCKER (historical; later superseded):
+- target evidence remained outside Git at that checkpoint.
+NEXT (historical; later superseded):
+- install/verify target build;
+- verify aliases/identity and bootstrap registry;
+- run deep remote evidence.
 DO NOT REPEAT:
 - do not recreate PR #233;
 - do not rebuild multi-PC transport;
@@ -303,7 +300,7 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: Computer Agent / SSH hardening / continuity
-STATE: ACTIVE
+STATE: SUPERSEDED
 BRANCH/PR: `fix/audit-followups-20260924` / #233
 CHANGED:
 - preserve explicit remote node in direct read-only Computer fast path;
@@ -331,7 +328,7 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: whole-project audit / Computer / continuity / release readiness
-STATE: ACTIVE
+STATE: SUPERSEDED
 BRANCH/PR: docs/full-audit-20260924
 CHANGED:
 - added `docs/FULL_AUDIT_2026-09-24.md`;
