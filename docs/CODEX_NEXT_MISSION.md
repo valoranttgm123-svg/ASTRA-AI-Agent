@@ -130,7 +130,7 @@ Exit:
 - failures are repaired and retested;
 - tracker/handoff updated.
 
-### M2 — MEM-X real Sonor / Graphify / Obsidian
+### M2 — MEM-X remaining Sonor degradation / cancellation evidence
 
 Canonical documents:
 
@@ -138,20 +138,25 @@ Canonical documents:
 - `docs/SONOR_BRIDGE.md`
 - `docs/SONOR_UI_INTEGRATION.md`
 
-Rules:
-- the real Sonor graph already exists; preserve it;
+Already validated on the real target:
+- existing Sonor graph preserved;
+- real loopback search/retrieval works through the ASTRA adapter;
+- project scope is enforced;
+- Graphify provenance is preserved;
+- Obsidian provenance is preserved.
+
+Remaining rules:
 - do not rebuild a duplicate memory graph;
-- inspect the real implementation/API before wiring endpoints;
-- do not guess routes;
-- keep project scope and provenance;
-- validate unavailable/cancellation behavior;
+- do not repeat the initial endpoint/provenance audit;
+- validate Sonor unavailable/degraded behavior;
+- validate active-query cancellation;
+- capture Diagnostics health/search evidence where the Phase-28 gate requires it;
 - never commit private graph/vault/index data.
 
 Exit:
-- actual local Sonor state is known;
-- minimal search/retrieval works through the real adapter;
-- Graphify/Obsidian provenance is truthful;
-- degradation/cancellation is validated.
+- outage/degradation behavior is evidenced;
+- active-query cancellation is evidenced;
+- any separately required Diagnostics Sonor health/search gate is evidenced truthfully.
 
 ### M3 — Phase 16 real performance evidence
 
