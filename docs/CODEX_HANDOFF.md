@@ -6,6 +6,7 @@ ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: safe parallel repository preparation
 STATE: BLOCKED
+SUBSTATE: SATURATED_WAITING_FOR_TARGET_EVIDENCE
 BRANCH/PR: #241
 BLOCKER:
 - further useful repository work now depends on new target evidence or would overlap/duplicate Codex's active target slice.
