@@ -29,6 +29,7 @@ ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: continuity / multi-PC status truth
 STATE: ACTIVE
+SUBSTATE: ACTIVE
 SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 COMPLETED:
@@ -53,7 +54,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: SSH/private evidence security
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 COMPLETED:
 - revalidated all 17 PR #241 files plus 4 additional baseline SSH/config/security files, 21 unique files total, for private topology/credential leakage.
@@ -79,7 +81,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: project continuity / no-repeat recovery
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 CHANGED:
 - every completed ChatGPT/Codex work slice must create a durable GitHub checkpoint before the next task starts;
@@ -98,7 +101,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: target evidence templates / release freeze / reconciliation / branch hygiene
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 PREPARED:
 - `MULTI_PC_EVIDENCE_RESULT_TEMPLATE_2026-09-24.md`;
@@ -123,7 +127,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: target evidence preparation / release sequencing
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 PREPARED:
 - multi-PC target evidence runbook;
@@ -186,8 +191,12 @@ VALIDATED:
 - direct ASTRA remote marker checks passed on all three;
 - unknown-node fail-closed passed.
 BLOCKER / REMAINING:
-- remote administrator/file/service-control evidence;
-- unreachable/wrong-node fail-closed evidence;
+- remote administrator-context evidence;
+- bounded remote file mutation/readback/rollback evidence;
+- remote process-control evidence;
+- safe service-control evidence or truthful BLOCKED;
+- unreachable-node fail-closed evidence;
+- wrong-identity fail-closed evidence;
 - long-running remote STOP/KILL proof;
 - pinned-target multi-step task;
 - later physical voice/HP/HIGH/performance and broader release gates.
@@ -239,7 +248,7 @@ NEXT (historical at this checkpoint; later superseded):
 - update/install exact clean current main on PC1;
 - verify remaining connected private aliases;
 - bootstrap only true remote nodes;
-- run per-node Owner Mode/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.
+- run per-node administrator/file rollback/process/safe-service/unreachable/wrong-identity/STOP-KILL/pinned-multi-step evidence.
 DO NOT REPEAT:
 - do not reclassify PC1 as a remote SSH node unless the owner changes the hub topology;
 - do not rebuild multi-PC transport.
