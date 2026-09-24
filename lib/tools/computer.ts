@@ -8,6 +8,7 @@ import type {
 import { runBoundedProcess } from "./process";
 
 export type AstraComputerCapability =
+  | "computer.nodes.list"
   | "computer.system.info"
   | "computer.process.list"
   | "computer.app.launch"
@@ -38,23 +39,11 @@ export interface AstraComputerTransport {
 
 const CATALOG: readonly AstraToolDefinition[] = [
   {
-    id: "computer.system.info",
-    name: "Windows System Info",
+    id: "computer.nodes.list",
+    name: "Windows Computer Nodes",
     category: "computer",
     description:
-      "Read the local computer name and bounded operating-system identity without shell execution or file changes.",
-    permissionLevel: 1,
-    sideEffect: "read",
-    timeoutMs: 5_000,
-    supportsCancellation: true,
-    availability: "NOT_CONFIGURED",
-  },
-  {
-    id: "computer.process.list",
-    name: "Windows Process List",
-    category: "computer",
-    description:
-      "Read a bounded Windows process list through the controlled Computer Agent.",
+      "List ASTRA computer nodes and independently report LOCAL/SSH readiness without silently substituting another machine.",
     permissionLevel: 1,
     sideEffect: "read",
     timeoutMs: 15_000,
@@ -62,11 +51,47 @@ const CATALOG: readonly AstraToolDefinition[] = [
     availability: "NOT_CONFIGURED",
   },
   {
+    id: "computer.system.info",
+    name: "Windows System Info",
+    category: "computer",
+    description:
+      "Read bounded Windows system identity from the local computer or an explicitly selected trusted node.",
+    permissionLevel: 1,
+    sideEffect: "read",
+    timeoutMs: 15_000,
+    supportsCancellation: true,
+    availability: "NOT_CONFIGURED",
+    inputSchema: {
+      type: "object",
+      properties: {
+        nodeId: { type: "string", minLength: 1, maxLength: 64 },
+      },
+    },
+  },
+  {
+    id: "computer.process.list",
+    name: "Windows Process List",
+    category: "computer",
+    description:
+      "Read a bounded Windows process list from the local computer or an explicitly selected trusted node.",
+    permissionLevel: 1,
+    sideEffect: "read",
+    timeoutMs: 15_000,
+    supportsCancellation: true,
+    availability: "NOT_CONFIGURED",
+    inputSchema: {
+      type: "object",
+      properties: {
+        nodeId: { type: "string", minLength: 1, maxLength: 64 },
+      },
+    },
+  },
+  {
     id: "computer.owner.exec",
     name: "Windows Owner Command",
     category: "computer",
     description:
-      "Execute an arbitrary PowerShell or CMD command on the explicitly trusted local Windows node when Owner Mode is enabled.",
+      "Execute an arbitrary PowerShell or CMD command on the explicitly selected trusted local/SSH Windows node when Owner Mode is enabled.",
     permissionLevel: 2,
     sideEffect: "local_write",
     timeoutMs: 120_000,
@@ -76,6 +101,11 @@ const CATALOG: readonly AstraToolDefinition[] = [
       type: "object",
       required: ["command"],
       properties: {
+        nodeId: {
+          type: "string",
+          minLength: 1,
+          maxLength: 64,
+        },
         command: {
           type: "string",
           minLength: 1,
@@ -107,6 +137,11 @@ const CATALOG: readonly AstraToolDefinition[] = [
       type: "object",
       required: ["appId"],
       properties: {
+        nodeId: {
+          type: "string",
+          minLength: 1,
+          maxLength: 64,
+        },
         appId: {
           type: "string",
           enum: ["notepad", "calculator", "paint", "explorer"],
@@ -126,7 +161,55 @@ const APP_ALLOWLIST: Readonly<Record<string, string>> = {
   explorer: "explorer.exe",
 };
 
+export type AstraDirectReadOnlyComputerCommand = {
+  toolId: "computer.system.info" | "computer.process.list";
+  nodeId?: string;
+};
+
+function explicitReadOnlyNodeId(input: string) {
+  const ids = new Set<string>();
+
+  for (const match of input.matchAll(/(?:^|\s)@([a-z0-9][a-z0-9._-]{0,63})(?=\s|$|[,.!?])/gi)) {
+    ids.add(match[1].toLowerCase());
+  }
+
+  for (const match of input.matchAll(/\b(pc\d{1,3})\b/gi)) {
+    ids.add(match[1].toLowerCase());
+  }
+
+  return ids.size === 1 ? [...ids][0] : ids.size > 1 ? null : undefined;
+}
+
+export function parseDirectReadOnlyComputerCommand(
+  input: string,
+): AstraDirectReadOnlyComputerCommand | null {
+  const text = input.trim();
+  const normalized = text.toLowerCase();
+  let toolId: AstraDirectReadOnlyComputerCommand["toolId"] | null = null;
+
+  if (
+    /\b(?:versi\s+windows|windows\s+version|versi\s+os|os\s+version|nama\s+komputer|computer\s+name|hostname|system\s+info|informasi\s+sistem)\b/i.test(normalized)
+  ) {
+    toolId = "computer.system.info";
+  } else if (
+    /\b(?:daftar\s+proses|process\s+list|proses\s+berjalan|running\s+process(?:es)?|tasklist|aplikasi\s+yang\s+sedang\s+berjalan)\b/i.test(normalized)
+  ) {
+    toolId = "computer.process.list";
+  }
+
+  if (!toolId) return null;
+
+  const nodeId = explicitReadOnlyNodeId(text);
+  if (nodeId === null) return null;
+
+  return {
+    toolId,
+    ...(nodeId ? { nodeId } : {}),
+  };
+}
+
 export type AstraDirectOwnerCommand = {
+  nodeId?: string;
   shell: "powershell" | "cmd";
   command: string;
 };
@@ -134,16 +217,18 @@ export type AstraDirectOwnerCommand = {
 export function parseDirectOwnerCommand(input: string): AstraDirectOwnerCommand | null {
   const text = input.trim();
   const match = text.match(
-    /^(?:(?:jalankan|run|execute|eksekusi)\s+)?(?:owner(?:\s+mode)?\s+)?(powershell|pwsh|cmd)\s*:\s*([\s\S]+)$/i,
+    /^(?:(?:jalankan|run|execute|eksekusi)\s+)?(?:owner(?:\s+mode)?\s+)?(?:@([a-z0-9][a-z0-9._-]{0,63})\s+)?(powershell|pwsh|cmd)\s*:\s*([\s\S]+)$/i,
   );
 
   if (!match) return null;
 
-  const command = (match[2] ?? "").trim();
+  const nodeId = (match[1] ?? "").trim().toLowerCase();
+  const command = (match[3] ?? "").trim();
   if (!command || command.length > 8192) return null;
 
   return {
-    shell: (match[1] ?? "").toLowerCase() === "cmd" ? "cmd" : "powershell",
+    ...(nodeId ? { nodeId } : {}),
+    shell: (match[2] ?? "").toLowerCase() === "cmd" ? "cmd" : "powershell",
     command,
   };
 }
@@ -241,6 +326,7 @@ export class WindowsComputerTransport
           ? "Controlled Windows Computer Agent is enabled with trusted local Owner Mode command execution."
           : "Controlled Windows Computer Agent is enabled with fixed allowlisted capabilities only.",
       capabilities: [
+        "computer.nodes.list",
         "computer.system.info",
         "computer.process.list",
         "computer.app.launch",
@@ -268,6 +354,26 @@ export class WindowsComputerTransport
         ok: false,
         verified: false,
         detail: "Computer Agent requires Windows.",
+      };
+    }
+
+    if (capability === "computer.nodes.list") {
+      return {
+        ok: true,
+        verified: true,
+        detail: "Read local Computer Agent node status.",
+        output: {
+          nodes: [
+            {
+              id: "local",
+              label: hostname(),
+              transport: "LOCAL",
+              trusted: true,
+              state: "READY",
+              computerName: hostname(),
+            },
+          ],
+        },
       };
     }
 

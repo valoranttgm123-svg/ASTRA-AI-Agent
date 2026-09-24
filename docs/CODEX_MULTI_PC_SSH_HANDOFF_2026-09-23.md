@@ -1,5 +1,42 @@
 # Codex handoff — ASTRA multi-PC over existing SSH
 
+## 2026-09-24 — multi-PC transport merged; target SSH verification next
+
+PR #225 merged to main as `6b3859a70f8c46ab80204b56c788e06cb8c09e60`
+after full ASTRA CI success (build, unit/integration tests, typecheck, Brain lint,
+dependency audit and diff check).
+
+Repository-complete now:
+
+- private gitignored node registry via `ASTRA_COMPUTER_NODES_FILE`;
+- default `.astra/computer-nodes.json`, with parser rejection of credential/key fields;
+- first-class `computer.nodes.list` plus optional `nodeId` on Computer tools;
+- multi-node default runtime with LOCAL and SSH transport evidence;
+- OpenSSH `BatchMode=yes` using only the existing SSH config alias and normal
+  known-host verification (no host-key bypass and no private key path in ASTRA);
+- per-command remote `COMPUTERNAME` identity guard against the private
+  `expectedComputerName`;
+- trusted-node requirement, bounded output/timeouts, and no fallback for
+  unknown/untrusted/offline/identity-mismatched targets;
+- explicit direct no-model syntax `@<node-id> powershell: ...` / `cmd: ...`;
+- target validator `scripts/windows/validate-multi-pc-owner-mode.ps1`;
+- regression tests for config secrets, target evidence, unknown/untrusted nodes,
+  identity mismatch and independent node inventory.
+
+PR #226 is also merged to main as `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e` and adds `scripts/windows/configure-ssh-computer-nodes.ps1`: a local trust-bootstrap helper that receives explicit `node-id=existing-ssh-alias` mappings, inspects only safe `ssh -G` fields (HostName/port), verifies the remote Windows `COMPUTERNAME` over normal host-verified SSH, and writes the private registry only when every target succeeds. It never copies passwords, tokens, private keys, key paths, or SSH config contents into the registry.
+
+The older target-only observation that intended remote aliases failed name
+resolution is superseded. The owner now reports four PC targets connected in
+Codex. Exact aliases remain private and must not be committed. On the real hub,
+verify the current connected aliases with `ssh -G` and remote
+`$env:COMPUTERNAME`, identify which machine is LOCAL/the ASTRA hub, bootstrap
+only the remaining verified remote nodes, restart ASTRA-Agent, then run the
+validator.
+
+Reliable remote STOP/KILL, actual administrator/file/service mutations and a
+multi-step task still require physical target evidence before declaring
+multi-PC Owner Mode complete.
+
 Date: 2026-09-23
 
 ## User intent
@@ -142,7 +179,7 @@ Before calling multi-PC Owner Mode complete, verify:
 - no private SSH material or secrets appear in logs, evidence, Git, or UI;
 - ASTRA never silently falls back from one target PC to another.
 
-## Current implementation status after PR #221
+## Historical PC1 implementation status — superseded by PR #222/#225/#226
 
 Local Owner Mode on PC1 is now implemented in the repository:
 
@@ -153,13 +190,13 @@ Local Owner Mode on PC1 is now implemented in the repository:
 - ambiguous natural-language requests are intentionally not interpreted as raw shell commands by this direct path;
 - direct Owner Mode still obeys the runtime permission ceiling and fails closed unless `computer.owner.exec` is READY and `ASTRA_ALLOW_SHELL=true`.
 
-PC1 target validation is still required on the actual Windows machine. The minimum validation command should be an explicit harmless command such as:
+PC1 target validation was subsequently completed successfully. The historical minimum probe was:
 
 ```text
 powershell: Write-Output ASTRA_OWNER_DIRECT_OK
 ```
 
-Expected evidence: `computer.owner.exec` executes, exit code is 0, stdout contains `ASTRA_OWNER_DIRECT_OK`, Brain provider is routing-only, memory retrieval is 0, and no planner/model round-trip is present.
+Recorded evidence showed `computer.owner.exec` executing with exit code 0, stdout containing `ASTRA_OWNER_DIRECT_OK`, Brain provider `routing_only`, memory retrieval 0 and no planner/model round-trip. Do not repeat this PC1 validation unless a concrete regression appears.
 
 A target-PC validation helper now exists at `scripts/windows/validate-owner-mode.ps1`. Run it against the active ASTRA URL after enabling Owner Mode, for example:
 
@@ -169,7 +206,7 @@ powershell -ExecutionPolicy Bypass -File .\\scripts\\windows\\validate-owner-mod
 
 Use the actual local ASTRA port if it differs. The script fails closed unless Owner Mode is READY and the direct probe returns verified tool lifecycle evidence without memory/planner/model use.
 
-After PC1 validation, Codex should continue with PC2-PC4 SSH transport/identity and remote Owner Mode. Do not reimplement the local executor first.
+That repository sequence is now complete through PR #225/#226. Codex must not reimplement the local executor or multi-PC transport. Continue only with physical verification of the owner-reported connected targets, private-registry bootstrap for true remote nodes, and the remaining remote admin/STOP-KILL/multi-step evidence.
 
 ## Do not redo completed work
 
@@ -181,4 +218,4 @@ Already completed on current main:
 - target evidence showed local system-info execution completed successfully in about 645 ms;
 - local path used no memory retrieval, no plan, and no model provider.
 
-Continue from that state. Do not remove or regress the existing local fast path while adding remote-node support.
+Continue from the current merged state. Do not remove or regress the existing local fast path or rebuild remote-node support already merged in PR #225/#226.

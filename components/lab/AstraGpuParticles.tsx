@@ -7,7 +7,6 @@ import type { AstraAvatarState } from "@/lib/avatar/types";
 import type { FingerTrackingTarget } from "./useFingerTracking";
 
 const ASSEMBLY_DURATION_SECONDS = 2.6;
-const ASSEMBLY_WINDOW = 0.34;
 const SHOCKWAVE_DURATION_SECONDS = 2.35;
 
 type RenderQuality = "low" | "high";

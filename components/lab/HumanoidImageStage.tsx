@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 const ARTWORK = "/assets/humanoid/astra-idle-v1.webp";

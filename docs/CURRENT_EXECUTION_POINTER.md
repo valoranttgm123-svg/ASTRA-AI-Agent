@@ -1,5 +1,14 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Codex active continuation — PR #239
+
+STATE: **ACTIVE**. The native startup-probe correction is being combined with
+current main `63bdd14` (CI #646 SUCCESS), including all newer ChatGPT SSH/security
+work. Finish the combined clean repository gate, merge green CI and install the
+exact build before continuing the remote target sequence below. Morning remote
+observations in the next section are historical, not current reachability.
+Do not recreate the multi-PC transport already merged in PR #225-#238.
+
 ## Native Windows readiness probe — 2026-09-24
 
 PR #224 is merged (`0a0962a`, PR CI #607 / main #608 SUCCESS), production
@@ -12,6 +21,101 @@ Do not recreate either startup task or change Automation opt-in to repair a prob
 PC2 and SNRPC2 identities now respond through existing strict SSH aliases;
 DeviceSNR still fails name resolution. ASTRA remote UI transport is not yet proven.
 
+## SSH target update — owner reports four connected Codex targets
+
+State: **PC1 CONFIRMED LOCAL HUB / REMOTE IDENTITY + PRIVATE REGISTRY VERIFICATION PENDING**
+
+The previous observation that intended aliases failed name resolution is superseded by newer owner-provided evidence showing four PC targets connected in Codex.
+
+Security boundary:
+- exact local SSH aliases remain private and must not be committed to Git;
+- use the owner's current connected SSH/Codex targets from the local runtime;
+- verify each alias with `ssh -G` and remote `COMPUTERNAME`;
+- owner confirms PC1 is the current ASTRA hub/local machine; do not add PC1 to the SSH remote registry;
+- write only verified remote targets into the gitignored `.astra/computer-nodes.json`.
+
+Next target sequence:
+1. update/install the exact clean current `main` build on the ASTRA hub;
+2. verify the four currently connected target aliases from the local SSH configuration;
+3. treat PC1 as LOCAL and verify only the remaining connected targets as remote candidates;
+4. run `configure-ssh-computer-nodes.ps1` only for verified remote nodes;
+5. restart ASTRA-Agent and run `validate-multi-pc-owner-mode.ps1`;
+6. capture per-node identity/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.
+
+## Post-remediation hardening complete
+
+State: **REPOSITORY HARDENING COMPLETE / TARGET EVIDENCE PENDING**
+
+The focused follow-up after PR #233 now also:
+- fails closed on explicit remote read failure/unavailability instead of falling through to planner reinterpretation;
+- rejects secret-like and unsupported fields at the root of the private node registry.
+
+Validation before final merge:
+- ASTRA CI PASS;
+- 460 tests / 458 pass / 0 fail / 2 Windows-only skips;
+- dependency audit 0 vulnerabilities.
+
+Do not recreate this hardening. Remaining work is target/runtime/provider evidence.
+
+## Audit remediation merged — PR #233
+
+State: **REPOSITORY FIXES DONE / TARGET EVIDENCE PENDING**
+
+PR #233 merged as `52135e16f4113460807ff9005a72ba7efc53d911` after full CI success.
+
+Completed repository fixes:
+- direct read-only remote node preservation;
+- system-info timeout compatibility with SSH;
+- nested-secret/unknown node-config rejection;
+- temp-validate-replace SSH registry writes;
+- stale MEM-X/Sonor canonical status;
+- duplicate/overlapping tracker entries;
+- safe non-visual CI warning cleanup and Humanoid V9 gesture dependency tracking.
+
+Do not recreate PR #233. The next real gate is target-side: update/install the exact clean current main build, verify runtime build identity, then resume PC2-PC4 and release evidence.
+
+## Full audit checkpoint — 2026-09-24
+
+Read `docs/FULL_AUDIT_2026-09-24.md` for the complete historical audit and remediation record.
+
+Current status after PR #233:
+- repository defects identified by the audit are remediated and merged;
+- open PRs/issues are zero at this checkpoint;
+- do not repeat the fixed remote-read, timeout, node-config, SSH-registry, MEM-X documentation or tracker work;
+- target PC is still not proven to run the exact current `main` build;
+- remaining work is target/runtime/provider evidence, beginning with exact-build install/attestation and PC2-PC4 SSH validation.
+
+## Mandatory collaboration continuity
+
+Before any ChatGPT or Codex implementation, read `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
+
+The owner requires ChatGPT and Codex to act as one continuous ASTRA team. Every meaningful change must synchronize the roadmap/pointer/worklog/handoff. New or interrupted sessions must resume existing `ACTIVE`/`BLOCKED` work and must not recreate merged work.
+
+## Work ownership rule
+
+ChatGPT and Codex must not compete for the same ASTRA slice. ChatGPT completes safe repository work; unresolved target/runtime/provider work is handed to Codex with an explicit trail. Codex refines and finishes the existing implementation by default, but a clearly better evidence-backed Codex proposal should be adopted when it improves ASTRA. Replacement without reason is prohibited; superior validated refinement is welcome. Both agents must update roadmap/pointer/worklog/handoff after meaningful changes.
+
+## Canonical latest checkpoint — 2026-09-24
+
+Live repository truth at this checkpoint:
+
+- capability baseline entering this synchronization: PR #226 merge `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`; live `main`, open PRs and newest CI always supersede any literal checkpoint SHA;
+- PR #225 merged the trusted multi-PC SSH Computer Agent transport after full ASTRA CI success;
+- PR #226 merged the safe SSH trust-bootstrap/diagnostic helper after full ASTRA CI success;
+- PC1 local read-only execution, local Owner Mode and direct no-model Owner Mode are already implemented and target-validated;
+- repository-side multi-PC routing, private node registry, target identity verification, fail-closed behavior and explicit remote Owner Mode syntax are complete;
+- the remaining multi-PC gate is real PC2-PC4 connectivity/identity/admin/STOP-KILL/multi-step evidence on the physical targets.
+
+Do **not** recreate PR #217-#226, redo PC1 validation, rebuild the Computer Agent transport, or start another SSH architecture unless a concrete regression is reproduced. The current remote sequence is:
+
+1. resolve/verify the existing SSH aliases on the hub without inventing replacements;
+2. run `scripts/windows/configure-ssh-computer-nodes.ps1` to create the private gitignored registry only from verified targets;
+3. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
+4. capture real PC2-PC4 administrator/file/service execution, unreachable/wrong-node failure, remote STOP/KILL and one pinned-target multi-step task;
+5. then continue the remaining real release gates.
+
+Historical observation: intended aliases previously failed name resolution. This has been superseded by newer owner evidence showing four Codex-connected PC targets. Exact aliases remain private; target identity and ASTRA registry verification are still required.
+
 ## Browser availability refinement — 2026-09-24
 
 PR #223 is merged (`bc0d2d4`, PR CI #605 / main #606 SUCCESS) and production
@@ -19,7 +123,7 @@ head `1d3fd72` was installed and verified. See its PR comment for final evidence
 The next reproduced defect is repeated WebGL initialization errors during normal
 chat rerenders in a browser that denies GPU contexts. See
 `WEBGL_FALLBACK_2026-09-24.md`. Preserve the approved image/HIGH renderer; fall back
-only when WebGL2 is unavailable. Remote aliases currently fail name resolution;
+only when WebGL2 is unavailable. The earlier remote-alias name-resolution observation is superseded; four Codex-connected targets are now reported, but ASTRA identity/registry validation remains pending;
 physical voice/HP and remaining comprehensive release gates are still unverified.
 
 ## Target runtime recovery — 2026-09-24
@@ -28,9 +132,7 @@ Baseline: PR #222 / `0b07a4c`, main CI #604 SUCCESS; no open PR.
 Local Owner Mode is already merged. Read `RUNTIME_RECOVERY_2026-09-24.md`
 for the reproduced development HTTP 500, stopped Ollama task, and false-positive
 Ollama readiness fix. Install a clean production build before release capture.
-Read `CODEX_MULTI_PC_SSH_HANDOFF_2026-09-23.md` for pending remote-node work;
-do not recreate local execution. Physical voice, remote transport and M1–M6
-evidence gates remain separate from this startup repair.
+Read `CODEX_MULTI_PC_SSH_HANDOFF_2026-09-23.md` for the current remote-node validation sequence. PR #225/#226 already provide the repository transport/bootstrap; do not recreate local or multi-PC execution. Physical voice, real remote-PC evidence and M1–M6 evidence gates remain separate from this startup repair.
 
 ## Active responsiveness blocker — 2026-09-23
 
@@ -50,7 +152,7 @@ evidence and newly reproduced startup-console/health/repository-gate fixes.
 Preserve all later foundations. Next is clean-build installation/evidence and
 the still-open M1–M6 gates, not reimplementation or a claim of full readiness.
 
-Status date: **2026-09-22**. This is the authoritative short handoff for interrupted ChatGPT/Codex sessions. Check the actual latest `main`, open PRs and CI first; do not assume this checkpoint is still the HEAD.
+Historical checkpoint date: **2026-09-22**. The canonical latest checkpoint at the top of this file supersedes this older status block. Always inspect actual `main`, open PRs and CI first.
 
 ## ChatGPT saturation / interruption checkpoint
 

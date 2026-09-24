@@ -1,5 +1,18 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — Codex active PR #239, preserve newer main
+
+ACTOR: Codex
+STATE: ACTIVE
+BRANCH/PR: `fix/windows-task-probe-20260924` / #239
+CHANGED: combining the reproduced native startup-probe fix with current main
+`63bdd14` (CI #646 SUCCESS); retaining all PR #225-#238 transport and hardening.
+VALIDATED: earlier probe tests and runtime evidence below; the combined exact
+build still needs a fresh full repository gate and install.
+NEXT: finish PR #239 and install the combined clean build; verify current SSH
+identities, bootstrap only real remote nodes, and validate the existing transport.
+DO NOT REPEAT: do not rebuild SSH architecture or treat morning DNS as current.
+
 ## 2026-09-24 — native task inspection and installed fallback
 
 PR #224 merged as `0a0962a`; CI #607/#608 SUCCESS, 449 local tests and all repository
@@ -12,6 +25,246 @@ under one second and now preserves missing/disabled/unknown/error distinctions.
 See `WINDOWS_TASK_PROBE_2026-09-24.md`; final gate/install evidence belongs on its PR.
 Existing SSH identities PC2/SNRPC2 respond; DeviceSNR DNS remains unavailable.
 Physical voice, HP hardware, HIGH performance and full release gates remain open.
+
+## 2026-09-24 — PC1 confirmed LOCAL hub
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: multi-PC SSH target identity
+STATE: REPO_DONE_TARGET_PENDING
+CHANGED:
+- owner confirms PC1 is the current ASTRA hub/local machine;
+- PC1 must not be added as a remote SSH registry node.
+NEXT:
+- update/install exact clean current main on PC1;
+- verify the remaining connected private aliases with `ssh -G` and remote `COMPUTERNAME`;
+- bootstrap only true remote nodes;
+- run per-node Owner Mode/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.
+DO NOT REPEAT:
+- do not reclassify PC1 as a remote SSH node unless the owner changes the hub topology;
+- do not rebuild multi-PC transport.
+
+
+## 2026-09-24 — owner reports four connected SSH/Codex targets
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: multi-PC SSH target inventory
+STATE: REPO_DONE_TARGET_PENDING
+CHANGED:
+- previous name-resolution-failure observation is superseded by newer owner evidence showing four connected PC targets in Codex;
+- exact SSH aliases remain private and were not committed to Git.
+VALIDATED:
+- connection state is owner-provided UI evidence, not yet ASTRA identity/Owner-Mode proof.
+NEXT:
+- on the real ASTRA hub, use the owner's current private aliases;
+- verify each alias with `ssh -G` and remote `COMPUTERNAME`;
+- identify LOCAL/hub versus true remote nodes;
+- bootstrap only verified remote nodes into `.astra/computer-nodes.json`;
+- restart ASTRA-Agent and run the multi-PC validator;
+- continue per-node admin/file/service/wrong-node/offline/STOP-KILL/multi-step evidence.
+DO NOT REPEAT:
+- do not revive the old "all aliases fail name resolution" status unless it is reproduced again;
+- do not commit private aliases/IPs/usernames/key paths;
+- do not rebuild the SSH transport.
+
+
+## 2026-09-24 — post-remediation hardening validated
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent fail-closed boundaries
+STATE: REPO_DONE_TARGET_PENDING
+CHANGED:
+- explicit remote read failure/unavailability now blocks on the requested node and does not fall through to planner/local reinterpretation;
+- root node-registry schema rejects secret-like and unsupported root fields.
+VALIDATED:
+- ASTRA CI PASS;
+- 460 tests / 458 pass / 0 fail / 2 Windows-only skips;
+- build/typecheck/lint/dependency audit/diff check PASS;
+- dependency audit 0 vulnerabilities.
+NEXT:
+- continue only target/runtime/provider evidence after this PR merges.
+DO NOT REPEAT:
+- do not add another remote-read fallback path;
+- do not loosen the private registry schema;
+- do not rebuild multi-PC transport.
+
+
+## 2026-09-24 — post-remediation hardening active
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent fail-closed boundaries
+STATE: ACTIVE
+BRANCH/PR: `fix/fail-closed-remote-read-config-root-20260924`
+CHANGED:
+- explicit remote read failure/unavailability blocks on the requested node instead of falling through to planner;
+- node-registry root schema rejects secret-like/unknown fields;
+- regression tests cover root secret and unsupported-root rejection.
+BLOCKER:
+- none repository-side; newest-head CI/merge still required.
+NEXT:
+- ChatGPT owns this focused PR through CI and merge;
+- Codex continues target evidence only after the repository follow-up is merged.
+DO NOT REPEAT:
+- do not create a second remote-read path or registry format;
+- preserve PR #233 architecture.
+
+
+## 2026-09-24 — PR #233 merged; target validation resumes
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent / SSH hardening / continuity
+STATE: REPO_DONE_TARGET_PENDING
+BRANCH/PR: #233
+MERGE/COMMIT: `52135e16f4113460807ff9005a72ba7efc53d911`
+CHANGED:
+- explicit remote read-only node targeting is preserved;
+- system-info timeout now safely exceeds SSH connect timeout;
+- nested secret/unknown node fields fail closed;
+- SSH node registry uses temp-validate-replace semantics;
+- MEM-X/Sonor status and tracker duplication were synchronized;
+- safe warning cleanup completed without changing approved humanoid artwork paths.
+VALIDATED:
+- PR #233 ASTRA CI SUCCESS;
+- 459 tests / 457 pass / 0 fail / 2 Windows-only skips;
+- build/typecheck/lint/dependency audit/diff check PASS;
+- dependency audit: 0 vulnerabilities.
+BLOCKER:
+- physical SSH alias/name resolution and target evidence remain outside Git.
+NEXT:
+- install/update exact clean current main on target PC;
+- verify runtime build identity;
+- resolve verified SSH aliases and bootstrap the private node registry;
+- run PC2-PC4 Owner Mode/admin/file/service/wrong-node/offline/STOP-KILL/multi-step evidence.
+DO NOT REPEAT:
+- do not recreate PR #233;
+- do not rebuild multi-PC transport;
+- do not redo PC1 Owner Mode;
+- do not repeat broad Sonor retrieval/provenance validation.
+
+
+## 2026-09-24 — audit remediation PR #233 handoff
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent / SSH hardening / continuity
+STATE: ACTIVE
+BRANCH/PR: `fix/audit-followups-20260924` / #233
+CHANGED:
+- preserve explicit remote node in direct read-only Computer fast path;
+- align system-info timeout with bounded SSH connection timing;
+- recursively reject secret-like node config and unknown fields;
+- temp-validate-replace private SSH registry writes;
+- synchronize MEM-X/Sonor canonical status;
+- deduplicate/normalize NVIDIA/JARVIS/recovery trackers;
+- clean safe non-visual warnings and Humanoid V9 hook dependencies.
+VALIDATED SO FAR:
+- regression tests were added in-repo; newest-head CI must still pass before merge.
+BLOCKER:
+- physical PC2-PC4 and release evidence remains target-only and must use the post-merge exact clean build.
+NEXT:
+- ChatGPT owns PR #233 through CI/merge;
+- Codex then installs/verifies exact current main and resumes real target evidence.
+DO NOT REPEAT:
+- do not create another Computer transport;
+- do not redo the broad Sonor retrieval/provenance audit;
+- do not start a competing fix while #233 is active.
+
+
+## 2026-09-24 — full audit handoff
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: whole-project audit / Computer / continuity / release readiness
+STATE: ACTIVE
+BRANCH/PR: docs/full-audit-20260924
+CHANGED:
+- added `docs/FULL_AUDIT_2026-09-24.md`;
+- recorded repo defects, stale docs, duplicate tracker items, target-build drift and target-only gates.
+VALIDATED:
+- PR #217-#231 merged;
+- no open PR/issues at audit start;
+- latest #231 PR-head CI success;
+- 457 tests / 455 pass / 0 fail / 2 Windows-only skips;
+- npm audit 0 vulnerabilities.
+BLOCKER:
+- final target evidence must wait for focused repo follow-up fixes and a clean exact-build install.
+NEXT:
+- ChatGPT fixes the audited repository/doc defects first;
+- Codex then installs/verifies exact clean main and resumes PC2-PC4 + release evidence.
+DO NOT REPEAT:
+- do not rebuild multi-PC transport;
+- do not redo PC1 Owner Mode;
+- do not redo broad Sonor retrieval/provenance audit;
+- do not validate final PC2-PC4 behavior on an older build.
+
+
+## 2026-09-24 — improvement acceptance addendum
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: collaboration / refinement policy
+STATE: DONE
+CHANGED:
+- clarified that good Codex improvements are welcome;
+- Codex should refine existing work by default, but may replace/refactor when a clearly better evidence-backed approach improves ASTRA;
+- unjustified competing implementations remain prohibited.
+VALIDATED:
+- policy synchronized across collaboration protocol, AGENTS, refinement contract, pointer, tracker and worklog.
+BLOCKER:
+- none.
+NEXT:
+- evaluate future ChatGPT/Codex proposals on technical merit and evidence.
+DO NOT REPEAT:
+- do not reject a better Codex solution merely because ChatGPT implemented the first version;
+- do not replace working architecture without documented reason/evidence.
+
+
+## 2026-09-24 — no-competition work ownership addendum
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: project collaboration / work ownership
+STATE: DONE
+CHANGED:
+- ChatGPT is responsible for completing all safe repository-side work it can verify.
+- Target-PC/provider/runtime-only remainder must be explicitly handed to Codex.
+- Codex must refine/finish incomplete ChatGPT work rather than create a competing implementation by default.
+- ACTIVE work must be inspected/continued before either agent starts another implementation in the same subsystem.
+- Parallel work is allowed only for independent slices.
+VALIDATED:
+- collaboration documents updated together on one branch.
+BLOCKER:
+- none for the policy itself.
+NEXT:
+- apply this relay model to every subsequent ASTRA task.
+DO NOT REPEAT:
+- do not duplicate another agent's ACTIVE, merged, BLOCKED or REPO_DONE_TARGET_PENDING work.
+
+
+## 2026-09-24 — mandatory ChatGPT ↔ Codex collaboration handoff
+
+ACTOR: ChatGPT
+AREA: project continuity / cross-session memory
+STATE: DONE
+CHANGED:
+- added `docs/ASTRA_COLLABORATION_PROTOCOL.md`;
+- made the protocol mandatory from `AGENTS.md` and `SESSION_RECOVERY.md`;
+- linked the rule from `CURRENT_EXECUTION_POINTER.md` and `JARVIS_PROGRESS_TRACKER.md`;
+- recorded the rule in `ASTRA_WORKLOG.md` and the Codex refinement contract.
+VALIDATED:
+- repository state before this slice had no open PR and current multi-PC baseline remained merged;
+- no ASTRA runtime behavior was intentionally changed.
+NEXT:
+- Codex/ChatGPT must read live main/CI/open PRs and the collaboration protocol before any new implementation.
+DO NOT REPEAT:
+- do not recreate merged work because a chat/session was interrupted;
+- do not leave a meaningful code/runtime/provider change without synchronizing roadmap/pointer/worklog/handoff;
+- do not treat BLOCKED or REPO_DONE_TARGET_PENDING as NOT_STARTED.
+
 
 ## 2026-09-24 — browser WebGL fallback
 

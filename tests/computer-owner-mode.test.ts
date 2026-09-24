@@ -5,9 +5,48 @@ import {
   COMPUTER_TOOL_DEFINITIONS,
   createComputerToolRegistrations,
   parseDirectOwnerCommand,
+  parseDirectReadOnlyComputerCommand,
   type AstraComputerTransport,
 } from "../lib/tools/computer";
 import { createExecutableToolRegistry } from "../lib/tools/executor";
+
+test("direct read-only parser preserves explicit remote target and rejects ambiguity", () => {
+  assert.deepEqual(
+    parseDirectReadOnlyComputerCommand("cek versi Windows PC3"),
+    {
+      toolId: "computer.system.info",
+      nodeId: "pc3",
+    },
+  );
+
+  assert.deepEqual(
+    parseDirectReadOnlyComputerCommand("lihat process list @devicesnr"),
+    {
+      toolId: "computer.process.list",
+      nodeId: "devicesnr",
+    },
+  );
+
+  assert.deepEqual(
+    parseDirectReadOnlyComputerCommand("cek versi Windows"),
+    {
+      toolId: "computer.system.info",
+    },
+  );
+
+  assert.equal(
+    parseDirectReadOnlyComputerCommand("cek versi Windows PC2 dan PC3"),
+    null,
+  );
+});
+
+test("read-only system info timeout is compatible with bounded SSH connect timeout", () => {
+  const definition = COMPUTER_TOOL_DEFINITIONS.find(
+    (tool) => tool.id === "computer.system.info",
+  );
+  assert.ok(definition);
+  assert.ok(definition.timeoutMs > 8_000);
+});
 
 test("Owner Mode command is a cancellable Level-2 computer capability", () => {
   const definition = COMPUTER_TOOL_DEFINITIONS.find(
@@ -127,6 +166,15 @@ test("explicit Owner Mode prefixes parse without natural-language planning", () 
       command: "Get-Date",
     },
   );
+
+  assert.deepEqual(
+    parseDirectOwnerCommand("run owner mode @pc2 powershell: hostname"),
+    {
+      nodeId: "pc2",
+      shell: "powershell",
+      command: "hostname",
+    },
+  );
 });
 
 test("Owner Mode direct parser rejects ambiguous natural language and oversized commands", () => {
@@ -135,6 +183,7 @@ test("Owner Mode direct parser rejects ambiguous natural language and oversized 
     null,
   );
   assert.equal(parseDirectOwnerCommand("powershell:"), null);
+  assert.equal(parseDirectOwnerCommand("@-bad powershell: whoami"), null);
   assert.equal(
     parseDirectOwnerCommand("powershell: " + "x".repeat(8193)),
     null,

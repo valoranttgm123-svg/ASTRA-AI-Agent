@@ -284,14 +284,6 @@ Repository contracts implemented on `feature/nvidia-max-subsystem-contracts`:
 - [x] regression tests for the above;
 - [x] NVA-2…NVA-9 PR #161 CI green and merge commit `84e5eb6aeb20dbdb737dc6d9ace149adfac73dbb` on `main`.
 
-Real integration remains:
-- [ ] actual AI-Q backend connected/validated;
-- [ ] actual NeMo Retriever/RAG connected under audited real Sonor;
-- [ ] actual OCR/parser backend connected;
-- [ ] actual Nemotron Voice/Speech connected and measured;
-- [ ] actual DeepStream/VSS pipeline connected with real pixels;
-- [ ] actual NemoClaw/Hermes workflow capture/replay validated;
-- [ ] actual NeMo Guardrails/content-safety backend/config validated;
-- [ ] actual evaluation suites run against exact target runtime/build.
+The canonical real-integration checklist is the single NVA-2 through NVA-9 list above; do not count or execute a duplicate second checklist.
 
 Once this PR merges, repository-only NVIDIA architecture should be considered saturated. Do not invent backend schemas to create more repo churn. Continue real target-PC/core release work when access is available.

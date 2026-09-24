@@ -1,10 +1,60 @@
 # JARVIS REPOSITORY FOUNDATION TRACKER
 
+## Active target refinement — 2026-09-24, PR #239
+
+Native read-only Windows startup inspection replaces a reproduced five-second
+CIM timeout. Focused Windows tests and live self-check passed on the earlier
+baseline. STATE: ACTIVE until the combined build (including main `63bdd14` and
+all ChatGPT multi-PC hardening) passes full gates, merges and is installed.
+Then continue verified remote registry/bootstrap and real target evidence;
+do not rebuild transport or mark physical voice/HP/HIGH gates complete.
+
 > Tracks merged repository foundations separately from real target-PC/provider evidence. Read `docs/CURRENT_EXECUTION_POINTER.md` first. Do not restart merged work based on old chats or branches.
 
 ## Recovery
 
 Inspect current `main`, newest CI and open PRs first. Resume an existing open PR before starting new work. Treat historical branches as superseded unless a concrete missing capability is demonstrated. The 206-branch reconciliation is documented in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`.
+
+## 2026-09-24 full-audit follow-up
+
+- [x] Full repository/runtime-readiness audit recorded in `docs/FULL_AUDIT_2026-09-24.md`.
+- [x] Fix direct read-only Computer fast path so explicit remote target is never silently converted to LOCAL.
+- [x] Fix remote `computer.system.info` timeout mismatch with SSH connect timeout and add regression coverage.
+- [x] Synchronize stale MEM-X/Sonor status in AGENTS / ASTRA_MAX / CODEX_NEXT_MISSION / TARGET_PC_EVIDENCE.
+- [x] Normalize duplicate/non-task tracker entries, including duplicate NVIDIA NVA-2…NVA-9 real-integration gates.
+- [x] Harden SSH bootstrap with temp-validate-replace semantics and reject nested secret/unknown node-config fields.
+- [x] Review CI warnings: removed safe unused code/imports and fixed the HumanoidLabV9 gesture-hook dependency path without changing approved visuals. Raw `<img>` optimization warnings remain intentionally visible until an equivalent fidelity-preserving migration is proven.
+
+## 2026-09-24 post-remediation hardening
+
+- [x] Fail closed on an explicitly targeted remote read when the requested remote tool/node is unavailable or fails; do not fall through to planner/local reinterpretation.
+- [x] Reject secret-like and unsupported fields at the root of the private computer-node registry, not only inside node entries.
+
+## Project continuity / ChatGPT ↔ Codex collaboration
+
+- [x] Durable cross-session collaboration protocol added: `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
+- [x] New-session recovery requires live `main`/CI/open-PR inspection before implementation.
+- [x] Every meaningful ChatGPT/Codex change must update pointer + tracker + worklog + relevant handoff/validation docs.
+- [x] Explicit no-repeat rule for merged, active, blocked and repo-complete/target-pending work.
+- [x] No-competition division: ChatGPT handles safe repository work; Codex refines/completes target/runtime/provider remainder. Better evidence-backed Codex proposals are accepted; only unjustified competing replacements are prohibited.
+- [x] Mandatory transfer trail records what is complete, what remains, why, branch/PR/commit, validation, exact next action and DO NOT REPEAT scope.
+Ongoing invariant: every future meaningful change must preserve these synchronization and work-ownership requirements.
+
+## Computer Agent / Multi-PC — 2026-09-24
+
+- [x] Local Windows `computer.system.info` Level-1 execution — PR #217.
+- [x] Direct no-model read-only Computer fast path — PR #218.
+- [x] Trusted local Owner Mode executor — PR #221.
+- [x] Explicit direct local Owner Mode path + target validator — PR #222.
+- [x] Trusted multi-PC SSH Computer Agent transport, private node registry, per-node identity verification, fail-closed routing and explicit remote Owner Mode syntax — PR #225, merge `6b3859a70f8c46ab80204b56c788e06cb8c09e60`.
+- [x] Safe SSH trust-bootstrap/diagnostic helper that writes the private registry only after all requested targets verify — PR #226, merge `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`.
+- [ ] Verify the four owner-reported Codex-connected SSH targets on the physical hub with `ssh -G` + remote `COMPUTERNAME`; exact aliases stay private and must not be committed.
+- [x] Identify the ASTRA hub/local machine: owner confirms PC1 is LOCAL/current hub; PC1 must not be duplicated into the SSH remote registry.
+- [ ] Bootstrap only the remaining verified remote targets into the private registry and run real per-node Owner Mode validation.
+- [ ] Real remote administrator/file/service control evidence on each selected trusted node.
+- [ ] Real unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
+- [ ] One pinned-target multi-step project task end-to-end.
+Completion invariant: do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
 
 ## Phase 24 — Event Engine
 
@@ -38,7 +88,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Regression tests; PR #166 merged `a01d40ff8e378b1b1881269f0568bb65793d2e17`.
 - [x] User-facing read-only health and action-history UI: PR #174 merged `293216e9f94868d00b2636b125922ff09ec593db`, CI #483 SUCCESS.
 - [ ] Explicit real connectivity probe.
-- [ ] Provider health integration:
+Provider health integration:
   - [x] Ollama/Codex/NVIDIA/Hermes/Cloud real status-probe wiring — PR #178 merged `dfc7d93fb02e8e32375dd7c3d8ebc7370232c078`; PR CI #500 SUCCESS, main CI #501 SUCCESS.
   - [ ] Sonor real health/search evidence on the target runtime; repository Diagnostics remains UNKNOWN rather than fabricating readiness.
 - [ ] Safe recovery execution through existing Tool Runtime — blocked until a real recovery-specific tool exists; current generic tools do not truthfully implement provider reconnect/service restart/cache-clear.
@@ -58,8 +108,8 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Private registry, single-use expiring hashed pairing challenge, capability expiry and per-device Level 0–3 ceilings.
 - [x] Phase-22 trust prerequisite, terminal revoke, deterministic routing, approval preservation, no public unauthenticated transport and bounded symlink-safe storage.
 - [x] Tests; PR #168 merged `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`; main CI #451 SUCCESS.
-- [ ] Select and validate real LAN/SSH/authenticated-relay transport.
-- [ ] Actual PC2/mobile pairing, authenticated encryption, dispatch/result return and immediate revoke evidence.
+- [x] Select SSH as the real PC-to-PC transport and merge its repository implementation through the Computer Agent — PR #225/#226. This does not prove physical target readiness.
+- [ ] Complete the broader Phase-27 paired-device/mobile contract: pairing, authenticated dispatch/result return and immediate revoke evidence. PC2-PC4 SSH target validation is owned only by the Computer Agent / Multi-PC section above.
 - [ ] Scenario J6 evidence.
 
 ## Phase 29 — Generic Skill / Device Registry

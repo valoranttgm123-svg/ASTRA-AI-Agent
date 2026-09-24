@@ -1,5 +1,15 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — Codex resumes against the latest ChatGPT handoff
+
+- ACTOR: Codex; STATE: ACTIVE; PR #239.
+- Merged current main `63bdd14` (CI #646 SUCCESS) into the existing native probe
+  fix, retaining PR #225-#238 transport, hardening and collaboration work.
+- Interrupted the older-base repository gate after 453 passing tests; those
+  results are not evidence for the combined build. Re-run all gates on the
+  exact combined commit, install it, then validate the existing remote transport.
+- Earlier morning SSH observations below are historical and need a fresh check.
+
 ## 2026-09-24 — native Windows startup inspection
 
 - PR #224 merged `0a0962a3494f066c14eb40850dcb1597e8178c3a`, CI #607/#608
@@ -17,6 +27,84 @@
   This is not ASTRA remote transport completion. Sonor unchanged.
 - See `WINDOWS_TASK_PROBE_2026-09-24.md`; final PR/build/install evidence must
   be recorded before handoff. Physical and comprehensive gates remain open.
+
+## 2026-09-24 — PC1 confirmed as ASTRA local hub
+
+- Owner confirmed that PC1 is the current PC and ASTRA hub/local machine.
+- PC1 must remain LOCAL in ASTRA and must not be duplicated into the private SSH remote-node registry.
+- Remaining connected Codex targets are remote candidates only after `ssh -G` and remote `COMPUTERNAME` verification.
+- No SSH transport code changed.
+
+## 2026-09-24 — SSH target inventory refreshed from owner evidence
+
+- Owner supplied newer Codex connection evidence showing four PC targets currently connected.
+- This supersedes the older physical observation that intended SSH aliases failed name resolution.
+- Exact SSH aliases are intentionally not committed because the multi-PC registry/topology is private local configuration.
+- Codex must verify the current private aliases with `ssh -G` and remote `COMPUTERNAME`, identify the ASTRA hub/local machine, and bootstrap only true remote targets into the gitignored registry.
+- No SSH transport architecture was changed.
+
+## 2026-09-24 — post-remediation fail-closed hardening
+
+- Re-audited current main after PR #235 and found two additional repository hardening opportunities.
+- Explicit remote read-only requests now return BLOCKED on remote tool/node failure or unavailability rather than falling through to planner reinterpretation.
+- Private computer-node registry now rejects root-level secret-like fields and unsupported root metadata, in addition to the existing per-node strict schema.
+- Added root-schema regression tests.
+- This is a focused extension of PR #233 hardening, not a replacement Computer architecture.
+- Validation passed: 460 tests / 458 pass / 0 fail / 2 Windows-only skips; build/typecheck/lint/audit/diff checks PASS; 0 dependency vulnerabilities.
+
+## 2026-09-24 — stale audit pointer closed
+
+- Post-merge verification found the current pointer still contained the original pre-remediation audit defect list below the newer PR #233 completion block.
+- Updated the pointer and full-audit banner so historical findings cannot be mistaken for current defects.
+- No runtime behavior changed; remaining work is target/runtime/provider evidence only.
+
+## 2026-09-24 — audit remediation PR #233
+
+- Started focused follow-up from the merged full audit; existing Computer/Sonor architecture is preserved rather than rebuilt.
+- Direct read-only Computer parsing now carries explicit `PC<n>` or `@node-id` targets into Tool Runtime and rejects ambiguous multiple targets instead of silently defaulting remote intent to LOCAL.
+- `computer.system.info` timeout was raised above the SSH 8-second connect bound; local execution still returns immediately when fast.
+- Multi-PC node config now recursively rejects secret-like keys and rejects unsupported top-level fields.
+- SSH trust bootstrap now writes a sibling temp file, parses it back for validation, atomically replaces/moves the final registry, and cleans temp state.
+- Added regression tests for remote target parsing, timeout compatibility, nested secrets/unknown fields and atomic bootstrap semantics.
+- Canonical MEM-X docs now preserve already-validated Sonor retrieval/project scope/Graphify/Obsidian provenance and leave only degradation/cancellation/Diagnostics/release evidence pending.
+- NVIDIA and JARVIS tracker duplication/non-task checkbox drift was normalized; historical recovery branch wording was relabeled.
+- Safe warning cleanup removed unused non-visual code/imports and made Humanoid V9 gesture dependencies explicit. Approved raw image rendering was not changed merely to silence optimization warnings.
+- PR #233 newest-head CI passed and merged as `52135e16f4113460807ff9005a72ba7efc53d911`. Repository remediation is complete; remaining work is target/runtime evidence.
+
+## 2026-09-24 — full repository/runtime-readiness audit
+
+- Audited current main, open PRs/issues, PR #217-#231 merge/CI state, collaboration docs, execution trackers, release/security/performance docs, multi-PC code, SSH bootstrap, Tool Runtime timeout/cancellation, and latest CI logs.
+- Full findings are durable in `docs/FULL_AUDIT_2026-09-24.md`.
+- Confirmed no open PR/issue at audit start; PR #217-#231 merged; latest #231 PR-head CI passed build/tests/typecheck/lint/audit/diff with 457 tests, 455 pass, 0 fail, 2 Windows-only skips and 0 vulnerabilities.
+- Found concrete repo defects: direct remote read target can be dropped to LOCAL; system-info 5s timeout conflicts with SSH 8s connect timeout.
+- Found continuity drift: stale broad Sonor/MEM-X status in authoritative docs, duplicate NVIDIA checklist gates, historical active/current wording, and overlapping/non-task tracker boxes.
+- Found hardening/maintenance items: bootstrap write is fail-all-before-write but not true temp+replace atomic; nested secret-like node fields are not recursively rejected; CI/build warnings remain.
+- Target runtime is not proven to match exact current main. Do not capture final PC2-PC4/release evidence until repository follow-ups merge and the clean target build is updated.
+
+## 2026-09-24 — improvement acceptance clarification
+
+- Owner clarified that the no-competition rule must not block good Codex ideas.
+- Codex should refine existing ChatGPT work by default, but a clearly better evidence-backed design is welcome and should be adopted when it materially improves correctness, security, reliability, maintainability, performance, UX, compatibility or simplicity.
+- Replacement without reason remains prohibited; superior validated refinement is explicitly allowed.
+- Any replacement/refactor must document the current problem, proposed improvement, evidence, preserved work/tests, migration risk and validation result.
+
+## 2026-09-24 — no-competition ChatGPT ↔ Codex work division
+
+- Owner clarified that ChatGPT and Codex must not compete for or duplicate the same ASTRA work.
+- ChatGPT owns every safe repository task it can perform and verify; anything it cannot truthfully finish must be handed to Codex with a precise trail.
+- Codex must refine/finish an incomplete ChatGPT implementation against the real target/runtime/provider rather than start a parallel replacement by default.
+- If one agent has ACTIVE work, the other must inspect that branch/PR/handoff before touching the same subsystem.
+- Parallel execution is reserved for clearly independent slices.
+- Every transfer now records completed scope, unfinished scope/reason, branch/PR/commit, validation, blocker, exact next action and DO NOT REPEAT boundaries.
+
+## 2026-09-24 — ChatGPT ↔ Codex cross-session collaboration rule
+
+- Owner identified a recurring continuity failure: after interrupted/new ChatGPT sessions, completed or blocked work could be repeated and roadmap state could lag behind actual changes.
+- Added the mandatory `docs/ASTRA_COLLABORATION_PROTOCOL.md` so GitHub, not conversational memory alone, is the durable ASTRA project memory.
+- Both ChatGPT and Codex must inspect live main/CI/open PRs before work, preserve active/blocked branches, and never recreate merged work without concrete regression evidence.
+- Every meaningful change must update `CURRENT_EXECUTION_POINTER`, `JARVIS_PROGRESS_TRACKER`, `ASTRA_WORKLOG` and the relevant handoff/validation document in the same work slice.
+- Required states distinguish DONE, REPO_DONE_TARGET_PENDING, ACTIVE, BLOCKED, NOT_STARTED and SUPERSEDED.
+- New-session shorthand such as `lanjutkan` means recover from repository truth and continue; the owner must not be asked to reconstruct old chats.
 
 ## 2026-09-24 — WebGL-denied browser refinement
 

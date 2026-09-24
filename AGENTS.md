@@ -2,6 +2,25 @@
 
 This repository is the working source of truth for the ASTRA AI Agent project.
 
+## CHATGPT ↔ CODEX COLLABORATION PROTOCOL — mandatory
+
+Read `docs/ASTRA_COLLABORATION_PROTOCOL.md` before implementation work. It defines the cross-session project-memory, no-repeat, roadmap-update and mutual-handoff rules for both ChatGPT and Codex.
+
+Every meaningful ASTRA change must update the canonical pointer/tracker/worklog/handoff in the same work slice so the other agent can continue without reconstructing old chats.
+
+## NO-COMPETITION WORK DIVISION — mandatory
+
+ChatGPT and Codex are a relay team, not competing implementers.
+
+- ChatGPT performs all safe repository-side work it can complete and verify.
+- ChatGPT must leave an explicit handoff for anything it cannot finish.
+- Codex owns refinement/completion that requires the real target PC/provider/runtime. Preserve and improve the existing ChatGPT implementation by default, but adopt a clearly better evidence-backed Codex design when it materially improves ASTRA; document the comparison and avoid replacement without reason.
+- If one agent has an ACTIVE branch/PR/task, the other must inspect and continue that work before touching the same subsystem.
+- Parallel work is allowed only for clearly independent slices.
+- Both agents must leave pointer/tracker/worklog/handoff evidence after meaningful changes.
+
+Read the full rule in `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
+
 ## CODEX REFINEMENT CONTRACT — mandatory
 
 Read `docs/CODEX_REFINEMENT_CONTRACT.md` before implementation work.
@@ -17,15 +36,16 @@ Codex owns the real target-PC/provider/runtime work, evidence-driven fixes, end-
 Before changing any code:
 
 0. inspect current `main`, open PRs, and newest CI;
-1. read `docs/CURRENT_EXECUTION_POINTER.md` — **shortest authoritative current checkpoint**;
-2. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` — stale/divergent branch reconciliation;
-3. read `docs/CODEX_REFINEMENT_CONTRACT.md` — mandatory ChatGPT→Codex division of work;
-4. read `docs/CODEX_NEXT_MISSION.md` — executable mission and real-environment order;
-5. read `docs/JARVIS_PROGRESS_TRACKER.md` — Phase 21–30 repository-foundation truth;
-6. read `docs/ASTRA_WORKLOG.md` — durable chronological history;
-7. read `docs/SESSION_RECOVERY.md` — interruption/new-session protocol;
-8. read `docs/CODEX_HANDOFF.md` and `docs/CODEX_PROGRESS_TRACKER.md`;
-9. then read the validation/security document relevant to the active task.
+1. read `docs/ASTRA_COLLABORATION_PROTOCOL.md` — **mandatory cross-session ChatGPT/Codex rule**;
+2. read `docs/CURRENT_EXECUTION_POINTER.md` — **shortest authoritative current checkpoint**;
+3. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` — stale/divergent branch reconciliation;
+4. read `docs/CODEX_REFINEMENT_CONTRACT.md` — mandatory ChatGPT→Codex division of work;
+5. read `docs/CODEX_NEXT_MISSION.md` — executable mission and real-environment order;
+6. read `docs/JARVIS_PROGRESS_TRACKER.md` — Phase 21–30 repository-foundation truth;
+7. read `docs/ASTRA_WORKLOG.md` — durable chronological history;
+8. read `docs/SESSION_RECOVERY.md` — interruption/new-session protocol;
+9. read `docs/CODEX_HANDOFF.md` and `docs/CODEX_PROGRESS_TRACKER.md`;
+10. then read the validation/security document relevant to the active task.
 
 Supporting canonical documents:
 - `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done;
@@ -63,7 +83,7 @@ Read these only when the active task needs their historical/detail context:
 - Phase 24/25/28/22/27/29 repository foundations are merged; do not recreate them.
 - Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
 - Repository-only release preparation includes target-PC evidence collection, Humanoid/browser capture, conservative Phase 20 report generation, evidence-backed manual gate recording, final-report context recording, strict evidence-shape/private-path validation, runtime-build attestation, end-to-end capture provenance, stale-browser rejection, browser nested-runtime binding, secure optional-cloud transport, exact GitHub remote validation, and process-tree STOP hardening (PRs #121, #123–#126, #129, #142–#145, #147–#150).
-- MEM-X still requires real local Sonor access.
+- MEM-X real Sonor retrieval/project scope/Graphify/Obsidian provenance is already target-validated. Remaining MEM-X gates are Sonor outage/degradation, active-query cancellation, Diagnostics health/search evidence where required, and release evidence. Do not repeat the broad initial Sonor audit.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
 - Unattended Automation stays Level 0/1 only.
@@ -84,7 +104,7 @@ If a task requires target-PC access, real Sonor access, login, physical micropho
 Examples:
 
 - If Phase 14 target-PC validation cannot run yet, continue Phase 15A–15F.
-- If real Sonor cannot be reached yet, finish all safe ASTRA-side hardening/tests that do not require guessing Sonor endpoints, mark MEM-X externally blocked, and continue the next implementable roadmap work.
+- If Sonor becomes unavailable during a remaining degradation/cancellation/Diagnostics gate, record that exact blocker and continue independent work. Do not restart the already-completed retrieval/provenance audit.
 - Do not wait idle for a user reply when independent repository work remains.
 
 ### Current exact task
@@ -262,7 +282,7 @@ Do not treat “JARVIS-Class” as permission for fictional claims or unsafe aut
 
 A local Sonor workflow graph already exists on the user's target PC at `127.0.0.1:55127`. Reuse it. Do not build a duplicate Graphify/Obsidian system inside ASTRA.
 
-When local PC access is available, inspect Sonor's real server/API implementation and connect the existing `lib/memory/sonor.ts` adapter using the contract in `docs/SONOR_BRIDGE.md`. Do not guess endpoint paths and do not claim READY until the real end-to-end check passes.
+The existing Sonor server/API and `lib/memory/sonor.ts` adapter have already been validated on the target for real loopback retrieval, project scope, Graphify provenance and Obsidian provenance. Preserve that integration. Remaining Sonor work is outage/degradation, active cancellation, Diagnostics health/search evidence where required, and release evidence; do not repeat the initial endpoint/provenance audit.
 
 ## NVIDIA JARVIS Mesh — PR #154
 

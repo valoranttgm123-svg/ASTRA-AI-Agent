@@ -19,7 +19,7 @@ import type { AstraPlan } from "@/lib/planner/contracts";
 import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
 import type { AstraToolDefinition, AstraToolLifecycleEvent } from "@/lib/tools/contracts";
 import { astraNativeToolRuntime, createDefaultToolRuntime } from "@/lib/tools/runtime";
-import { parseDirectOwnerCommand } from "@/lib/tools/computer";
+import { parseDirectOwnerCommand, parseDirectReadOnlyComputerCommand } from "@/lib/tools/computer";
 import { generateStrategistPlan, shouldGeneratePlan } from "@/lib/planner/generator";
 import {
   chatWithCodex,
@@ -976,33 +976,17 @@ function formatDirectOwnerCommandResult(output: unknown) {
 
   const record = output as Record<string, unknown>;
   const shell = typeof record.shell === "string" ? record.shell : "shell";
+  const nodeId = typeof record.nodeId === "string" ? record.nodeId : "local";
+  const transport = typeof record.transport === "string" ? record.transport : "LOCAL";
   const exitCode = typeof record.exitCode === "number" ? record.exitCode : -1;
   const stdout = typeof record.stdout === "string" ? record.stdout.trimEnd() : "";
   const stderr = typeof record.stderr === "string" ? record.stderr.trimEnd() : "";
 
   return [
-    "Owner Mode " + shell + " selesai dengan exit code " + exitCode + ".",
+    "Owner Mode " + shell + " pada " + nodeId + " (" + transport + ") selesai dengan exit code " + exitCode + ".",
     stdout ? "STDOUT:\n" + stdout : "",
     stderr ? "STDERR:\n" + stderr : "",
   ].filter(Boolean).join("\n");
-}
-
-function directReadOnlyComputerTool(input: string): "computer.system.info" | "computer.process.list" | null {
-  const text = input.trim().toLowerCase();
-
-  if (
-    /\b(?:versi\s+windows|windows\s+version|versi\s+os|os\s+version|nama\s+komputer|computer\s+name|hostname|system\s+info|informasi\s+sistem)\b/i.test(text)
-  ) {
-    return "computer.system.info";
-  }
-
-  if (
-    /\b(?:daftar\s+proses|process\s+list|proses\s+berjalan|running\s+process(?:es)?|tasklist|aplikasi\s+yang\s+sedang\s+berjalan)\b/i.test(text)
-  ) {
-    return "computer.process.list";
-  }
-
-  return null;
 }
 
 function formatDirectComputerReadResult(
@@ -1525,7 +1509,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             agentName: agent.name,
             state: "blocked",
             message:
-              "Owner Mode lokal belum READY. Aktifkan Computer Agent dan ASTRA_OWNER_MODE_ENABLED pada PC1 lalu restart ASTRA-Agent.",
+              "Owner Mode belum READY. Aktifkan Computer Agent dan ASTRA_OWNER_MODE_ENABLED pada hub, lalu pastikan target remote terdaftar sebagai trusted node.",
             requiresApproval: false,
             brain: {
               provider: "routing_only",
@@ -1564,7 +1548,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             agentName: agent.name,
             state: "blocked",
             message:
-              "Owner Mode lokal sudah terdaftar, tetapi shell execution masih dimatikan oleh policy. Aktifkan ASTRA_ALLOW_SHELL=true pada PC1.",
+              "Owner Mode sudah terdaftar, tetapi shell execution masih dimatikan oleh policy. Aktifkan ASTRA_ALLOW_SHELL=true pada hub.",
             requiresApproval: false,
             brain: {
               provider: "routing_only",
@@ -1745,15 +1729,15 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
     }
 
-    const directComputerTool =
+    const directComputerCommand =
       preferredProvider === "auto" &&
       selected === "computer" &&
       options?.requirePlan !== true &&
       !task.approvalToken
-        ? directReadOnlyComputerTool(input)
+        ? parseDirectReadOnlyComputerCommand(input)
         : null;
 
-    if (directComputerTool) {
+    if (directComputerCommand) {
       const policy = getPermissionPolicy();
       const approvedPermissionLevel = Math.min(
         1,
@@ -1763,7 +1747,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       if (approvedPermissionLevel >= 1) {
         try {
           const toolRuntime = await createDefaultToolRuntime(options?.signal);
-          const definition = toolRuntime.get(directComputerTool);
+          const definition = toolRuntime.get(directComputerCommand.toolId);
 
           if (definition?.availability === "READY") {
             const liveEvents: AstraBrainEvent[] = [];
@@ -1780,8 +1764,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             );
 
             const result = await toolRuntime.execute(
-              directComputerTool,
-              {},
+              directComputerCommand.toolId,
+              directComputerCommand.nodeId
+                ? { nodeId: directComputerCommand.nodeId }
+                : {},
               {
                 approvedPermissionLevel,
                 policy: {
@@ -1818,7 +1804,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
                 agentName: agent.name,
                 state: "completed",
                 message: formatDirectComputerReadResult(
-                  directComputerTool,
+                  directComputerCommand.toolId,
                   result.output,
                 ),
                 requiresApproval: false,
@@ -1842,11 +1828,138 @@ class LocalPreferredBrainAdapter implements AstraBrain {
                 },
               };
             }
+
+            if (directComputerCommand.nodeId) {
+              const detail = safePublicDetail(
+                result.detail,
+                "Requested remote computer read failed closed.",
+                800,
+              );
+              liveEvents.push(
+                emitLiveEvent(options, {
+                  type: "agent.blocked",
+                  agent: selected,
+                  visualNode: visualNodeForAgent(selected),
+                  label: "Remote computer read blocked",
+                  detail,
+                }),
+              );
+
+              return {
+                ok: false,
+                agent: selected,
+                agentName: agent.name,
+                state: "blocked",
+                message:
+                  "ASTRA tidak dapat memverifikasi pembacaan pada node " +
+                  directComputerCommand.nodeId +
+                  ". " +
+                  detail,
+                requiresApproval: false,
+                brain: {
+                  provider: "routing_only",
+                  execution: "blocked",
+                  requestedMode: "execute",
+                  route,
+                  visualNodes: route.map(visualNodeForAgent),
+                  events: [...baseEvents(selected), ...liveEvents],
+                  context: {
+                    memoryEntries: 0,
+                    memorySources: [],
+                    skills: [],
+                    input: options?.inputContext,
+                  },
+                  permissions: policy,
+                },
+              };
+            }
+          } else if (directComputerCommand.nodeId) {
+            const detail =
+              "Requested remote Computer Tool is not READY; ASTRA did not fall back to another node or planner.";
+            return {
+              ok: false,
+              agent: selected,
+              agentName: agent.name,
+              state: "blocked",
+              message:
+                "ASTRA tidak dapat memverifikasi pembacaan pada node " +
+                directComputerCommand.nodeId +
+                ". " +
+                detail,
+              requiresApproval: false,
+              brain: {
+                provider: "routing_only",
+                execution: "blocked",
+                requestedMode: "execute",
+                route,
+                visualNodes: route.map(visualNodeForAgent),
+                events: [
+                  ...baseEvents(selected),
+                  emitLiveEvent(options, {
+                    type: "agent.blocked",
+                    agent: selected,
+                    visualNode: visualNodeForAgent(selected),
+                    label: "Remote computer read unavailable",
+                    detail,
+                  }),
+                ],
+                context: {
+                  memoryEntries: 0,
+                  memorySources: [],
+                  skills: [],
+                  input: options?.inputContext,
+                },
+                permissions: policy,
+              },
+            };
           }
         } catch (error) {
           options?.signal?.throwIfAborted();
-          // Fall through to the bounded planner/executor path when the
-          // controlled Computer Tool is unavailable or fails unexpectedly.
+          if (directComputerCommand.nodeId) {
+            const detail = safeErrorDetail(
+              error,
+              "Requested remote computer read failed closed.",
+              800,
+            );
+            return {
+              ok: false,
+              agent: selected,
+              agentName: agent.name,
+              state: "blocked",
+              message:
+                "ASTRA tidak dapat memverifikasi pembacaan pada node " +
+                directComputerCommand.nodeId +
+                ". " +
+                detail,
+              requiresApproval: false,
+              brain: {
+                provider: "routing_only",
+                execution: "blocked",
+                requestedMode: "execute",
+                route,
+                visualNodes: route.map(visualNodeForAgent),
+                events: [
+                  ...baseEvents(selected),
+                  emitLiveEvent(options, {
+                    type: "agent.blocked",
+                    agent: selected,
+                    visualNode: visualNodeForAgent(selected),
+                    label: "Remote computer read failed",
+                    detail,
+                  }),
+                ],
+                context: {
+                  memoryEntries: 0,
+                  memorySources: [],
+                  skills: [],
+                  input: options?.inputContext,
+                },
+                permissions: policy,
+              },
+            };
+          }
+          // Local read-only requests may still fall through to the bounded
+          // planner/executor path when the direct local tool is unavailable.
         }
       }
     }

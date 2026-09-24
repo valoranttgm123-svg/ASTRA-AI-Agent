@@ -1,6 +1,6 @@
 # CODEX NEXT MISSION — CURRENT EXECUTION PLAN
 
-Status date: **2026-09-22**
+Status date: **2026-09-24**
 
 This file is the current executable mission. Historical implementation chronology belongs in `docs/ASTRA_WORKLOG.md`, not here.
 
@@ -36,6 +36,30 @@ That is a complete instruction.
 
 Resume automatically from repository truth. Do not ask the owner to restate the roadmap.
 
+## Audit remediation merged — resume exact-build target evidence
+
+The 2026-09-24 repository follow-up is complete in PR #233, merge `52135e16f4113460807ff9005a72ba7efc53d911`.
+
+Codex must now:
+- update/install the exact clean current `main` build on the target PC;
+- verify runtime build identity before collecting evidence;
+- resolve/verify the existing SSH aliases without inventing replacements;
+- bootstrap the private node registry;
+- continue PC2-PC4 Owner Mode/admin/file/service/STOP-KILL/multi-step evidence;
+- continue remaining release gates from the canonical order.
+
+Do not rebuild the Computer Agent, SSH transport, or Sonor retrieval/provenance work.
+
+## Shared work ownership rule
+
+Before choosing a mission item, apply `docs/ASTRA_COLLABORATION_PROTOCOL.md`:
+
+- do not take over an ACTIVE ChatGPT branch by starting a competing implementation;
+- if ChatGPT left `REPO_DONE_TARGET_PENDING`, finish the target/runtime evidence and repair only proven gaps;
+- if ChatGPT's implementation is imperfect, refine the existing work rather than restart it;
+- after Codex changes anything meaningful, update the same pointer/tracker/worklog/handoff so ChatGPT can continue later;
+- when a task is fully repository-accessible, leave that slice to ChatGPT unless Codex is already actively working it.
+
 ## Current completed repository baseline
 
 Do not rebuild these:
@@ -56,7 +80,13 @@ Do not rebuild these:
 - Phase 28 Diagnostics/Audit/Offline — PR #166;
 - Phase 22 Identity/Trust/Secrets — PR #167;
 - Phase 27 Multi-device foundation — PR #168;
-- Phase 29 Generic Skill/Environment foundation — PR #169.
+- Phase 29 Generic Skill/Environment foundation — PR #169;
+- local Computer Agent read-only + no-model fast path — PR #217/#218;
+- local trusted Owner Mode + direct no-model Owner Mode — PR #221/#222;
+- trusted multi-PC SSH Computer Agent transport — PR #225;
+- safe SSH node trust-bootstrap/diagnostic helper — PR #226.
+
+Do not recreate PR #217-#226 or repeat PC1 validation unless a concrete regression is reproduced.
 
 Cross-session reconciliation:
 - PR #171 merge: `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
@@ -66,7 +96,23 @@ Cross-session reconciliation:
 
 ## Mission order
 
-Execute the first task below that is actionable in the current environment.
+### Active owner-priority override — multi-PC target evidence
+
+The repository implementation for local and multi-PC SSH is already merged. The owner now reports four PC targets connected in Codex, superseding the older name-resolution observation. Finish this real-environment sequence before starting another repository architecture pass:
+
+1. use the owner's current private SSH/Codex aliases from the local runtime; do not commit them;
+2. verify each alias with `ssh -G` and remote `$env:COMPUTERNAME`;
+3. treat PC1 as the confirmed ASTRA hub/local machine and exclude it from the remote registry;
+4. run `scripts/windows/configure-ssh-computer-nodes.ps1` using only verified remote aliases;
+5. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
+6. validate administrator/file/service execution independently on each verified remote node;
+7. validate wrong/unreachable-node fail-closed behavior and long-running remote STOP/KILL;
+8. complete one pinned-target multi-step task end-to-end.
+
+Do not invent replacement aliases/IPs, expose private SSH topology in Git, or rebuild the Computer Agent.
+
+When the multi-PC target gate is not the active owner thread or is blocked by unavailable physical targets, execute the first actionable task below.
+
 
 ### M1 — Phase 14 target-PC Automation validation
 
@@ -88,7 +134,7 @@ Exit:
 - failures are repaired and retested;
 - tracker/handoff updated.
 
-### M2 — MEM-X real Sonor / Graphify / Obsidian
+### M2 — MEM-X remaining Sonor degradation / cancellation evidence
 
 Canonical documents:
 
@@ -96,20 +142,25 @@ Canonical documents:
 - `docs/SONOR_BRIDGE.md`
 - `docs/SONOR_UI_INTEGRATION.md`
 
-Rules:
-- the real Sonor graph already exists; preserve it;
+Already validated on the real target:
+- existing Sonor graph preserved;
+- real loopback search/retrieval works through the ASTRA adapter;
+- project scope is enforced;
+- Graphify provenance is preserved;
+- Obsidian provenance is preserved.
+
+Remaining rules:
 - do not rebuild a duplicate memory graph;
-- inspect the real implementation/API before wiring endpoints;
-- do not guess routes;
-- keep project scope and provenance;
-- validate unavailable/cancellation behavior;
+- do not repeat the initial endpoint/provenance audit;
+- validate Sonor unavailable/degraded behavior;
+- validate active-query cancellation;
+- capture Diagnostics health/search evidence where the Phase-28 gate requires it;
 - never commit private graph/vault/index data.
 
 Exit:
-- actual local Sonor state is known;
-- minimal search/retrieval works through the real adapter;
-- Graphify/Obsidian provenance is truthful;
-- degradation/cancellation is validated.
+- outage/degradation behavior is evidenced;
+- active-query cancellation is evidenced;
+- any separately required Diagnostics Sonor health/search gate is evidenced truthfully.
 
 ### M3 — Phase 16 real performance evidence
 
@@ -228,7 +279,7 @@ Build on the audited real Sonor/Graphify/Obsidian system. Do not create a compet
 
 ### Phase 27 — real multi-device transport
 
-Use the merged trust/device contracts with authenticated/encrypted transport. Do not expose the current loopback API directly.
+PC-to-PC SSH transport is selected and repository-implemented through PR #225/#226. Validate the real PC2-PC4 targets rather than selecting another PC transport. The broader Phase-27 device work still requires actual pairing/authenticated dispatch/result return/revoke evidence, especially for mobile or non-SSH devices. Do not expose the current loopback API directly.
 
 ### Phase 29 — real skills/environment devices
 
