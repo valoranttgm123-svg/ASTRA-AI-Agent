@@ -122,6 +122,17 @@ Do not convert `BLOCKED` into `NOT_STARTED`.
 Do not convert `REPO_DONE_TARGET_PENDING` into "needs implementation".
 Do not mark `DONE` from code inspection when real target evidence is part of the completion gate.
 
+### Coordination substates for unmerged/frozen work
+
+The canonical `STATE` field must remain one of the required task states above.
+
+When extra precision is needed, use a separate `SUBSTATE` field:
+
+- `STATE: ACTIVE` + `SUBSTATE: COMPLETE_IN_DRAFT` — the draft slice is internally complete/validated but is intentionally not repository-complete because its PR is unmerged.
+- `STATE: BLOCKED` + `SUBSTATE: SATURATED_WAITING_FOR_TARGET_EVIDENCE` — no additional independent safe work remains; continuation depends on named target evidence, a reproduced defect, target-checkpoint completion, or an owner requirement change.
+
+Do not use `COMPLETE_IN_DRAFT` or `SATURATED_WAITING_FOR_TARGET_EVIDENCE` as standalone canonical `STATE` values.
+
 ## 5. Interrupted-session rule
 
 If a ChatGPT or Codex session stops before completion:
@@ -286,7 +297,8 @@ After a meaningful work slice, record a concise handoff with:
 ACTOR: ChatGPT | Codex
 DATE:
 AREA:
-STATE: DONE | REPO_DONE_TARGET_PENDING | ACTIVE | BLOCKED | SUPERSEDED
+STATE: DONE | REPO_DONE_TARGET_PENDING | ACTIVE | BLOCKED | NOT_STARTED | SUPERSEDED
+SUBSTATE: optional coordination detail such as COMPLETE_IN_DRAFT or SATURATED_WAITING_FOR_TARGET_EVIDENCE
 BRANCH/PR:
 MERGE/COMMIT:
 CHANGED:
