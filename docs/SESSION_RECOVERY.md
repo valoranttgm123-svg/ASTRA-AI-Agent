@@ -53,6 +53,19 @@ The owner requires one continuous ASTRA project memory across ChatGPT and Codex 
 - A disconnected/new chat is never permission to restart merged or blocked work.
 - Read `docs/ASTRA_COLLABORATION_PROTOCOL.md` for the full mandatory rules.
 
+## No-competition recovery rule
+
+When recovering from an interrupted ChatGPT/Codex session:
+
+- determine which agent last owned the active task;
+- inspect its branch/PR/commit/handoff before creating anything new;
+- continue/refine the existing work if it is incomplete;
+- if ChatGPT already completed the repository slice and left target/runtime work pending, Codex finishes that remainder;
+- if Codex already changed the target/runtime, ChatGPT reads those changes before touching the same subsystem;
+- never create parallel implementations merely because conversational context was lost.
+
+The expected pattern is handoff → refinement → handoff, not competition.
+
 ## Interrupted-work rule
 
 If a session ends mid-task:

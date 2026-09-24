@@ -6,6 +6,10 @@ Before any ChatGPT or Codex implementation, read `docs/ASTRA_COLLABORATION_PROTO
 
 The owner requires ChatGPT and Codex to act as one continuous ASTRA team. Every meaningful change must synchronize the roadmap/pointer/worklog/handoff. New or interrupted sessions must resume existing `ACTIVE`/`BLOCKED` work and must not recreate merged work.
 
+## Work ownership rule
+
+ChatGPT and Codex must not compete for the same ASTRA slice. ChatGPT completes safe repository work; unresolved target/runtime/provider work is handed to Codex with an explicit trail. Codex refines and finishes the existing implementation instead of starting a parallel replacement. Both agents must update roadmap/pointer/worklog/handoff after meaningful changes.
+
 ## Canonical latest checkpoint — 2026-09-24
 
 Live repository truth at this checkpoint:

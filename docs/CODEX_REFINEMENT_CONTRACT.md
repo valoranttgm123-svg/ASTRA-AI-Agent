@@ -11,6 +11,14 @@ Status date: **2026-09-22**
 
 This document defines the division of work between ChatGPT repository work and Codex execution work for ASTRA.
 
+## Refinement means finish, not replace
+
+When ChatGPT has already produced an ASTRA implementation, Codex's default job is to inspect it, preserve the valid parts, reproduce any remaining defect on the real target, and **finish or correct that implementation**.
+
+Codex must not create a parallel/replacement subsystem simply because ChatGPT's first version is incomplete. Replace architecture only when current evidence proves the existing design cannot satisfy the requirement or the owner explicitly changes direction.
+
+If ChatGPT could not complete a target-only step, treat the repository state as `REPO_DONE_TARGET_PENDING` or `BLOCKED`, perform the missing real-environment work, then write the result back into the pointer/tracker/worklog/handoff for the next ChatGPT session.
+
 ## Core rule
 
 **ChatGPT pre-builds as much safe repository work as possible to conserve Codex tokens. Codex then refines, completes, integrates, validates, and ships that work.**

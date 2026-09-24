@@ -36,6 +36,16 @@ That is a complete instruction.
 
 Resume automatically from repository truth. Do not ask the owner to restate the roadmap.
 
+## Shared work ownership rule
+
+Before choosing a mission item, apply `docs/ASTRA_COLLABORATION_PROTOCOL.md`:
+
+- do not take over an ACTIVE ChatGPT branch by starting a competing implementation;
+- if ChatGPT left `REPO_DONE_TARGET_PENDING`, finish the target/runtime evidence and repair only proven gaps;
+- if ChatGPT's implementation is imperfect, refine the existing work rather than restart it;
+- after Codex changes anything meaningful, update the same pointer/tracker/worklog/handoff so ChatGPT can continue later;
+- when a task is fully repository-accessible, leave that slice to ChatGPT unless Codex is already actively working it.
+
 ## Current completed repository baseline
 
 Do not rebuild these:

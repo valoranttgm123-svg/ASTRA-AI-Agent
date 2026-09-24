@@ -124,6 +124,70 @@ Codex should:
 
 When Codex changes runtime behavior locally, the durable project state must be updated before another agent continues.
 
+## 7A. Work division and no-competition rule
+
+ChatGPT and Codex must not compete for the same ASTRA task or create parallel implementations of the same requirement by default.
+
+The required division of work is:
+
+1. **ChatGPT first completes every safe repository-side task it can actually perform and verify.**
+   - inspect current code and docs;
+   - implement/refactor repository code;
+   - add tests and documentation;
+   - create/fix PRs;
+   - inspect CI;
+   - merge only after the required gates pass;
+   - keep the roadmap/pointer/worklog/handoff synchronized.
+
+2. **Anything ChatGPT cannot truthfully complete must be handed to Codex with an explicit trail.**
+   Typical Codex-owned remainder includes:
+   - real target-PC execution;
+   - local runtime diagnosis that requires the user's machine;
+   - provider/account/runtime integration unavailable to ChatGPT;
+   - physical microphone/camera/GPU/device checks;
+   - UAC/admin/interactive OS validation;
+   - real latency/performance/evidence capture;
+   - finishing or polishing a ChatGPT implementation when target evidence shows it is incomplete.
+
+3. **If ChatGPT's work is incomplete or imperfect, Codex must refine and finish that same work rather than discard it and start a competing implementation.**
+   Codex should preserve valid architecture, tests, contracts and merged behavior, then make the minimum evidence-backed changes required to make it correct and ready-to-use.
+
+4. **If Codex already owns an ACTIVE target/runtime task, ChatGPT must not independently rebuild that same task.**
+   ChatGPT may safely work on a non-conflicting repository slice, regression coverage, documentation, or another independent task.
+
+5. **If ChatGPT is actively changing a repository slice, Codex should consume that branch/PR/handoff before touching the same subsystem.**
+   When possible, continue/fix the existing branch or continue from its merged result.
+
+6. Parallel work is allowed only when the slices are clearly independent and cannot overwrite or invalidate each other.
+
+The goal is a relay, not a race:
+
+```text
+ChatGPT: implement what can be done from repository access
+        ↓ leave exact trail
+Codex: refine / validate / finish what requires the real environment
+        ↓ leave exact trail
+ChatGPT: read Codex changes and continue the next safe repository slice
+```
+
+No agent should redo work merely to claim ownership of it.
+
+### Mandatory transfer trail
+
+Whenever work moves from ChatGPT to Codex or from Codex back to ChatGPT, record:
+
+- what is already complete;
+- what is intentionally not complete;
+- why the remaining part cannot be finished by the current agent;
+- exact branch/PR/commit;
+- tests/CI already passed;
+- real evidence already collected;
+- exact next action;
+- files/subsystems that must not be rebuilt;
+- task state: `REPO_DONE_TARGET_PENDING`, `ACTIVE`, or `BLOCKED` as appropriate.
+
+A handoff without this trail is incomplete.
+
 ## 8. Mutual handoff format
 
 After a meaningful work slice, record a concise handoff with:
