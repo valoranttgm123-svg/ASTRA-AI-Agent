@@ -1,5 +1,14 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — safe parallel work saturation checkpoint
+
+- Completed the private SSH/evidence leak audit (PASS) and authoritative status-drift cleanup on draft PR #241.
+- Status-drift cleanup CI passed on head `7fad5efb854fac93c847bef45a76406cb78cd7dd`.
+- Reviewed remaining safe parallel opportunities and intentionally stopped adding duplicate runbooks/checklists.
+- ChatGPT repository-side parallel work is now `SATURATED_WAITING_FOR_TARGET_EVIDENCE`.
+- Next repository action must be triggered by new Codex PASS/FAIL/BLOCKED evidence, a reproduced repository defect, completion of the active target checkpoint, or an owner requirement change.
+- `main` remains unchanged.
+
 ## 2026-09-24 — authoritative status-drift cleanup
 
 - Audited current authoritative draft docs for stale multi-PC/PR #239 language.
