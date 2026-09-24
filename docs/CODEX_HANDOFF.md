@@ -52,10 +52,10 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: SSH/private evidence security
-STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+STATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 COMPLETED:
-- audited all 15 PR #241 files plus five SSH/config core files for private topology/credential leakage.
+- revalidated all 17 PR #241 files plus 4 additional baseline SSH/config/security files, 21 unique files total, for private topology/credential leakage.
 VALIDATED:
 - no current private alias string;
 - no RFC1918 private IP;
@@ -78,7 +78,7 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: project continuity / no-repeat recovery
-STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+STATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 CHANGED:
 - every completed ChatGPT/Codex work slice must create a durable GitHub checkpoint before the next task starts;
@@ -97,7 +97,7 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: target evidence templates / release freeze / reconciliation / branch hygiene
-STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+STATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 PREPARED:
 - `MULTI_PC_EVIDENCE_RESULT_TEMPLATE_2026-09-24.md`;
@@ -122,7 +122,7 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: target evidence preparation / release sequencing
-STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+STATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 PREPARED:
 - multi-PC target evidence runbook;
@@ -144,12 +144,12 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: collaboration / exact-build release evidence
-STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+STATE: BLOCKED
 CHANGED:
 - prepared stale pointer/mission cleanup after PR #239;
 - prepared exact-build evidence-freeze rule;
 - advanced current multi-PC mission past completed registry/bootstrap/marker work.
-WHY NOT MERGED:
+BLOCKER:
 - official ASTRA release evidence is commit-bound; moving `main` while Codex captures target evidence can invalidate current-HEAD provenance.
 NEXT:
 - Codex continues administrator/file/service, unreachable/wrong-node, remote STOP/KILL and pinned multi-step evidence;
