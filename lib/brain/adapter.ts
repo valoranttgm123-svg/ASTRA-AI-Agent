@@ -19,7 +19,7 @@ import type { AstraPlan } from "@/lib/planner/contracts";
 import type { AstraPlanExecutionEvent } from "@/lib/planner/executor";
 import type { AstraToolDefinition, AstraToolLifecycleEvent } from "@/lib/tools/contracts";
 import { astraNativeToolRuntime, createDefaultToolRuntime } from "@/lib/tools/runtime";
-import { parseDirectOwnerCommand } from "@/lib/tools/computer";
+import { parseDirectOwnerCommand, parseDirectReadOnlyComputerCommand } from "@/lib/tools/computer";
 import { generateStrategistPlan, shouldGeneratePlan } from "@/lib/planner/generator";
 import {
   chatWithCodex,
@@ -989,24 +989,6 @@ function formatDirectOwnerCommandResult(output: unknown) {
   ].filter(Boolean).join("\n");
 }
 
-function directReadOnlyComputerTool(input: string): "computer.system.info" | "computer.process.list" | null {
-  const text = input.trim().toLowerCase();
-
-  if (
-    /\b(?:versi\s+windows|windows\s+version|versi\s+os|os\s+version|nama\s+komputer|computer\s+name|hostname|system\s+info|informasi\s+sistem)\b/i.test(text)
-  ) {
-    return "computer.system.info";
-  }
-
-  if (
-    /\b(?:daftar\s+proses|process\s+list|proses\s+berjalan|running\s+process(?:es)?|tasklist|aplikasi\s+yang\s+sedang\s+berjalan)\b/i.test(text)
-  ) {
-    return "computer.process.list";
-  }
-
-  return null;
-}
-
 function formatDirectComputerReadResult(
   toolId: "computer.system.info" | "computer.process.list",
   output: unknown,
@@ -1747,15 +1729,15 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       }
     }
 
-    const directComputerTool =
+    const directComputerCommand =
       preferredProvider === "auto" &&
       selected === "computer" &&
       options?.requirePlan !== true &&
       !task.approvalToken
-        ? directReadOnlyComputerTool(input)
+        ? parseDirectReadOnlyComputerCommand(input)
         : null;
 
-    if (directComputerTool) {
+    if (directComputerCommand) {
       const policy = getPermissionPolicy();
       const approvedPermissionLevel = Math.min(
         1,
@@ -1765,7 +1747,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
       if (approvedPermissionLevel >= 1) {
         try {
           const toolRuntime = await createDefaultToolRuntime(options?.signal);
-          const definition = toolRuntime.get(directComputerTool);
+          const definition = toolRuntime.get(directComputerCommand.toolId);
 
           if (definition?.availability === "READY") {
             const liveEvents: AstraBrainEvent[] = [];
@@ -1782,8 +1764,10 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             );
 
             const result = await toolRuntime.execute(
-              directComputerTool,
-              {},
+              directComputerCommand.toolId,
+              directComputerCommand.nodeId
+                ? { nodeId: directComputerCommand.nodeId }
+                : {},
               {
                 approvedPermissionLevel,
                 policy: {
@@ -1820,7 +1804,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
                 agentName: agent.name,
                 state: "completed",
                 message: formatDirectComputerReadResult(
-                  directComputerTool,
+                  directComputerCommand.toolId,
                   result.output,
                 ),
                 requiresApproval: false,
@@ -1845,7 +1829,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
               };
             }
           }
-        } catch (error) {
+        } catch {
           options?.signal?.throwIfAborted();
           // Fall through to the bounded planner/executor path when the
           // controlled Computer Tool is unavailable or fails unexpectedly.
