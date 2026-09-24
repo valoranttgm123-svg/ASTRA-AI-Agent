@@ -36,7 +36,7 @@ Read in this order:
 8. `docs/JARVIS_PROGRESS_TRACKER.md`;
 9. only then use `docs/ASTRA_WORKLOG.md`, `docs/CODEX_PROGRESS_TRACKER.md`, the latest section of `docs/CODEX_HANDOFF.md`, and task-specific validation/security documents when extra history is needed.
 
-Older checkpoint sections later in this file are chronological history. They must never override live GitHub state, `docs/CURRENT_EXECUTION_POINTER.md`, or the ChatGPT saturation checkpoint.
+Older checkpoint sections later in this file are chronological history. They must never override live GitHub state, an open active PR/branch, `docs/CURRENT_EXECUTION_POINTER.md`, or the latest authoritative session checkpoint.
 
 Then:
 
@@ -45,12 +45,15 @@ Then:
 3. never assume an unmerged branch is complete;
 4. if a previous PR CI failed, inspect the failure before starting a replacement;
 5. if a branch was merged, use the merge result as repository truth and continue from the next unchecked task;
-6. if docs conflict, prefer:
-   - actual `main` code/CI;
-   - then `ASTRA_WORKLOG.md`;
-   - then `CODEX_PROGRESS_TRACKER.md`;
-   - then latest `CODEX_HANDOFF.md`;
-   - then roadmap/older history.
+6. if docs conflict, use this authority order:
+   - live current `main` code and newest CI;
+   - live open PR / active-branch state;
+   - `docs/CURRENT_EXECUTION_POINTER.md`;
+   - the latest authoritative session checkpoint named by this recovery file;
+   - `docs/JARVIS_PROGRESS_TRACKER.md`;
+   - `docs/CODEX_NEXT_MISSION.md`;
+   - latest relevant `ASTRA_WORKLOG.md` / `CODEX_HANDOFF.md` / `CODEX_PROGRESS_TRACKER.md`;
+   - dated continuation notes, roadmap history, old branches and chat transcripts last.
 
 ## Mandatory completion-checkpoint rule
 
