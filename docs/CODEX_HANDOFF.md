@@ -1,5 +1,26 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — ChatGPT draft held during Codex target evidence
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: collaboration / exact-build release evidence
+STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+CHANGED:
+- prepared stale pointer/mission cleanup after PR #239;
+- prepared exact-build evidence-freeze rule;
+- advanced current multi-PC mission past completed registry/bootstrap/marker work.
+WHY NOT MERGED:
+- official ASTRA release evidence is commit-bound; moving `main` while Codex captures target evidence can invalidate current-HEAD provenance.
+NEXT:
+- Codex continues administrator/file/service, unreachable/wrong-node, remote STOP/KILL and pinned multi-step evidence;
+- keep this ChatGPT documentation slice as draft until the active target evidence checkpoint is complete;
+- then merge queued non-conflicting docs, choose/install one final clean commit and freeze `main` for official release capture.
+DO NOT REPEAT:
+- do not repeat alias/bootstrap/marker validation;
+- do not merge this draft merely to update prose while commit-bound evidence is active.
+
+
 ## 2026-09-24 — PR #239 merged and PC1/remote validation advanced
 
 ACTOR: Codex
