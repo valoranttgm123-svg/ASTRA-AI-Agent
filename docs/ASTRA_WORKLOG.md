@@ -1,5 +1,18 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — full re-audit continuity remediation on draft PR #241
+
+- Re-audited live `main`, open PRs, current #241 diff/CI, canonical recovery/pointer/mission/tracker/handoff documents, relevant SSH/target branches, private-secret hygiene, and the critical PR #233 code safeguards.
+- Confirmed `main` remains `c5d89375ef25601132b47da7d1c064df22d2d98f`; PR #241 is the only open PR and remains draft/mergeable.
+- Confirmed predecessor draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701 in build, tests, typecheck, lint, dependency audit and PR diff check.
+- Confirmed critical current-main safeguards remain present: explicit remote `nodeId` preservation/fail-closed routing, 15s system-info timeout vs SSH ConnectTimeout=8, recursive forbidden-secret rejection, and temp-validate-replace private registry writes.
+- Corrected the current Multi-PC gate list to include separate administrator, file rollback, process-control, safe service-control, unreachable-node, wrong-identity, remote STOP/KILL and pinned multi-step evidence. Unknown-node is already PASS and must not be repeated.
+- Corrected recovery/source-of-truth ordering so live open PR/active branch and `CURRENT_EXECUTION_POINTER` outrank historical trackers/continuation notes.
+- Made `AGENTS.md` resume/branch/merge behavior aware of existing active PRs and the exact-build evidence freeze.
+- Normalized draft/waiting labels into canonical `STATE` plus optional `SUBSTATE` semantics.
+- No runtime application code, target-PC state, private SSH topology, or `main` was changed.
+
+
 ## 2026-09-24 — PR #241 consistency cleanup after audit revalidation
 
 - Reconciled the draft after the private-evidence audit scope grew from 15 to 17 PR files.
@@ -62,7 +75,7 @@
 - Release documents require the running ASTRA build, repository gate/evidence and clean repository HEAD to match the same commit throughout official capture.
 - ChatGPT therefore prepared a collaboration rule that freezes `main` during official commit-bound target/release evidence capture.
 - While Codex continues target evidence, ChatGPT cleanup work must remain on branch/draft PR and must not move `main`.
-- The draft also advances the current multi-PC mission to administrator/file/service, unreachable/wrong-node, remote STOP/KILL and pinned multi-step evidence.
+- The draft advances the current multi-PC mission to administrator context, bounded file rollback, disposable process control, safe service control, unreachable-node, wrong-identity, remote STOP/KILL and pinned multi-step evidence.
 - No runtime code changes are included.
 
 ## 2026-09-24 — PR #239 merged; remote evidence continues
@@ -73,7 +86,7 @@
 - Private configuration/project/automation hashes were preserved.
 - The private node registry now contains only three individually reverified remote Windows targets; PC1 remains LOCAL.
 - Direct ASTRA remote marker checks passed on all three registered remotes and unknown-node fail-closed passed.
-- Remaining multi-PC evidence is administrator/file/service control, unreachable/wrong-node behavior, remote STOP/KILL and one pinned-target multi-step task.
+- Remaining multi-PC evidence is administrator context, bounded file rollback, disposable process control, safe service control, unreachable-node fail-closed, wrong-identity fail-closed, remote STOP/KILL and one pinned-target multi-step task.
 - Pointer/handoff/tracker were synchronized because the prior top-level status still incorrectly said PR #239 ACTIVE after merge.
 
 ## 2026-09-24 — Codex resumes against the latest ChatGPT handoff
@@ -655,7 +668,7 @@ Still not proven:
 - Phase 19 Windows install/update/reinstall/startup;
 - Phase 20 final evidence-backed verdict.
 
-Exact next task: continue on the real target PC using `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`. If target-PC access is unavailable, change repository code only for a newly reproducible concrete defect; do not fabricate evidence or start Phase 21–30 as a substitute.
+Historical next-task note (SUPERSEDED): this 2026-09-21 checkpoint previously pointed to `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`. That dated note is historical only; current execution must come from live GitHub state, `docs/CURRENT_EXECUTION_POINTER.md`, `docs/CODEX_NEXT_MISSION.md`, and the latest session checkpoint. Later repository work legitimately continues Phase 21–30 under current roadmap rules.
 
 
 ## 2026-09-21 — final repository audit after PR #145
