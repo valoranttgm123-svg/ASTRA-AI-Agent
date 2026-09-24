@@ -1,5 +1,12 @@
 # CODEX REFINEMENT CONTRACT
 
+
+## Mandatory shared-memory collaboration rule — 2026-09-24
+
+Codex and ChatGPT are one continuous ASTRA project team. Read `docs/ASTRA_COLLABORATION_PROTOCOL.md` before implementation.
+
+Codex must consume ChatGPT's latest merged pointer/tracker/worklog/handoff before changing the same subsystem, and must write its own runtime/provider/target-PC changes back to those same durable documents so the next ChatGPT session can continue without guessing. A new session or missing chat context never authorizes rebuilding completed, active, blocked, or repo-complete/target-pending work.
+
 Status date: **2026-09-22**
 
 This document defines the division of work between ChatGPT repository work and Codex execution work for ASTRA.
