@@ -136,6 +136,58 @@ ChatGPT:
 - prepare repository fixes only if Codex reproduces a concrete repository defect;
 - do not compete with active target work.
 
+## Checkpoint update — mandatory checkpoint after every completed work slice
+
+Owner rule added after this checkpoint was first created:
+
+**Every completed ASTRA work slice by ChatGPT or Codex must create a durable GitHub checkpoint before the next task begins.**
+
+Applied to:
+- repository implementation;
+- target/runtime validation;
+- documentation/release preparation;
+- bug fixes/refinements;
+- target evidence checkpoints.
+
+Required checkpoint fields:
+- ACTOR;
+- DATE;
+- AREA;
+- STATE;
+- BRANCH/PR;
+- HEAD/MERGE COMMIT;
+- COMPLETED;
+- VALIDATED;
+- FAILED;
+- BLOCKED;
+- NEXT;
+- DO NOT REPEAT.
+
+Durable files updated for this rule:
+- `docs/ASTRA_COLLABORATION_PROTOCOL.md`;
+- `docs/SESSION_RECOVERY.md`;
+- `docs/CURRENT_EXECUTION_POINTER.md`;
+- `docs/CODEX_HANDOFF.md`;
+- `docs/ASTRA_WORKLOG.md`.
+
+Validation before writing this checkpoint:
+- draft head `58eb8da54fb7f052a4c574aa5336b95285e170c1`;
+- ASTRA CI SUCCESS;
+- build PASS;
+- tests PASS;
+- typecheck PASS;
+- lint PASS;
+- dependency audit PASS;
+- PR diff check PASS.
+
+DO NOT REPEAT:
+- do not finish one task and silently move to the next;
+- do not use chat history as the only checkpoint;
+- during evidence freeze, checkpoint on the existing draft PR rather than moving `main`.
+
+NEXT:
+- future ChatGPT/Codex work must apply this rule automatically after each completed work slice.
+
 ## Resume phrase
 
 **RESUME FROM PR #241 + THIS CHECKPOINT. DO NOT RESTART ASTRA WORK.**
