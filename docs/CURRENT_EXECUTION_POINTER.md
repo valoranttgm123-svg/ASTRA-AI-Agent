@@ -1,5 +1,11 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Mandatory collaboration continuity
+
+Before any ChatGPT or Codex implementation, read `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
+
+The owner requires ChatGPT and Codex to act as one continuous ASTRA team. Every meaningful change must synchronize the roadmap/pointer/worklog/handoff. New or interrupted sessions must resume existing `ACTIVE`/`BLOCKED` work and must not recreate merged work.
+
 ## Canonical latest checkpoint — 2026-09-24
 
 Live repository truth at this checkpoint:
