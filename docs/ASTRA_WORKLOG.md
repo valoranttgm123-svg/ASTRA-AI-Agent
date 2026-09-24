@@ -1,5 +1,13 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — SSH target inventory refreshed from owner evidence
+
+- Owner supplied newer Codex connection evidence showing four PC targets currently connected.
+- This supersedes the older physical observation that intended SSH aliases failed name resolution.
+- Exact SSH aliases are intentionally not committed because the multi-PC registry/topology is private local configuration.
+- Codex must verify the current private aliases with `ssh -G` and remote `COMPUTERNAME`, identify the ASTRA hub/local machine, and bootstrap only true remote targets into the gitignored registry.
+- No SSH transport architecture was changed.
+
 ## 2026-09-24 — post-remediation fail-closed hardening
 
 - Re-audited current main after PR #235 and found two additional repository hardening opportunities.
