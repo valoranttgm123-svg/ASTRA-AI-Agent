@@ -58,6 +58,7 @@ const SSH_ALIAS = /^[a-z0-9][a-z0-9._-]{0,127}$/i;
 const COMPUTER_NAME = /^[a-z0-9][a-z0-9-]{0,62}$/i;
 const FORBIDDEN_NODE_KEYS =
   /^(?:password|passphrase|token|privatekey|private_key|keypath|key_path|identityfile|identity_file)$/i;
+const ALLOWED_CONFIG_KEYS = new Set(["version", "nodes"]);
 const ALLOWED_NODE_KEYS = new Set([
   "id",
   "label",
@@ -108,6 +109,19 @@ export function parseComputerNodesConfig(raw: string): AstraComputerNodesConfig 
 
   if (!isRecord(decoded) || decoded.version !== 1 || !Array.isArray(decoded.nodes)) {
     throw new Error("ASTRA computer node config must use version 1 and a nodes array.");
+  }
+
+  if (findForbiddenNodeKey(decoded)) {
+    throw new Error(
+      "ASTRA computer node config must not contain passwords, tokens, or private-key paths.",
+    );
+  }
+  for (const key of Object.keys(decoded)) {
+    if (!ALLOWED_CONFIG_KEYS.has(key)) {
+      throw new Error(
+        "ASTRA computer node config contains unsupported root field: " + key,
+      );
+    }
   }
 
   const nodes: AstraComputerNode[] = [];
