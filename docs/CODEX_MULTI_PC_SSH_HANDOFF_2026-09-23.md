@@ -1,5 +1,37 @@
 # Codex handoff — ASTRA multi-PC over existing SSH
 
+## 2026-09-24 — repository transport implementation in progress
+
+Branch `feat/multi-pc-ssh-transport-20260924` continues from main
+`0a0962a3494f066c14eb40850dcb1597e8178c3a` without redoing PC1.
+
+Implemented on this branch:
+
+- private gitignored node registry via `ASTRA_COMPUTER_NODES_FILE`;
+- default `.astra/computer-nodes.json`, with parser rejection of credential/key fields;
+- first-class `computer.nodes.list` plus optional `nodeId` on Computer tools;
+- multi-node default runtime with LOCAL and SSH transport evidence;
+- OpenSSH `BatchMode=yes` using only the existing SSH config alias and normal
+  known-host verification (no host-key bypass and no private key path in ASTRA);
+- per-command remote `COMPUTERNAME` identity guard against the private
+  `expectedComputerName`;
+- trusted-node requirement, bounded output/timeouts, and no fallback for
+  unknown/untrusted/offline/identity-mismatched targets;
+- explicit direct no-model syntax `@<node-id> powershell: ...` / `cmd: ...`;
+- target validator `scripts/windows/validate-multi-pc-owner-mode.ps1`;
+- regression tests for config secrets, target evidence, unknown/untrusted nodes,
+  identity mismatch and independent node inventory.
+
+Current target-only blocker remains outside Git: the latest real check reported
+all three intended remote SSH aliases failing name resolution. Do not invent or
+commit replacement IPs/aliases. Resolve the user's existing SSH topology on the
+hub, write only the verified alias + expected Windows computer name into the
+private node registry, then run the validator.
+
+Reliable remote STOP/KILL, actual administrator/file/service mutations and a
+multi-step task still require physical target evidence before declaring
+multi-PC Owner Mode complete.
+
 Date: 2026-09-23
 
 ## User intent
