@@ -2,6 +2,12 @@
 
 This repository is the working source of truth for the ASTRA AI Agent project.
 
+## CHATGPT ↔ CODEX COLLABORATION PROTOCOL — mandatory
+
+Read `docs/ASTRA_COLLABORATION_PROTOCOL.md` before implementation work. It defines the cross-session project-memory, no-repeat, roadmap-update and mutual-handoff rules for both ChatGPT and Codex.
+
+Every meaningful ASTRA change must update the canonical pointer/tracker/worklog/handoff in the same work slice so the other agent can continue without reconstructing old chats.
+
 ## CODEX REFINEMENT CONTRACT — mandatory
 
 Read `docs/CODEX_REFINEMENT_CONTRACT.md` before implementation work.
@@ -17,15 +23,16 @@ Codex owns the real target-PC/provider/runtime work, evidence-driven fixes, end-
 Before changing any code:
 
 0. inspect current `main`, open PRs, and newest CI;
-1. read `docs/CURRENT_EXECUTION_POINTER.md` — **shortest authoritative current checkpoint**;
-2. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` — stale/divergent branch reconciliation;
-3. read `docs/CODEX_REFINEMENT_CONTRACT.md` — mandatory ChatGPT→Codex division of work;
-4. read `docs/CODEX_NEXT_MISSION.md` — executable mission and real-environment order;
-5. read `docs/JARVIS_PROGRESS_TRACKER.md` — Phase 21–30 repository-foundation truth;
-6. read `docs/ASTRA_WORKLOG.md` — durable chronological history;
-7. read `docs/SESSION_RECOVERY.md` — interruption/new-session protocol;
-8. read `docs/CODEX_HANDOFF.md` and `docs/CODEX_PROGRESS_TRACKER.md`;
-9. then read the validation/security document relevant to the active task.
+1. read `docs/ASTRA_COLLABORATION_PROTOCOL.md` — **mandatory cross-session ChatGPT/Codex rule**;
+2. read `docs/CURRENT_EXECUTION_POINTER.md` — **shortest authoritative current checkpoint**;
+3. read `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md` — stale/divergent branch reconciliation;
+4. read `docs/CODEX_REFINEMENT_CONTRACT.md` — mandatory ChatGPT→Codex division of work;
+5. read `docs/CODEX_NEXT_MISSION.md` — executable mission and real-environment order;
+6. read `docs/JARVIS_PROGRESS_TRACKER.md` — Phase 21–30 repository-foundation truth;
+7. read `docs/ASTRA_WORKLOG.md` — durable chronological history;
+8. read `docs/SESSION_RECOVERY.md` — interruption/new-session protocol;
+9. read `docs/CODEX_HANDOFF.md` and `docs/CODEX_PROGRESS_TRACKER.md`;
+10. then read the validation/security document relevant to the active task.
 
 Supporting canonical documents:
 - `docs/ASTRA_MAX.md` — approved ASTRA MAX + JARVIS-Class roadmap and Definition of Done;
