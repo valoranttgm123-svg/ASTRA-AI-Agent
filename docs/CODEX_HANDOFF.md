@@ -59,7 +59,7 @@ STATE: ACTIVE
 SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 COMPLETED:
-- revalidated all 17 PR #241 files plus 4 additional baseline SSH/config/security files, 21 unique files total, for private topology/credential leakage.
+- revalidated all 18 PR #241 files plus 4 additional baseline SSH/config/security files, 22 unique files total, for private topology/credential leakage.
 VALIDATED:
 - no current private alias string;
 - no RFC1918 private IP;
