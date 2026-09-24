@@ -21,12 +21,12 @@
 - [x] Prepare final release freeze checklist.
 - [x] Prepare post-Codex reconciliation checklist.
 - [x] Verify 12 recent merged branch candidates have `ahead_by = 0` against current main; re-check before any future deletion.
-- [x] Audit PR #241 + SSH/config core files for private alias/IP/key-path/credential leakage: PASS across 20 directly inspected files.
+- [x] Audit PR #241 + baseline SSH/config/security files for private alias/IP/key-path/credential leakage: PASS across 21 unique inspected files (17 current PR files + 4 additional baseline files).
 - [x] Audit authoritative draft docs for stale multi-PC/PR #239 status and mark current instructions/snapshots correctly as post-bootstrap or historical/superseded.
 - [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
 - [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
 
-Current ChatGPT parallel state: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**. Do not create duplicate preparation work; resume when new Codex evidence or a reproduced defect arrives.
+Current ChatGPT parallel state: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**. ASTRA CI #698 passed on draft head `f6d41233820217e25bc81b806b8e6cb96f95be2e` before the latest consistency-only cleanup. Do not create duplicate preparation work; resume when new Codex evidence or a reproduced defect arrives.
 
 ## Recovery
 
