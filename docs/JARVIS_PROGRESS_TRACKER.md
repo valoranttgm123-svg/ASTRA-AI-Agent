@@ -12,7 +12,7 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] New-session recovery requires live `main`/CI/open-PR inspection before implementation.
 - [x] Every meaningful ChatGPT/Codex change must update pointer + tracker + worklog + relevant handoff/validation docs.
 - [x] Explicit no-repeat rule for merged, active, blocked and repo-complete/target-pending work.
-- [x] No-competition division: ChatGPT handles safe repository work; Codex refines/completes target/runtime/provider remainder instead of creating competing implementations.
+- [x] No-competition division: ChatGPT handles safe repository work; Codex refines/completes target/runtime/provider remainder. Better evidence-backed Codex proposals are accepted; only unjustified competing replacements are prohibited.
 - [x] Mandatory transfer trail records what is complete, what remains, why, branch/PR/commit, validation, exact next action and DO NOT REPEAT scope.
 - [ ] Ongoing rule: every future meaningful change must preserve these synchronization and work-ownership requirements.
 
