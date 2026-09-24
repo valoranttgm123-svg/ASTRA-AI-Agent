@@ -14,9 +14,13 @@ ChatGPT:
 - do not move `main` during commit-bound evidence capture.
 
 Current multi-PC remaining:
-- remote admin/file/service-control evidence;
-- unreachable/wrong-node evidence;
-- remote STOP/KILL;
+- remote administrator-context evidence;
+- bounded remote file mutation/readback/rollback evidence;
+- remote process-control evidence;
+- safe service-control evidence or truthful BLOCKED;
+- unreachable-node fail-closed evidence;
+- wrong-identity fail-closed evidence; unknown-node is already PASS;
+- remote STOP/KILL proving the remote work itself terminates;
 - pinned multi-step task.
 
 ## Stage 1 — close functional defects before final evidence freeze
