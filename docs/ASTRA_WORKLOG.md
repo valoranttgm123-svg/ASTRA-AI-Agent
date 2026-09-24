@@ -1,5 +1,13 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — private SSH/evidence leak audit
+
+- Scanned all 15 current PR #241 files plus five SSH/config core files directly on the draft branch.
+- Checked current private alias strings, private-key material, IdentityFile/key paths, RFC1918 addresses, obvious credential assignments and literal SSH user@host topology.
+- Result: PASS; no matching private topology/credential material was found in the inspected public/draft scope.
+- Exact aliases/topology remain private and private evidence remains under gitignored `.astra/`.
+- No runtime code and no `main` state changed.
+
 ## 2026-09-24 — owner mandates checkpoint after every completed task
 
 - Owner explicitly requires a durable checkpoint after every completed ASTRA work slice.
