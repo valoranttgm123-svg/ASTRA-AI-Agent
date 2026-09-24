@@ -2,8 +2,8 @@
 
 Status: **AUDIT COMPLETE / FOLLOW-UP REQUIRED**
 
-Actor: ChatGPT  
-Repository: `valoranttgm123-svg/ASTRA-AI-Agent`  
+Actor: ChatGPT
+Repository: `valoranttgm123-svg/ASTRA-AI-Agent`
 Audited main at start: `ffc6b7209498cd72dd970a27c56c03c453b39490`
 
 This audit is a durable handoff. It does not claim target-PC readiness. It separates:
