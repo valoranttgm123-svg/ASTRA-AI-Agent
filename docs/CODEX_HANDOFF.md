@@ -1,5 +1,24 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — owner requires checkpoint after every completed task
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: project continuity / no-repeat recovery
+STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+CHANGED:
+- every completed ChatGPT/Codex work slice must create a durable GitHub checkpoint before the next task starts;
+- during evidence freeze, checkpoints stay on the active draft instead of moving `main`.
+VALIDATED:
+- the current session checkpoint and recovery pointer already exist in #241.
+NEXT:
+- apply this checkpoint-after-completion rule to every future work slice.
+DO NOT REPEAT:
+- do not finish one task and start another without checkpointing;
+- do not rely on chat history as the durable checkpoint.
+
+
 ## 2026-09-24 — additional draft aids ready
 
 ACTOR: ChatGPT
