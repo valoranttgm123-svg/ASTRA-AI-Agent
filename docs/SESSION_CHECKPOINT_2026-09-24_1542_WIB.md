@@ -230,6 +230,52 @@ NEXT:
 DO NOT REPEAT:
 - do not repeat alias/bootstrap/marker work or revive PR #239 as ACTIVE.
 
+## Parallel safe-work saturation checkpoint
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: safe parallel repository preparation
+STATE: SATURATED_WAITING_FOR_TARGET_EVIDENCE
+BRANCH/PR: #241
+
+COMPLETED IN DRAFT #241:
+- exact-build evidence-freeze protocol;
+- multi-PC target evidence runbook;
+- multi-PC evidence result template;
+- final release execution matrix;
+- release freeze checklist;
+- post-Codex reconciliation checklist;
+- branch hygiene plan;
+- 12 verified zero-unique-commit cleanup candidates;
+- private SSH/evidence leak audit across 20 directly inspected files — PASS;
+- authoritative status-drift cleanup to post-bootstrap/PR239-merged reality;
+- mandatory checkpoint-after-every-completed-task rule.
+
+VALIDATED:
+- latest completed status-drift slice CI on head `7fad5efb854fac93c847bef45a76406cb78cd7dd`: SUCCESS;
+- build/tests/typecheck/lint/dependency audit/diff check PASS;
+- no runtime code or `main` change was required.
+
+WHY SATURATED:
+- additional documentation would duplicate existing runbooks/checklists and increase continuity noise;
+- runtime/SSH/STOP-KILL changes would overlap Codex's active target slice without target evidence;
+- branch deletion is intentionally deferred during evidence work;
+- official release capture must wait for a final frozen clean commit.
+
+NEXT TRIGGER:
+Continue ChatGPT repository work only when one of these occurs:
+1. Codex posts new PASS/FAIL/BLOCKED target evidence;
+2. Codex reproduces a concrete repository defect;
+3. the active target checkpoint completes and #241 can be reconciled/merged;
+4. the owner changes requirements.
+
+DO NOT REPEAT:
+- do not invent another runbook/checklist;
+- do not start another SSH/Computer architecture;
+- do not merge #241 merely because CI is green;
+- do not delete branches while target evidence is active;
+- do not mark waiting-for-evidence as NOT_STARTED.
+
 ## Resume phrase
 
 **RESUME FROM PR #241 + THIS CHECKPOINT. DO NOT RESTART ASTRA WORK.**
