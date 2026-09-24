@@ -22,6 +22,7 @@
 - [x] Prepare post-Codex reconciliation checklist.
 - [x] Verify 12 recent merged branch candidates have `ahead_by = 0` against current main; re-check before any future deletion.
 - [x] Audit PR #241 + SSH/config core files for private alias/IP/key-path/credential leakage: PASS across 20 directly inspected files.
+- [x] Audit authoritative draft docs for stale multi-PC/PR #239 status and mark current instructions/snapshots correctly as post-bootstrap or historical/superseded.
 - [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
 - [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
 
