@@ -106,6 +106,48 @@ test("private node config rejects embedded credentials and requires verified ide
               transport: "SSH",
               trusted: true,
               sshAlias: "pc2-windows",
+              expectedComputerName: "PC2",
+              metadata: {
+                password: "nested-secret",
+              },
+            },
+          ],
+        }),
+      ),
+    /must not contain passwords, tokens, or private-key paths/i,
+  );
+
+  assert.throws(
+    () =>
+      parseComputerNodesConfig(
+        JSON.stringify({
+          version: 1,
+          nodes: [
+            {
+              id: "pc2",
+              transport: "SSH",
+              trusted: true,
+              sshAlias: "pc2-windows",
+              expectedComputerName: "PC2",
+              arbitraryMetadata: "not-supported",
+            },
+          ],
+        }),
+      ),
+    /unsupported field/i,
+  );
+
+  assert.throws(
+    () =>
+      parseComputerNodesConfig(
+        JSON.stringify({
+          version: 1,
+          nodes: [
+            {
+              id: "pc2",
+              transport: "SSH",
+              trusted: true,
+              sshAlias: "pc2-windows",
             },
           ],
         }),
