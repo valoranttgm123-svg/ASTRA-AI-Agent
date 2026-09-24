@@ -87,9 +87,23 @@ probed independently and can report `READY`, `OFFLINE`, `UNTRUSTED`, or
 
 One remote failure does not change another node's state.
 
+## Safe trust bootstrap
+
+Once Codex has the real existing SSH aliases, create the private registry without
+copying SSH credentials or config contents:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\configure-ssh-computer-nodes.ps1 -Node "<node-id>=<existing-ssh-alias>","<node-id>=<existing-ssh-alias>"
+```
+
+The bootstrap reads only effective HostName/port for diagnosis, uses normal
+OpenSSH host verification and key authentication, verifies each remote Windows
+`COMPUTERNAME`, and writes the registry only if every requested node succeeds.
+If any alias cannot resolve/authenticate, no registry is written.
+
 ## Target validation
 
-After Codex resolves the real existing aliases and verified computer names, run:
+After the bootstrap succeeds and ASTRA-Agent is restarted, run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\windows\validate-multi-pc-owner-mode.ps1 -BaseUrl http://127.0.0.1:3017
