@@ -1,5 +1,11 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Parallel ChatGPT repository status
+
+State: **SAFE PARALLEL WORK SATURATED / WAITING FOR NEW CODEX TARGET EVIDENCE**
+
+Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
+
 ## Owner continuity rule — checkpoint every completed task
 
 Every completed ASTRA work slice by ChatGPT or Codex must create a durable GitHub checkpoint **before the next task starts**. During the current evidence freeze, checkpoints belong on the existing draft PR #241 rather than moving `main`.
