@@ -8,6 +8,19 @@ Read `docs/ASTRA_COLLABORATION_PROTOCOL.md` before implementation work. It defin
 
 Every meaningful ASTRA change must update the canonical pointer/tracker/worklog/handoff in the same work slice so the other agent can continue without reconstructing old chats.
 
+## NO-COMPETITION WORK DIVISION — mandatory
+
+ChatGPT and Codex are a relay team, not competing implementers.
+
+- ChatGPT performs all safe repository-side work it can complete and verify.
+- ChatGPT must leave an explicit handoff for anything it cannot finish.
+- Codex owns refinement/completion that requires the real target PC/provider/runtime and must improve the existing ChatGPT implementation rather than create a competing replacement.
+- If one agent has an ACTIVE branch/PR/task, the other must inspect and continue that work before touching the same subsystem.
+- Parallel work is allowed only for clearly independent slices.
+- Both agents must leave pointer/tracker/worklog/handoff evidence after meaningful changes.
+
+Read the full rule in `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
+
 ## CODEX REFINEMENT CONTRACT — mandatory
 
 Read `docs/CODEX_REFINEMENT_CONTRACT.md` before implementation work.
