@@ -11,7 +11,6 @@ const STATE_SEQUENCE: AgentState[] = ["idle", "listening", "thinking", "speaking
 
 const CYAN = new THREE.Color("#38ecff");
 const CYAN_SOFT = new THREE.Color("#159eb5");
-const ORANGE = new THREE.Color("#ffad32");
 
 function lineMaterial(color = CYAN, opacity = 0.28) {
   return new THREE.LineBasicMaterial({
