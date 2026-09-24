@@ -58,7 +58,7 @@ const CATALOG: readonly AstraToolDefinition[] = [
       "Read bounded Windows system identity from the local computer or an explicitly selected trusted node.",
     permissionLevel: 1,
     sideEffect: "read",
-    timeoutMs: 5_000,
+    timeoutMs: 15_000,
     supportsCancellation: true,
     availability: "NOT_CONFIGURED",
     inputSchema: {
@@ -160,6 +160,53 @@ const APP_ALLOWLIST: Readonly<Record<string, string>> = {
   paint: "mspaint.exe",
   explorer: "explorer.exe",
 };
+
+export type AstraDirectReadOnlyComputerCommand = {
+  toolId: "computer.system.info" | "computer.process.list";
+  nodeId?: string;
+};
+
+function explicitReadOnlyNodeId(input: string) {
+  const ids = new Set<string>();
+
+  for (const match of input.matchAll(/(?:^|\s)@([a-z0-9][a-z0-9._-]{0,63})(?=\s|$|[,.!?])/gi)) {
+    ids.add(match[1].toLowerCase());
+  }
+
+  for (const match of input.matchAll(/\b(pc\d{1,3})\b/gi)) {
+    ids.add(match[1].toLowerCase());
+  }
+
+  return ids.size === 1 ? [...ids][0] : ids.size > 1 ? null : undefined;
+}
+
+export function parseDirectReadOnlyComputerCommand(
+  input: string,
+): AstraDirectReadOnlyComputerCommand | null {
+  const text = input.trim();
+  const normalized = text.toLowerCase();
+  let toolId: AstraDirectReadOnlyComputerCommand["toolId"] | null = null;
+
+  if (
+    /\b(?:versi\s+windows|windows\s+version|versi\s+os|os\s+version|nama\s+komputer|computer\s+name|hostname|system\s+info|informasi\s+sistem)\b/i.test(normalized)
+  ) {
+    toolId = "computer.system.info";
+  } else if (
+    /\b(?:daftar\s+proses|process\s+list|proses\s+berjalan|running\s+process(?:es)?|tasklist|aplikasi\s+yang\s+sedang\s+berjalan)\b/i.test(normalized)
+  ) {
+    toolId = "computer.process.list";
+  }
+
+  if (!toolId) return null;
+
+  const nodeId = explicitReadOnlyNodeId(text);
+  if (nodeId === null) return null;
+
+  return {
+    toolId,
+    ...(nodeId ? { nodeId } : {}),
+  };
+}
 
 export type AstraDirectOwnerCommand = {
   nodeId?: string;
