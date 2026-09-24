@@ -18,8 +18,8 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 
 ## 2026-09-24 post-remediation hardening
 
-- [ ] Fail closed on an explicitly targeted remote read when the requested remote tool/node is unavailable or fails; do not fall through to planner/local reinterpretation.
-- [ ] Reject secret-like and unsupported fields at the root of the private computer-node registry, not only inside node entries.
+- [x] Fail closed on an explicitly targeted remote read when the requested remote tool/node is unavailable or fails; do not fall through to planner/local reinterpretation.
+- [x] Reject secret-like and unsupported fields at the root of the private computer-node registry, not only inside node entries.
 
 ## Project continuity / ChatGPT ↔ Codex collaboration
 
