@@ -118,20 +118,20 @@ Never resume by weakening these:
 - Humanoid HIGH quality is preserved unless the owner explicitly changes the visual requirement;
 - no secrets/private runtime data committed.
 
-## Current checkpoint
+## Historical checkpoint at protocol creation — SUPERSEDED
 
-At creation of this protocol:
+At creation of this protocol (historical only; never use as current mission):
 
 - P15A–P15E: merged/CI verified;
 - Phase 15 repository hardening: merged/CI verified;
 - Phase 16A instrumentation: merged/CI verified;
 - Phase 16 target runtime/browser measurements: pending local access;
 - Phase 14 local validation: pending;
-- Sonor real validation: pending local access;
+- Sonor real validation: pending local access at that historical checkpoint; later target evidence validated retrieval/project scope/Graphify/Obsidian provenance.
 - Phase 17A preflight tooling: merged/CI verified;
 - repository cleanup before RC: complete;
 - Phase 19A read-only readiness self-check tooling: merged/CI verified;
-- current implementable repository work: **Phase 19B safe update/reinstall tooling**.
+- historical next repository work at that time: **Phase 19B safe update/reinstall tooling**.
 
 ## NVIDIA MAX recovery checkpoint — 2026-09-22
 
@@ -232,7 +232,7 @@ Repository truth before this slice:
 - Phase 25 merged PR #165 at `2169d260ae4e52577053af442e10edc7ca1b6abf`;
 - Phase 25 main CI #443 SUCCESS.
 
-Active branch: `feature/phase28-diagnostics-audit-offline`.
+Historical branch snapshot: `feature/phase28-diagnostics-audit-offline`.
 
 If a PR exists for this branch, inspect its CI and continue/fix it rather than creating a duplicate diagnostics implementation.
 
@@ -247,7 +247,7 @@ Repository truth:
 - Phase 28 merged PR #166 at `a01d40ff8e378b1b1881269f0568bb65793d2e17`;
 - Phase 28 main CI #445 SUCCESS.
 
-Active branch: `feature/phase22-identity-trust-secrets`.
+Historical branch snapshot: `feature/phase22-identity-trust-secrets`.
 
 If a PR exists for this branch, inspect its CI and continue/fix it instead of starting another identity/security implementation.
 
@@ -263,7 +263,7 @@ Repository truth:
 - Phase 22 PR #167 merged at `a2b289d9118c8883608379320784b7bc047f980c`;
 - Phase 22 main CI #449 SUCCESS.
 
-Active branch: `feature/phase27-multi-device-foundation`.
+Historical branch snapshot: `feature/phase27-multi-device-foundation`.
 
 If a PR exists for this branch, inspect its newest head SHA/CI and continue/fix it rather than building another device/pairing layer.
 
@@ -280,7 +280,7 @@ Repository truth before this slice:
 - Phase 27 PR #168 merged at `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`;
 - Phase 27 main CI #451 SUCCESS.
 
-Active branch: `feature/phase29-skill-environment-registry`.
+Historical branch snapshot: `feature/phase29-skill-environment-registry`.
 Active PR: #169.
 
 Phase 29 now contains:
