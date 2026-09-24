@@ -50,6 +50,10 @@ Use small batches:
 
 Stop immediately if a branch has unique commits or ambiguous ownership.
 
+## Verified recent candidates
+
+A separately checked list of recent branches with `ahead_by = 0` is in `docs/VERIFIED_BRANCH_CLEANUP_CANDIDATES_2026-09-24.md`. Re-check before any deletion because `main` may advance.
+
 ## Current decision
 
 During Codex target evidence:
