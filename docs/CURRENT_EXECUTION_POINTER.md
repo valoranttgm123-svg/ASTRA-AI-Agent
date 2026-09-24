@@ -4,7 +4,7 @@
 
 State: **SAFE PARALLEL WORK SATURATED / WAITING FOR NEW CODEX TARGET EVIDENCE**
 
-Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
+Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. The last fully validated pre-cleanup draft head `f6d41233820217e25bc81b806b8e6cb96f95be2e` passed ASTRA CI #698; the private-evidence audit is revalidated across 21 unique files (17 current PR files + 4 additional baseline files). Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
 
 ## Owner continuity rule — checkpoint every completed task
 
