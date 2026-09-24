@@ -1,5 +1,11 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — stale audit pointer closed
+
+- Post-merge verification found the current pointer still contained the original pre-remediation audit defect list below the newer PR #233 completion block.
+- Updated the pointer and full-audit banner so historical findings cannot be mistaken for current defects.
+- No runtime behavior changed; remaining work is target/runtime/provider evidence only.
+
 ## 2026-09-24 — audit remediation PR #233
 
 - Started focused follow-up from the merged full audit; existing Computer/Sonor architecture is preserved rather than rebuilt.
