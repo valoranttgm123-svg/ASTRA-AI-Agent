@@ -36,6 +36,18 @@ That is a complete instruction.
 
 Resume automatically from repository truth. Do not ask the owner to restate the roadmap.
 
+## Audit hold before fresh multi-PC target evidence
+
+The 2026-09-24 full audit found repository defects that ChatGPT owns. Read `docs/FULL_AUDIT_2026-09-24.md`.
+
+Before Codex performs fresh final PC2-PC4 evidence, wait for the focused repository follow-up(s) that fix:
+- direct read-only remote target preservation;
+- system-info/SSH timeout mismatch;
+- canonical MEM-X/Sonor status drift;
+- tracker/bootstrap/config hardening identified by the audit.
+
+Codex must not rebuild the Computer Agent or Sonor while these fixes are being prepared. After the fixes merge, install/verify the exact clean current build and resume target-PC validation.
+
 ## Shared work ownership rule
 
 Before choosing a mission item, apply `docs/ASTRA_COLLABORATION_PROTOCOL.md`:
