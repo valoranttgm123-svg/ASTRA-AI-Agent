@@ -1,5 +1,27 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — post-remediation hardening validated
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent fail-closed boundaries
+STATE: REPO_DONE_TARGET_PENDING
+CHANGED:
+- explicit remote read failure/unavailability now blocks on the requested node and does not fall through to planner/local reinterpretation;
+- root node-registry schema rejects secret-like and unsupported root fields.
+VALIDATED:
+- ASTRA CI PASS;
+- 460 tests / 458 pass / 0 fail / 2 Windows-only skips;
+- build/typecheck/lint/dependency audit/diff check PASS;
+- dependency audit 0 vulnerabilities.
+NEXT:
+- continue only target/runtime/provider evidence after this PR merges.
+DO NOT REPEAT:
+- do not add another remote-read fallback path;
+- do not loosen the private registry schema;
+- do not rebuild multi-PC transport.
+
+
 ## 2026-09-24 — post-remediation hardening active
 
 ACTOR: ChatGPT
