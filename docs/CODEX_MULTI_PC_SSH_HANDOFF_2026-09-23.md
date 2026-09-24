@@ -25,10 +25,13 @@ Repository-complete now:
 
 PR #226 is also merged to main as `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e` and adds `scripts/windows/configure-ssh-computer-nodes.ps1`: a local trust-bootstrap helper that receives explicit `node-id=existing-ssh-alias` mappings, inspects only safe `ssh -G` fields (HostName/port), verifies the remote Windows `COMPUTERNAME` over normal host-verified SSH, and writes the private registry only when every target succeeds. It never copies passwords, tokens, private keys, key paths, or SSH config contents into the registry.
 
-Current target-only blocker remains outside Git: the latest real check reported
-all three intended remote SSH aliases failing name resolution. Do not invent or
-commit replacement IPs/aliases. Diagnose the existing SSH config/network on the
-hub, bootstrap only verified nodes, restart ASTRA-Agent, then run the validator.
+The older target-only observation that intended remote aliases failed name
+resolution is superseded. The owner now reports four PC targets connected in
+Codex. Exact aliases remain private and must not be committed. On the real hub,
+verify the current connected aliases with `ssh -G` and remote
+`$env:COMPUTERNAME`, identify which machine is LOCAL/the ASTRA hub, bootstrap
+only the remaining verified remote nodes, restart ASTRA-Agent, then run the
+validator.
 
 Reliable remote STOP/KILL, actual administrator/file/service mutations and a
 multi-step task still require physical target evidence before declaring
@@ -203,7 +206,7 @@ powershell -ExecutionPolicy Bypass -File .\\scripts\\windows\\validate-owner-mod
 
 Use the actual local ASTRA port if it differs. The script fails closed unless Owner Mode is READY and the direct probe returns verified tool lifecycle evidence without memory/planner/model use.
 
-That repository sequence is now complete through PR #225/#226. Codex must not reimplement the local executor or multi-PC transport. Continue only with the physical PC2-PC4 alias/connectivity/bootstrap/runtime validation and remaining remote admin/STOP-KILL/multi-step evidence.
+That repository sequence is now complete through PR #225/#226. Codex must not reimplement the local executor or multi-PC transport. Continue only with physical verification of the owner-reported connected targets, private-registry bootstrap for true remote nodes, and the remaining remote admin/STOP-KILL/multi-step evidence.
 
 ## Do not redo completed work
 
