@@ -334,7 +334,7 @@ FAILED:
 BLOCKED:
 - ChatGPT safe parallel work remains saturated pending new Codex target evidence, a reproduced repository defect, target-checkpoint completion, or an owner requirement change.
 NEXT:
-- Codex continues remote admin/file/process/service evidence, unreachable/wrong-identity fail-closed, remote STOP/KILL, and one pinned-target multi-step task;
+- Codex continues administrator context, bounded file rollback, disposable process control, safe service control, unreachable-node and wrong-identity fail-closed, remote STOP/KILL, and one pinned-target multi-step task;
 - ChatGPT only reconciles genuinely new Codex PASS/FAIL/BLOCKED evidence or a concrete repository defect.
 DO NOT REPEAT:
 - do not recreate the audit/runbooks/templates/freeze/reconciliation work;
