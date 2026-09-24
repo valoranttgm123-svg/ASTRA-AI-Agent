@@ -8,7 +8,7 @@ The owner requires ChatGPT and Codex to act as one continuous ASTRA team. Every 
 
 ## Work ownership rule
 
-ChatGPT and Codex must not compete for the same ASTRA slice. ChatGPT completes safe repository work; unresolved target/runtime/provider work is handed to Codex with an explicit trail. Codex refines and finishes the existing implementation instead of starting a parallel replacement. Both agents must update roadmap/pointer/worklog/handoff after meaningful changes.
+ChatGPT and Codex must not compete for the same ASTRA slice. ChatGPT completes safe repository work; unresolved target/runtime/provider work is handed to Codex with an explicit trail. Codex refines and finishes the existing implementation by default, but a clearly better evidence-backed Codex proposal should be adopted when it improves ASTRA. Replacement without reason is prohibited; superior validated refinement is welcome. Both agents must update roadmap/pointer/worklog/handoff after meaningful changes.
 
 ## Canonical latest checkpoint — 2026-09-24
 
