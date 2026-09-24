@@ -44,6 +44,16 @@ Remaining multi-PC evidence:
 3. long-running remote STOP/KILL proving the remote work itself terminates;
 4. one pinned-target multi-step task end-to-end.
 
+### Prepared draft execution aids
+
+ChatGPT prepared, on draft PR #241 only:
+
+- `docs/MULTI_PC_TARGET_EVIDENCE_RUNBOOK_2026-09-24.md` — admin/file/process/service/fail-closed/STOP-KILL/pinned-task evidence sequence with rollback rules;
+- `docs/FINAL_RELEASE_EXECUTION_MATRIX_2026-09-24.md` — non-duplicated M1-M6 + extended JARVIS/NVIDIA release order;
+- `docs/BRANCH_HYGIENE_PLAN_2026-09-24.md` — post-checkpoint cleanup plan; no deletion is authorized during target evidence.
+
+These files are intentionally not merged while commit-bound target evidence is active.
+
 ### Exact-build evidence caution
 
 ASTRA's official release collector requires the running build, repository evidence and current clean `HEAD` to match the same commit from capture start through completion. PR #239 supplied the installed runtime code; later documentation synchronization advanced `main` without changing runtime behavior.
