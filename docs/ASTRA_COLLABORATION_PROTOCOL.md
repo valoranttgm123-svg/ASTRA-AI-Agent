@@ -176,6 +176,21 @@ ChatGPT: read Codex changes and continue the next safe repository slice
 
 No agent should redo work merely to claim ownership of it.
 
+## 7B. Exact-build evidence freeze
+
+ASTRA release evidence is commit-bound. When Codex is collecting official target-PC/release evidence that requires the running build commit to match repository `HEAD`, ChatGPT and Codex must treat `main` as temporarily frozen.
+
+During an evidence freeze:
+
+- do not merge unrelated code or documentation into `main`;
+- repository work may continue on clearly named branches/draft PRs only;
+- do not rewrite, force-push or delete the evidence branch/commit;
+- if a required bug fix must merge, the in-progress evidence is invalidated and must be recaptured from the new final clean commit;
+- functional exploratory tests may continue on the installed runtime, but they must not be represented as final current-HEAD release evidence after `main` advances;
+- once the required target evidence checkpoint completes, merge queued non-conflicting repository work, choose the final clean release commit, install/build that commit on PC1, then capture the official commit-bound release evidence without further merges until capture completes.
+
+This rule exists because the release collector/report requires the repository, persisted evidence and running ASTRA build to use the same clean commit at capture start and completion.
+
 ### Improvement acceptance rule
 
 Suggestions from either ChatGPT or Codex should be evaluated on technical merit, evidence and fit with the ASTRA roadmap.
