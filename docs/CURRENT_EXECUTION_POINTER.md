@@ -22,38 +22,38 @@ Current multi-PC target work:
 4. complete one pinned-target multi-step task end-to-end;
 5. continue the remaining real release gates.
 
-## Native Windows readiness probe — 2026-09-24
+## PC1 runtime and multi-PC state after PR #239
 
-PR #224 is merged (`0a0962a`, PR CI #607 / main #608 SUCCESS), production
-`ffb4caa` installed. Real Codex chat and UI STOP passed with WebGL deliberately
-denied in the test browser; the approved Humanoid image remains visible at
-390x844 and GPU capture stays disabled. This is not a physical HP/GPU test.
-The next reproduced defect is the read-only self-check timing out while loading
-the Windows ScheduledTasks CIM module. See `WINDOWS_TASK_PROBE_2026-09-24.md`.
-Do not recreate either startup task or change Automation opt-in to repair a probe.
-PC2 and SNRPC2 identities now respond through existing strict SSH aliases;
-DeviceSNR still fails name resolution. ASTRA remote UI transport is not yet proven.
+State: **PC1 RUNTIME VALIDATED / THREE REMOTES REGISTERED / DEEP REMOTE EVIDENCE PENDING**
 
-## SSH target update — owner reports four connected Codex targets
+Completed by Codex after PR #239:
+- native Windows startup probe fix merged and CI-green;
+- clean PR #239 runtime source installed on PC1;
+- default self-check and Windows release validator passed;
+- private configuration/project/automation hashes preserved;
+- PC1 remains LOCAL;
+- three remote Windows targets were individually reverified and written to the private registry;
+- direct ASTRA marker checks passed on all three registered remotes;
+- unknown-node fail-closed passed.
 
-State: **PC1 CONFIRMED LOCAL HUB / REMOTE IDENTITY + PRIVATE REGISTRY VERIFICATION PENDING**
+Do not repeat alias resolution/bootstrap or recreate the startup-probe fix unless a regression is reproduced.
 
-The previous observation that intended aliases failed name resolution is superseded by newer owner-provided evidence showing four PC targets connected in Codex.
+Remaining multi-PC evidence:
+1. remote administrator/file/service-control evidence;
+2. unreachable/wrong-node fail-closed evidence;
+3. long-running remote STOP/KILL proving the remote work itself terminates;
+4. one pinned-target multi-step task end-to-end.
 
-Security boundary:
-- exact local SSH aliases remain private and must not be committed to Git;
-- use the owner's current connected SSH/Codex targets from the local runtime;
-- verify each alias with `ssh -G` and remote `COMPUTERNAME`;
-- owner confirms PC1 is the current ASTRA hub/local machine; do not add PC1 to the SSH remote registry;
-- write only verified remote targets into the gitignored `.astra/computer-nodes.json`.
+### Exact-build evidence caution
 
-Next target sequence:
-1. update/install the exact clean current `main` build on the ASTRA hub;
-2. verify the four currently connected target aliases from the local SSH configuration;
-3. treat PC1 as LOCAL and verify only the remaining connected targets as remote candidates;
-4. run `configure-ssh-computer-nodes.ps1` only for verified remote nodes;
-5. restart ASTRA-Agent and run `validate-multi-pc-owner-mode.ps1`;
-6. capture per-node identity/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.
+ASTRA's official release collector requires the running build, repository evidence and current clean `HEAD` to match the same commit from capture start through completion. PR #239 supplied the installed runtime code; later documentation synchronization advanced `main` without changing runtime behavior.
+
+Therefore:
+- Codex may continue non-destructive functional multi-PC validation on the installed runtime;
+- do not treat those observations as final current-HEAD release evidence after `main` advances;
+- while official commit-bound release capture is active, freeze `main`;
+- queued ChatGPT documentation/cleanup work should remain on draft branches until the target evidence checkpoint is complete;
+- after queued changes merge, select one final clean commit, install/build it once on PC1, then capture the official final evidence without additional merges.
 
 ## Post-remediation hardening complete
 
@@ -95,8 +95,8 @@ Current status after PR #233:
 - repository defects identified by the audit are remediated and merged;
 - open PRs/issues are zero at this checkpoint;
 - do not repeat the fixed remote-read, timeout, node-config, SSH-registry, MEM-X documentation or tracker work;
-- target PC is still not proven to run the exact current `main` build;
-- remaining work is target/runtime/provider evidence, beginning with exact-build install/attestation and PC2-PC4 SSH validation.
+- PR #239 runtime code was installed and validated on PC1; later documentation-only synchronization advanced `main`, so final release evidence must use a later frozen final commit;
+- remaining work is deep remote target evidence plus the broader target/runtime/provider gates.
 
 ## Mandatory collaboration continuity
 
@@ -121,13 +121,13 @@ Live repository truth at this checkpoint:
 
 Do **not** recreate PR #217-#226, redo PC1 validation, rebuild the Computer Agent transport, or start another SSH architecture unless a concrete regression is reproduced. The current remote sequence is:
 
-1. resolve/verify the existing SSH aliases on the hub without inventing replacements;
-2. run `scripts/windows/configure-ssh-computer-nodes.ps1` to create the private gitignored registry only from verified targets;
-3. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
-4. capture real PC2-PC4 administrator/file/service execution, unreachable/wrong-node failure, remote STOP/KILL and one pinned-target multi-step task;
-5. then continue the remaining real release gates.
+1. capture remote administrator/file/service-control evidence on the three verified remote nodes;
+2. capture unreachable/wrong-node failure evidence;
+3. prove long-running remote STOP/KILL terminates the remote work itself;
+4. complete one pinned-target multi-step task;
+5. then continue the remaining real release gates under the exact-build evidence-freeze rule.
 
-Historical observation: intended aliases previously failed name resolution. This has been superseded by newer owner evidence showing four Codex-connected PC targets. Exact aliases remain private; target identity and ASTRA registry verification are still required.
+Historical observation: intended aliases previously failed name resolution. This is superseded: PC1 is LOCAL and three remote Windows targets are now privately registered and marker-validated. Exact aliases remain private.
 
 ## Browser availability refinement — 2026-09-24
 
