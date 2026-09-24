@@ -333,7 +333,7 @@ As of this protocol's creation:
 - PC1 Owner Mode and direct no-model execution are complete and target-validated;
 - trusted multi-PC SSH repository transport is merged;
 - safe SSH bootstrap/diagnostic tooling is merged;
-- current remaining multi-PC work is physical PC2-PC4 connectivity/identity/admin/STOP-KILL/multi-step evidence;
+- PC1 is LOCAL; three remote Windows targets are privately registered and marker-validated; current remaining multi-PC work is admin/file/process/service, unreachable/wrong-identity, remote STOP/KILL and pinned multi-step evidence;
 - older instructions that say to rebuild PC1 or select a new PC transport are superseded.
 
 Always re-check live `main` before relying on this historical baseline.
