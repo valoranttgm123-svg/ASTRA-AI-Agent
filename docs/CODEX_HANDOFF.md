@@ -1,5 +1,26 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — mandatory ChatGPT ↔ Codex collaboration handoff
+
+ACTOR: ChatGPT
+AREA: project continuity / cross-session memory
+STATE: DONE
+CHANGED:
+- added `docs/ASTRA_COLLABORATION_PROTOCOL.md`;
+- made the protocol mandatory from `AGENTS.md` and `SESSION_RECOVERY.md`;
+- linked the rule from `CURRENT_EXECUTION_POINTER.md` and `JARVIS_PROGRESS_TRACKER.md`;
+- recorded the rule in `ASTRA_WORKLOG.md` and the Codex refinement contract.
+VALIDATED:
+- repository state before this slice had no open PR and current multi-PC baseline remained merged;
+- no ASTRA runtime behavior was intentionally changed.
+NEXT:
+- Codex/ChatGPT must read live main/CI/open PRs and the collaboration protocol before any new implementation.
+DO NOT REPEAT:
+- do not recreate merged work because a chat/session was interrupted;
+- do not leave a meaningful code/runtime/provider change without synchronizing roadmap/pointer/worklog/handoff;
+- do not treat BLOCKED or REPO_DONE_TARGET_PENDING as NOT_STARTED.
+
+
 ## 2026-09-24 — browser WebGL fallback
 
 PR #223 is merged and installed: 446 tests/build/typecheck/audit passed; harmless

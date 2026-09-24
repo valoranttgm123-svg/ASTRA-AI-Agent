@@ -1,5 +1,14 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — ChatGPT ↔ Codex cross-session collaboration rule
+
+- Owner identified a recurring continuity failure: after interrupted/new ChatGPT sessions, completed or blocked work could be repeated and roadmap state could lag behind actual changes.
+- Added the mandatory `docs/ASTRA_COLLABORATION_PROTOCOL.md` so GitHub, not conversational memory alone, is the durable ASTRA project memory.
+- Both ChatGPT and Codex must inspect live main/CI/open PRs before work, preserve active/blocked branches, and never recreate merged work without concrete regression evidence.
+- Every meaningful change must update `CURRENT_EXECUTION_POINTER`, `JARVIS_PROGRESS_TRACKER`, `ASTRA_WORKLOG` and the relevant handoff/validation document in the same work slice.
+- Required states distinguish DONE, REPO_DONE_TARGET_PENDING, ACTIVE, BLOCKED, NOT_STARTED and SUPERSEDED.
+- New-session shorthand such as `lanjutkan` means recover from repository truth and continue; the owner must not be asked to reconstruct old chats.
+
 ## 2026-09-24 — WebGL-denied browser refinement
 
 - PR #223 merged `bc0d2d450c921ec9aaa86bf686c118c7271228d4` after CI #605;

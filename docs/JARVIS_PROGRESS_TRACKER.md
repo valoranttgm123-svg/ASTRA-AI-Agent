@@ -6,6 +6,14 @@
 
 Inspect current `main`, newest CI and open PRs first. Resume an existing open PR before starting new work. Treat historical branches as superseded unless a concrete missing capability is demonstrated. The 206-branch reconciliation is documented in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`.
 
+## Project continuity / ChatGPT ↔ Codex collaboration
+
+- [x] Durable cross-session collaboration protocol added: `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
+- [x] New-session recovery requires live `main`/CI/open-PR inspection before implementation.
+- [x] Every meaningful ChatGPT/Codex change must update pointer + tracker + worklog + relevant handoff/validation docs.
+- [x] Explicit no-repeat rule for merged, active, blocked and repo-complete/target-pending work.
+- [ ] Ongoing rule: every future meaningful change must preserve these synchronization requirements.
+
 ## Computer Agent / Multi-PC — 2026-09-24
 
 - [x] Local Windows `computer.system.info` Level-1 execution — PR #217.

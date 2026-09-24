@@ -18,12 +18,13 @@ Read in this order:
 
 1. current `main` commit, newest CI result, and all open PRs;
 2. `AGENTS.md`;
-3. `docs/CURRENT_EXECUTION_POINTER.md`;
-4. `docs/CHATGPT_SATURATION_CHECKPOINT_2026-09-22.md`;
-5. `docs/CODEX_REFINEMENT_CONTRACT.md`;
-6. `docs/CODEX_NEXT_MISSION.md`;
-7. `docs/JARVIS_PROGRESS_TRACKER.md`;
-8. only then use `docs/ASTRA_WORKLOG.md`, `docs/CODEX_PROGRESS_TRACKER.md`, the latest section of `docs/CODEX_HANDOFF.md`, and task-specific validation/security documents when extra history is needed.
+3. `docs/ASTRA_COLLABORATION_PROTOCOL.md`;
+4. `docs/CURRENT_EXECUTION_POINTER.md`;
+5. `docs/CHATGPT_SATURATION_CHECKPOINT_2026-09-22.md`;
+6. `docs/CODEX_REFINEMENT_CONTRACT.md`;
+7. `docs/CODEX_NEXT_MISSION.md`;
+8. `docs/JARVIS_PROGRESS_TRACKER.md`;
+9. only then use `docs/ASTRA_WORKLOG.md`, `docs/CODEX_PROGRESS_TRACKER.md`, the latest section of `docs/CODEX_HANDOFF.md`, and task-specific validation/security documents when extra history is needed.
 
 Older checkpoint sections later in this file are chronological history. They must never override live GitHub state, `docs/CURRENT_EXECUTION_POINTER.md`, or the ChatGPT saturation checkpoint.
 
@@ -40,6 +41,17 @@ Then:
    - then `CODEX_PROGRESS_TRACKER.md`;
    - then latest `CODEX_HANDOFF.md`;
    - then roadmap/older history.
+
+## Mandatory collaboration-memory rule — 2026-09-24
+
+The owner requires one continuous ASTRA project memory across ChatGPT and Codex sessions.
+
+- GitHub is the durable cross-session memory.
+- Every meaningful change by ChatGPT or Codex must update pointer + tracker + worklog + relevant handoff/validation docs.
+- A new session must inspect existing branch/PR/status before creating work.
+- `DONE`, `REPO_DONE_TARGET_PENDING`, `ACTIVE`, `BLOCKED`, `NOT_STARTED` and `SUPERSEDED` are distinct states.
+- A disconnected/new chat is never permission to restart merged or blocked work.
+- Read `docs/ASTRA_COLLABORATION_PROTOCOL.md` for the full mandatory rules.
 
 ## Interrupted-work rule
 
