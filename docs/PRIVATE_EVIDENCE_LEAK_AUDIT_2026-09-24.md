@@ -7,21 +7,22 @@ Purpose: verify that the current public repository/draft preparation does not ex
 ## Scope
 
 Scanned directly on draft PR #241:
-- all 17 files currently changed by PR #241;
+- all 18 files currently changed by PR #241, including the newly synchronized `AGENTS.md`;
 - `.gitignore`;
 - `lib/tools/computer-nodes.ts`;
 - `scripts/windows/configure-ssh-computer-nodes.ps1`;
 - `docs/COMPUTER_NODES_PRIVATE_CONFIG.md`;
 - `docs/CODEX_MULTI_PC_SSH_HANDOFF_2026-09-23.md`.
 
-Total unique files inspected directly: **21** (17 PR files + 4 additional baseline files not already present in the PR diff).
+Total unique files inspected directly: **22** (18 PR files + 4 additional baseline files not already present in the PR diff).
 
 Also searched the repository for current private alias strings and common private-key/IP/credential indicators.
 
 Revalidation note:
-- PR #241 grew from 15 to 17 changed files after the first audit checkpoint.
-- The two additional PR files were included in this revalidation.
-- Pattern hits were limited to deliberate audit/example text such as RFC1918 CIDR examples and the literal placeholder phrase `user@host`; no concrete private topology or credential value was found.
+- PR #241 first grew from 15 to 17 changed files after the initial audit checkpoint.
+- The full continuity remediation then added `AGENTS.md` to the PR diff, growing the current scope to 18 PR files.
+- All 18 current PR files plus the 4 additional baseline files were re-inspected.
+- Pattern hits were limited to deliberate audit/example text such as RFC1918 CIDR examples, the literal placeholder phrase `user@host`, and wording that says "real IdentityFile path"; no concrete private topology, credential value, or real IdentityFile assignment/path was found.
 
 ## Patterns checked
 
