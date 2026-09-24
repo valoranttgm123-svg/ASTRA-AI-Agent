@@ -19,19 +19,14 @@ Do not recreate PR #233. The next real gate is target-side: update/install the e
 
 ## Full audit checkpoint — 2026-09-24
 
-Read `docs/FULL_AUDIT_2026-09-24.md` before new Computer/MEM-X/release work.
+Read `docs/FULL_AUDIT_2026-09-24.md` for the complete historical audit and remediation record.
 
-Audit result:
-- no open PRs/issues at audit start; PR #217-#231 are merged;
-- recent PR CI is green; latest #231 head CI had 457 tests / 455 pass / 0 fail / 2 Windows-only skips and 0 dependency vulnerabilities;
-- repository follow-up is required before fresh final multi-PC evidence;
-- highest-priority repo defect: direct read-only Computer fast path drops remote target and defaults to LOCAL;
-- remote system-info timeout is shorter than SSH connect timeout;
-- canonical Sonor/MEM-X docs still contain stale broad "not validated" language;
-- tracker duplication/ambiguity remains;
-- target PC is not yet proven to run the exact current main build.
-
-ChatGPT owns the repository/doc fixes. Codex should wait for those merged follow-ups before final PC2-PC4 validation, then install/verify the exact clean build and continue target evidence. Do not rebuild multi-PC transport or Sonor.
+Current status after PR #233:
+- repository defects identified by the audit are remediated and merged;
+- open PRs/issues are zero at this checkpoint;
+- do not repeat the fixed remote-read, timeout, node-config, SSH-registry, MEM-X documentation or tracker work;
+- target PC is still not proven to run the exact current `main` build;
+- remaining work is target/runtime/provider evidence, beginning with exact-build install/attestation and PC2-PC4 SSH validation.
 
 ## Mandatory collaboration continuity
 
