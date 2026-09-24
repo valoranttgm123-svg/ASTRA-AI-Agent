@@ -4,8 +4,7 @@
 
 Live repository truth at this checkpoint:
 
-- `main`: `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`;
-- open PRs: none at checkpoint creation;
+- capability baseline entering this synchronization: PR #226 merge `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`; live `main`, open PRs and newest CI always supersede any literal checkpoint SHA;
 - PR #225 merged the trusted multi-PC SSH Computer Agent transport after full ASTRA CI success;
 - PR #226 merged the safe SSH trust-bootstrap/diagnostic helper after full ASTRA CI success;
 - PC1 local read-only execution, local Owner Mode and direct no-model Owner Mode are already implemented and target-validated;
