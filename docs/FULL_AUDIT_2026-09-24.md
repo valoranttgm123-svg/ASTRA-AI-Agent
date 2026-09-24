@@ -433,3 +433,25 @@ Do not:
 - select another PC transport merely because SSH aliases currently fail;
 - treat historical branch names as active work;
 - claim READY from CI alone.
+
+## 21. Follow-up remediation — PR #233
+
+ChatGPT started the focused repository remediation on `fix/audit-followups-20260924` / PR #233.
+
+Addressed in the active PR:
+- direct read-only remote node preservation and ambiguity rejection;
+- system-info timeout compatibility with SSH;
+- nested-secret and unknown node-config rejection;
+- true temp-validate-replace registry write semantics;
+- canonical Sonor/MEM-X status drift;
+- duplicate/overlapping tracker entries;
+- safe non-visual warning cleanup and Humanoid V9 hook dependency tracking.
+
+Still intentionally target-only after merge:
+- exact clean target build install/attestation;
+- SSH alias/name-resolution repair;
+- PC2-PC4 Owner Mode/admin/file/service evidence;
+- reliable remote STOP/KILL evidence;
+- remaining release/provider/device gates.
+
+Do not mark these remediation items DONE until PR #233 newest-head CI is green and the PR is merged.
