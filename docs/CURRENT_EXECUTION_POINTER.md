@@ -1,5 +1,21 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Full audit checkpoint — 2026-09-24
+
+Read `docs/FULL_AUDIT_2026-09-24.md` before new Computer/MEM-X/release work.
+
+Audit result:
+- no open PRs/issues at audit start; PR #217-#231 are merged;
+- recent PR CI is green; latest #231 head CI had 457 tests / 455 pass / 0 fail / 2 Windows-only skips and 0 dependency vulnerabilities;
+- repository follow-up is required before fresh final multi-PC evidence;
+- highest-priority repo defect: direct read-only Computer fast path drops remote target and defaults to LOCAL;
+- remote system-info timeout is shorter than SSH connect timeout;
+- canonical Sonor/MEM-X docs still contain stale broad "not validated" language;
+- tracker duplication/ambiguity remains;
+- target PC is not yet proven to run the exact current main build.
+
+ChatGPT owns the repository/doc fixes. Codex should wait for those merged follow-ups before final PC2-PC4 validation, then install/verify the exact clean build and continue target evidence. Do not rebuild multi-PC transport or Sonor.
+
 ## Mandatory collaboration continuity
 
 Before any ChatGPT or Codex implementation, read `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
