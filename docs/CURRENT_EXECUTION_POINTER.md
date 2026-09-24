@@ -1,5 +1,15 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Browser availability refinement — 2026-09-24
+
+PR #223 is merged (`bc0d2d4`, PR CI #605 / main #606 SUCCESS) and production
+head `1d3fd72` was installed and verified. See its PR comment for final evidence.
+The next reproduced defect is repeated WebGL initialization errors during normal
+chat rerenders in a browser that denies GPU contexts. See
+`WEBGL_FALLBACK_2026-09-24.md`. Preserve the approved image/HIGH renderer; fall back
+only when WebGL2 is unavailable. Remote aliases currently fail name resolution;
+physical voice/HP and remaining comprehensive release gates are still unverified.
+
 ## Target runtime recovery — 2026-09-24
 
 Baseline: PR #222 / `0b07a4c`, main CI #604 SUCCESS; no open PR.

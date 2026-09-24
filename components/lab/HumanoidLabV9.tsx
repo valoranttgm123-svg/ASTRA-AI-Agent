@@ -9,6 +9,7 @@ import type { AstraBrainEvent, AstraBrainProvider } from "@/lib/brain/types";
 import AstraGpuParticles from "./AstraGpuParticles";
 import { useFingerTracking, type FingerTrackingTarget } from "./useFingerTracking";
 import { useHumanoidPerformanceCapture } from "./useHumanoidPerformanceCapture";
+import { useWebGLAvailability } from "../useWebGLAvailability";
 
 const ARTWORK = "/assets/astra-humanoid/astra-idle-v1.webp";
 const SAMPLE_W = 320;
@@ -347,6 +348,8 @@ function ParticleScene({
 
 export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const runtime = useAstraRuntime();
+  const webgl = useWebGLAvailability();
+  const rendererAvailable = webgl === "available";
   const reducedMotion = useReducedMotion();
   const [data, setData] = useState<ParticleData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -610,6 +613,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
   const tracking = useFingerTracking(resolvedQuality);
 
   const capturePerformanceEvidence = async () => {
+    if (!rendererAvailable || !gpuInfo) return;
     const dynamicWindow =
       assemblyActive || shockwaveActive;
     try {
@@ -634,6 +638,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
 
   const captureAssemblyPerformanceEvidence = async () => {
     if (
+      !rendererAvailable || !gpuInfo ||
       performanceCapture.capturing ||
       resolvedQuality !== "high" ||
       !data ||
@@ -678,6 +683,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
 
   const captureShockwavePerformanceEvidence = async () => {
     if (
+      !rendererAvailable || !gpuInfo ||
       performanceCapture.capturing ||
       resolvedQuality !== "high" ||
       !data ||
@@ -736,8 +742,8 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
     }
   };
 
-  const showReferenceOnly = view === "reference" || !effects;
-  const showParticles = view !== "reference" && effects;
+  const showReferenceOnly = view === "reference" || !effects || !rendererAvailable;
+  const showParticles = view !== "reference" && effects && rendererAvailable;
   const referenceOpacity = showReferenceOnly
     ? 1
     : view === "compare"
@@ -1172,11 +1178,12 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
                 textShadow: "0 0 12px currentColor",
               }}
             >
-              ● {assemblyActive ? "ASSEMBLING" : shockwaveActive ? "CORE SHOCKWAVE" : "ASSEMBLY READY"}
+              ● {!rendererAvailable ? "GRAFIS 3D TIDAK TERSEDIA" : assemblyActive ? "ASSEMBLING" : shockwaveActive ? "CORE SHOCKWAVE" : "ASSEMBLY READY"}
             </span>
             <button
               onClick={() => void capturePerformanceEvidence()}
               disabled={
+                !rendererAvailable || !gpuInfo ||
                 performanceCapture.capturing ||
                 resolvedQuality !== "high" ||
                 !data
@@ -1202,6 +1209,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <button
               onClick={() => void captureAssemblyPerformanceEvidence()}
               disabled={
+                !rendererAvailable || !gpuInfo ||
                 performanceCapture.capturing ||
                 resolvedQuality !== "high" ||
                 !data ||
@@ -1226,6 +1234,7 @@ export default function HumanoidLabV9({ onExit }: { onExit?: () => void }) {
             <button
               onClick={() => void captureShockwavePerformanceEvidence()}
               disabled={
+                !rendererAvailable || !gpuInfo ||
                 performanceCapture.capturing ||
                 resolvedQuality !== "high" ||
                 !data ||
