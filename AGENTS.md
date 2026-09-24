@@ -136,23 +136,24 @@ Do **not** ask the user to restate the roadmap or choose a phase when the reposi
 
 Resume protocol:
 
-1. read current `main`;
-2. read `docs/ASTRA_WORKLOG.md`;
-3. read `docs/SESSION_RECOVERY.md`;
-4. read `docs/CODEX_PROGRESS_TRACKER.md`;
-5. read the latest section of `docs/CODEX_HANDOFF.md`;
-6. read `docs/CODEX_NEXT_MISSION.md`;
-7. read `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md`;
-8. identify the first task that is not PASS/complete and is implementable in the current environment;
-9. if an earlier task is blocked only by target-PC access, login, Sonor access, camera/mic or another external-only action, record the blocker and continue the next independent repository task;
-10. create a focused feature branch;
-11. implement the task completely enough to satisfy its exit gate;
-12. add/update regression tests;
+1. inspect current `main`, newest CI, and **all open PRs**;
+2. read `docs/ASTRA_COLLABORATION_PROTOCOL.md`;
+3. read `docs/CURRENT_EXECUTION_POINTER.md`;
+4. if an open PR/active branch owns the current slice, inspect and resume that exact work before creating anything new;
+5. read `docs/SESSION_RECOVERY.md`;
+6. read `docs/CODEX_NEXT_MISSION.md` and `docs/JARVIS_PROGRESS_TRACKER.md`;
+7. read the latest relevant `docs/ASTRA_WORKLOG.md`, `docs/CODEX_HANDOFF.md`, and `docs/CODEX_PROGRESS_TRACKER.md` entries;
+8. treat dated continuation notes such as `docs/CODEX_CONTINUATION_NOTE_2026-09-21.md` as **historical context only**; they must never override live GitHub state, the current pointer, or the current mission;
+9. identify the first task that is not PASS/complete and is implementable in the current environment;
+10. if an earlier task is blocked only by target-PC access, login, Sonor access, camera/mic or another external-only action, record the blocker and continue the next independent repository task only when it does not overlap another agent's ACTIVE slice;
+11. **reuse the existing active branch/PR when one exists**; create a focused feature branch only when no current branch/PR already owns the slice;
+12. implement the task completely enough to satisfy its exit gate and add/update regression tests where relevant;
 13. run build, tests, typecheck, lint and audit;
-14. open a PR;
-15. merge only after green CI;
-16. update `ASTRA_WORKLOG.md`, `CODEX_HANDOFF.md`, `CODEX_PROGRESS_TRACKER.md` and any relevant validation document;
-17. continue automatically to the next implementable unfinished task.
+14. open or update the focused PR;
+15. merge only after green CI **and only when the current evidence-freeze/merge rules allow it**; a green CI result alone never overrides a freeze;
+16. update `CURRENT_EXECUTION_POINTER.md`, `JARVIS_PROGRESS_TRACKER.md`, `ASTRA_WORKLOG.md`, the relevant handoff, and any task-specific validation document;
+17. write the mandatory durable checkpoint before starting the next work slice;
+18. continue automatically to the next implementable unfinished task only after that checkpoint exists.
 
 Stop only when:
 
@@ -220,11 +221,12 @@ Do not build these as disconnected systems.
 Before merging meaningful changes:
 
 - create a recoverable backup branch when the change is risky;
-- work on a feature branch;
+- reuse the current active branch/PR when one already owns the slice; otherwise work on a focused feature branch;
 - run the production GitHub Actions build;
-- merge only when CI succeeds;
+- merge only when CI succeeds **and the current collaboration/evidence-freeze rules permit merging**;
+- during an evidence freeze, keep non-conflicting repository work on the existing draft branch/PR instead of moving `main`;
 - update the relevant build/context docs;
-- append the merged slice, PR, merge commit, CI result, important finding, and exact next task to `docs/ASTRA_WORKLOG.md`.
+- append the completed slice, branch/PR/commit, CI result, important finding, exact next task, and DO NOT REPEAT scope to the durable project state.
 
 ## Local commands
 
