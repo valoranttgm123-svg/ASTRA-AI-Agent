@@ -28,7 +28,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: continuity / multi-PC status truth
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 COMPLETED:
 - removed stale current instructions to repeat install/alias/bootstrap work;
@@ -152,7 +153,7 @@ CHANGED:
 BLOCKER:
 - official ASTRA release evidence is commit-bound; moving `main` while Codex captures target evidence can invalidate current-HEAD provenance.
 NEXT:
-- Codex continues administrator/file/service, unreachable/wrong-node, remote STOP/KILL and pinned multi-step evidence;
+- Codex continues administrator context, bounded file rollback, disposable process control, safe service control, unreachable-node and wrong-identity fail-closed, remote STOP/KILL, and pinned multi-step evidence;
 - keep this ChatGPT documentation slice as draft until the active target evidence checkpoint is complete;
 - then merge queued non-conflicting docs, choose/install one final clean commit and freeze `main` for official release capture.
 DO NOT REPEAT:
