@@ -1,22 +1,27 @@
 # ASTRA Private Evidence / SSH Topology Leak Audit — 2026-09-24
 
-Status: **PASS / DRAFT CHECKPOINT EVIDENCE**
+Status: **PASS / DRAFT CHECKPOINT EVIDENCE — REVALIDATED AFTER PR SCOPE GROWTH**
 
 Purpose: verify that the current public repository/draft preparation does not expose the private multi-PC SSH topology or credential material.
 
 ## Scope
 
 Scanned directly on draft PR #241:
-- all 15 files changed by PR #241;
+- all 17 files currently changed by PR #241;
 - `.gitignore`;
 - `lib/tools/computer-nodes.ts`;
 - `scripts/windows/configure-ssh-computer-nodes.ps1`;
 - `docs/COMPUTER_NODES_PRIVATE_CONFIG.md`;
 - `docs/CODEX_MULTI_PC_SSH_HANDOFF_2026-09-23.md`.
 
-Total files inspected directly: **20**.
+Total unique files inspected directly: **21** (17 PR files + 4 additional baseline files not already present in the PR diff).
 
 Also searched the repository for current private alias strings and common private-key/IP/credential indicators.
+
+Revalidation note:
+- PR #241 grew from 15 to 17 changed files after the first audit checkpoint.
+- The two additional PR files were included in this revalidation.
+- Pattern hits were limited to deliberate audit/example text such as RFC1918 CIDR examples and the literal placeholder phrase `user@host`; no concrete private topology or credential value was found.
 
 ## Patterns checked
 
