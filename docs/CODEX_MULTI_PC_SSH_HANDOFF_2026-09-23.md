@@ -23,13 +23,7 @@ Repository-complete now:
 - regression tests for config secrets, target evidence, unknown/untrusted nodes,
   identity mismatch and independent node inventory.
 
-The next branch adds
-`scripts/windows/configure-ssh-computer-nodes.ps1`: a local trust-bootstrap
-helper that receives explicit `node-id=existing-ssh-alias` mappings, inspects
-only safe `ssh -G` fields (HostName/port), verifies the remote Windows
-`COMPUTERNAME` over normal host-verified SSH, and writes the private registry
-only when every target succeeds. It never copies passwords, tokens, private
-keys, key paths, or SSH config contents into the registry.
+PR #226 is also merged to main as `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e` and adds `scripts/windows/configure-ssh-computer-nodes.ps1`: a local trust-bootstrap helper that receives explicit `node-id=existing-ssh-alias` mappings, inspects only safe `ssh -G` fields (HostName/port), verifies the remote Windows `COMPUTERNAME` over normal host-verified SSH, and writes the private registry only when every target succeeds. It never copies passwords, tokens, private keys, key paths, or SSH config contents into the registry.
 
 Current target-only blocker remains outside Git: the latest real check reported
 all three intended remote SSH aliases failing name resolution. Do not invent or
@@ -182,7 +176,7 @@ Before calling multi-PC Owner Mode complete, verify:
 - no private SSH material or secrets appear in logs, evidence, Git, or UI;
 - ASTRA never silently falls back from one target PC to another.
 
-## Current implementation status after PR #221
+## Historical PC1 implementation status — superseded by PR #222/#225/#226
 
 Local Owner Mode on PC1 is now implemented in the repository:
 
@@ -193,13 +187,13 @@ Local Owner Mode on PC1 is now implemented in the repository:
 - ambiguous natural-language requests are intentionally not interpreted as raw shell commands by this direct path;
 - direct Owner Mode still obeys the runtime permission ceiling and fails closed unless `computer.owner.exec` is READY and `ASTRA_ALLOW_SHELL=true`.
 
-PC1 target validation is still required on the actual Windows machine. The minimum validation command should be an explicit harmless command such as:
+PC1 target validation was subsequently completed successfully. The historical minimum probe was:
 
 ```text
 powershell: Write-Output ASTRA_OWNER_DIRECT_OK
 ```
 
-Expected evidence: `computer.owner.exec` executes, exit code is 0, stdout contains `ASTRA_OWNER_DIRECT_OK`, Brain provider is routing-only, memory retrieval is 0, and no planner/model round-trip is present.
+Recorded evidence showed `computer.owner.exec` executing with exit code 0, stdout containing `ASTRA_OWNER_DIRECT_OK`, Brain provider `routing_only`, memory retrieval 0 and no planner/model round-trip. Do not repeat this PC1 validation unless a concrete regression appears.
 
 A target-PC validation helper now exists at `scripts/windows/validate-owner-mode.ps1`. Run it against the active ASTRA URL after enabling Owner Mode, for example:
 
@@ -209,7 +203,7 @@ powershell -ExecutionPolicy Bypass -File .\\scripts\\windows\\validate-owner-mod
 
 Use the actual local ASTRA port if it differs. The script fails closed unless Owner Mode is READY and the direct probe returns verified tool lifecycle evidence without memory/planner/model use.
 
-After PC1 validation, Codex should continue with PC2-PC4 SSH transport/identity and remote Owner Mode. Do not reimplement the local executor first.
+That repository sequence is now complete through PR #225/#226. Codex must not reimplement the local executor or multi-PC transport. Continue only with the physical PC2-PC4 alias/connectivity/bootstrap/runtime validation and remaining remote admin/STOP-KILL/multi-step evidence.
 
 ## Do not redo completed work
 
@@ -221,4 +215,4 @@ Already completed on current main:
 - target evidence showed local system-info execution completed successfully in about 645 ms;
 - local path used no memory retrieval, no plan, and no model provider.
 
-Continue from that state. Do not remove or regress the existing local fast path while adding remote-node support.
+Continue from the current merged state. Do not remove or regress the existing local fast path or rebuild remote-node support already merged in PR #225/#226.

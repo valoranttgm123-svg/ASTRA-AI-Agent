@@ -6,6 +6,21 @@
 
 Inspect current `main`, newest CI and open PRs first. Resume an existing open PR before starting new work. Treat historical branches as superseded unless a concrete missing capability is demonstrated. The 206-branch reconciliation is documented in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`.
 
+## Computer Agent / Multi-PC — 2026-09-24
+
+- [x] Local Windows `computer.system.info` Level-1 execution — PR #217.
+- [x] Direct no-model read-only Computer fast path — PR #218.
+- [x] Trusted local Owner Mode executor — PR #221.
+- [x] Explicit direct local Owner Mode path + target validator — PR #222.
+- [x] Trusted multi-PC SSH Computer Agent transport, private node registry, per-node identity verification, fail-closed routing and explicit remote Owner Mode syntax — PR #225, merge `6b3859a70f8c46ab80204b56c788e06cb8c09e60`.
+- [x] Safe SSH trust-bootstrap/diagnostic helper that writes the private registry only after all requested targets verify — PR #226, merge `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`.
+- [ ] Resolve and verify the existing SSH aliases on the physical hub/targets; latest observation was name-resolution failure.
+- [ ] Run private node bootstrap and real PC2-PC4 Owner Mode validation.
+- [ ] Real remote administrator/file/service control evidence on each selected trusted node.
+- [ ] Real unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
+- [ ] One pinned-target multi-step project task end-to-end.
+- [ ] Do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
+
 ## Phase 24 — Event Engine
 
 - [x] Contracts, severity floors, debounce/deduplication, quiet hours, rate limits and ACK.
@@ -58,8 +73,8 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Private registry, single-use expiring hashed pairing challenge, capability expiry and per-device Level 0–3 ceilings.
 - [x] Phase-22 trust prerequisite, terminal revoke, deterministic routing, approval preservation, no public unauthenticated transport and bounded symlink-safe storage.
 - [x] Tests; PR #168 merged `aa91850f68dc5bc677cb14a11cd54ab5da9fa36a`; main CI #451 SUCCESS.
-- [ ] Select and validate real LAN/SSH/authenticated-relay transport.
-- [ ] Actual PC2/mobile pairing, authenticated encryption, dispatch/result return and immediate revoke evidence.
+- [x] Select SSH as the real PC-to-PC transport and merge its repository implementation through the Computer Agent — PR #225/#226. This does not prove physical target readiness.
+- [ ] Validate actual PC2-PC4 SSH nodes on the physical environment and separately complete PC2/mobile pairing, authenticated dispatch/result return and immediate revoke evidence required by the broader Phase-27 device contract.
 - [ ] Scenario J6 evidence.
 
 ## Phase 29 — Generic Skill / Device Registry
