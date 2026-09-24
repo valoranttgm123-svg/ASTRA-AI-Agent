@@ -1,5 +1,31 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — private evidence leak audit checkpoint
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: SSH/private evidence security
+STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+COMPLETED:
+- audited all 15 PR #241 files plus five SSH/config core files for private topology/credential leakage.
+VALIDATED:
+- no current private alias string;
+- no RFC1918 private IP;
+- no private-key material;
+- no IdentityFile/key-path assignment;
+- no obvious password/passphrase/token assignment;
+- no literal SSH user@host topology in the inspected scope.
+FAILED:
+- none.
+BLOCKED:
+- none.
+NEXT:
+- continue only independent draft preparation or reconcile new Codex target evidence.
+DO NOT REPEAT:
+- do not rerun this exact audit unless new SSH/evidence-bearing files are added or a leak is suspected.
+
+
 ## 2026-09-24 — owner requires checkpoint after every completed task
 
 ACTOR: ChatGPT
