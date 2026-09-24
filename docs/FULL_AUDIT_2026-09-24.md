@@ -1,12 +1,14 @@
 # ASTRA Full Repository / Runtime Readiness Audit — 2026-09-24
 
-Status: **AUDIT COMPLETE / FOLLOW-UP REQUIRED**
+Status: **AUDIT COMPLETE / REPOSITORY REMEDIATED / TARGET EVIDENCE PENDING**
 
 Actor: ChatGPT
 Repository: `valoranttgm123-svg/ASTRA-AI-Agent`
 Audited main at start: `ffc6b7209498cd72dd970a27c56c03c453b39490`
 
-This audit is a durable handoff. It does not claim target-PC readiness. It separates:
+This audit is a durable handoff. It does not claim target-PC readiness.
+
+> Remediation update: the repository-side findings were addressed in PR #233, merge `52135e16f4113460807ff9005a72ba7efc53d911`. Sections below preserve the original findings for audit history; Section 21 records their remediation. Do not treat those fixed findings as current defects. It separates:
 - repository defects ChatGPT can fix;
 - documentation/state drift;
 - target-PC/provider work Codex must validate;
