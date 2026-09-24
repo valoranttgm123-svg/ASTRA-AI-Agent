@@ -43,9 +43,13 @@ PR #239 merged as `290164a8787cf895a9c1a32018c700cf8d6ad551`. Codex reported its
 Do not repeat install/bootstrap/marker validation merely because later documentation commits advanced `main`.
 
 Current work:
-- remote administrator/file/service-control evidence;
-- unreachable/wrong-node evidence;
-- long-running remote STOP/KILL proof;
+- remote administrator-context evidence;
+- bounded remote file mutation/readback/rollback evidence;
+- remote process-control evidence;
+- safe service-control evidence (or truthful BLOCKED when no disposable service exists);
+- unreachable-node fail-closed evidence;
+- wrong-identity fail-closed evidence;
+- long-running remote STOP/KILL proof that the remote work itself terminates;
 - one pinned-target multi-step task;
 - remaining M1-M6 gates.
 
@@ -112,12 +116,16 @@ Cross-session reconciliation:
 
 The repository implementation and private-node bootstrap are already complete. PC1 is LOCAL; three remote Windows targets are privately registered and direct marker-validated. Finish this real-environment sequence before starting another repository architecture pass:
 
-1. validate administrator/file/service execution independently on each selected remote node;
-2. validate unreachable/wrong-node fail-closed behavior;
-3. prove long-running remote STOP/KILL terminates the remote work itself;
-4. complete one pinned-target multi-step task end-to-end;
-5. continue M1-M6 in canonical order;
-6. when official release capture begins, freeze `main` and keep runtime/evidence/repository on the same final clean commit.
+1. validate administrator context independently on each selected remote node;
+2. validate bounded file mutation/readback/rollback on each selected remote node;
+3. validate remote process control with a disposable owned process;
+4. validate safe service control, or record truthful BLOCKED when no disposable test service exists;
+5. validate unreachable-node fail-closed behavior;
+6. validate wrong-identity fail-closed behavior; do not repeat the already-PASS unknown-node check;
+7. prove long-running remote STOP/KILL terminates the remote work itself;
+8. complete one pinned-target multi-step task end-to-end;
+9. continue M1-M6 in canonical order;
+10. when official release capture begins, freeze `main` and keep runtime/evidence/repository on the same final clean commit.
 
 Do not invent replacement aliases/IPs, expose private SSH topology in Git, or rebuild the Computer Agent.
 
