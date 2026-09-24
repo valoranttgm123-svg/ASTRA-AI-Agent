@@ -1,5 +1,14 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — no-competition ChatGPT ↔ Codex work division
+
+- Owner clarified that ChatGPT and Codex must not compete for or duplicate the same ASTRA work.
+- ChatGPT owns every safe repository task it can perform and verify; anything it cannot truthfully finish must be handed to Codex with a precise trail.
+- Codex must refine/finish an incomplete ChatGPT implementation against the real target/runtime/provider rather than start a parallel replacement by default.
+- If one agent has ACTIVE work, the other must inspect that branch/PR/handoff before touching the same subsystem.
+- Parallel execution is reserved for clearly independent slices.
+- Every transfer now records completed scope, unfinished scope/reason, branch/PR/commit, validation, blocker, exact next action and DO NOT REPEAT boundaries.
+
 ## 2026-09-24 — ChatGPT ↔ Codex cross-session collaboration rule
 
 - Owner identified a recurring continuity failure: after interrupted/new ChatGPT sessions, completed or blocked work could be repeated and roadmap state could lag behind actual changes.
