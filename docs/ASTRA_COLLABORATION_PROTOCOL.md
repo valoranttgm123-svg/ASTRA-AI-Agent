@@ -149,8 +149,12 @@ The required division of work is:
    - real latency/performance/evidence capture;
    - finishing or polishing a ChatGPT implementation when target evidence shows it is incomplete.
 
-3. **If ChatGPT's work is incomplete or imperfect, Codex must refine and finish that same work rather than discard it and start a competing implementation.**
-   Codex should preserve valid architecture, tests, contracts and merged behavior, then make the minimum evidence-backed changes required to make it correct and ready-to-use.
+3. **If ChatGPT's work is incomplete or imperfect, Codex should refine and finish the same work first rather than automatically discard it and start a competing implementation.**
+   Codex should preserve valid architecture, tests, contracts and merged behavior where they remain useful.
+
+   **Good Codex improvements are explicitly welcome.** If Codex finds a clearly better design, safer architecture, simpler implementation, stronger performance path, or more reliable target-runtime approach, it may propose and implement that refinement when the improvement is evidence-backed and compatible with the owner's goals. The better approach should be adopted after comparing it against the current implementation, preserving useful work/tests where practical, and recording why the change is better.
+
+   "Do not create a competing implementation" means **do not replace work without reason**. It does not mean freezing a weaker design or rejecting a superior Codex recommendation.
 
 4. **If Codex already owns an ACTIVE target/runtime task, ChatGPT must not independently rebuild that same task.**
    ChatGPT may safely work on a non-conflicting repository slice, regression coverage, documentation, or another independent task.
@@ -171,6 +175,33 @@ ChatGPT: read Codex changes and continue the next safe repository slice
 ```
 
 No agent should redo work merely to claim ownership of it.
+
+### Improvement acceptance rule
+
+Suggestions from either ChatGPT or Codex should be evaluated on technical merit, evidence and fit with the ASTRA roadmap.
+
+Accept a proposed refinement when it materially improves one or more of:
+
+- correctness;
+- security;
+- reliability;
+- maintainability;
+- performance;
+- user experience;
+- target-PC compatibility;
+- simplicity without capability loss;
+- testability/evidence quality.
+
+Before replacing an existing implementation, record:
+
+- the problem with the current approach;
+- the proposed improvement;
+- evidence or reasoning supporting the improvement;
+- what existing work/tests will be preserved;
+- migration/regression risk;
+- validation required after the change.
+
+The project should keep the **better proven approach**, regardless of whether it originated from ChatGPT or Codex.
 
 ### Mandatory transfer trail
 
