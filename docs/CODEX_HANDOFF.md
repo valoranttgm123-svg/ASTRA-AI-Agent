@@ -1,5 +1,26 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — post-remediation hardening active
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent fail-closed boundaries
+STATE: ACTIVE
+BRANCH/PR: `fix/fail-closed-remote-read-config-root-20260924`
+CHANGED:
+- explicit remote read failure/unavailability blocks on the requested node instead of falling through to planner;
+- node-registry root schema rejects secret-like/unknown fields;
+- regression tests cover root secret and unsupported-root rejection.
+BLOCKER:
+- none repository-side; newest-head CI/merge still required.
+NEXT:
+- ChatGPT owns this focused PR through CI and merge;
+- Codex continues target evidence only after the repository follow-up is merged.
+DO NOT REPEAT:
+- do not create a second remote-read path or registry format;
+- preserve PR #233 architecture.
+
+
 ## 2026-09-24 — PR #233 merged; target validation resumes
 
 ACTOR: ChatGPT
