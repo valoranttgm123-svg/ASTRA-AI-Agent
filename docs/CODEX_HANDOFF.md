@@ -1,5 +1,33 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — full audit handoff
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: whole-project audit / Computer / continuity / release readiness
+STATE: ACTIVE
+BRANCH/PR: docs/full-audit-20260924
+CHANGED:
+- added `docs/FULL_AUDIT_2026-09-24.md`;
+- recorded repo defects, stale docs, duplicate tracker items, target-build drift and target-only gates.
+VALIDATED:
+- PR #217-#231 merged;
+- no open PR/issues at audit start;
+- latest #231 PR-head CI success;
+- 457 tests / 455 pass / 0 fail / 2 Windows-only skips;
+- npm audit 0 vulnerabilities.
+BLOCKER:
+- final target evidence must wait for focused repo follow-up fixes and a clean exact-build install.
+NEXT:
+- ChatGPT fixes the audited repository/doc defects first;
+- Codex then installs/verifies exact clean main and resumes PC2-PC4 + release evidence.
+DO NOT REPEAT:
+- do not rebuild multi-PC transport;
+- do not redo PC1 Owner Mode;
+- do not redo broad Sonor retrieval/provenance audit;
+- do not validate final PC2-PC4 behavior on an older build.
+
+
 ## 2026-09-24 — improvement acceptance addendum
 
 ACTOR: ChatGPT
