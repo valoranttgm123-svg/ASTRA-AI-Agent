@@ -1,5 +1,29 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — authoritative status-drift cleanup checkpoint
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: continuity / multi-PC status truth
+STATE: COMPLETE_IN_DRAFT
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+COMPLETED:
+- removed stale current instructions to repeat install/alias/bootstrap work;
+- updated current multi-PC baseline to PC1 LOCAL + three registered marker-validated remotes;
+- marked old ACTIVE handoff snapshots as historical/superseded.
+VALIDATED:
+- current pointer/mission/protocol/handoff now agree on remaining deep remote evidence.
+FAILED:
+- none.
+BLOCKED:
+- none.
+NEXT:
+- continue only a new independent draft slice or reconcile new Codex target evidence.
+DO NOT REPEAT:
+- do not restore old name-resolution/bootstrap status unless a real regression is reproduced;
+- do not rewrite historical worklog evidence as if it were current.
+
+
 ## 2026-09-24 — private evidence leak audit checkpoint
 
 ACTOR: ChatGPT
