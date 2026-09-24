@@ -1,5 +1,30 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — additional draft aids ready
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: target evidence templates / release freeze / reconciliation / branch hygiene
+STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+PREPARED:
+- `MULTI_PC_EVIDENCE_RESULT_TEMPLATE_2026-09-24.md`;
+- `RELEASE_FREEZE_CHECKLIST_2026-09-24.md`;
+- `POST_CODEX_RECONCILIATION_CHECKLIST_2026-09-24.md`;
+- `VERIFIED_BRANCH_CLEANUP_CANDIDATES_2026-09-24.md`.
+VALIDATED:
+- 12 recent branch candidates currently compare with `ahead_by = 0` against main;
+- no deletion was performed.
+NEXT:
+- Codex continues target evidence;
+- ChatGPT keeps #241 draft/unmerged;
+- after target checkpoint, reconcile new evidence into #241 before deciding whether to merge.
+DO NOT REPEAT:
+- do not create a second evidence template/freeze checklist;
+- do not delete branches during evidence capture;
+- do not move `main` just to publish documentation.
+
+
 ## 2026-09-24 — draft runbooks ready for Codex target work
 
 ACTOR: ChatGPT
