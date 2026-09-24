@@ -196,7 +196,7 @@ AREA: SSH/private evidence security
 STATE: COMPLETE_IN_DRAFT
 BRANCH/PR: #241
 COMPLETED:
-- direct inspection of 20 public/draft files;
+- direct inspection of 21 unique public/draft files;
 - private-alias/IP/key-path/key-material/credential/user@host leak checks.
 VALIDATED:
 - PASS; no matching private topology/credential material found in inspected scope.
@@ -247,7 +247,7 @@ COMPLETED IN DRAFT #241:
 - post-Codex reconciliation checklist;
 - branch hygiene plan;
 - 12 verified zero-unique-commit cleanup candidates;
-- private SSH/evidence leak audit across 20 directly inspected files — PASS;
+- private SSH/evidence leak audit across 21 unique directly inspected files — PASS;
 - authoritative status-drift cleanup to post-bootstrap/PR239-merged reality;
 - mandatory checkpoint-after-every-completed-task rule.
 
@@ -275,6 +275,33 @@ DO NOT REPEAT:
 - do not merge #241 merely because CI is green;
 - do not delete branches while target evidence is active;
 - do not mark waiting-for-evidence as NOT_STARTED.
+
+
+## Checkpoint update — PR #241 audit scope-drift correction
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: SSH/private evidence audit continuity
+STATE: COMPLETE_IN_DRAFT
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+HEAD/MERGE COMMIT: audit correction commit `9ca1231b78fd0f14392bdb5418539fbaed0327c4`; main intentionally unchanged.
+COMPLETED:
+- detected that PR #241 had grown from 15 to 17 changed files after the earlier leak-audit checkpoint;
+- revalidated all 17 current PR files plus 4 additional baseline security/configuration files, 21 unique files total;
+- corrected stale audit/checkpoint file counts without touching runtime code or Codex-owned target work.
+VALIDATED:
+- PASS; no concrete private key material, RFC1918 host address, credential assignment, real IdentityFile path, or private SSH topology value found;
+- scanner-only matches were deliberate documentation examples/placeholders.
+FAILED:
+- none.
+BLOCKED:
+- none.
+NEXT:
+- remain SATURATED_WAITING_FOR_TARGET_EVIDENCE and reconcile only new Codex PASS/FAIL/BLOCKED evidence or a reproduced repository defect.
+DO NOT REPEAT:
+- do not repeat this audit unless evidence-bearing files change again or a leak is suspected;
+- do not merge #241 or move `main` because of this correction;
+- do not touch Codex-owned admin/file/process/service/STOP-KILL/pinned-task target execution.
 
 ## Resume phrase
 
