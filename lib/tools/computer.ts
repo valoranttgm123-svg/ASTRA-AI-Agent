@@ -91,7 +91,7 @@ const CATALOG: readonly AstraToolDefinition[] = [
     name: "Windows Owner Command",
     category: "computer",
     description:
-      "Execute an arbitrary PowerShell or CMD command on the explicitly selected trusted local/SSH Windows node when Owner Mode is enabled."
+      "Execute an arbitrary PowerShell or CMD command on the explicitly selected trusted local/SSH Windows node when Owner Mode is enabled.",
     permissionLevel: 2,
     sideEffect: "local_write",
     timeoutMs: 120_000,
