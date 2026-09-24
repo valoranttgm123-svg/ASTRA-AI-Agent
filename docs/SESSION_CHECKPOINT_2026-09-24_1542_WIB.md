@@ -303,6 +303,40 @@ DO NOT REPEAT:
 - do not merge #241 or move `main` because of this correction;
 - do not touch Codex-owned admin/file/process/service/STOP-KILL/pinned-task target execution.
 
+
+## Checkpoint update — PR #241 consistency cleanup + CI #698
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: documentation consistency / no-repeat continuity
+STATE: COMPLETE_IN_DRAFT
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+HEAD/MERGE COMMIT:
+- pre-checkpoint branch head: `d66b6891a38ae9e3c08bdac0f70c23e4043c18ae`;
+- this checkpoint commit advances the draft head; read live PR #241 for the exact newest SHA;
+- `main` remains intentionally unchanged at `c5d89375ef25601132b47da7d1c064df22d2d98f`.
+COMPLETED:
+- corrected stale audit scope in worklog/tracker/handoff from the earlier 15+5 / 20-file wording to 21 unique files: 17 current PR files + 4 additional baseline files;
+- changed completed ChatGPT preparation entries from misleading `ACTIVE_DRAFT_NOT_FOR_MERGE` to `COMPLETE_IN_DRAFT`;
+- changed the still-held draft/evidence-freeze handoff entry to `BLOCKED` because it is waiting on the Codex target checkpoint rather than active ChatGPT implementation;
+- recorded ASTRA CI #698 success for draft head `f6d41233820217e25bc81b806b8e6cb96f95be2e`.
+VALIDATED:
+- targeted consistency scan found no remaining stale `all 15 PR #241`, `15 current PR #241`, `20 directly inspected files`, or `ACTIVE_DRAFT_NOT_FOR_MERGE` markers in the synchronized worklog/handoff/tracker/pointer;
+- CI #698 conclusion: SUCCESS;
+- no runtime code, target-PC state, SSH topology, or `main` was changed.
+FAILED:
+- none.
+BLOCKED:
+- ChatGPT safe parallel work remains saturated pending new Codex target evidence, a reproduced repository defect, target-checkpoint completion, or an owner requirement change.
+NEXT:
+- Codex continues remote admin/file/process/service evidence, unreachable/wrong-identity fail-closed, remote STOP/KILL, and one pinned-target multi-step task;
+- ChatGPT only reconciles genuinely new Codex PASS/FAIL/BLOCKED evidence or a concrete repository defect.
+DO NOT REPEAT:
+- do not recreate the audit/runbooks/templates/freeze/reconciliation work;
+- do not restore completed ChatGPT slices to ACTIVE merely because a session restarts;
+- do not merge #241 or move `main` while active commit-bound evidence collection requires the freeze;
+- do not overlap Codex-owned target/runtime execution.
+
 ## Resume phrase
 
 **RESUME FROM PR #241 + THIS CHECKPOINT. DO NOT RESTART ASTRA WORK.**
