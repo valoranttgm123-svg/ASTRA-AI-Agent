@@ -193,7 +193,8 @@ NEXT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: SSH/private evidence security
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: #241
 COMPLETED:
 - direct inspection of 21 unique public/draft files;
@@ -214,7 +215,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: continuity / multi-PC status truth
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: #241
 COMPLETED:
 - current pointer/mission/protocol/multi-PC handoff advanced to post-bootstrap state;
@@ -235,7 +237,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: safe parallel repository preparation
-STATE: SATURATED_WAITING_FOR_TARGET_EVIDENCE
+STATE: BLOCKED
+SUBSTATE: SATURATED_WAITING_FOR_TARGET_EVIDENCE
 BRANCH/PR: #241
 
 COMPLETED IN DRAFT #241:
@@ -282,7 +285,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: SSH/private evidence audit continuity
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 HEAD/MERGE COMMIT: audit correction commit `9ca1231b78fd0f14392bdb5418539fbaed0327c4`; main intentionally unchanged.
 COMPLETED:
@@ -309,7 +313,8 @@ DO NOT REPEAT:
 ACTOR: ChatGPT
 DATE: 2026-09-24
 AREA: documentation consistency / no-repeat continuity
-STATE: COMPLETE_IN_DRAFT
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
 BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
 HEAD/MERGE COMMIT:
 - pre-checkpoint branch head: `d66b6891a38ae9e3c08bdac0f70c23e4043c18ae`;
@@ -335,6 +340,51 @@ DO NOT REPEAT:
 - do not recreate the audit/runbooks/templates/freeze/reconciliation work;
 - do not restore completed ChatGPT slices to ACTIVE merely because a session restarts;
 - do not merge #241 or move `main` while active commit-bound evidence collection requires the freeze;
+- do not overlap Codex-owned target/runtime execution.
+
+
+## Checkpoint update — full re-audit continuity remediation
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: full repository/continuity re-audit remediation
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+HEAD/MERGE COMMIT:
+- remediation is committed only to draft PR #241;
+- `main` remains intentionally unchanged at `c5d89375ef25601132b47da7d1c064df22d2d98f`;
+- inspect live PR #241 for the newest remediation head and CI.
+COMPLETED:
+- corrected Multi-PC task drift so process-control is not omitted;
+- split pending fail-closed gates into unreachable-node and wrong-identity, while preserving already-PASS unknown-node;
+- corrected SESSION_RECOVERY authority order so live open PR/active branch and CURRENT_EXECUTION_POINTER outrank historical state;
+- corrected AGENTS autonomous resume so it reuses active work and cannot bypass evidence freeze merely because CI is green;
+- marked dated CODEX_CONTINUATION_NOTE_2026-09-21 as historical-only in current resume logic;
+- defined COMPLETE_IN_DRAFT and SATURATED_WAITING_FOR_TARGET_EVIDENCE as SUBSTATE values under canonical task STATE values;
+- relabeled the older pointer checkpoint heading as historical/superseded by live top-level state;
+- recorded that predecessor head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701.
+VALIDATED BEFORE REMEDIATION:
+- #241 was the only open PR and was draft/mergeable;
+- main CI #650 SUCCESS;
+- draft CI #701 SUCCESS;
+- current-tree secret scans and sensitive-path history checks found no matching committed private credential material in the checked patterns/paths;
+- PR #233 critical safeguards remain present in current main.
+FAILED:
+- none found in runtime code during this re-audit.
+BLOCKED:
+- final target/runtime evidence remains Codex-owned;
+- this documentation slice is not repository-complete until the freeze permits a merge.
+NEXT:
+- run/inspect newest #241 CI for this remediation;
+- if green, return ChatGPT to BLOCKED + SATURATED_WAITING_FOR_TARGET_EVIDENCE;
+- Codex continues administrator context, file rollback, process control, safe service control, unreachable-node, wrong-identity, remote STOP/KILL and pinned multi-step target evidence.
+DO NOT REPEAT:
+- do not re-audit all 206 historical branches without a fresh capability mismatch;
+- do not recreate PR #233 safeguards;
+- do not repeat PC1/bootstrap/marker/unknown-node validation;
+- do not create a replacement PR for #241;
+- do not merge #241 or move main merely because CI is green;
 - do not overlap Codex-owned target/runtime execution.
 
 ## Resume phrase
