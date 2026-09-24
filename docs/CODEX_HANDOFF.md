@@ -1,5 +1,29 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — owner reports four connected SSH/Codex targets
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: multi-PC SSH target inventory
+STATE: REPO_DONE_TARGET_PENDING
+CHANGED:
+- previous name-resolution-failure observation is superseded by newer owner evidence showing four connected PC targets in Codex;
+- exact SSH aliases remain private and were not committed to Git.
+VALIDATED:
+- connection state is owner-provided UI evidence, not yet ASTRA identity/Owner-Mode proof.
+NEXT:
+- on the real ASTRA hub, use the owner's current private aliases;
+- verify each alias with `ssh -G` and remote `COMPUTERNAME`;
+- identify LOCAL/hub versus true remote nodes;
+- bootstrap only verified remote nodes into `.astra/computer-nodes.json`;
+- restart ASTRA-Agent and run the multi-PC validator;
+- continue per-node admin/file/service/wrong-node/offline/STOP-KILL/multi-step evidence.
+DO NOT REPEAT:
+- do not revive the old "all aliases fail name resolution" status unless it is reproduced again;
+- do not commit private aliases/IPs/usernames/key paths;
+- do not rebuild the SSH transport.
+
+
 ## 2026-09-24 — post-remediation hardening validated
 
 ACTOR: ChatGPT

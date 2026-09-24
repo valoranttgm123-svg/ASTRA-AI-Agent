@@ -1,5 +1,26 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## SSH target update — owner reports four connected Codex targets
+
+State: **TARGET CONNECTIONS REPORTED / IDENTITY + PRIVATE REGISTRY VERIFICATION PENDING**
+
+The previous observation that intended aliases failed name resolution is superseded by newer owner-provided evidence showing four PC targets connected in Codex.
+
+Security boundary:
+- exact local SSH aliases remain private and must not be committed to Git;
+- use the owner's current connected SSH/Codex targets from the local runtime;
+- verify each alias with `ssh -G` and remote `COMPUTERNAME`;
+- detect which machine is the ASTRA hub/local machine and do not duplicate that machine as an SSH remote node;
+- write only verified remote targets into the gitignored `.astra/computer-nodes.json`.
+
+Next target sequence:
+1. update/install the exact clean current `main` build on the ASTRA hub;
+2. verify the four currently connected target aliases from the local SSH configuration;
+3. identify the local hub versus true remote targets;
+4. run `configure-ssh-computer-nodes.ps1` only for verified remote nodes;
+5. restart ASTRA-Agent and run `validate-multi-pc-owner-mode.ps1`;
+6. capture per-node identity/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.
+
 ## Post-remediation hardening complete
 
 State: **REPOSITORY HARDENING COMPLETE / TARGET EVIDENCE PENDING**
@@ -72,7 +93,7 @@ Do **not** recreate PR #217-#226, redo PC1 validation, rebuild the Computer Agen
 4. capture real PC2-PC4 administrator/file/service execution, unreachable/wrong-node failure, remote STOP/KILL and one pinned-target multi-step task;
 5. then continue the remaining real release gates.
 
-The latest physical SSH observation before this checkpoint was that the intended remote aliases failed name resolution. That is a target/network/configuration blocker, not missing repository transport code.
+Historical observation: intended aliases previously failed name resolution. This has been superseded by newer owner evidence showing four Codex-connected PC targets. Exact aliases remain private; target identity and ASTRA registry verification are still required.
 
 ## Browser availability refinement — 2026-09-24
 
@@ -81,7 +102,7 @@ head `1d3fd72` was installed and verified. See its PR comment for final evidence
 The next reproduced defect is repeated WebGL initialization errors during normal
 chat rerenders in a browser that denies GPU contexts. See
 `WEBGL_FALLBACK_2026-09-24.md`. Preserve the approved image/HIGH renderer; fall back
-only when WebGL2 is unavailable. Remote aliases currently fail name resolution;
+only when WebGL2 is unavailable. The earlier remote-alias name-resolution observation is superseded; four Codex-connected targets are now reported, but ASTRA identity/registry validation remains pending;
 physical voice/HP and remaining comprehensive release gates are still unverified.
 
 ## Target runtime recovery — 2026-09-24
