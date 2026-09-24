@@ -12,6 +12,14 @@
 - [ ] Unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
 - [ ] One pinned-target multi-step project task end-to-end.
 
+## Draft preparation while Codex owns target evidence
+
+- [x] Prepare multi-PC target evidence runbook with bounded rollback and fail-closed criteria.
+- [x] Prepare final release execution matrix covering core M1-M6 and extended JARVIS/NVIDIA gates.
+- [x] Prepare non-destructive branch hygiene plan; no branch deletion authorized during target evidence.
+- [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
+- [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
+
 ## Recovery
 
 Inspect current `main`, newest CI and open PRs first. Resume an existing open PR before starting new work. Treat historical branches as superseded unless a concrete missing capability is demonstrated. The 206-branch reconciliation is documented in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`.
