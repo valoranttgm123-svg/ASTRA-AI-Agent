@@ -976,12 +976,14 @@ function formatDirectOwnerCommandResult(output: unknown) {
 
   const record = output as Record<string, unknown>;
   const shell = typeof record.shell === "string" ? record.shell : "shell";
+  const nodeId = typeof record.nodeId === "string" ? record.nodeId : "local";
+  const transport = typeof record.transport === "string" ? record.transport : "LOCAL";
   const exitCode = typeof record.exitCode === "number" ? record.exitCode : -1;
   const stdout = typeof record.stdout === "string" ? record.stdout.trimEnd() : "";
   const stderr = typeof record.stderr === "string" ? record.stderr.trimEnd() : "";
 
   return [
-    "Owner Mode " + shell + " selesai dengan exit code " + exitCode + ".",
+    "Owner Mode " + shell + " pada " + nodeId + " (" + transport + ") selesai dengan exit code " + exitCode + ".",
     stdout ? "STDOUT:\n" + stdout : "",
     stderr ? "STDERR:\n" + stderr : "",
   ].filter(Boolean).join("\n");
@@ -1525,7 +1527,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             agentName: agent.name,
             state: "blocked",
             message:
-              "Owner Mode lokal belum READY. Aktifkan Computer Agent dan ASTRA_OWNER_MODE_ENABLED pada PC1 lalu restart ASTRA-Agent.",
+              "Owner Mode belum READY. Aktifkan Computer Agent dan ASTRA_OWNER_MODE_ENABLED pada hub, lalu pastikan target remote terdaftar sebagai trusted node.",
             requiresApproval: false,
             brain: {
               provider: "routing_only",
@@ -1564,7 +1566,7 @@ class LocalPreferredBrainAdapter implements AstraBrain {
             agentName: agent.name,
             state: "blocked",
             message:
-              "Owner Mode lokal sudah terdaftar, tetapi shell execution masih dimatikan oleh policy. Aktifkan ASTRA_ALLOW_SHELL=true pada PC1.",
+              "Owner Mode sudah terdaftar, tetapi shell execution masih dimatikan oleh policy. Aktifkan ASTRA_ALLOW_SHELL=true pada hub.",
             requiresApproval: false,
             brain: {
               provider: "routing_only",
