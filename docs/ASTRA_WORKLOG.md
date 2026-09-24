@@ -1,5 +1,14 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — post-remediation fail-closed hardening
+
+- Re-audited current main after PR #235 and found two additional repository hardening opportunities.
+- Explicit remote read-only requests now return BLOCKED on remote tool/node failure or unavailability rather than falling through to planner reinterpretation.
+- Private computer-node registry now rejects root-level secret-like fields and unsupported root metadata, in addition to the existing per-node strict schema.
+- Added root-schema regression tests.
+- This is a focused extension of PR #233 hardening, not a replacement Computer architecture.
+- Validation passed: 460 tests / 458 pass / 0 fail / 2 Windows-only skips; build/typecheck/lint/audit/diff checks PASS; 0 dependency vulnerabilities.
+
 ## 2026-09-24 — stale audit pointer closed
 
 - Post-merge verification found the current pointer still contained the original pre-remediation audit defect list below the newer PR #233 completion block.

@@ -16,6 +16,11 @@ Inspect current `main`, newest CI and open PRs first. Resume an existing open PR
 - [x] Harden SSH bootstrap with temp-validate-replace semantics and reject nested secret/unknown node-config fields.
 - [x] Review CI warnings: removed safe unused code/imports and fixed the HumanoidLabV9 gesture-hook dependency path without changing approved visuals. Raw `<img>` optimization warnings remain intentionally visible until an equivalent fidelity-preserving migration is proven.
 
+## 2026-09-24 post-remediation hardening
+
+- [x] Fail closed on an explicitly targeted remote read when the requested remote tool/node is unavailable or fails; do not fall through to planner/local reinterpretation.
+- [x] Reject secret-like and unsupported fields at the root of the private computer-node registry, not only inside node entries.
+
 ## Project continuity / ChatGPT ↔ Codex collaboration
 
 - [x] Durable cross-session collaboration protocol added: `docs/ASTRA_COLLABORATION_PROTOCOL.md`.

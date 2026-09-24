@@ -1,5 +1,20 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Post-remediation hardening complete
+
+State: **REPOSITORY HARDENING COMPLETE / TARGET EVIDENCE PENDING**
+
+The focused follow-up after PR #233 now also:
+- fails closed on explicit remote read failure/unavailability instead of falling through to planner reinterpretation;
+- rejects secret-like and unsupported fields at the root of the private node registry.
+
+Validation before final merge:
+- ASTRA CI PASS;
+- 460 tests / 458 pass / 0 fail / 2 Windows-only skips;
+- dependency audit 0 vulnerabilities.
+
+Do not recreate this hardening. Remaining work is target/runtime/provider evidence.
+
 ## Audit remediation merged — PR #233
 
 State: **REPOSITORY FIXES DONE / TARGET EVIDENCE PENDING**
