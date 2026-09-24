@@ -1,5 +1,13 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — additional draft evidence/release preparation
+
+- Added a public-safe multi-PC evidence result template; real topology/results remain private under `.astra/`.
+- Added a final release freeze checklist aligned with ASTRA's same-commit runtime/evidence requirement.
+- Added a post-Codex reconciliation checklist so target evidence cannot remain only in chat/PR comments.
+- Compared 12 recent merged documentation/fix branches against current `main`; all currently have `ahead_by = 0` and are only future cleanup candidates.
+- No branches were deleted and `main` was not moved. All work remains on draft PR #241.
+
 ## 2026-09-24 — safe parallel evidence/release preparation
 
 - On draft PR #241, ChatGPT prepared a target evidence runbook for the remaining multi-PC gates without changing runtime code or `main`.
