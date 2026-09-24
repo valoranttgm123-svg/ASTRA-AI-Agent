@@ -50,7 +50,11 @@ ChatGPT prepared, on draft PR #241 only:
 
 - `docs/MULTI_PC_TARGET_EVIDENCE_RUNBOOK_2026-09-24.md` — admin/file/process/service/fail-closed/STOP-KILL/pinned-task evidence sequence with rollback rules;
 - `docs/FINAL_RELEASE_EXECUTION_MATRIX_2026-09-24.md` — non-duplicated M1-M6 + extended JARVIS/NVIDIA release order;
-- `docs/BRANCH_HYGIENE_PLAN_2026-09-24.md` — post-checkpoint cleanup plan; no deletion is authorized during target evidence.
+- `docs/BRANCH_HYGIENE_PLAN_2026-09-24.md` — post-checkpoint cleanup plan; no deletion is authorized during target evidence;
+- `docs/VERIFIED_BRANCH_CLEANUP_CANDIDATES_2026-09-24.md` — 12 recent branches currently verified with zero unique commits;
+- `docs/MULTI_PC_EVIDENCE_RESULT_TEMPLATE_2026-09-24.md` — public-safe schema for recording target results privately;
+- `docs/RELEASE_FREEZE_CHECKLIST_2026-09-24.md` — exact-build freeze checklist;
+- `docs/POST_CODEX_RECONCILIATION_CHECKLIST_2026-09-24.md` — durable handoff checklist after each Codex target checkpoint.
 
 These files are intentionally not merged while commit-bound target evidence is active.
 
