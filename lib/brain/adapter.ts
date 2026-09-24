@@ -1828,11 +1828,138 @@ class LocalPreferredBrainAdapter implements AstraBrain {
                 },
               };
             }
+
+            if (directComputerCommand.nodeId) {
+              const detail = safePublicDetail(
+                result.detail,
+                "Requested remote computer read failed closed.",
+                800,
+              );
+              liveEvents.push(
+                emitLiveEvent(options, {
+                  type: "agent.blocked",
+                  agent: selected,
+                  visualNode: visualNodeForAgent(selected),
+                  label: "Remote computer read blocked",
+                  detail,
+                }),
+              );
+
+              return {
+                ok: false,
+                agent: selected,
+                agentName: agent.name,
+                state: "blocked",
+                message:
+                  "ASTRA tidak dapat memverifikasi pembacaan pada node " +
+                  directComputerCommand.nodeId +
+                  ". " +
+                  detail,
+                requiresApproval: false,
+                brain: {
+                  provider: "routing_only",
+                  execution: "blocked",
+                  requestedMode: "execute",
+                  route,
+                  visualNodes: route.map(visualNodeForAgent),
+                  events: [...baseEvents(selected), ...liveEvents],
+                  context: {
+                    memoryEntries: 0,
+                    memorySources: [],
+                    skills: [],
+                    input: options?.inputContext,
+                  },
+                  permissions: policy,
+                },
+              };
+            }
+          } else if (directComputerCommand.nodeId) {
+            const detail =
+              "Requested remote Computer Tool is not READY; ASTRA did not fall back to another node or planner.";
+            return {
+              ok: false,
+              agent: selected,
+              agentName: agent.name,
+              state: "blocked",
+              message:
+                "ASTRA tidak dapat memverifikasi pembacaan pada node " +
+                directComputerCommand.nodeId +
+                ". " +
+                detail,
+              requiresApproval: false,
+              brain: {
+                provider: "routing_only",
+                execution: "blocked",
+                requestedMode: "execute",
+                route,
+                visualNodes: route.map(visualNodeForAgent),
+                events: [
+                  ...baseEvents(selected),
+                  emitLiveEvent(options, {
+                    type: "agent.blocked",
+                    agent: selected,
+                    visualNode: visualNodeForAgent(selected),
+                    label: "Remote computer read unavailable",
+                    detail,
+                  }),
+                ],
+                context: {
+                  memoryEntries: 0,
+                  memorySources: [],
+                  skills: [],
+                  input: options?.inputContext,
+                },
+                permissions: policy,
+              },
+            };
           }
-        } catch {
+        } catch (error) {
           options?.signal?.throwIfAborted();
-          // Fall through to the bounded planner/executor path when the
-          // controlled Computer Tool is unavailable or fails unexpectedly.
+          if (directComputerCommand.nodeId) {
+            const detail = safeErrorDetail(
+              error,
+              "Requested remote computer read failed closed.",
+              800,
+            );
+            return {
+              ok: false,
+              agent: selected,
+              agentName: agent.name,
+              state: "blocked",
+              message:
+                "ASTRA tidak dapat memverifikasi pembacaan pada node " +
+                directComputerCommand.nodeId +
+                ". " +
+                detail,
+              requiresApproval: false,
+              brain: {
+                provider: "routing_only",
+                execution: "blocked",
+                requestedMode: "execute",
+                route,
+                visualNodes: route.map(visualNodeForAgent),
+                events: [
+                  ...baseEvents(selected),
+                  emitLiveEvent(options, {
+                    type: "agent.blocked",
+                    agent: selected,
+                    visualNode: visualNodeForAgent(selected),
+                    label: "Remote computer read failed",
+                    detail,
+                  }),
+                ],
+                context: {
+                  memoryEntries: 0,
+                  memorySources: [],
+                  skills: [],
+                  input: options?.inputContext,
+                },
+                permissions: policy,
+              },
+            };
+          }
+          // Local read-only requests may still fall through to the bounded
+          // planner/executor path when the direct local tool is unavailable.
         }
       }
     }
