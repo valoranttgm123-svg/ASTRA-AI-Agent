@@ -52,6 +52,20 @@ Then:
    - then latest `CODEX_HANDOFF.md`;
    - then roadmap/older history.
 
+## Mandatory completion-checkpoint rule
+
+The owner requires a durable checkpoint **after every completed work slice**.
+
+Before beginning a new task, confirm the previous completed task has a GitHub checkpoint containing:
+- completed work;
+- validation result;
+- branch/PR/commit;
+- blocker if any;
+- exact next action;
+- DO NOT REPEAT scope.
+
+If that checkpoint is missing, create/update it first. Never use a new chat/session as a reason to redo the completed work.
+
 ## Mandatory collaboration-memory rule — 2026-09-24
 
 The owner requires one continuous ASTRA project memory across ChatGPT and Codex sessions.
