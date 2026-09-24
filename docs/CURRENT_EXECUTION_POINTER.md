@@ -107,7 +107,7 @@ Completed repository fixes:
 - duplicate/overlapping tracker entries;
 - safe non-visual CI warning cleanup and Humanoid V9 gesture dependency tracking.
 
-Do not recreate PR #233. The next real gate is target-side: update/install the exact clean current main build, verify runtime build identity, then resume PC2-PC4 and release evidence.
+Do not recreate PR #233. Its repository fixes are complete. Current target work is the already-registered three-remote deep evidence slice (admin/file/process/service, unreachable/wrong-identity, STOP/KILL, pinned multi-step), followed by broader release gates under the exact-build freeze rule.
 
 ## Full audit checkpoint — 2026-09-24
 
@@ -139,7 +139,7 @@ Live repository truth at this checkpoint:
 - PR #226 merged the safe SSH trust-bootstrap/diagnostic helper after full ASTRA CI success;
 - PC1 local read-only execution, local Owner Mode and direct no-model Owner Mode are already implemented and target-validated;
 - repository-side multi-PC routing, private node registry, target identity verification, fail-closed behavior and explicit remote Owner Mode syntax are complete;
-- the remaining multi-PC gate is real PC2-PC4 connectivity/identity/admin/STOP-KILL/multi-step evidence on the physical targets.
+- PC1 is LOCAL and three remote Windows targets are already privately registered and marker-validated; remaining multi-PC gates are admin/file/process/service, unreachable/wrong-identity, remote STOP/KILL and one pinned multi-step task.
 
 Do **not** recreate PR #217-#226, redo PC1 validation, rebuild the Computer Agent transport, or start another SSH architecture unless a concrete regression is reproduced. The current remote sequence is:
 
@@ -158,7 +158,7 @@ head `1d3fd72` was installed and verified. See its PR comment for final evidence
 The next reproduced defect is repeated WebGL initialization errors during normal
 chat rerenders in a browser that denies GPU contexts. See
 `WEBGL_FALLBACK_2026-09-24.md`. Preserve the approved image/HIGH renderer; fall back
-only when WebGL2 is unavailable. The earlier remote-alias name-resolution observation is superseded; four Codex-connected targets are now reported, but ASTRA identity/registry validation remains pending;
+only when WebGL2 is unavailable. The earlier remote-alias name-resolution observation is superseded; PC1 is LOCAL and three remote Windows targets are privately registered and marker-validated;
 physical voice/HP and remaining comprehensive release gates are still unverified.
 
 ## Target runtime recovery — 2026-09-24
