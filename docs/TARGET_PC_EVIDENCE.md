@@ -54,7 +54,7 @@ Even when every collector check passes, the following remain separate:
 
 - real Level-2/3 Automation approval behavior;
 - STOP during a real running occurrence;
-- real Sonor / Graphify / Obsidian provenance and cancellation;
+- real Sonor outage/degradation and active-query cancellation; retrieval/project-scope/Graphify/Obsidian provenance was already validated separately and should not be repeated;
 - browser/Humanoid HIGH FPS and console measurements;
 - approved external-write scenarios for configured integrations;
 - emergency STOP against a real cancellable task.

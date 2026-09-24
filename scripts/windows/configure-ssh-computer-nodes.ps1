@@ -118,9 +118,30 @@ if ($parent -and -not (Test-Path -LiteralPath $parent)) {
 
 $document = [ordered]@{ version = 1; nodes = @($verified) }
 $json = $document | ConvertTo-Json -Depth 6
-Set-Content -LiteralPath $OutputPath -Value $json -Encoding UTF8
+
+$writeParent = if ($parent) { $parent } else { "." }
+$tempPath = Join-Path $writeParent (".astra-computer-nodes-" + [Guid]::NewGuid().ToString("N") + ".tmp")
+try {
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($tempPath, $json, $utf8NoBom)
+
+    $validated = Get-Content -LiteralPath $tempPath -Raw | ConvertFrom-Json
+    if ($validated.version -ne 1 -or $null -eq $validated.nodes) {
+        throw "Temporary ASTRA computer registry failed validation."
+    }
+
+    if (Test-Path -LiteralPath $OutputPath) {
+        [System.IO.File]::Replace($tempPath, $OutputPath, $null)
+    } else {
+        [System.IO.File]::Move($tempPath, $OutputPath)
+    }
+} finally {
+    if (Test-Path -LiteralPath $tempPath) {
+        Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
+    }
+}
 
 Write-Host ""
-Write-Host "ASTRA private computer registry written: $OutputPath" -ForegroundColor Green
+Write-Host "ASTRA private computer registry written atomically: $OutputPath" -ForegroundColor Green
 Write-Host "No password, token, private key, key path, or SSH config body was copied." -ForegroundColor Green
 Write-Host "Restart ASTRA-Agent before running validate-multi-pc-owner-mode.ps1." -ForegroundColor Cyan

@@ -12,7 +12,7 @@ Primary implementation branch when work begins: `astra/astra-max-production`
 - Phase 1 validation: production build, unit/integration tests, typecheck, lint, and dependency audit passed in GitHub Actions.
 - **Phase 2 foundation — Memory Intelligence contracts: COMPLETE.** Local memory now preserves provenance, project, privacy, relevance and confidence metadata. A provider-neutral multi-source manager enforces dedupe, project isolation, bounds, source failure handling and cancellation.
 - **Phase 2 telemetry: real memory lifecycle telemetry is implemented.** Memory Manager emits search/source/graph/selection/completion events from actual retrieval, and Brain streams + retains them.
-- **Phase 2 live-source integration: SONOR BRIDGE FOUNDATION IMPLEMENTED.** The user already has Sonor at `http://127.0.0.1:55127/#graph`, with Graphify/Obsidian/project context. ASTRA now has a loopback-only `AstraMemorySource` adapter and unified Brain memory path. The actual Sonor endpoint path/schema still requires inspection on the target PC, so production Sonor remains truthfully NOT_CONFIGURED until that check succeeds. See `docs/SONOR_BRIDGE.md`.
+- **Phase 2 live-source integration: SONOR BRIDGE TARGET-VALIDATED FOR RETRIEVAL/PROVENANCE.** The existing Sonor at `http://127.0.0.1:55127/#graph` is preserved and the loopback `AstraMemorySource` path has been validated on the real target for project-scoped retrieval plus Graphify and Obsidian provenance. Remaining MEM-X evidence is outage/degradation, active-query cancellation, Diagnostics health/search integration where separately required, and release evidence. Do not repeat the initial endpoint/provenance audit. See `docs/SONOR_BRIDGE.md`.
 - **Phase 3 foundation — Project Registry: COMPLETE.** ASTRA now reads only explicitly registered project metadata from `.astra/projects.json` (or `ASTRA_PROJECTS_FILE`), resolves id/name/alias and “project terakhir”, and reports real `project.selected` Brain context/events. It does not scan arbitrary folders.
 - **Phase 3 scoped project-context loading: IMPLEMENTED.** ASTRA may read only explicitly registered `docs` / `importantFiles` under the resolved project's registered `workspace`. It does not scan directories, rejects path escape/symlink escape, blocks secret/key files, applies file-count/size/type limits, and feeds accepted content into the same provenance-aware Memory Manager as source `project`.
 - **Phase 4 — Strategist + bounded Planner: IMPLEMENTED.** Complex/explicit goals use local Ollama to produce structured drafts which are forced through `createBoundedPlan()`. Permission floors, step/retry/timeout/dependency bounds remain authoritative. Brain exposes the validated plan and emits real `plan.created`.
@@ -24,7 +24,7 @@ Primary implementation branch when work begins: `astra/astra-max-production`
 - **Phase 7B — Authenticated GitHub transport + tool-aware planning: IMPLEMENTED.** GitHub push/PR/CI are backed by a provider-neutral transport and the default local `gh` CLI adapter becomes READY only after verified `gh auth status`. Strategist plans carry registered `toolId`/bounded `toolInput` and execute through Tool Runtime.
 - **Phase 7C — Scoped Level-3 approval: IMPLEMENTED.** External writes use one-time 5-minute approval challenges bound to exact input/plan/step. Normal execute approval remains Level 2; each Level-3 step requires its own explicit UI confirmation; Level 4 remains blocked. Target-PC end-to-end GitHub validation is still pending.
 - **Latest repository release-hardening checkpoint (2026-09-21):** code through PR #145 is merged and CI-verified. Runtime, target-PC, performance/preflight, and browser/Humanoid release evidence now fail closed on stale/dirty build provenance. This does not replace real target-PC evidence.
-- **Next Codex execution sequence:** use the real target PC to complete Phase 14 approval/STOP proof, MEM-X Sonor/Graphify/Obsidian audit, Phase 16 target/browser measurements, Phase 17 real scenarios, Phase 19 Windows verification, then generate the Phase 20 report from real evidence. Do not start Phase 21–30 until the core gate is stable, and do not rebuild Sonor or already-complete Research/browser foundations.
+- **Next Codex execution sequence:** use the real target PC to complete Phase 14 approval/STOP proof, the remaining MEM-X outage/degradation + active-cancellation evidence, Phase 16 target/browser measurements, Phase 17 real scenarios, Phase 19 Windows verification, then generate the Phase 20 report from real evidence. Do not rebuild Sonor or already-complete Research/browser foundations.
 
 ## Mission
 
@@ -988,7 +988,7 @@ Repository hardening is complete through P15E and P15F is the final regression/r
 
 `PHASE 15 REPOSITORY HARDENING COMPLETE / CI VERIFIED / LOCAL RELEASE GATES REMAIN`
 
-Local release gates still include target-PC Automation validation and real Sonor/Graphify/Obsidian MEM-X validation. Do not treat those as complete from repository CI alone.
+Local release gates still include target-PC Automation validation plus remaining MEM-X Sonor outage/degradation and active-cancellation evidence. Real Sonor retrieval/project scope/Graphify/Obsidian provenance is already target-validated and must not be repeated.
 
 ## Phase 16 — Performance pass
 
@@ -1053,7 +1053,7 @@ Behavior:
 - does not start/stop services;
 - does not approve actions;
 - does not choose the Phase 20 release verdict;
-- Sonor remains `UNKNOWN` until real MEM-X validation.
+- Sonor remains `UNKNOWN` in this self-check unless a real Sonor health/search probe is included in the captured evidence. Prior retrieval/provenance validation does not make an unrelated self-check report READY.
 
 The self-check is evidence collection, not proof that installation, reinstall/update, physical STOP, Sonor, or performance validation passed.
 

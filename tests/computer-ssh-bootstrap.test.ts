@@ -26,13 +26,17 @@ test("SSH node bootstrap never copies credential or key material into registry",
   assert.doesNotMatch(source, /Get-Content\s+.*\.ssh\\config/i);
 });
 
-test("SSH node bootstrap fails atomically before writing private registry", () => {
+test("SSH node bootstrap verifies all targets before atomic registry replacement", () => {
   const failureGuard = source.indexOf("if ($failures.Count -gt 0)");
-  const registryWrite = source.indexOf("Set-Content -LiteralPath $OutputPath");
+  const tempWrite = source.indexOf("[System.IO.File]::WriteAllText");
+  const replace = source.indexOf("[System.IO.File]::Replace");
+  const move = source.indexOf("[System.IO.File]::Move");
+
   assert.ok(failureGuard >= 0);
-  assert.ok(registryWrite > failureGuard);
-  assert.match(
-    source.slice(failureGuard, registryWrite),
-    /exit 2/,
-  );
+  assert.ok(tempWrite > failureGuard);
+  assert.ok(replace > tempWrite);
+  assert.ok(move > tempWrite);
+  assert.match(source.slice(failureGuard, tempWrite), /exit 2/);
+  assert.match(source, /ConvertFrom-Json/);
+  assert.match(source, /Remove-Item -LiteralPath \$tempPath/);
 });

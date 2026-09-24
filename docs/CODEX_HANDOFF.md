@@ -1,5 +1,33 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — audit remediation PR #233 handoff
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: Computer Agent / SSH hardening / continuity
+STATE: ACTIVE
+BRANCH/PR: `fix/audit-followups-20260924` / #233
+CHANGED:
+- preserve explicit remote node in direct read-only Computer fast path;
+- align system-info timeout with bounded SSH connection timing;
+- recursively reject secret-like node config and unknown fields;
+- temp-validate-replace private SSH registry writes;
+- synchronize MEM-X/Sonor canonical status;
+- deduplicate/normalize NVIDIA/JARVIS/recovery trackers;
+- clean safe non-visual warnings and Humanoid V9 hook dependencies.
+VALIDATED SO FAR:
+- regression tests were added in-repo; newest-head CI must still pass before merge.
+BLOCKER:
+- physical PC2-PC4 and release evidence remains target-only and must use the post-merge exact clean build.
+NEXT:
+- ChatGPT owns PR #233 through CI/merge;
+- Codex then installs/verifies exact current main and resumes real target evidence.
+DO NOT REPEAT:
+- do not create another Computer transport;
+- do not redo the broad Sonor retrieval/provenance audit;
+- do not start a competing fix while #233 is active.
+
+
 ## 2026-09-24 — full audit handoff
 
 ACTOR: ChatGPT

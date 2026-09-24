@@ -1,5 +1,18 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — audit remediation PR #233
+
+- Started focused follow-up from the merged full audit; existing Computer/Sonor architecture is preserved rather than rebuilt.
+- Direct read-only Computer parsing now carries explicit `PC<n>` or `@node-id` targets into Tool Runtime and rejects ambiguous multiple targets instead of silently defaulting remote intent to LOCAL.
+- `computer.system.info` timeout was raised above the SSH 8-second connect bound; local execution still returns immediately when fast.
+- Multi-PC node config now recursively rejects secret-like keys and rejects unsupported top-level fields.
+- SSH trust bootstrap now writes a sibling temp file, parses it back for validation, atomically replaces/moves the final registry, and cleans temp state.
+- Added regression tests for remote target parsing, timeout compatibility, nested secrets/unknown fields and atomic bootstrap semantics.
+- Canonical MEM-X docs now preserve already-validated Sonor retrieval/project scope/Graphify/Obsidian provenance and leave only degradation/cancellation/Diagnostics/release evidence pending.
+- NVIDIA and JARVIS tracker duplication/non-task checkbox drift was normalized; historical recovery branch wording was relabeled.
+- Safe warning cleanup removed unused non-visual code/imports and made Humanoid V9 gesture dependencies explicit. Approved raw image rendering was not changed merely to silence optimization warnings.
+- PR: #233. Status remains ACTIVE until newest-head CI passes and merge completes.
+
 ## 2026-09-24 — full repository/runtime-readiness audit
 
 - Audited current main, open PRs/issues, PR #217-#231 merge/CI state, collaboration docs, execution trackers, release/security/performance docs, multi-PC code, SSH bootstrap, Tool Runtime timeout/cancellation, and latest CI logs.

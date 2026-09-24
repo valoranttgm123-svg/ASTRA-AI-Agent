@@ -83,7 +83,7 @@ Read these only when the active task needs their historical/detail context:
 - Phase 24/25/28/22/27/29 repository foundations are merged; do not recreate them.
 - Phase 18A repository RC gate is merged as PR #119; stale/diverged PR #111 is closed as superseded.
 - Repository-only release preparation includes target-PC evidence collection, Humanoid/browser capture, conservative Phase 20 report generation, evidence-backed manual gate recording, final-report context recording, strict evidence-shape/private-path validation, runtime-build attestation, end-to-end capture provenance, stale-browser rejection, browser nested-runtime binding, secure optional-cloud transport, exact GitHub remote validation, and process-tree STOP hardening (PRs #121, #123–#126, #129, #142–#145, #147–#150).
-- MEM-X still requires real local Sonor access.
+- MEM-X real Sonor retrieval/project scope/Graphify/Obsidian provenance is already target-validated. Remaining MEM-X gates are Sonor outage/degradation, active-query cancellation, Diagnostics health/search evidence where required, and release evidence. Do not repeat the broad initial Sonor audit.
 - Automation target-PC validation is still required and must not be claimed complete until actually run.
 - Background Automation stays OFF by default.
 - Unattended Automation stays Level 0/1 only.
@@ -104,7 +104,7 @@ If a task requires target-PC access, real Sonor access, login, physical micropho
 Examples:
 
 - If Phase 14 target-PC validation cannot run yet, continue Phase 15A–15F.
-- If real Sonor cannot be reached yet, finish all safe ASTRA-side hardening/tests that do not require guessing Sonor endpoints, mark MEM-X externally blocked, and continue the next implementable roadmap work.
+- If Sonor becomes unavailable during a remaining degradation/cancellation/Diagnostics gate, record that exact blocker and continue independent work. Do not restart the already-completed retrieval/provenance audit.
 - Do not wait idle for a user reply when independent repository work remains.
 
 ### Current exact task
@@ -282,7 +282,7 @@ Do not treat “JARVIS-Class” as permission for fictional claims or unsafe aut
 
 A local Sonor workflow graph already exists on the user's target PC at `127.0.0.1:55127`. Reuse it. Do not build a duplicate Graphify/Obsidian system inside ASTRA.
 
-When local PC access is available, inspect Sonor's real server/API implementation and connect the existing `lib/memory/sonor.ts` adapter using the contract in `docs/SONOR_BRIDGE.md`. Do not guess endpoint paths and do not claim READY until the real end-to-end check passes.
+The existing Sonor server/API and `lib/memory/sonor.ts` adapter have already been validated on the target for real loopback retrieval, project scope, Graphify provenance and Obsidian provenance. Preserve that integration. Remaining Sonor work is outage/degradation, active cancellation, Diagnostics health/search evidence where required, and release evidence; do not repeat the initial endpoint/provenance audit.
 
 ## NVIDIA JARVIS Mesh — PR #154
 

@@ -58,6 +58,32 @@ const SSH_ALIAS = /^[a-z0-9][a-z0-9._-]{0,127}$/i;
 const COMPUTER_NAME = /^[a-z0-9][a-z0-9-]{0,62}$/i;
 const FORBIDDEN_NODE_KEYS =
   /^(?:password|passphrase|token|privatekey|private_key|keypath|key_path|identityfile|identity_file)$/i;
+const ALLOWED_NODE_KEYS = new Set([
+  "id",
+  "label",
+  "transport",
+  "trusted",
+  "sshAlias",
+  "expectedComputerName",
+]);
+
+function findForbiddenNodeKey(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findForbiddenNodeKey(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!value || typeof value !== "object") return null;
+
+  for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+    if (FORBIDDEN_NODE_KEYS.test(key)) return key;
+    const found = findForbiddenNodeKey(nested);
+    if (found) return found;
+  }
+  return null;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -92,10 +118,15 @@ export function parseComputerNodesConfig(raw: string): AstraComputerNodesConfig 
       throw new Error("ASTRA computer node entries must be objects.");
     }
 
+    if (findForbiddenNodeKey(entry)) {
+      throw new Error(
+        "ASTRA computer node config must not contain passwords, tokens, or private-key paths.",
+      );
+    }
     for (const key of Object.keys(entry)) {
-      if (FORBIDDEN_NODE_KEYS.test(key)) {
+      if (!ALLOWED_NODE_KEYS.has(key)) {
         throw new Error(
-          "ASTRA computer node config must not contain passwords, tokens, or private-key paths.",
+          "ASTRA computer node config contains unsupported field: " + key,
         );
       }
     }

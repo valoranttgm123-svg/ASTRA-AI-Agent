@@ -1,5 +1,22 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Active audit remediation — PR #233
+
+State: **ACTIVE / CHATGPT-OWNED**
+
+PR #233 is the focused repository follow-up for `docs/FULL_AUDIT_2026-09-24.md`.
+
+It fixes:
+- direct read-only remote node preservation;
+- system-info timeout compatibility with SSH;
+- nested-secret/unknown node-config rejection;
+- temp-validate-replace SSH registry writes;
+- stale MEM-X/Sonor canonical status;
+- duplicate/overlapping tracker entries;
+- safe non-visual CI warning debt and Humanoid V9 gesture dependency tracking.
+
+Codex must not duplicate this repository slice. After #233 merges and its CI is green, Codex should update/install the exact clean main build before collecting fresh PC2-PC4 or final release evidence.
+
 ## Full audit checkpoint — 2026-09-24
 
 Read `docs/FULL_AUDIT_2026-09-24.md` before new Computer/MEM-X/release work.
