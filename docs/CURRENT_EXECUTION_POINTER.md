@@ -1,5 +1,27 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Canonical latest checkpoint — 2026-09-24
+
+Live repository truth at this checkpoint:
+
+- `main`: `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`;
+- open PRs: none at checkpoint creation;
+- PR #225 merged the trusted multi-PC SSH Computer Agent transport after full ASTRA CI success;
+- PR #226 merged the safe SSH trust-bootstrap/diagnostic helper after full ASTRA CI success;
+- PC1 local read-only execution, local Owner Mode and direct no-model Owner Mode are already implemented and target-validated;
+- repository-side multi-PC routing, private node registry, target identity verification, fail-closed behavior and explicit remote Owner Mode syntax are complete;
+- the remaining multi-PC gate is real PC2-PC4 connectivity/identity/admin/STOP-KILL/multi-step evidence on the physical targets.
+
+Do **not** recreate PR #217-#226, redo PC1 validation, rebuild the Computer Agent transport, or start another SSH architecture unless a concrete regression is reproduced. The current remote sequence is:
+
+1. resolve/verify the existing SSH aliases on the hub without inventing replacements;
+2. run `scripts/windows/configure-ssh-computer-nodes.ps1` to create the private gitignored registry only from verified targets;
+3. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
+4. capture real PC2-PC4 administrator/file/service execution, unreachable/wrong-node failure, remote STOP/KILL and one pinned-target multi-step task;
+5. then continue the remaining real release gates.
+
+The latest physical SSH observation before this checkpoint was that the intended remote aliases failed name resolution. That is a target/network/configuration blocker, not missing repository transport code.
+
 ## Browser availability refinement — 2026-09-24
 
 PR #223 is merged (`bc0d2d4`, PR CI #605 / main #606 SUCCESS) and production
@@ -16,9 +38,7 @@ Baseline: PR #222 / `0b07a4c`, main CI #604 SUCCESS; no open PR.
 Local Owner Mode is already merged. Read `RUNTIME_RECOVERY_2026-09-24.md`
 for the reproduced development HTTP 500, stopped Ollama task, and false-positive
 Ollama readiness fix. Install a clean production build before release capture.
-Read `CODEX_MULTI_PC_SSH_HANDOFF_2026-09-23.md` for pending remote-node work;
-do not recreate local execution. Physical voice, remote transport and M1–M6
-evidence gates remain separate from this startup repair.
+Read `CODEX_MULTI_PC_SSH_HANDOFF_2026-09-23.md` for the current remote-node validation sequence. PR #225/#226 already provide the repository transport/bootstrap; do not recreate local or multi-PC execution. Physical voice, real remote-PC evidence and M1–M6 evidence gates remain separate from this startup repair.
 
 ## Active responsiveness blocker — 2026-09-23
 
@@ -38,7 +58,7 @@ evidence and newly reproduced startup-console/health/repository-gate fixes.
 Preserve all later foundations. Next is clean-build installation/evidence and
 the still-open M1–M6 gates, not reimplementation or a claim of full readiness.
 
-Status date: **2026-09-22**. This is the authoritative short handoff for interrupted ChatGPT/Codex sessions. Check the actual latest `main`, open PRs and CI first; do not assume this checkpoint is still the HEAD.
+Historical checkpoint date: **2026-09-22**. The canonical latest checkpoint at the top of this file supersedes this older status block. Always inspect actual `main`, open PRs and CI first.
 
 ## ChatGPT saturation / interruption checkpoint
 
