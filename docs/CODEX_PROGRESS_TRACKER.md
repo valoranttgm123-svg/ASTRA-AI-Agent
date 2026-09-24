@@ -2,6 +2,11 @@
 
 > Update this checklist only from real merged/verified work.
 
+24 September browser refinement: PR #223 production is verified (446 tests;
+CI #605/#606). Graphics denial still caused repeated async initialization errors.
+The follow-up availability fallback preserves artwork and blocks false 3D
+measurement; see `WEBGL_FALLBACK_2026-09-24.md`. Full HIGH/physical gates remain open.
+
 24 September refinement: reproduced runtime HTTP 500 and stopped Ollama after
 PR #222. See `RUNTIME_RECOVERY_2026-09-24.md`. The development repair and harmless
 local Owner Mode probe pass; these do not complete physical/multi-PC/core gates.

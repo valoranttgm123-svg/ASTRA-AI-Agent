@@ -1,5 +1,16 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — browser WebGL fallback
+
+PR #223 is merged and installed: 446 tests/build/typecheck/audit passed; harmless
+Owner Mode cancellation removed the witnessed shell in observed 440 ms. Sonor
+retrieval passed for ASTRA and ALURKA. Final evidence is recorded on PR #223.
+Browser inspection then reproduced repeated WebGL initialization rejection on
+chat/control rerenders. The next patch gates R3F mounting behind one bounded
+WebGL2 probe, keeps the existing SVG ring/approved humanoid image, and prevents
+GPU-unavailable performance capture. See `WEBGL_FALLBACK_2026-09-24.md`.
+Do not describe browser-denied GPU fallback as hardware 3D/HIGH verification.
+
 ## 2026-09-24 — actual runtime recovery
 
 PR #222 is merged and CI #604 passed. Actual target inspection then found a

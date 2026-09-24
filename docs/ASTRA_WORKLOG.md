@@ -1,5 +1,21 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — WebGL-denied browser refinement
+
+- PR #223 merged `bc0d2d450c921ec9aaa86bf686c118c7271228d4` after CI #605;
+  main CI #606 passed. Clean production `1d3fd72` installed with private data
+  hashes unchanged. Full local gate passed 446 tests, typecheck, lint, build,
+  audit (zero vulnerabilities), diff check; PR comment stores target results.
+- Live browser had 10 WebGL errors at load, 18 after toggling voice output and
+  28 after changing provider. Async R3F context creation bypassed the intended
+  render boundary; ordinary rerenders retried a browser-blocked context.
+- Added a one-time WebGL2 availability probe before R3F mounting, retaining
+  the existing SVG ring and original humanoid artwork when unavailable.
+- Disabled 3D evidence capture without an available renderer/GPU observation.
+  Quality parameters, artwork, providers, permissions and Sonor are unchanged.
+- Recheck a clean production build in a real browser after merge. Fallback is
+  not a claim of real hardware HIGH rendering or physical voice readiness.
+
 ## 2026-09-24 — runtime recovery after PR #222
 
 - Inspected main `0b07a4c`, CI #604 SUCCESS, no open PR, clean checkout.

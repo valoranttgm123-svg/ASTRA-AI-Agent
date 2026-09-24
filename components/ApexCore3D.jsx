@@ -12,6 +12,7 @@ import React, { useRef, useMemo, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
+import { useWebGLAvailability } from './useWebGLAvailability'
 // Website copy: no voice pipeline here - the calm-render throttle is never engaged.
 const isRenderCalm = () => false
 
@@ -423,6 +424,7 @@ function Core({ state, variant, corner = false, bigDock = false }) {
 }
 
 export default function ApexCore3D({ state = 'idle', variant = 'geodesic', onClick, corner = false, bigDock = false, contained = false }) {
+  const webgl = useWebGLAvailability()
   const st = normalizeState(state)
   const label = st === 'processing' ? 'Processing' : st === 'listening' ? 'Listening' : st === 'speaking' ? 'Speaking' : 'Standby'
   const [bgIdx, setBgIdx] = useState(2) // Grid default
@@ -446,7 +448,7 @@ export default function ApexCore3D({ state = 'idle', variant = 'geodesic', onCli
         >BG Â· {BG_VARIANTS[bgIdx].name.toUpperCase()}</button>
       )}
 
-      <OrbBoundary>
+      {webgl === 'available' && <OrbBoundary>
       <Canvas
         camera={{ position: [0, 0, 4.8], fov: 50 }}
         dpr={[1, 1.5]}
@@ -480,7 +482,8 @@ export default function ApexCore3D({ state = 'idle', variant = 'geodesic', onCli
           <Bloom intensity={1.8} luminanceThreshold={0.15} luminanceSmoothing={0.9} mipmapBlur radius={0.62} />
         </EffectComposer>
       </Canvas>
-      </OrbBoundary>
+      </OrbBoundary>}
+      {webgl === 'unavailable' && <div data-webgl-fallback style={{ position: 'absolute', top: '62%', left: 0, right: 0, textAlign: 'center', color: '#80b9bf', fontSize: 10, letterSpacing: '.08em' }}>MODE GRAFIS RINGAN · CHAT TETAP AKTIF</div>}
 
       {!isParticles && (
         <div style={{
