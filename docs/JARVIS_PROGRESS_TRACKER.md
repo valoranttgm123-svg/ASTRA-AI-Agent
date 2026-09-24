@@ -40,7 +40,8 @@ Ongoing invariant: every future meaningful change must preserve these synchroniz
 - [x] Trusted multi-PC SSH Computer Agent transport, private node registry, per-node identity verification, fail-closed routing and explicit remote Owner Mode syntax — PR #225, merge `6b3859a70f8c46ab80204b56c788e06cb8c09e60`.
 - [x] Safe SSH trust-bootstrap/diagnostic helper that writes the private registry only after all requested targets verify — PR #226, merge `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`.
 - [ ] Verify the four owner-reported Codex-connected SSH targets on the physical hub with `ssh -G` + remote `COMPUTERNAME`; exact aliases stay private and must not be committed.
-- [ ] Identify the ASTRA hub/local machine, bootstrap only the verified remote targets into the private registry, and run real per-node Owner Mode validation.
+- [x] Identify the ASTRA hub/local machine: owner confirms PC1 is LOCAL/current hub; PC1 must not be duplicated into the SSH remote registry.
+- [ ] Bootstrap only the remaining verified remote targets into the private registry and run real per-node Owner Mode validation.
 - [ ] Real remote administrator/file/service control evidence on each selected trusted node.
 - [ ] Real unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
 - [ ] One pinned-target multi-step project task end-to-end.
