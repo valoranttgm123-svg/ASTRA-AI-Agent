@@ -2,6 +2,16 @@
 
 > Use this when a Codex/ChatGPT session is new, interrupted, truncated, or uncertain about what happened previously.
 
+## Latest active checkpoint — 2026-09-24 15:42 WIB
+
+If draft PR #241 is still open, read:
+
+`docs/SESSION_CHECKPOINT_2026-09-24_1542_WIB.md`
+
+**before implementing anything.** It records the frozen-main rule, completed Codex target work, pending Multi-PC evidence, the prepared #241 draft artifacts, and the exact DO NOT REPEAT scope.
+
+Resume the existing #241 branch rather than creating a replacement.
+
 ## One-line owner command
 
 The repository owner may say only:
