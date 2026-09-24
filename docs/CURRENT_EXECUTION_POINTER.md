@@ -1,13 +1,26 @@
 # ASTRA CURRENT EXECUTION POINTER
 
-## Codex active continuation — PR #239
+## Codex PR #239 merged — target validation in progress
 
-STATE: **ACTIVE**. The native startup-probe correction is being combined with
-current main `63bdd14` (CI #646 SUCCESS), including all newer ChatGPT SSH/security
-work. Finish the combined clean repository gate, merge green CI and install the
-exact build before continuing the remote target sequence below. Morning remote
-observations in the next section are historical, not current reachability.
-Do not recreate the multi-PC transport already merged in PR #225-#238.
+STATE: **REPO + PC1 INSTALL DONE / REMOTE ADMIN-FILE-STOP EVIDENCE PENDING**
+
+PR #239 merged as `290164a8787cf895a9c1a32018c700cf8d6ad551`.
+Its exact PR head passed ASTRA CI. Codex then reported the clean production
+source installed on PC1, default self-check success, Windows release-validator
+success, preserved private config/project/automation hashes, and a private
+registry containing only three individually reverified remote Windows targets.
+PC1 remains LOCAL.
+
+Direct ASTRA remote marker checks passed on all three registered remotes and an
+unknown-node request failed closed. Do not rebuild or re-bootstrap the transport
+unless a regression is reproduced.
+
+Current multi-PC target work:
+1. capture remote administrator/file/service-control evidence on each selected node;
+2. capture unreachable/wrong-node fail-closed evidence;
+3. prove long-running remote STOP/KILL stops the remote work itself;
+4. complete one pinned-target multi-step task end-to-end;
+5. continue the remaining real release gates.
 
 ## Native Windows readiness probe — 2026-09-24
 

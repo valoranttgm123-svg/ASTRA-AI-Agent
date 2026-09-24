@@ -1,5 +1,16 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — PR #239 merged; remote evidence continues
+
+- Codex PR #239 merged as `290164a8787cf895a9c1a32018c700cf8d6ad551`.
+- Exact PR head CI passed. CI reported 464 tests, 460 pass, 0 fail and 4 skips; typecheck/lint/build/audit/diff checks passed with 0 dependency vulnerabilities.
+- Codex reported the clean production source installed on PC1, startup health in 7,384 ms, default self-check PASS and Windows release-validator PASS.
+- Private configuration/project/automation hashes were preserved.
+- The private node registry now contains only three individually reverified remote Windows targets; PC1 remains LOCAL.
+- Direct ASTRA remote marker checks passed on all three registered remotes and unknown-node fail-closed passed.
+- Remaining multi-PC evidence is administrator/file/service control, unreachable/wrong-node behavior, remote STOP/KILL and one pinned-target multi-step task.
+- Pointer/handoff/tracker were synchronized because the prior top-level status still incorrectly said PR #239 ACTIVE after merge.
+
 ## 2026-09-24 — Codex resumes against the latest ChatGPT handoff
 
 - ACTOR: Codex; STATE: ACTIVE; PR #239.

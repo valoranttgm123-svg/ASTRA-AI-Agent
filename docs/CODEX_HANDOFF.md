@@ -1,5 +1,44 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — PR #239 merged and PC1/remote validation advanced
+
+ACTOR: Codex
+DATE: 2026-09-24
+AREA: Windows readiness / multi-PC target validation
+STATE: REPO_DONE_TARGET_PENDING
+BRANCH/PR: #239
+MERGE/COMMIT: `290164a8787cf895a9c1a32018c700cf8d6ad551`
+CHANGED:
+- native read-only Windows startup task inspection replaces the slow CIM probe;
+- current ChatGPT multi-PC/security work was preserved in the merged branch.
+VALIDATED:
+- PR head ASTRA CI SUCCESS;
+- 464 tests / 460 pass / 0 fail / 4 skips in Linux CI;
+- typecheck/lint/build/dependency audit/diff check PASS;
+- dependency audit 0 vulnerabilities;
+- clean production source reported installed on PC1;
+- startup health reported 7,384 ms;
+- default ten-second self-check PASS including Windows startup READY;
+- Windows release validator PASS;
+- private config/project/automation hashes preserved;
+- private registry contains only three individually reverified remote Windows targets; PC1 remains LOCAL;
+- direct ASTRA remote marker checks passed on all three;
+- unknown-node fail-closed passed.
+BLOCKER / REMAINING:
+- remote administrator/file/service-control evidence;
+- unreachable/wrong-node fail-closed evidence;
+- long-running remote STOP/KILL proof;
+- pinned-target multi-step task;
+- later physical voice/HP/HIGH/performance and broader release gates.
+NEXT:
+- continue those target-only checks; do not rebuild transport or startup-task architecture.
+DO NOT REPEAT:
+- do not mark PR #239 ACTIVE;
+- do not recreate the native startup probe fix;
+- do not re-add PC1 as a remote node;
+- do not expose private aliases/topology/credentials.
+
+
 ## 2026-09-24 — Codex active PR #239, preserve newer main
 
 ACTOR: Codex

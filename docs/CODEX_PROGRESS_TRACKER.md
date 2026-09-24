@@ -147,14 +147,14 @@ Target-PC evidence still required:
 
 - [ ] target-PC self-check + install/update/reinstall evidence captured
 - [ ] install path verified
-- [ ] startup tasks verified
+- [x] startup tasks verified with the native read-only probe on the installed PC1 build
 - [ ] loopback binding verified
 - [ ] Ollama/model verified
 - [ ] Codex status verified
 - [ ] Automation status verified
 - [ ] Sonor status verified
 - [ ] private runtime directories verified
-- [ ] read-only self-check executed successfully
+- [x] read-only self-check executed successfully on PC1 after PR #239
 - [ ] reinstall/update path verified
 - [ ] bounded startup health gate executed successfully on the real target PC
 
