@@ -46,6 +46,13 @@ export type AstraSshRunner = (
   signal: AbortSignal,
 ) => Promise<AstraProcessResult>;
 
+type AstraComputerCallResult = {
+  ok: boolean;
+  verified: boolean;
+  detail: string;
+  output?: unknown;
+};
+
 const NODE_ID = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
 const SSH_ALIAS = /^[a-z0-9][a-z0-9._-]{0,127}$/i;
 const COMPUTER_NAME = /^[a-z0-9][a-z0-9-]{0,62}$/i;
@@ -253,7 +260,7 @@ function remoteFailure(
   node: AstraComputerNode,
   result: AstraProcessResult,
   fallback: string,
-) {
+): AstraComputerCallResult {
   if (
     result.exitCode === 86 ||
     result.stderr.includes("ASTRA_IDENTITY_MISMATCH")
@@ -369,7 +376,7 @@ export class MultiNodeWindowsComputerTransport
   private async remoteSystemInfo(
     node: AstraComputerNode,
     signal: AbortSignal,
-  ) {
+  ): Promise<AstraComputerCallResult> {
     const script = [
       identityGuard(node),
       "$v=[Environment]::OSVersion.Version.ToString()",
@@ -417,7 +424,7 @@ export class MultiNodeWindowsComputerTransport
   private async remoteProcessList(
     node: AstraComputerNode,
     signal: AbortSignal,
-  ) {
+  ): Promise<AstraComputerCallResult> {
     const script = [
       identityGuard(node),
       "$items=@(Get-Process | Sort-Object Id | Select-Object -First 250 | ForEach-Object {[pscustomobject]@{imageName=$_.ProcessName;pid=$_.Id;sessionName='';memory=[string]$_.WorkingSet64}})",
@@ -456,7 +463,7 @@ export class MultiNodeWindowsComputerTransport
     node: AstraComputerNode,
     input: unknown,
     signal: AbortSignal,
-  ) {
+  ): Promise<AstraComputerCallResult> {
     if (!node.trusted) {
       return {
         ok: false,
@@ -614,12 +621,12 @@ export class MultiNodeWindowsComputerTransport
     signal.throwIfAborted();
 
     const localStatus = await this.local().status(signal);
-    if (!localStatus.configured) {
+    if (!localStatus.available) {
       return {
         ok: false,
         verified: false,
         detail:
-          "Computer Agent is disabled by configuration. ASTRA did not attempt remote execution.",
+          "Computer Agent is disabled or unavailable on this hub. ASTRA did not attempt remote execution.",
       };
     }
     if (
