@@ -156,6 +156,32 @@ test("private node config rejects embedded credentials and requires verified ide
   );
 });
 
+test("private node config rejects root secrets and unsupported root fields", () => {
+  assert.throws(
+    () =>
+      parseComputerNodesConfig(
+        JSON.stringify({
+          version: 1,
+          nodes: [],
+          token: "must-never-be-accepted",
+        }),
+      ),
+    /must not contain passwords, tokens, or private-key paths/i,
+  );
+
+  assert.throws(
+    () =>
+      parseComputerNodesConfig(
+        JSON.stringify({
+          version: 1,
+          nodes: [],
+          metadata: { owner: "local" },
+        }),
+      ),
+    /unsupported root field/i,
+  );
+});
+
 test("remote system-info uses explicit trusted SSH node and returns target evidence", async () => {
   let calls = 0;
   const transport = new MultiNodeWindowsComputerTransport({
