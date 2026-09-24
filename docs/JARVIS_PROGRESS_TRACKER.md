@@ -1,15 +1,16 @@
 # JARVIS REPOSITORY FOUNDATION TRACKER
 
-## Active target refinement — 2026-09-24, PR #239
+## Codex target refinement — PR #239 merged
 
-Native read-only Windows startup inspection replaces a reproduced five-second
-CIM timeout. Focused Windows tests and live self-check passed on the earlier
-baseline. STATE: ACTIVE until the combined build (including main `63bdd14` and
-all ChatGPT multi-PC hardening) passes full gates, merges and is installed.
-Then continue verified remote registry/bootstrap and real target evidence;
-do not rebuild transport or mark physical voice/HP/HIGH gates complete.
-
-> Tracks merged repository foundations separately from real target-PC/provider evidence. Read `docs/CURRENT_EXECUTION_POINTER.md` first. Do not restart merged work based on old chats or branches.
+- [x] Native read-only Windows startup-task probe fixed and merged in PR #239.
+- [x] PR #239 exact head CI passed; clean production source installed on PC1.
+- [x] Default self-check and Windows release validator passed on PC1.
+- [x] Private registry contains only three individually reverified remote Windows targets; PC1 remains LOCAL.
+- [x] Direct ASTRA marker checks passed on all three registered remotes.
+- [x] Unknown-node fail-closed check passed.
+- [ ] Remote administrator/file/service-control evidence on each selected trusted node.
+- [ ] Unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
+- [ ] One pinned-target multi-step project task end-to-end.
 
 ## Recovery
 
@@ -48,11 +49,11 @@ Ongoing invariant: every future meaningful change must preserve these synchroniz
 - [x] Explicit direct local Owner Mode path + target validator — PR #222.
 - [x] Trusted multi-PC SSH Computer Agent transport, private node registry, per-node identity verification, fail-closed routing and explicit remote Owner Mode syntax — PR #225, merge `6b3859a70f8c46ab80204b56c788e06cb8c09e60`.
 - [x] Safe SSH trust-bootstrap/diagnostic helper that writes the private registry only after all requested targets verify — PR #226, merge `6cdfe8089dfb2e0273e984ca4ad9a2952d157b8e`.
-- [ ] Verify the four owner-reported Codex-connected SSH targets on the physical hub with `ssh -G` + remote `COMPUTERNAME`; exact aliases stay private and must not be committed.
+- [x] Verify the owner-reported connected targets: PC1 is LOCAL and three remote Windows targets were individually reverified; exact aliases remain private.
 - [x] Identify the ASTRA hub/local machine: owner confirms PC1 is LOCAL/current hub; PC1 must not be duplicated into the SSH remote registry.
-- [ ] Bootstrap only the remaining verified remote targets into the private registry and run real per-node Owner Mode validation.
+- [x] Bootstrap only the three verified remote targets into the private registry and pass direct ASTRA marker validation on each.
 - [ ] Real remote administrator/file/service control evidence on each selected trusted node.
-- [ ] Real unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
+- [ ] Unknown-node fail-closed is proven; still capture unreachable/wrong-node evidence plus long-running remote STOP/KILL.
 - [ ] One pinned-target multi-step project task end-to-end.
 Completion invariant: do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
 
