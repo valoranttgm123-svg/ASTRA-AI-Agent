@@ -6,6 +6,16 @@
 
 Inspect current `main`, newest CI and open PRs first. Resume an existing open PR before starting new work. Treat historical branches as superseded unless a concrete missing capability is demonstrated. The 206-branch reconciliation is documented in `docs/CROSS_SESSION_RECONCILIATION_2026-09-22.md`.
 
+## 2026-09-24 full-audit follow-up
+
+- [x] Full repository/runtime-readiness audit recorded in `docs/FULL_AUDIT_2026-09-24.md`.
+- [ ] Fix direct read-only Computer fast path so explicit remote target is never silently converted to LOCAL.
+- [ ] Fix remote `computer.system.info` timeout mismatch with SSH connect timeout and add regression coverage.
+- [ ] Synchronize stale MEM-X/Sonor status in AGENTS / ASTRA_MAX / CODEX_NEXT_MISSION / TARGET_PC_EVIDENCE.
+- [ ] Normalize duplicate/non-task tracker entries, including duplicate NVIDIA NVA-2…NVA-9 real-integration gates.
+- [ ] Harden SSH bootstrap write semantics/wording and nested-secret node-config rejection.
+- [ ] Review CI warnings; fix safe non-visual technical debt and the HumanoidLabV9 hook dependency warning without regressing approved visuals.
+
 ## Project continuity / ChatGPT ↔ Codex collaboration
 
 - [x] Durable cross-session collaboration protocol added: `docs/ASTRA_COLLABORATION_PROTOCOL.md`.
