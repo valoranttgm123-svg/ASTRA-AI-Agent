@@ -1,5 +1,9 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Session checkpoint — 2026-09-24 15:42 WIB
+
+Resume from `docs/SESSION_CHECKPOINT_2026-09-24_1542_WIB.md` and open draft PR #241. Do not recreate or merge the draft merely because a new chat/session started.
+
 ## Codex PR #239 merged — target validation in progress
 
 STATE: **REPO + PC1 INSTALL DONE / REMOTE ADMIN-FILE-STOP EVIDENCE PENDING**
