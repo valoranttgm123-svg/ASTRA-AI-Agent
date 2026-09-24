@@ -1,5 +1,27 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — draft runbooks ready for Codex target work
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: target evidence preparation / release sequencing
+STATE: ACTIVE_DRAFT_NOT_FOR_MERGE
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+PREPARED:
+- multi-PC target evidence runbook;
+- final release execution matrix;
+- non-destructive branch hygiene plan;
+- exact-build evidence-freeze protocol.
+NEXT:
+- Codex may use the runbook while continuing target validation;
+- keep PR #241 draft/unmerged until the active commit-bound evidence checkpoint is complete;
+- after checkpoint, reconcile any new Codex evidence into the draft before merge.
+DO NOT REPEAT:
+- do not create a second evidence checklist;
+- do not delete branches during target evidence;
+- do not move `main` only to publish documentation.
+
+
 ## 2026-09-24 — ChatGPT draft held during Codex target evidence
 
 ACTOR: ChatGPT
