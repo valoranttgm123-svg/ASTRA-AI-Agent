@@ -5,7 +5,7 @@
 State: **BLOCKED**  
 Substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**
 
-Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. Draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 21 unique files (17 current PR files + 4 additional baseline files). Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
+Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. Draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 22 unique files (18 current PR files + 4 additional baseline files). Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
 
 ## Owner continuity rule — checkpoint every completed task
 
