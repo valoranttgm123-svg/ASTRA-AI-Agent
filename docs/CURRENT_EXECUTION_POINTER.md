@@ -2,7 +2,7 @@
 
 ## SSH target update — owner reports four connected Codex targets
 
-State: **TARGET CONNECTIONS REPORTED / IDENTITY + PRIVATE REGISTRY VERIFICATION PENDING**
+State: **PC1 CONFIRMED LOCAL HUB / REMOTE IDENTITY + PRIVATE REGISTRY VERIFICATION PENDING**
 
 The previous observation that intended aliases failed name resolution is superseded by newer owner-provided evidence showing four PC targets connected in Codex.
 
@@ -10,13 +10,13 @@ Security boundary:
 - exact local SSH aliases remain private and must not be committed to Git;
 - use the owner's current connected SSH/Codex targets from the local runtime;
 - verify each alias with `ssh -G` and remote `COMPUTERNAME`;
-- detect which machine is the ASTRA hub/local machine and do not duplicate that machine as an SSH remote node;
+- owner confirms PC1 is the current ASTRA hub/local machine; do not add PC1 to the SSH remote registry;
 - write only verified remote targets into the gitignored `.astra/computer-nodes.json`.
 
 Next target sequence:
 1. update/install the exact clean current `main` build on the ASTRA hub;
 2. verify the four currently connected target aliases from the local SSH configuration;
-3. identify the local hub versus true remote targets;
+3. treat PC1 as LOCAL and verify only the remaining connected targets as remote candidates;
 4. run `configure-ssh-computer-nodes.ps1` only for verified remote nodes;
 5. restart ASTRA-Agent and run `validate-multi-pc-owner-mode.ps1`;
 6. capture per-node identity/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.

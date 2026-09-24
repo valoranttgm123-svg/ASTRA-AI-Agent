@@ -1,5 +1,12 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — PC1 confirmed as ASTRA local hub
+
+- Owner confirmed that PC1 is the current PC and ASTRA hub/local machine.
+- PC1 must remain LOCAL in ASTRA and must not be duplicated into the private SSH remote-node registry.
+- Remaining connected Codex targets are remote candidates only after `ssh -G` and remote `COMPUTERNAME` verification.
+- No SSH transport code changed.
+
 ## 2026-09-24 — SSH target inventory refreshed from owner evidence
 
 - Owner supplied newer Codex connection evidence showing four PC targets currently connected.

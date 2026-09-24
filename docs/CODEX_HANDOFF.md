@@ -1,5 +1,24 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — PC1 confirmed LOCAL hub
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: multi-PC SSH target identity
+STATE: REPO_DONE_TARGET_PENDING
+CHANGED:
+- owner confirms PC1 is the current ASTRA hub/local machine;
+- PC1 must not be added as a remote SSH registry node.
+NEXT:
+- update/install exact clean current main on PC1;
+- verify the remaining connected private aliases with `ssh -G` and remote `COMPUTERNAME`;
+- bootstrap only true remote nodes;
+- run per-node Owner Mode/admin/file/service/fail-closed/STOP-KILL/multi-step evidence.
+DO NOT REPEAT:
+- do not reclassify PC1 as a remote SSH node unless the owner changes the hub topology;
+- do not rebuild multi-PC transport.
+
+
 ## 2026-09-24 — owner reports four connected SSH/Codex targets
 
 ACTOR: ChatGPT
