@@ -1,5 +1,26 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — improvement acceptance addendum
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: collaboration / refinement policy
+STATE: DONE
+CHANGED:
+- clarified that good Codex improvements are welcome;
+- Codex should refine existing work by default, but may replace/refactor when a clearly better evidence-backed approach improves ASTRA;
+- unjustified competing implementations remain prohibited.
+VALIDATED:
+- policy synchronized across collaboration protocol, AGENTS, refinement contract, pointer, tracker and worklog.
+BLOCKER:
+- none.
+NEXT:
+- evaluate future ChatGPT/Codex proposals on technical merit and evidence.
+DO NOT REPEAT:
+- do not reject a better Codex solution merely because ChatGPT implemented the first version;
+- do not replace working architecture without documented reason/evidence.
+
+
 ## 2026-09-24 — no-competition work ownership addendum
 
 ACTOR: ChatGPT

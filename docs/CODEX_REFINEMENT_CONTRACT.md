@@ -15,7 +15,7 @@ This document defines the division of work between ChatGPT repository work and C
 
 When ChatGPT has already produced an ASTRA implementation, Codex's default job is to inspect it, preserve the valid parts, reproduce any remaining defect on the real target, and **finish or correct that implementation**.
 
-Codex must not create a parallel/replacement subsystem simply because ChatGPT's first version is incomplete. Replace architecture only when current evidence proves the existing design cannot satisfy the requirement or the owner explicitly changes direction.
+Codex must not create a parallel/replacement subsystem simply because ChatGPT's first version is incomplete. However, a genuinely better Codex proposal is welcome: if target evidence or technical analysis shows a safer, simpler, more reliable, faster, more maintainable, or more compatible approach, Codex may refine or replace the relevant design after documenting the comparison and preserving useful existing tests/contracts where practical. The project keeps the better proven approach, not the first approach by default.
 
 If ChatGPT could not complete a target-only step, treat the repository state as `REPO_DONE_TARGET_PENDING` or `BLOCKED`, perform the missing real-environment work, then write the result back into the pointer/tracker/worklog/handoff for the next ChatGPT session.
 

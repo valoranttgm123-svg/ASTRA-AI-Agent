@@ -1,5 +1,12 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — improvement acceptance clarification
+
+- Owner clarified that the no-competition rule must not block good Codex ideas.
+- Codex should refine existing ChatGPT work by default, but a clearly better evidence-backed design is welcome and should be adopted when it materially improves correctness, security, reliability, maintainability, performance, UX, compatibility or simplicity.
+- Replacement without reason remains prohibited; superior validated refinement is explicitly allowed.
+- Any replacement/refactor must document the current problem, proposed improvement, evidence, preserved work/tests, migration risk and validation result.
+
 ## 2026-09-24 — no-competition ChatGPT ↔ Codex work division
 
 - Owner clarified that ChatGPT and Codex must not compete for or duplicate the same ASTRA work.
