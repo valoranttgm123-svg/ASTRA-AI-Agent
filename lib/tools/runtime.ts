@@ -21,8 +21,8 @@ import type { AstraComputerTransport } from "./computer";
 import {
   COMPUTER_TOOL_DEFINITIONS,
   createComputerToolRegistrations,
-  WindowsComputerTransport,
 } from "./computer";
+import { MultiNodeWindowsComputerTransport } from "./computer-nodes";
 import {
   createCreativeToolRegistrations,
   CREATIVE_TOOL_DEFINITIONS,
@@ -224,7 +224,7 @@ export async function createDefaultToolRuntime(
   return createToolRuntime({
     githubTransport: new GhCliGitHubTransport(),
     researchTransport: new SearXngResearchTransport(),
-    computerTransport: new WindowsComputerTransport(),
+    computerTransport: new MultiNodeWindowsComputerTransport(),
     signal,
   });
 }
