@@ -188,6 +188,27 @@ DO NOT REPEAT:
 NEXT:
 - future ChatGPT/Codex work must apply this rule automatically after each completed work slice.
 
+## Checkpoint update — private SSH/evidence leak audit
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: SSH/private evidence security
+STATE: COMPLETE_IN_DRAFT
+BRANCH/PR: #241
+COMPLETED:
+- direct inspection of 20 public/draft files;
+- private-alias/IP/key-path/key-material/credential/user@host leak checks.
+VALIDATED:
+- PASS; no matching private topology/credential material found in inspected scope.
+FAILED:
+- none.
+BLOCKED:
+- none.
+NEXT:
+- continue only a new independent draft slice or reconcile new Codex evidence.
+DO NOT REPEAT:
+- do not rerun unless evidence-bearing files change or a leak is suspected.
+
 ## Resume phrase
 
 **RESUME FROM PR #241 + THIS CHECKPOINT. DO NOT RESTART ASTRA WORK.**
