@@ -1,5 +1,15 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-24 — full repository/runtime-readiness audit
+
+- Audited current main, open PRs/issues, PR #217-#231 merge/CI state, collaboration docs, execution trackers, release/security/performance docs, multi-PC code, SSH bootstrap, Tool Runtime timeout/cancellation, and latest CI logs.
+- Full findings are durable in `docs/FULL_AUDIT_2026-09-24.md`.
+- Confirmed no open PR/issue at audit start; PR #217-#231 merged; latest #231 PR-head CI passed build/tests/typecheck/lint/audit/diff with 457 tests, 455 pass, 0 fail, 2 Windows-only skips and 0 vulnerabilities.
+- Found concrete repo defects: direct remote read target can be dropped to LOCAL; system-info 5s timeout conflicts with SSH 8s connect timeout.
+- Found continuity drift: stale broad Sonor/MEM-X status in authoritative docs, duplicate NVIDIA checklist gates, historical active/current wording, and overlapping/non-task tracker boxes.
+- Found hardening/maintenance items: bootstrap write is fail-all-before-write but not true temp+replace atomic; nested secret-like node fields are not recursively rejected; CI/build warnings remain.
+- Target runtime is not proven to match exact current main. Do not capture final PC2-PC4/release evidence until repository follow-ups merge and the clean target build is updated.
+
 ## 2026-09-24 — improvement acceptance clarification
 
 - Owner clarified that the no-competition rule must not block good Codex ideas.
