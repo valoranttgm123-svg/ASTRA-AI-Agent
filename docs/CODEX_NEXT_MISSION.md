@@ -1,6 +1,6 @@
 # CODEX NEXT MISSION — CURRENT EXECUTION PLAN
 
-Status date: **2026-09-22**
+Status date: **2026-09-24**
 
 This file is the current executable mission. Historical implementation chronology belongs in `docs/ASTRA_WORKLOG.md`, not here.
 
@@ -56,7 +56,13 @@ Do not rebuild these:
 - Phase 28 Diagnostics/Audit/Offline — PR #166;
 - Phase 22 Identity/Trust/Secrets — PR #167;
 - Phase 27 Multi-device foundation — PR #168;
-- Phase 29 Generic Skill/Environment foundation — PR #169.
+- Phase 29 Generic Skill/Environment foundation — PR #169;
+- local Computer Agent read-only + no-model fast path — PR #217/#218;
+- local trusted Owner Mode + direct no-model Owner Mode — PR #221/#222;
+- trusted multi-PC SSH Computer Agent transport — PR #225;
+- safe SSH node trust-bootstrap/diagnostic helper — PR #226.
+
+Do not recreate PR #217-#226 or repeat PC1 validation unless a concrete regression is reproduced.
 
 Cross-session reconciliation:
 - PR #171 merge: `cc8432edcf9e854bba9d0d78c14c7731fd279dbd`;
@@ -66,7 +72,21 @@ Cross-session reconciliation:
 
 ## Mission order
 
-Execute the first task below that is actionable in the current environment.
+### Active owner-priority override — multi-PC target evidence
+
+The repository implementation for PC1 and multi-PC SSH is already merged. If the owner is continuing the current multi-PC thread, finish this real-environment sequence before starting another repository architecture pass:
+
+1. resolve/verify the existing SSH aliases on the hub;
+2. run `scripts/windows/configure-ssh-computer-nodes.ps1` using only verified existing aliases;
+3. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
+4. validate PC2-PC4 administrator/file/service execution;
+5. validate wrong/unreachable-node fail-closed behavior and long-running remote STOP/KILL;
+6. complete one pinned-target multi-step task end-to-end.
+
+Latest physical observation: the intended remote aliases failed name resolution. Treat that as a target/network/configuration blocker, not a missing transport implementation. Do not invent replacement aliases/IPs and do not rebuild the Computer Agent.
+
+When the multi-PC target gate is not the active owner thread or is blocked by unavailable physical targets, execute the first actionable task below.
+
 
 ### M1 — Phase 14 target-PC Automation validation
 
@@ -228,7 +248,7 @@ Build on the audited real Sonor/Graphify/Obsidian system. Do not create a compet
 
 ### Phase 27 — real multi-device transport
 
-Use the merged trust/device contracts with authenticated/encrypted transport. Do not expose the current loopback API directly.
+PC-to-PC SSH transport is selected and repository-implemented through PR #225/#226. Validate the real PC2-PC4 targets rather than selecting another PC transport. The broader Phase-27 device work still requires actual pairing/authenticated dispatch/result return/revoke evidence, especially for mobile or non-SSH devices. Do not expose the current loopback API directly.
 
 ### Phase 29 — real skills/environment devices
 
