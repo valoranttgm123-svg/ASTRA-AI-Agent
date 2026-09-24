@@ -4,7 +4,7 @@
 
 State: **SAFE PARALLEL WORK SATURATED / WAITING FOR NEW CODEX TARGET EVIDENCE**
 
-Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. The last fully validated pre-cleanup draft head `f6d41233820217e25bc81b806b8e6cb96f95be2e` passed ASTRA CI #698; the private-evidence audit is revalidated across 21 unique files (17 current PR files + 4 additional baseline files). Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
+Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. Draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 21 unique files (17 current PR files + 4 additional baseline files). Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
 
 ## Owner continuity rule — checkpoint every completed task
 
@@ -30,11 +30,15 @@ unknown-node request failed closed. Do not rebuild or re-bootstrap the transport
 unless a regression is reproduced.
 
 Current multi-PC target work:
-1. capture remote administrator/file/service-control evidence on each selected node;
-2. capture unreachable/wrong-node fail-closed evidence;
-3. prove long-running remote STOP/KILL stops the remote work itself;
-4. complete one pinned-target multi-step task end-to-end;
-5. continue the remaining real release gates.
+1. capture remote administrator-context evidence;
+2. capture bounded remote file mutation/readback/rollback evidence;
+3. capture remote process-control evidence with an owned disposable process;
+4. capture safe service-control evidence, or record truthful BLOCKED if no disposable service exists;
+5. capture unreachable-node fail-closed evidence;
+6. capture wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS and must not be repeated;
+7. prove long-running remote STOP/KILL stops the remote work itself;
+8. complete one pinned-target multi-step task end-to-end;
+9. continue the remaining real release gates.
 
 ## PC1 runtime and multi-PC state after PR #239
 
@@ -53,10 +57,14 @@ Completed by Codex after PR #239:
 Do not repeat alias resolution/bootstrap or recreate the startup-probe fix unless a regression is reproduced.
 
 Remaining multi-PC evidence:
-1. remote administrator/file/service-control evidence;
-2. unreachable/wrong-node fail-closed evidence;
-3. long-running remote STOP/KILL proving the remote work itself terminates;
-4. one pinned-target multi-step task end-to-end.
+1. remote administrator-context evidence;
+2. bounded remote file mutation/readback/rollback evidence;
+3. remote process-control evidence;
+4. safe service-control evidence or truthful BLOCKED;
+5. unreachable-node fail-closed evidence;
+6. wrong-identity fail-closed evidence;
+7. long-running remote STOP/KILL proving the remote work itself terminates;
+8. one pinned-target multi-step task end-to-end.
 
 ### Prepared draft execution aids
 
@@ -136,7 +144,7 @@ The owner requires ChatGPT and Codex to act as one continuous ASTRA team. Every 
 
 ChatGPT and Codex must not compete for the same ASTRA slice. ChatGPT completes safe repository work; unresolved target/runtime/provider work is handed to Codex with an explicit trail. Codex refines and finishes the existing implementation by default, but a clearly better evidence-backed Codex proposal should be adopted when it improves ASTRA. Replacement without reason is prohibited; superior validated refinement is welcome. Both agents must update roadmap/pointer/worklog/handoff after meaningful changes.
 
-## Canonical latest checkpoint — 2026-09-24
+## Historical merged-capability checkpoint — 2026-09-24 (superseded by the live state at the top)
 
 Live repository truth at this checkpoint:
 
@@ -149,11 +157,15 @@ Live repository truth at this checkpoint:
 
 Do **not** recreate PR #217-#226, redo PC1 validation, rebuild the Computer Agent transport, or start another SSH architecture unless a concrete regression is reproduced. The current remote sequence is:
 
-1. capture remote administrator/file/service-control evidence on the three verified remote nodes;
-2. capture unreachable/wrong-node failure evidence;
-3. prove long-running remote STOP/KILL terminates the remote work itself;
-4. complete one pinned-target multi-step task;
-5. then continue the remaining real release gates under the exact-build evidence-freeze rule.
+1. capture remote administrator-context evidence on the verified remote nodes;
+2. capture bounded file mutation/readback/rollback evidence;
+3. capture remote process-control evidence;
+4. capture safe service-control evidence or truthful BLOCKED;
+5. capture unreachable-node fail-closed evidence;
+6. capture wrong-identity fail-closed evidence; do not repeat the already-PASS unknown-node check;
+7. prove long-running remote STOP/KILL terminates the remote work itself;
+8. complete one pinned-target multi-step task;
+9. then continue the remaining real release gates under the exact-build evidence-freeze rule.
 
 Historical observation: intended aliases previously failed name resolution. This is superseded: PC1 is LOCAL and three remote Windows targets are now privately registered and marker-validated. Exact aliases remain private.
 
@@ -201,7 +213,7 @@ Read `docs/CHATGPT_SATURATION_CHECKPOINT_2026-09-22.md` before repeating any bro
 
 ## Resume in one sentence
 
-When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; read this pointer, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/POST_AUTOMATION_EVENT_HANDOFF_2026-09-22.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first active task. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
+When the owner says `lanjutkan yang belum selesai`, inspect `main`/CI/open PRs; **resume any open PR/active branch first**; read this pointer, the current session checkpoint/recovery file, `docs/JARVIS_PROGRESS_TRACKER.md`, `docs/CODEX_NEXT_MISSION.md`, `docs/CODEX_REFINEMENT_CONTRACT.md` and the latest worklog/handoff; resume the first valid active task. Dated handoffs such as `docs/POST_AUTOMATION_EVENT_HANDOFF_2026-09-22.md` are historical context only and cannot override this pointer. Do not ask the owner to reconstruct old chats or recreate merged work. The newer post-event-source handoff supersedes historical "PR #176 active" prose in older worklogs.
 
 ## Canonical repository checkpoint
 
