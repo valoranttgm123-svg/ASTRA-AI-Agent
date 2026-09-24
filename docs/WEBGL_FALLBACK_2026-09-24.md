@@ -1,5 +1,16 @@
 # WebGL-unavailable fallback refinement
 
+Installed result: PR #224 merged `0a0962a`, CI #607/#608 SUCCESS; production
+`ffb4caa`, 449/449 tests and repository gate PASS. Private configuration/registry
+hashes unchanged. At this morning's retest native browser WebGL was available;
+the regression scenario was therefore deliberately injected in this test browser
+only. Real Codex chat completed, a real Owner Mode tool started then UI STOP
+settled, and the approved image/unavailable label/disabled capture controls were
+visible at 390x844. No physical microphone, camera or HP was used.
+Subsequent existing strict SSH identity checks returned PC2 and SNRPC2;
+DeviceSNR still failed DNS. This supersedes the historical all-DNS-failed result
+below but does not prove ASTRA's unfinished remote transport.
+
 Baseline: PR #223 production `1d3fd72`, same tree as merge `bc0d2d4`.
 Automated Chromium reported a browser-blocked WebGL context. This observation
 does not establish that every native browser or the physical GPU is broken.

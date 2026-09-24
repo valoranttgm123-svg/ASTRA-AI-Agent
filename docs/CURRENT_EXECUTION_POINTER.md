@@ -1,5 +1,17 @@
 # ASTRA CURRENT EXECUTION POINTER
 
+## Native Windows readiness probe — 2026-09-24
+
+PR #224 is merged (`0a0962a`, PR CI #607 / main #608 SUCCESS), production
+`ffb4caa` installed. Real Codex chat and UI STOP passed with WebGL deliberately
+denied in the test browser; the approved Humanoid image remains visible at
+390x844 and GPU capture stays disabled. This is not a physical HP/GPU test.
+The next reproduced defect is the read-only self-check timing out while loading
+the Windows ScheduledTasks CIM module. See `WINDOWS_TASK_PROBE_2026-09-24.md`.
+Do not recreate either startup task or change Automation opt-in to repair a probe.
+PC2 and SNRPC2 identities now respond through existing strict SSH aliases;
+DeviceSNR still fails name resolution. ASTRA remote UI transport is not yet proven.
+
 ## Browser availability refinement — 2026-09-24
 
 PR #223 is merged (`bc0d2d4`, PR CI #605 / main #606 SUCCESS) and production

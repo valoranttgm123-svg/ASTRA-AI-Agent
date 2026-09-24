@@ -1,5 +1,18 @@
 # ASTRA Codex Handoff
 
+## 2026-09-24 — native task inspection and installed fallback
+
+PR #224 merged as `0a0962a`; CI #607/#608 SUCCESS, 449 local tests and all repository
+gates passed. Production `ffb4caa` preserved private configuration/project/automation
+hashes. Codex chat and UI STOP passed under deliberately denied WebGL; the approved
+image and unavailable label render at mobile size, with GPU captures disabled.
+Windows self-check then falsely errored because its five-second PowerShell probe
+loaded the slow CIM module. Native read-only Task Scheduler lookup completes in
+under one second and now preserves missing/disabled/unknown/error distinctions.
+See `WINDOWS_TASK_PROBE_2026-09-24.md`; final gate/install evidence belongs on its PR.
+Existing SSH identities PC2/SNRPC2 respond; DeviceSNR DNS remains unavailable.
+Physical voice, HP hardware, HIGH performance and full release gates remain open.
+
 ## 2026-09-24 — browser WebGL fallback
 
 PR #223 is merged and installed: 446 tests/build/typecheck/audit passed; harmless

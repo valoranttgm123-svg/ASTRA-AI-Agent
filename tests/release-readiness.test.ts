@@ -170,3 +170,14 @@ test("Phase 19A Windows startup task readiness distinguishes missing disabled an
   );
 });
 
+test("Windows startup readiness never treats unknown task states as READY", () => {
+  for (const state of ["Unknown", "", "unexpected"]) {
+    assert.equal(classifyWindowsStartupTasks({
+      "ASTRA-Agent": "Running", "ASTRA-Ollama": state,
+    }).state, "UNKNOWN");
+  }
+  assert.equal(classifyWindowsStartupTasks({
+    "ASTRA-Agent": "Queued", "ASTRA-Ollama": "Ready",
+  }).state, "READY");
+});
+

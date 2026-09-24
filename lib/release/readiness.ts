@@ -254,6 +254,11 @@ export function classifyWindowsStartupTasks(
       (states[name] ?? "").toLowerCase() ===
       "disabled",
   );
+  const unknown = required.filter(
+    (name) => !["running", "ready", "queued", "disabled", "missing"].includes(
+      (states[name] ?? "MISSING").toLowerCase(),
+    ),
+  );
 
   return {
     state:
@@ -261,13 +266,17 @@ export function classifyWindowsStartupTasks(
         ? "NOT_CONFIGURED"
         : disabled.length > 0
           ? "OFFLINE"
-          : "READY",
+          : unknown.length > 0
+            ? "UNKNOWN"
+            : "READY",
     detail:
       missing.length > 0
         ? "One or more ASTRA startup tasks are not installed."
         : disabled.length > 0
           ? "One or more ASTRA startup tasks are disabled."
-          : "ASTRA startup scheduled tasks are installed.",
+          : unknown.length > 0
+            ? "One or more ASTRA startup task states could not be determined."
+            : "ASTRA startup scheduled tasks are installed.",
     data: {
       tasks: states,
     },

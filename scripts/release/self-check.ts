@@ -15,6 +15,7 @@ import {
   prepareReadinessEvidencePath,
 } from "../../lib/release/private-output";
 import { safeErrorDetail } from "../../lib/security/redaction";
+import { WINDOWS_STARTUP_TASK_QUERY } from "../../lib/release/windows-task-probe";
 
 type Options = {
   baseUrl: string;
@@ -184,21 +185,6 @@ function windowsTaskCheck(): ReadinessCheck {
     };
   }
 
-  const script = [
-    "$ErrorActionPreference='Stop'",
-    "$names=@('ASTRA-Agent','ASTRA-Ollama')",
-    "$items=@()",
-    "foreach($n in $names){",
-    "  $t=Get-ScheduledTask -TaskName $n -ErrorAction SilentlyContinue",
-    "  if($t){",
-    "    $items += [pscustomobject]@{name=$n;state=[string]$t.State}",
-    "  } else {",
-    "    $items += [pscustomobject]@{name=$n;state='MISSING'}",
-    "  }",
-    "}",
-    "$items | ConvertTo-Json -Compress",
-  ].join("; ");
-
   try {
     const raw = execFileSync(
       "powershell.exe",
@@ -206,7 +192,7 @@ function windowsTaskCheck(): ReadinessCheck {
         "-NoProfile",
         "-NonInteractive",
         "-Command",
-        script,
+        WINDOWS_STARTUP_TASK_QUERY,
       ],
       {
         encoding: "utf8",
