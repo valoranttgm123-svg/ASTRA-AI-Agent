@@ -209,6 +209,27 @@ NEXT:
 DO NOT REPEAT:
 - do not rerun unless evidence-bearing files change or a leak is suspected.
 
+## Checkpoint update — authoritative status-drift cleanup
+
+ACTOR: ChatGPT
+DATE: 2026-09-24
+AREA: continuity / multi-PC status truth
+STATE: COMPLETE_IN_DRAFT
+BRANCH/PR: #241
+COMPLETED:
+- current pointer/mission/protocol/multi-PC handoff advanced to post-bootstrap state;
+- stale handoff snapshots that still looked ACTIVE marked historical/superseded.
+VALIDATED:
+- current authoritative instructions now agree that PC1 is LOCAL, three remotes are privately registered/marker-validated, and only deep remote evidence remains.
+FAILED:
+- none.
+BLOCKED:
+- none.
+NEXT:
+- continue only independent draft work or reconcile new Codex evidence.
+DO NOT REPEAT:
+- do not repeat alias/bootstrap/marker work or revive PR #239 as ACTIVE.
+
 ## Resume phrase
 
 **RESUME FROM PR #241 + THIS CHECKPOINT. DO NOT RESTART ASTRA WORK.**
