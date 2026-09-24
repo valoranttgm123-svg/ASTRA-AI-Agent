@@ -36,19 +36,20 @@ That is a complete instruction.
 
 Resume automatically from repository truth. Do not ask the owner to restate the roadmap.
 
-## Audit remediation merged — resume exact-build target evidence
+## Current target checkpoint — PR #239 runtime installed
 
-The 2026-09-24 repository follow-up is complete in PR #233, merge `52135e16f4113460807ff9005a72ba7efc53d911`.
+PR #239 merged as `290164a8787cf895a9c1a32018c700cf8d6ad551`. Codex reported its clean runtime source installed on PC1, self-check and Windows release validator PASS, and a private registry containing three individually reverified remote Windows targets. Direct ASTRA marker checks passed on all three and unknown-node fail-closed passed.
 
-Codex must now:
-- update/install the exact clean current `main` build on the target PC;
-- verify runtime build identity before collecting evidence;
-- resolve/verify the existing SSH aliases without inventing replacements;
-- bootstrap the private node registry;
-- continue PC2-PC4 Owner Mode/admin/file/service/STOP-KILL/multi-step evidence;
-- continue remaining release gates from the canonical order.
+Do not repeat install/bootstrap/marker validation merely because later documentation commits advanced `main`.
 
-Do not rebuild the Computer Agent, SSH transport, or Sonor retrieval/provenance work.
+Current work:
+- remote administrator/file/service-control evidence;
+- unreachable/wrong-node evidence;
+- long-running remote STOP/KILL proof;
+- one pinned-target multi-step task;
+- remaining M1-M6 gates.
+
+For official release evidence, obey `docs/ASTRA_COLLABORATION_PROTOCOL.md` section "Exact-build evidence freeze": choose a final clean commit, install/build it on PC1, freeze `main`, and capture all commit-bound evidence without intervening merges.
 
 ## Shared work ownership rule
 
@@ -98,16 +99,14 @@ Cross-session reconciliation:
 
 ### Active owner-priority override — multi-PC target evidence
 
-The repository implementation for local and multi-PC SSH is already merged. The owner now reports four PC targets connected in Codex, superseding the older name-resolution observation. Finish this real-environment sequence before starting another repository architecture pass:
+The repository implementation and private-node bootstrap are already complete. PC1 is LOCAL; three remote Windows targets are privately registered and direct marker-validated. Finish this real-environment sequence before starting another repository architecture pass:
 
-1. use the owner's current private SSH/Codex aliases from the local runtime; do not commit them;
-2. verify each alias with `ssh -G` and remote `$env:COMPUTERNAME`;
-3. treat PC1 as the confirmed ASTRA hub/local machine and exclude it from the remote registry;
-4. run `scripts/windows/configure-ssh-computer-nodes.ps1` using only verified remote aliases;
-5. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
-6. validate administrator/file/service execution independently on each verified remote node;
-7. validate wrong/unreachable-node fail-closed behavior and long-running remote STOP/KILL;
-8. complete one pinned-target multi-step task end-to-end.
+1. validate administrator/file/service execution independently on each selected remote node;
+2. validate unreachable/wrong-node fail-closed behavior;
+3. prove long-running remote STOP/KILL terminates the remote work itself;
+4. complete one pinned-target multi-step task end-to-end;
+5. continue M1-M6 in canonical order;
+6. when official release capture begins, freeze `main` and keep runtime/evidence/repository on the same final clean commit.
 
 Do not invent replacement aliases/IPs, expose private SSH topology in Git, or rebuild the Computer Agent.
 
