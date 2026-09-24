@@ -1,11 +1,12 @@
 # Codex handoff — ASTRA multi-PC over existing SSH
 
-## 2026-09-24 — repository transport implementation in progress
+## 2026-09-24 — multi-PC transport merged; target SSH verification next
 
-Branch `feat/multi-pc-ssh-transport-20260924` continues from main
-`0a0962a3494f066c14eb40850dcb1597e8178c3a` without redoing PC1.
+PR #225 merged to main as `6b3859a70f8c46ab80204b56c788e06cb8c09e60`
+after full ASTRA CI success (build, unit/integration tests, typecheck, Brain lint,
+dependency audit and diff check).
 
-Implemented on this branch:
+Repository-complete now:
 
 - private gitignored node registry via `ASTRA_COMPUTER_NODES_FILE`;
 - default `.astra/computer-nodes.json`, with parser rejection of credential/key fields;
@@ -22,11 +23,18 @@ Implemented on this branch:
 - regression tests for config secrets, target evidence, unknown/untrusted nodes,
   identity mismatch and independent node inventory.
 
+The next branch adds
+`scripts/windows/configure-ssh-computer-nodes.ps1`: a local trust-bootstrap
+helper that receives explicit `node-id=existing-ssh-alias` mappings, inspects
+only safe `ssh -G` fields (HostName/port), verifies the remote Windows
+`COMPUTERNAME` over normal host-verified SSH, and writes the private registry
+only when every target succeeds. It never copies passwords, tokens, private
+keys, key paths, or SSH config contents into the registry.
+
 Current target-only blocker remains outside Git: the latest real check reported
 all three intended remote SSH aliases failing name resolution. Do not invent or
-commit replacement IPs/aliases. Resolve the user's existing SSH topology on the
-hub, write only the verified alias + expected Windows computer name into the
-private node registry, then run the validator.
+commit replacement IPs/aliases. Diagnose the existing SSH config/network on the
+hub, bootstrap only verified nodes, restart ASTRA-Agent, then run the validator.
 
 Reliable remote STOP/KILL, actual administrator/file/service mutations and a
 multi-step task still require physical target evidence before declaring
