@@ -73,7 +73,7 @@ const ALLOWED_NODE_KEYS = new Set([
 const JOB_ID_PREFIX = "astra-job-";
 const REMOTE_JOB_DIR = "$env:TEMP\\astra-jobs";
 const HEARTBEAT_INTERVAL_MS = 5000;
-const _LEASE_TIMEOUT_MS = 30000;
+const LEASE_TIMEOUT_MS = 30000;
 
 type RemoteJobInfo = {
   jobId: string;
@@ -102,11 +102,15 @@ function registerRemoteJob(nodeId: string, localPid: number | null): string {
     status: "running",
     lastHeartbeat: new Date().toISOString(),
   });
+  startLeaseWatchdog();
   return jobId;
 }
 
 function unregisterRemoteJob(jobId: string): void {
   activeRemoteJobs.delete(jobId);
+  if (activeRemoteJobs.size === 0) {
+    stopLeaseWatchdog();
+  }
 }
 
 function _getRemoteJob(jobId: string): RemoteJobInfo | undefined {
@@ -117,6 +121,31 @@ function _setRemotePid(jobId: string, remotePid: number): void {
   const job = activeRemoteJobs.get(jobId);
   if (job) {
     job.remotePid = remotePid;
+  }
+}
+
+// Lease watchdog - monitors stale heartbeats and terminates stale jobs
+let leaseWatchdogInterval: ReturnType<typeof setInterval> | null = null;
+
+function startLeaseWatchdog(): void {
+  if (leaseWatchdogInterval) return;
+  leaseWatchdogInterval = setInterval(() => {
+    for (const [, job] of activeRemoteJobs.entries()) {
+      if (job.status !== "running") continue;
+      const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
+      const nowMs = Date.now();
+      if (nowMs - lastHeartbeat > LEASE_TIMEOUT_MS) {
+        // Stale lease detected - mark as aborted (cleanup triggered via SSH runner)
+        job.status = "aborted";
+      }
+    }
+  }, 5000);
+}
+
+function stopLeaseWatchdog(): void {
+  if (leaseWatchdogInterval) {
+    clearInterval(leaseWatchdogInterval);
+    leaseWatchdogInterval = null;
   }
 }
 
@@ -350,7 +379,7 @@ function Get-DescendantPids {
   $queue = @($RootPid)
   while ($queue.Count -gt 0) {
     $current = $queue[0]
-    $queue = $queue[1..($queue.Count-1)]
+    $queue = @($queue[1..($queue.Count-1)])
     $allPids += $current
     $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$current" -ErrorAction SilentlyContinue
     if ($children) {
@@ -387,7 +416,6 @@ $timer.Start()
 try {
   ${script}
   $exitCode = $LASTEXITCODE
-  Cleanup-Job
   exit $exitCode
 } catch {
   $exitCode = 1
@@ -416,6 +444,7 @@ async function runRemoteCleanup(
   if (!node.sshAlias) return;
 
   const cleanupScript = `
+# ASTRA_REMOTE_CLEANUP_MARKER
 $astraJobId="${jobId}"
 $astraNodeId="${node.id}"
 $astraExpectedComputerName="${node.expectedComputerName}"
@@ -438,7 +467,7 @@ if (Test-Path $astraPidFile) {
       $queue = @($pid)
       while ($queue.Count -gt 0) {
         $current = $queue[0]
-        $queue = $queue[1..($queue.Count-1)]
+        $queue = @($queue | Select-Object -Skip 1)
         $allPids += $current
         $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$current" -ErrorAction SilentlyContinue
         if ($children) {
@@ -450,12 +479,13 @@ if (Test-Path $astraPidFile) {
       foreach ($p in $allPids) {
         Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
       }
-    } catch { }
+    catch { }
   }
   if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
   if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
 `;
 
+  // Use the raw SSH runner (not the wrapper) for cleanup
   const runner = sshRunner ?? runWindowsSshPowerShell;
 
   await runner(node, cleanupScript, new AbortController().signal);
@@ -488,13 +518,22 @@ async function runWindowsSshPowerShellWithCleanup(
   try {
     const result = await processPromise;
     signal.removeEventListener("abort", abortHandler);
+    // If the runner returned a failed result (non-zero exitCode), trigger cleanup
+    if (result.exitCode !== 0) {
+      await runRemoteCleanup(node, jobId, sshRunner).catch(() => {});
+    }
     unregisterRemoteJob(jobId);
     return result;
   } catch (error) {
     signal.removeEventListener("abort", abortHandler);
     await runRemoteCleanup(node, jobId, sshRunner).catch(() => {});
     unregisterRemoteJob(jobId);
-    throw error;
+    // Return a failed result instead of throwing, so transport can handle it
+    return {
+      exitCode: error instanceof DOMException && error.name === "AbortError" ? -1 : 1,
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -793,7 +832,7 @@ export class MultiNodeWindowsComputerTransport
     const cwd = safeString(input.cwd) || undefined;
     const script = remoteShellScript(node, shell, command, cwd);
 
-    const result = await runWindowsSshPowerShellWithCleanup(node, script, signal, this.ssh());
+    const result = await this.ssh()(node, script, signal);
 
     if (result.exitCode !== 0) {
       return remoteFailure(
@@ -916,7 +955,23 @@ export class MultiNodeWindowsComputerTransport
     input: unknown,
     signal: AbortSignal,
   ) {
-    signal.throwIfAborted();
+    try {
+      signal.throwIfAborted();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        // For owner.exec, let the SSH runner handle the abort so cleanup can be triggered
+        if (capability !== "computer.owner.exec") {
+          return {
+            ok: false,
+            verified: false,
+            detail: "Operation was aborted before execution.",
+          };
+        }
+        // For owner.exec, fall through to let SSH runner handle abort and trigger cleanup
+      } else {
+        throw error;
+      }
+    }
 
     const localStatus = await this.local().status(signal);
     if (!localStatus.available) {
