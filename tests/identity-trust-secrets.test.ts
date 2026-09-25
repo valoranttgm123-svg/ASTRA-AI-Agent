@@ -4,6 +4,24 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, test } from "node:test";
 
+async function createSymlink(
+  target: string,
+  linkPath: string,
+  type?: "file" | "dir",
+) {
+  try {
+    await symlink(target, linkPath, type);
+    return true;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (["EPERM", "EACCES", "ENOSYS"].includes(code)) return false;
+    throw error;
+  }
+}
+
 import type { AstraIdentitySession } from "../lib/identity/contracts";
 import {
   identityPermissionCeiling,
@@ -198,7 +216,7 @@ test("trusted-device registry persists only hashed identity metadata and enforce
   assert.doesNotMatch(raw, /password|api[_-]?key|secret/i);
 });
 
-test("trust store rejects duplicate fingerprint identities and symbolic-link targets", async () => {
+test("trust store rejects duplicate fingerprint identities and symbolic-link targets", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-trust-link-"));
   const target = path.join(root, "target.json");
   const linked = path.join(root, "trust.json");
@@ -208,7 +226,11 @@ test("trust store rejects duplicate fingerprint identities and symbolic-link tar
     JSON.stringify({ schemaVersion: 1, devices: [] }),
     "utf8",
   );
-  await symlink(target, linked);
+  const created = await createSymlink(target, linked);
+  if (!created) {
+    t.skip("symlinks are unavailable in this environment");
+    return;
+  }
   process.env.ASTRA_TRUST_FILE = linked;
 
   const linkedLoad = await loadTrustStore();

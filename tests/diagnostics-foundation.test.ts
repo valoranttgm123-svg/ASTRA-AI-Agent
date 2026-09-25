@@ -4,6 +4,24 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, test } from "node:test";
 
+async function createSymlink(
+  target: string,
+  linkPath: string,
+  type?: "file" | "dir",
+) {
+  try {
+    await symlink(target, linkPath, type);
+    return true;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (["EPERM", "EACCES", "ENOSYS"].includes(code)) return false;
+    throw error;
+  }
+}
+
 import {
   appendAuditEntry,
   loadAuditStore,
@@ -210,7 +228,7 @@ test("audit journal redacts sensitive material and supports bounded history quer
   assert.equal(failures[0].action, "provider.check");
 });
 
-test("audit store rejects symbolic-link targets and malformed duplicate ids", async () => {
+test("audit store rejects symbolic-link targets and malformed duplicate ids", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-audit-link-"));
   const target = path.join(root, "target.json");
   const linked = path.join(root, "audit.json");
@@ -219,7 +237,11 @@ test("audit store rejects symbolic-link targets and malformed duplicate ids", as
     JSON.stringify({ schemaVersion: 1, entries: [] }),
     "utf8",
   );
-  await symlink(target, linked);
+  const created = await createSymlink(target, linked);
+  if (!created) {
+    t.skip("symlinks are unavailable in this environment");
+    return;
+  }
   process.env.ASTRA_AUDIT_FILE = linked;
 
   const loaded = await loadAuditStore();

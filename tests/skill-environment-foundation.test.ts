@@ -4,6 +4,24 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, test } from "node:test";
 
+async function createSymlink(
+  target: string,
+  linkPath: string,
+  type?: "file" | "dir",
+) {
+  try {
+    await symlink(target, linkPath, type);
+    return true;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (["EPERM", "EACCES", "ENOSYS"].includes(code)) return false;
+    throw error;
+  }
+}
+
 import {
   applySkillMutation,
   checkSkillHealth,
@@ -362,7 +380,7 @@ test("camera and sensor registrations require sensitive classification and per-o
   );
 });
 
-test("skill and environment registries reject symbolic-link targets", async () => {
+test("skill and environment registries reject symbolic-link targets", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-phase29-link-"));
   const target = path.join(root, "target.json");
   const skillLink = path.join(root, "skills.json");
@@ -373,8 +391,12 @@ test("skill and environment registries reject symbolic-link targets", async () =
     JSON.stringify({ schemaVersion: 1, skills: [] }),
     "utf8",
   );
-  await symlink(target, skillLink);
-  await symlink(target, environmentLink);
+  const skillCreated = await createSymlink(target, skillLink);
+  const environmentCreated = await createSymlink(target, environmentLink);
+  if (!skillCreated || !environmentCreated) {
+    t.skip("symlinks are unavailable in this environment");
+    return;
+  }
 
   process.env.ASTRA_GENERIC_SKILL_REGISTRY_FILE = skillLink;
   const skills = await loadSkillStore();

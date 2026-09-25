@@ -4,6 +4,24 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, test } from "node:test";
 
+async function createSymlink(
+  target: string,
+  linkPath: string,
+  type?: "file" | "dir",
+) {
+  try {
+    await symlink(target, linkPath, type);
+    return true;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (["EPERM", "EACCES", "ENOSYS"].includes(code)) return false;
+    throw error;
+  }
+}
+
 import type { AstraBackgroundTask } from "../lib/tasks/contracts";
 import { parseTaskMutation } from "../lib/tasks/http";
 import {
@@ -361,7 +379,7 @@ test("Phase 25 restart recovery safely pauses orphaned running tasks", async () 
   assert.match(loaded.store.tasks[0].lastError ?? "", /restart\/recovery/i);
 });
 
-test("Phase 25 task store rejects symbolic links", async () => {
+test("Phase 25 task store rejects symbolic links", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-task-link-"));
   const target = path.join(root, "target.json");
   const linked = path.join(root, "tasks.json");
@@ -370,7 +388,11 @@ test("Phase 25 task store rejects symbolic links", async () => {
     JSON.stringify({ schemaVersion: 1, tasks: [] }),
     "utf8",
   );
-  await symlink(target, linked);
+  const created = await createSymlink(target, linked);
+  if (!created) {
+    t.skip("symlinks are unavailable in this environment");
+    return;
+  }
   process.env.ASTRA_TASK_FILE = linked;
 
   const loaded = await loadTaskStore();
