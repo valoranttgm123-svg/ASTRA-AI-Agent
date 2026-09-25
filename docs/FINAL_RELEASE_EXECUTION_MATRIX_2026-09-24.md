@@ -369,6 +369,26 @@ Remaining work is actual provider integration only where desired/configured:
 
 Do not create a second NVIDIA framework.
 
+### NVIDIA dependency/order packet
+
+NVIDIA repository contracts are already complete. Real integrations should follow dependency rather than numeric pressure:
+
+1. **N1 — NVA-1 target mechanism**: verify the actual supported NVIDIA/Codex skill catalog/install/update/remove mechanism and private truth-state recording.
+2. **N2 — NVA-2 AI-Q**: connect one real bounded research backend; prove health, cancellation, malformed response and fallback before using it broadly.
+3. **N3 — NVA-3 Retriever/RAG**: only under the existing Sonor canonical memory boundary; prove project/namespace isolation before quality tuning.
+4. **N4 — NVA-4 Document Intelligence**: connect only after a real supported parser/OCR path is identified; originals remain immutable.
+5. **N5 — NVA-5 Voice**: coordinate with E21 so there is one voice runtime, not an NVIDIA-specific parallel assistant.
+6. **N6 — NVA-6 Vision**: coordinate with E23; real pixels/frames + consent are mandatory.
+7. **N7 — NVA-7 learned workflow**: wait until durable task/permission execution is stable; learned workflows start disabled/reviewable.
+8. **N8 — NVA-8 Guardrails**: deploy as defense in depth only; never as execution authorization.
+9. **N9 — NVA-9 Evaluation**: run last against the exact candidate; evaluation evidence cannot self-declare READY.
+
+Parallelism rule:
+- independent provider setup may be prepared in parallel only when it does not change the frozen release candidate or conflict with active target evidence;
+- N5/N6 should not outrun E21/E23 consent/runtime foundations;
+- N3 must not create a second memory authority beside Sonor;
+- N9 consumes the final integrated system, so running it early is exploratory only.
+
 ## Final release invariants
 
 A READY-class report requires:
