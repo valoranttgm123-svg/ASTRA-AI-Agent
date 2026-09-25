@@ -439,7 +439,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           const timeout = setTimeout(resolve, 100);
           signal.addEventListener("abort", () => {
             clearTimeout(timeout);
-            resolve(); // Resolve instead of reject - let the mock return failed result
+            resolve(undefined); // Resolve instead of reject - let the mock return failed result
           }, { once: true });
         });
         if (signal.aborted) {
@@ -589,7 +589,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       addEventListener: () => {}, 
       removeEventListener: () => {}, 
       dispatchEvent: () => true,
-      throwIfAborted: function() { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); }
+      throwIfAborted: function(this: { aborted: boolean }) { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); }
     } as unknown as AbortSignal;
 
     const result = await transport.call(
@@ -672,7 +672,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       addEventListener: () => {}, 
       removeEventListener: () => {}, 
       dispatchEvent: () => true,
-      throwIfAborted: function() { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); }
+      throwIfAborted: function(this: { aborted: boolean }) { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); }
     } as unknown as AbortSignal;
 
     const result = await transport.call(
