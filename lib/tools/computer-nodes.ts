@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 import type {
   AstraComputerCapability,
   AstraComputerStatus,
@@ -67,6 +68,53 @@ const ALLOWED_NODE_KEYS = new Set([
   "sshAlias",
   "expectedComputerName",
 ]);
+
+// Remote job tracking types and constants
+const JOB_ID_PREFIX = "astra-job-";
+const REMOTE_JOB_DIR = "$env:TEMP\\astra-jobs";
+const HEARTBEAT_INTERVAL_MS = 5000;
+const LEASE_TIMEOUT_MS = 30000;
+
+type RemoteJobInfo = {
+  jobId: string;
+  nodeId: string;
+  startedAt: string;
+  localPid: number | null;
+  remotePid: number | null;
+};
+
+const activeRemoteJobs = new Map<string, RemoteJobInfo>();
+
+function generateJobId(): string {
+  return JOB_ID_PREFIX + randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
+function registerRemoteJob(nodeId: string, localPid: number | null): string {
+  const jobId = generateJobId();
+  activeRemoteJobs.set(jobId, {
+    jobId,
+    nodeId,
+    startedAt: new Date().toISOString(),
+    localPid,
+    remotePid: null,
+  });
+  return jobId;
+}
+
+function unregisterRemoteJob(jobId: string): void {
+  activeRemoteJobs.delete(jobId);
+}
+
+function getRemoteJob(jobId: string): RemoteJobInfo | undefined {
+  return activeRemoteJobs.get(jobId);
+}
+
+function setRemotePid(jobId: string, remotePid: number): void {
+  const job = activeRemoteJobs.get(jobId);
+  if (job) {
+    job.remotePid = remotePid;
+  }
+}
 
 function findForbiddenNodeKey(value: unknown): string | null {
   if (Array.isArray(value)) {
@@ -254,20 +302,189 @@ function remoteShellScript(
   return parts.join("; ");
 }
 
-export async function runWindowsSshPowerShell(
+function buildRemoteScriptWithJobTracking(
+  node: AstraComputerNode,
+  script: string,
+  jobId: string,
+): string {
+  const encodedScript = encodePowerShell(script);
+  const encodedJobId = powershellLiteralBase64(jobId);
+  const encodedNodeId = powershellLiteralBase64(node.id);
+
+  const jobScript = `
+$astraJobId=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${encodedJobId}'))
+$astraNodeId=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${encodedNodeId}'))
+$astraJobDir="${REMOTE_JOB_DIR}"
+$astraJobFile="$astraJobDir\\$astraJobId.json"
+$astraPidFile="$astraJobDir\\$astraJobId.pid"
+
+if (-not (Test-Path $astraJobDir)) { New-Item -ItemType Directory -Path $astraJobDir -Force | Out-Null }
+
+$jobInfo = @{
+  jobId = $astraJobId
+  nodeId = $astraNodeId
+  startedAt = (Get-Date).ToString("o")
+  localPid = $null
+  remotePid = $PID
+  status = "running"
+  heartbeat = (Get-Date).ToString("o")
+} | ConvertTo-Json -Compress
+$jobInfo | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
+$PID | Out-File -FilePath $astraPidFile -Encoding ASCII -Force
+
+function Update-Heartbeat {
+  if (Test-Path $astraJobFile) {
+    $job = Get-Content $astraJobFile -Raw | ConvertFrom-Json
+    $job.heartbeat = (Get-Date).ToString("o")
+    $job | ConvertTo-Json -Compress | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
+  }
+}
+
+function Cleanup-Job {
+  if (Test-Path $astraPidFile) {
+    $pid = Get-Content $astraPidFile -Raw
+    if ($pid -match '^\d+$') {
+      try {
+        $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+        if ($proc) {
+          $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$pid" -ErrorAction SilentlyContinue
+          if ($children) {
+            foreach ($child in $children) {
+              Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
+            }
+          }
+          Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+        }
+      } catch { }
+    }
+  }
+  if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
+  if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
+}
+
+$timer = New-Object System.Timers.Timer
+$timer.Interval = ${HEARTBEAT_INTERVAL_MS}
+$timer.AutoReset = $true
+$timer.Elapsed += { Update-Heartbeat }
+$timer.Start()
+
+try {
+  ${script}
+  $exitCode = $LASTEXITCODE
+  Cleanup-Job
+  exit $exitCode
+} catch {
+  $exitCode = 1
+  Cleanup-Job
+  exit $exitCode
+} finally {
+  $timer.Stop()
+  $timer.Dispose()
+  if (Test-Path $astraJobFile) {
+    $job = Get-Content $astraJobFile -Raw | ConvertFrom-Json
+    $job.status = "completed"
+    $job.heartbeat = (Get-Date).ToString("o")
+    $job | ConvertTo-Json -Compress | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
+  }
+}
+`;
+
+  return jobScript;
+}
+
+async function runRemoteCleanup(
+  node: AstraComputerNode,
+  jobId: string,
+  sshRunner?: AstraSshRunner,
+): Promise<void> {
+  if (!node.sshAlias) return;
+
+  const cleanupScript = `
+$astraJobId="${jobId}"
+$astraJobDir="${REMOTE_JOB_DIR}"
+$astraJobFile="$astraJobDir\\$astraJobId.json"
+$astraPidFile="$astraJobDir\\$astraJobId.pid"
+
+if (Test-Path $astraPidFile) {
+  $pid = Get-Content $astraPidFile -Raw
+  if ($pid -match '^\d+$') {
+    try {
+      $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+      if ($proc) {
+        $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$pid" -ErrorAction SilentlyContinue
+        if ($children) {
+          foreach ($child in $children) {
+            Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
+          }
+        }
+        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+      }
+    } catch { }
+  }
+  if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
+  if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
+`;
+
+  const runner = sshRunner ?? runWindowsSshPowerShell;
+
+  await runner(node, cleanupScript, new AbortController().signal);
+}
+
+async function runWindowsSshPowerShellWithCleanup(
   node: AstraComputerNode,
   script: string,
   signal: AbortSignal,
-) {
+  sshRunner?: AstraSshRunner,
+): Promise<AstraProcessResult> {
   if (!node.sshAlias) {
     throw new Error("SSH node has no configured alias.");
   }
 
+  const jobId = registerRemoteJob(node.id, null);
+
+  const runner = sshRunner ?? runWindowsSshPowerShell;
+
+  const processPromise = runner(node, buildRemoteScriptWithJobTracking(node, script, jobId), signal);
+
+  const abortHandler = () => {
+    if (jobId) {
+      runRemoteCleanup(node, jobId, sshRunner).catch(() => {});
+    }
+  };
+
+  signal.addEventListener("abort", abortHandler, { once: true });
+
+  try {
+    const result = await processPromise;
+    signal.removeEventListener("abort", abortHandler);
+    unregisterRemoteJob(jobId);
+    return result;
+  } catch (error) {
+    signal.removeEventListener("abort", abortHandler);
+    await runRemoteCleanup(node, jobId, sshRunner).catch(() => {});
+    unregisterRemoteJob(jobId);
+    throw error;
+  }
+}
+
+export async function runWindowsSshPowerShell(
+  node: AstraComputerNode,
+  script: string,
+  signal: AbortSignal,
+): Promise<AstraProcessResult> {
+  if (!node.sshAlias) {
+    throw new Error("SSH node has no configured alias.");
+  }
+
+  const jobId = registerRemoteJob(node.id, null);
+
   const remoteCommand =
     "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " +
-    encodePowerShell(script);
+    encodePowerShell(buildRemoteScriptWithJobTracking(node, script, jobId));
 
-  return runBoundedProcess({
+  let localPid: number | null = null;
+
+  const result = await runBoundedProcess({
     command: process.platform === "win32" ? "ssh.exe" : "ssh",
     args: [
       "-T",
@@ -287,6 +504,10 @@ export async function runWindowsSshPowerShell(
     cwd: process.cwd(),
     signal,
   });
+
+  unregisterRemoteJob(jobId);
+
+  return result;
 }
 
 function normalizeNodeId(input: unknown) {
@@ -359,7 +580,7 @@ export class MultiNodeWindowsComputerTransport
   }
 
   private ssh() {
-    return this.options.runSsh ?? runWindowsSshPowerShell;
+    return this.options.runSsh ?? runWindowsSshPowerShellWithCleanup;
   }
 
   async status(signal?: AbortSignal): Promise<AstraComputerStatus> {
@@ -536,11 +757,9 @@ export class MultiNodeWindowsComputerTransport
     const shell =
       safeString(input.shell).toLowerCase() === "cmd" ? "cmd" : "powershell";
     const cwd = safeString(input.cwd) || undefined;
-    const result = await this.ssh()(
-      node,
-      remoteShellScript(node, shell, command, cwd),
-      signal,
-    );
+    const script = remoteShellScript(node, shell, command, cwd);
+
+    const result = await runWindowsSshPowerShellWithCleanup(node, script, signal, this.ssh());
 
     if (result.exitCode !== 0) {
       return remoteFailure(
