@@ -128,29 +128,30 @@ function _setRemotePid(jobId: string, remotePid: number): void {
 let leaseWatchdogInterval: ReturnType<typeof setInterval> | null = null;
 
 // Test seam: configurable lease timeout for tests
-let testLeaseTimeoutMs: number | null = null;
+const testLeaseTimeoutMs: number | null = null;
 
 function getEffectiveLeaseTimeoutMs(): number {
   return testLeaseTimeoutMs ?? LEASE_TIMEOUT_MS;
 }
 
 // Test seam: injectable clock for deterministic lease testing
-let testClock: { now: () => number } | null = null;
+const testClock: { now: () => number } | null = null;
 
 function getNowMs(): number {
   return testClock?.now() ?? Date.now();
 }
 
-function updateLocalHeartbeatFromRemote(jobId: string, rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>): Promise<boolean> {
+// Update local heartbeat from remote heartbeat file via SSH
+async function _updateLocalHeartbeatFromRemote(jobId: string, _rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>): Promise<boolean> {
   const job = activeRemoteJobs.get(jobId);
   if (!job || job.status !== "running") return false;
-  
+
   const nodeConfig = loadComputerNodesConfig();
   const node = nodeConfig.nodes.find(n => n.id === job.nodeId);
   if (!node || !node.sshAlias) return false;
-  
+
   // Read the remote heartbeat file via SSH
-  const script = `
+  const _script = `
 $astraJobId="${jobId}"
 $astraJobDir="${REMOTE_JOB_DIR}"
 $astraJobFile="$astraJobDir\\$astraJobId.json"
@@ -161,15 +162,10 @@ if (Test-Path $astraJobFile) {
   "NOT_FOUND"
 }
 `;
-  
-  return runRemoteCleanupRaw(node, jobId, (node, script, signal) => {
-    const cleanupScript = script;
-    return runRemoteCleanupRaw(node, jobId, (n, s, sig) => {
-      // We need to use the raw runner to execute the script
-      // This is a bit convoluted - we'll use the raw runner directly
-      return Promise.resolve({ exitCode: 0, stdout: "NOT_IMPLEMENTED", stderr: "" });
-    });
-  }).then(() => true).catch(() => false);
+
+  // Note: In production this would use the raw SSH runner to read the heartbeat
+  // For now, we rely on the local timer-based heartbeat
+  return true;
 }
 
 function startLeaseWatchdog(): void {
@@ -593,12 +589,12 @@ if (Test-Path $astraPidFile) {
 }
 
 // Legacy cleanup function for compatibility (uses raw SSH)
-async function runRemoteCleanup(
+async function _runRemoteCleanup(
   node: AstraComputerNode,
   jobId: string,
   _sshRunner?: AstraSshRunner,
 ): Promise<void> {
-  await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup);
+  await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw);
 }
 
 // Single tracking wrapper per logical job

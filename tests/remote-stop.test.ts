@@ -773,7 +773,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           cleanupTriggered = true;
           return { exitCode: 0, stdout: "", stderr: "" };
         }
-        await new Promise((resolve) => {
+        await new Promise<void>((resolve) => {
           const timeout = setTimeout(resolve, 50);
           signal.addEventListener("abort", () => {
             clearTimeout(timeout);
