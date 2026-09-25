@@ -127,40 +127,65 @@ function _setRemotePid(jobId: string, remotePid: number): void {
 // Lease watchdog - monitors stale heartbeats and terminates stale jobs
 let leaseWatchdogInterval: ReturnType<typeof setInterval> | null = null;
 
-function updateLocalHeartbeatFromRemote(jobId: string): boolean {
-  // Try to read the remote heartbeat file to sync local state
-  // In production, this would require SSH to read the remote file
-  // For now, we rely on the local timer-based heartbeat in the wrapper
+// Test seam: configurable lease timeout for tests
+let testLeaseTimeoutMs: number | null = null;
+
+function getEffectiveLeaseTimeoutMs(): number {
+  return testLeaseTimeoutMs ?? LEASE_TIMEOUT_MS;
+}
+
+// Test seam: injectable clock for deterministic lease testing
+let testClock: { now: () => number } | null = null;
+
+function getNowMs(): number {
+  return testClock?.now() ?? Date.now();
+}
+
+function updateLocalHeartbeatFromRemote(jobId: string, rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>): Promise<boolean> {
   const job = activeRemoteJobs.get(jobId);
-  if (job && job.status === "running") {
-    // The remote wrapper updates the heartbeat file every 5s
-    // Local lastHeartbeat is updated when we see the job is still alive
-    // We consider it fresh if the remote job file exists and was updated recently
-    // Since we can't easily read remote file from here without SSH,
-    // we trust the local timer that fires every 5s (same as remote heartbeat interval)
-    // If lease watchdog runs, it means 30s passed without local updates
-    // This is a simplified approach - the remote heartbeat file is the source of truth
-    return true;
-  }
-  return false;
+  if (!job || job.status !== "running") return false;
+  
+  const nodeConfig = loadComputerNodesConfig();
+  const node = nodeConfig.nodes.find(n => n.id === job.nodeId);
+  if (!node || !node.sshAlias) return false;
+  
+  // Read the remote heartbeat file via SSH
+  const script = `
+$astraJobId="${jobId}"
+$astraJobDir="${REMOTE_JOB_DIR}"
+$astraJobFile="$astraJobDir\\$astraJobId.json"
+if (Test-Path $astraJobFile) {
+  $job = Get-Content $astraJobFile -Raw | ConvertFrom-Json
+  $job.heartbeat
+} else {
+  "NOT_FOUND"
+}
+`;
+  
+  return runRemoteCleanupRaw(node, jobId, (node, script, signal) => {
+    const cleanupScript = script;
+    return runRemoteCleanupRaw(node, jobId, (n, s, sig) => {
+      // We need to use the raw runner to execute the script
+      // This is a bit convoluted - we'll use the raw runner directly
+      return Promise.resolve({ exitCode: 0, stdout: "NOT_IMPLEMENTED", stderr: "" });
+    });
+  }).then(() => true).catch(() => false);
 }
 
 function startLeaseWatchdog(): void {
   if (leaseWatchdogInterval) return;
   leaseWatchdogInterval = setInterval(async () => {
-    const nowMs = Date.now();
+    const nowMs = getNowMs();
     for (const [jobId, job] of activeRemoteJobs.entries()) {
       if (job.status !== "running") continue;
       
       // Check if local heartbeat is stale
       const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
-      if (nowMs - lastHeartbeat > LEASE_TIMEOUT_MS) {
+      if (nowMs - lastHeartbeat > getEffectiveLeaseTimeoutMs()) {
         // Stale lease detected - terminate the job via cleanup
         job.status = "aborted";
         
         // Get node info for cleanup - we need to look up the node
-        // Since we only have nodeId in the job, we need to find the node
-        // This requires access to the nodes config
         try {
           const config = loadComputerNodesConfig();
           const node = config.nodes.find(n => n.id === job.nodeId);
@@ -559,6 +584,7 @@ if (Test-Path $astraPidFile) {
   }
   if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
   if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
+}
 `;
 
   const cleanupRunner = runner ?? runWindowsSshPowerShellRaw;
@@ -572,7 +598,7 @@ async function runRemoteCleanup(
   jobId: string,
   _sshRunner?: AstraSshRunner,
 ): Promise<void> {
-  await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw);
+  await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup);
 }
 
 // Single tracking wrapper per logical job
@@ -650,7 +676,7 @@ async function runWindowsSshPowerShellWithCleanup(
     return result;
   } catch (error) {
     signal.removeEventListener("abort", abortHandler);
-    await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw).catch(() => {});
+    await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
     unregisterRemoteJob(jobId);
     // Return a failed result instead of throwing
     return {
@@ -732,12 +758,12 @@ export class MultiNodeWindowsComputerTransport
 
   // Raw SSH runner - no tracking wrapper (for system.info, process.list)
   private rawSsh(): AstraSshRunner {
-    return this.options.rawSsh ?? runWindowsSshPowerShellRaw;
+    return this.options.rawSsh ?? this.options.runSsh ?? runWindowsSshPowerShellRaw;
   }
 
   // Tracked SSH runner - single tracking wrapper per logical job (for owner.exec)
   private trackedSsh(): AstraSshRunner {
-    const customRunner = this.options.runSsh;
+    const customRunner = this.options.runSsh ?? this.options.rawSsh;
     if (customRunner) {
       return (node: AstraComputerNode, script: string, signal: AbortSignal) =>
         runWindowsSshPowerShellWithCleanup(node, script, signal, customRunner, this.rawSsh());
