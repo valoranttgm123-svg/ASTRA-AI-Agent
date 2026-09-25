@@ -91,7 +91,7 @@ jobs:
           ls -la tests/
 
       - name: Unit and integration tests
-        run: npx tsx --test --test-concurrency=1 "tests/**/*.test.ts"
+        run: npx tsx --test --test-concurrency=1 tests/**/*.test.ts
 
       - name: Typecheck
         run: npm run typecheck
