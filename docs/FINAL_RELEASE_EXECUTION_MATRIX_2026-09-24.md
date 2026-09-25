@@ -128,13 +128,15 @@ Canonical:
 - `docs/READY_TO_USE_DELIVERY.md`
 
 Need:
+- deterministic M5-0…M5-8 sequence from `docs/WINDOWS_RELEASE.md`;
 - production install/start;
-- loopback binding;
-- startup behavior;
-- truthful provider status;
-- private `.astra/` paths;
-- update/reinstall;
-- bounded startup health.
+- loopback binding and startup-task invariants;
+- truthful provider/subsystem status;
+- private `.astra/` state preservation;
+- a real fast-forward update transition or truthful BLOCKED if not exercised;
+- reinstall/repair with preservation checks;
+- bounded startup health;
+- final target evidence reconciliation on the pinned candidate.
 
 ### Gate M6 — Phase 20 final core report
 Canonical:
@@ -142,12 +144,14 @@ Canonical:
 - `docs/MANUAL_RELEASE_EVIDENCE.md`
 - `docs/CORE_RELEASE_CHECKLIST.md`
 
+Use deterministic M6-0…M6-7 sequence from `docs/CORE_RELEASE_REPORT.md`.
+
 Allowed verdicts only:
 - READY;
 - READY WITH EXTERNAL CONFIGURATION REQUIRED;
 - BLOCKED.
 
-Missing/stale/mismatched evidence must remain BLOCKED.
+Missing/stale/mismatched evidence must remain BLOCKED. Any build-changing fix invalidates affected official evidence and requires a new frozen candidate/re-capture.
 
 ## Stage 5 — extended JARVIS real-integration gates
 
