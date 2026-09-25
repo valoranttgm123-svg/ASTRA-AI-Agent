@@ -1,5 +1,13 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-25 — Phase 21–30 / NVIDIA dependency ordering prepared
+
+- Added a dependency-aware E21–E30 execution order to the final release matrix so future Codex sessions do not implement JARVIS capabilities in an arbitrary order.
+- Preserved existing repository-saturation boundaries: no new voice/vision/memory/device/NVIDIA abstraction was created.
+- Added NVIDIA N1–N9 real-backend ordering tied to the corresponding ASTRA phases: NVA-1 mechanism first, AI-Q/RAG/document providers only when real, Voice/Vision aligned with E21/E23, learned workflows after durable execution, Guardrails as defense-in-depth, evaluation last on the exact candidate.
+- Explicitly prohibited using NVIDIA to create a second voice runtime, second Sonor/memory authority, or self-selected READY verdict.
+- This is token-saving execution planning only; real implementation remains gated by core M1–M6 and actual target/provider evidence.
+
 ## 2026-09-25 — M1–M6 Codex token-saving execution preparation
 
 - Converted the remaining core target/release sequence into deterministic execution matrices without touching runtime code owned by Codex.
