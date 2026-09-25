@@ -53,6 +53,8 @@ Current work:
 - one pinned-target multi-step task;
 - remaining M1-M6 gates.
 
+Remote STOP repository remediation is complete on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`; ASTRA CI #769 is SUCCESS and all 22 repository remote-STOP regression tests PASS. Do not rebuild that implementation. The next remote STOP step is functional target-PC G0-G5 on that exact PR head. Treat the earlier target FAIL as historical and do not claim PASS until the remote parent/descendant behavior is re-tested.
+
 For official release evidence, obey `docs/ASTRA_COLLABORATION_PROTOCOL.md` section "Exact-build evidence freeze": choose a final clean commit, install/build it on PC1, freeze `main`, and capture all commit-bound evidence without intervening merges.
 
 ## Prepared target/release runbooks — draft PR #241
