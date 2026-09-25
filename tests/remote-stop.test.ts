@@ -584,12 +584,12 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     });
 
     // Create an already-aborted signal using a custom AbortSignal
-    const signal = { 
-      aborted: true, 
-      addEventListener: () => {}, 
-      removeEventListener: () => {}, 
+    const signal = {
+      aborted: true,
+      addEventListener: () => {},
+      removeEventListener: () => {},
       dispatchEvent: () => true,
-      throwIfAborted: function(this: { aborted: boolean }) { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); }
+      throwIfAborted: function(this: { aborted: boolean }) { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); },
     } as unknown as AbortSignal;
 
     const result = await transport.call(
@@ -667,12 +667,12 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     });
 
     // Create an already-aborted signal using a custom AbortSignal
-    const signal = { 
-      aborted: true, 
-      addEventListener: () => {}, 
-      removeEventListener: () => {}, 
+    const signal = {
+      aborted: true,
+      addEventListener: () => {},
+      removeEventListener: () => {},
       dispatchEvent: () => true,
-      throwIfAborted: function(this: { aborted: boolean }) { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); }
+      throwIfAborted: function(this: { aborted: boolean }) { if (this.aborted) throw new DOMException("Process cancelled.", "AbortError"); },
     } as unknown as AbortSignal;
 
     const result = await transport.call(
