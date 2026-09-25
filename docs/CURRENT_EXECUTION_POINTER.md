@@ -13,6 +13,19 @@ Real target testing has now advanced the long-running remote STOP/KILL gate from
 
 Codex is validating a focused fix locally. Local Windows regression tests were reported PASS, but one configured Windows SSH shell still exposes a long-command lease/transport issue, so this is **not release-ready**. The fix has not yet been pushed to GitHub. ChatGPT must review the actual diff after push; do not implement a competing remote STOP design in parallel.
 
+## Codex token-saving execution preparation — 2026-09-25
+
+ChatGPT completed a non-competing docs-only preparation slice for the post-Multi-PC core sequence. The canonical documents now contain deterministic target execution paths for M1–M6 rather than broad goals only:
+
+- M1 Automation: M1-0…M1-8;
+- M2 Sonor degradation/cancellation: reversible outage + active cancellation + Diagnostics result schema;
+- M3 Performance: M3-0…M3-8;
+- M4 Full-System: M4-0…M4-8;
+- M5 Windows: M5-0…M5-8;
+- M6 Final report: M6-0…M6-7.
+
+Purpose: Codex should execute/fill evidence from these matrices instead of spending context rebuilding test strategy. This did not change runtime code or take ownership of the active remote-job/heartbeat/lease fix.
+
 ## Owner continuity rule — checkpoint every completed task
 
 Every completed ASTRA work slice by ChatGPT or Codex must create a durable GitHub checkpoint **before the next task starts**. During the current evidence freeze, checkpoints belong on the existing draft PR #241 rather than moving `main`.
