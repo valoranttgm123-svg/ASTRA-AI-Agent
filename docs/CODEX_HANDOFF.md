@@ -1,5 +1,35 @@
 # ASTRA Codex Handoff
 
+## 2026-09-25 — remote STOP target failure reconciled
+
+ACTOR: ChatGPT
+DATE: 2026-09-25
+AREA: Multi-PC remote STOP/KILL
+STATE: BLOCKED
+SUBSTATE: SATURATED_WAITING_FOR_TARGET_EVIDENCE
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+COMPLETED:
+- reconciled Codex's new real target FAIL evidence;
+- independently confirmed from current `main` that local SSH-process termination does not by itself prove remote Windows parent/descendant termination;
+- recorded non-competing acceptance criteria for the focused Codex remote-job/heartbeat/lease fix.
+VALIDATED:
+- remote STOP gate is no longer merely untested: it is **TESTED FAIL** and requires a post-fix target re-test;
+- local Windows regression PASS reported by Codex is useful but insufficient for release evidence;
+- the focused Codex fix is not yet pushed to GitHub, so no actual diff has been repository-reviewed yet.
+FAILED:
+- an ASTRA-owned remote parent/descendant survived after the local SSH client was cancelled;
+- one configured Windows SSH long-command path still exposes a lease/transport issue.
+BLOCKED:
+- repository code review of the fix waits for Codex to push the actual branch/commit;
+- do not create a competing implementation while Codex owns the active target/runtime fix.
+NEXT:
+- Codex finishes the focused fix and target validation, then pushes a branch/PR/commit;
+- ChatGPT reviews the actual diff, security/regression coverage and CI, then checkpoints PASS/FAIL/BLOCKED.
+DO NOT REPEAT:
+- do not downgrade this gate back to NOT_STARTED;
+- do not mark remote STOP PASS from local tests alone;
+- do not merge #241 merely because the documentation CI is green.
+
 ## 2026-09-24 — ChatGPT parallel work saturated
 
 ACTOR: ChatGPT
