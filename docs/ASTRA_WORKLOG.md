@@ -1,5 +1,16 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-25 — PR #244 remote STOP repo remediation accepted; G0-G5 target retest pending
+
+- OpenCode completed the focused remote-job / heartbeat / lease remediation on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`.
+- ChatGPT independently reviewed the exact pushed head and accepted the repository side as `REPO_DONE_TARGET_PENDING / REMEDIATED_AND_CI_VALIDATED`.
+- ASTRA CI #769 is SUCCESS; repository test summary is 486 total / 482 PASS / 0 FAIL / 4 SKIP, with all 22 remote STOP tests PASS.
+- The earlier real target STOP result remains historical **FAIL** because remote parent/descendant work survived local SSH cancellation. Repository CI does not overwrite that result.
+- PR #244 is frozen until functional target-PC G0-G5: exact build/identity pin, normal long-command completion, explicit ASTRA UI STOP, timeout/transport-loss settlement, stale production lease/idempotent cleanup, and concurrent isolation.
+- ChatGPT synchronized the target execution guidance on PR #241 so G2 uses the real UI STOP path and G4 cannot be falsely proven with test-only seams.
+- Current `main` remains `c5d89375ef25601132b47da7d1c064df22d2d98f`; do not confuse the PR #244 head with main.
+- OpenCode is BLOCKED waiting for target access and has no active implementation slice. Do not reopen #244 unless target evidence reproduces a concrete defect.
+
 ## 2026-09-25 — Phase 21–30 / NVIDIA dependency ordering prepared
 
 - Added a dependency-aware E21–E30 execution order to the final release matrix so future Codex sessions do not implement JARVIS capabilities in an arbitrary order.
