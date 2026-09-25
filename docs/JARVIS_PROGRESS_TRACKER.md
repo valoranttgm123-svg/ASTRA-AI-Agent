@@ -149,6 +149,8 @@ Provider health integration:
 
 ## Deferred environment-gated work
 
+- [x] Dependency-aware Phase 21–30 + NVIDIA real-backend execution order prepared in the final execution matrix; this is planning only, not real integration evidence.
+
 - [ ] Phase 21 real always-on voice transport.
 - [ ] Phase 23 real screen/camera pixel transport.
 - [ ] Phase 26 real Sonor-backed episodic context fusion.
