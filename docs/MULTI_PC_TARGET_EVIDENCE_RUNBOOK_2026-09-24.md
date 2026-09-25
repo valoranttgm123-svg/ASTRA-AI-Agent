@@ -188,7 +188,7 @@ Prove the fix does not break ordinary completion:
 
 1. start a harmless long-running Owner Mode command with a unique private marker/job identity;
 2. independently prove the remote parent and at least one descendant/owned child are active when the test deliberately creates descendants;
-3. invoke the normal ASTRA STOP/KILL control;
+3. invoke the normal ASTRA UI **STOP** control for that active interaction; the current UI path calls `stopInteraction()`, which aborts the active request signal. Do **not** substitute manual `ssh.exe` termination, Ctrl+C, Task Manager, or an out-of-band remote kill as the STOP proof;
 4. wait only the bounded settlement interval;
 5. independently inspect the same remote node;
 6. require the owned remote parent and descendants to be absent;
@@ -208,11 +208,12 @@ Exercise the supported bounded failure path without changing private topology:
 ### G4 — stale lease / cleanup idempotence
 
 Where the focused implementation exposes this behavior safely:
-1. reproduce a stale/expired owned lease using only disposable state;
-2. prove cleanup is scoped to that exact job;
-3. repeat cleanup/settlement once;
-4. require the second cleanup to be safe/idempotent;
-5. require unrelated/concurrent jobs to remain unaffected.
+1. reproduce a stale/expired owned lease using only disposable target state and the production lease/heartbeat path;
+2. do **not** use repository test-only seams such as `_tickLeaseWatchdogOnce()`, injected clocks, or mocked runners as target-PC evidence;
+3. prove cleanup is scoped to that exact job;
+4. repeat cleanup/settlement once;
+5. require the second cleanup to be safe/idempotent;
+6. require unrelated/concurrent jobs to remain unaffected.
 
 ### G5 — concurrent isolation
 
