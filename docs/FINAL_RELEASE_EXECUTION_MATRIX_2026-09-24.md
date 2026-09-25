@@ -100,22 +100,26 @@ Canonical:
 - `docs/BROWSER_PERFORMANCE_EVIDENCE.md`
 
 Need:
+- deterministic M3-0…M3-8 sequence from `docs/PERFORMANCE_BASELINE.md`;
 - real browser/GPU;
+- runtime/status + bounded Ollama latency evidence;
 - six required HIGH scenarios/bundle;
 - Command Center active;
 - Automation panel open;
-- console review;
+- console/renderer review;
+- evidence-backed optimization only when a concrete bottleneck is measured;
 - truthful measured values.
 
 ### Gate M4 — full-system approved actions
 Canonical: `docs/FULL_SYSTEM_VALIDATION.md`
 
-Need real scenarios and failure variants:
+Need deterministic M4-0…M4-8 real scenarios and failure variants:
 - project continuation;
-- engineering workflow;
+- engineering workflow respecting the active release freeze;
 - ALURKA campaign;
-- configured Calendar/Email actions;
-- Emergency STOP.
+- configured Calendar/Email actions or truthful external-configuration BLOCKED;
+- Emergency STOP;
+- same-build evidence reconciliation and re-run after any build-changing remediation.
 
 ### Gate M5 — Windows install/update/reinstall
 Canonical:
