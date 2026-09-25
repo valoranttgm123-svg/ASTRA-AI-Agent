@@ -8,13 +8,14 @@
 - [x] Private registry contains only three individually reverified remote Windows targets; PC1 remains LOCAL.
 - [x] Direct ASTRA marker checks passed on all three registered remotes.
 - [x] Unknown-node fail-closed check passed.
+- [x] Real remote STOP/KILL test executed on 2026-09-25 and reproduced a concrete defect: cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive. This is truthful FAIL evidence, not a PASS.
 - [ ] Remote administrator-context evidence on each selected trusted node.
 - [ ] Bounded remote file mutation/readback/rollback evidence.
 - [ ] Remote process-control evidence using an owned disposable process.
 - [ ] Safe service-control evidence, or truthful BLOCKED when no disposable test service exists.
 - [ ] Unreachable-node fail-closed evidence.
 - [ ] Wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS.
-- [ ] Long-running remote STOP/KILL proving the remote work itself terminates.
+- [ ] Long-running remote STOP/KILL proving the remote work itself terminates — **TESTED FAIL on 2026-09-25**; Codex is validating a focused remote-job/heartbeat/lease fix and the target must be re-tested after that fix is pushed.
 - [ ] One pinned-target multi-step project task end-to-end.
 
 ## Draft preparation while Codex owns target evidence
@@ -31,7 +32,7 @@
 - [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
 - [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
 
-Current ChatGPT canonical state: **BLOCKED**; substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**. ASTRA CI #701 passed on draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` before this full re-audit remediation. Do not create duplicate preparation work; resume when new Codex evidence or a reproduced defect arrives.
+Current ChatGPT canonical state: **BLOCKED**; substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**. New target evidence has now been reconciled: remote STOP is **TESTED FAIL**, the defect path was independently confirmed from current `main`, and Codex owns the active focused fix. PR #241 final pre-defect-review head `e73afab3dc3d0fe324268013161f28a361555e96` passed ASTRA CI #719. Do not create a competing implementation; resume code review when Codex pushes the focused fix.
 
 ## Recovery
 
