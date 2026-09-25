@@ -158,22 +158,77 @@ PASS:
 
 This is stricter than killing the local `ssh.exe` client.
 
+Current known state (2026-09-25):
+- the first real target test **FAILED** because cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive;
+- Codex is validating a focused remote-job / heartbeat / lease refinement;
+- local regression success is not enough; this gate remains FAIL until the remote work itself is re-tested and proven terminated.
+
 Goal: prove ASTRA STOP terminates the actual remote owned work.
 
-Sequence:
-1. on one pinned remote, start a harmless long-running Owner Mode command with a unique marker/PID;
-2. independently prove the remote process is active;
-3. while ASTRA reports the operation running, invoke the normal ASTRA STOP/KILL control;
+### G0 — post-fix identity / build pin
+
+Before any re-test:
+1. record the pushed fix commit and target runtime commit;
+2. require the working tree/build identity expected by the active evidence freeze;
+3. confirm the selected remote node identity before starting owned work;
+4. do not reuse the original FAIL as PASS evidence.
+
+### G1 — normal long-command completion
+
+Prove the fix does not break ordinary completion:
+1. run one harmless bounded long command on the pinned remote;
+2. let it complete normally;
+3. require exit/result to settle once;
+4. require no false cancellation;
+5. verify no owned-job residue remains.
+
+### G2 — explicit STOP
+
+1. start a harmless long-running Owner Mode command with a unique private marker/job identity;
+2. independently prove the remote parent and at least one descendant/owned child are active when the test deliberately creates descendants;
+3. invoke the normal ASTRA STOP/KILL control;
 4. wait only the bounded settlement interval;
-5. independently inspect the remote node;
-6. require the owned remote process/marker to be absent;
+5. independently inspect the same remote node;
+6. require the owned remote parent and descendants to be absent;
 7. require no late ASTRA success;
 8. require no automatic retry;
 9. verify unrelated processes remain alive.
 
-PASS only if the **remote work itself** terminates.
+### G3 — timeout / transport-loss settlement
 
-If only the local SSH client exits while the remote process continues, record FAIL and treat that as an evidence-backed design defect for refinement.
+Exercise the supported bounded failure path without changing private topology:
+1. use a disposable owned job and a bounded timeout or approved transport-loss test;
+2. require the local transport to settle;
+3. require the remote lease/heartbeat contract to terminate or expire only the exact ASTRA-owned job;
+4. independently verify no owned remote parent/descendant remains after the documented bound;
+5. require no verified success after timeout/disconnect.
+
+### G4 — stale lease / cleanup idempotence
+
+Where the focused implementation exposes this behavior safely:
+1. reproduce a stale/expired owned lease using only disposable state;
+2. prove cleanup is scoped to that exact job;
+3. repeat cleanup/settlement once;
+4. require the second cleanup to be safe/idempotent;
+5. require unrelated/concurrent jobs to remain unaffected.
+
+### G5 — concurrent isolation
+
+When feasible with disposable work:
+1. start two distinct ASTRA-owned remote jobs on the same selected node;
+2. STOP/cancel only one;
+3. require only the selected job and its descendants to terminate;
+4. require the other job to remain truthful and unaffected;
+5. clean up the surviving disposable job normally.
+
+PASS only if:
+- the **remote work itself** terminates for STOP/timeout/disconnect according to the supported contract;
+- parent + owned descendants are gone;
+- unrelated/concurrent jobs are unaffected;
+- no late success appears after cancellation;
+- no private topology/credentials leak into public evidence.
+
+If only the local SSH client exits while remote work continues, record FAIL. Do not weaken this gate or relabel local-process termination as remote STOP success.
 
 ## Gate H — pinned multi-step task
 
