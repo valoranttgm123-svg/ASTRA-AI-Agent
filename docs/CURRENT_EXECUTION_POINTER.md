@@ -5,7 +5,13 @@
 State: **BLOCKED**
 Substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**
 
-Draft PR #241 now contains the non-conflicting preparation needed for the current target phase. Draft head `28ce6aaaa4c10ee8f84605f7eac5dc28e22624ca` passed ASTRA CI #701 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 22 unique files (18 current PR files + 4 additional baseline files). Do not create more overlapping documentation or runtime work just to stay busy. Resume repository implementation only when Codex supplies new target evidence/defect, the target checkpoint completes, or the owner changes requirements.
+Draft PR #241 contains the non-conflicting preparation for the current target phase. Pre-defect-review head `e73afab3dc3d0fe324268013161f28a361555e96` passed ASTRA CI #719 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 22 unique files (18 current PR files + 4 additional baseline files). New Codex target evidence on 2026-09-25 reproduced a real remote STOP defect: cancelling the local SSH client did not prove termination of an ASTRA-owned remote parent/descendant. ChatGPT independently confirmed the current-main design gap and recorded review criteria; Codex owns the focused remote-job/heartbeat/lease fix. Do not create a competing implementation.
+
+## Remote STOP defect checkpoint — 2026-09-25
+
+Real target testing has now advanced the long-running remote STOP/KILL gate from **untested** to **TESTED FAIL**. The local SSH client was cancelled, but an ASTRA-owned remote parent/descendant survived. Current `main` terminates the locally owned `ssh.exe` tree but has no committed remote job-id/heartbeat/lease lifecycle proving remote Windows work terminates.
+
+Codex is validating a focused fix locally. Local Windows regression tests were reported PASS, but one configured Windows SSH shell still exposes a long-command lease/transport issue, so this is **not release-ready**. The fix has not yet been pushed to GitHub. ChatGPT must review the actual diff after push; do not implement a competing remote STOP design in parallel.
 
 ## Owner continuity rule — checkpoint every completed task
 
@@ -37,7 +43,7 @@ Current multi-PC target work:
 4. capture safe service-control evidence, or record truthful BLOCKED if no disposable service exists;
 5. capture unreachable-node fail-closed evidence;
 6. capture wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS and must not be repeated;
-7. prove long-running remote STOP/KILL stops the remote work itself;
+7. re-test long-running remote STOP/KILL after the focused fix; the 2026-09-25 target test is **FAIL** because remote parent/descendant work survived local SSH cancellation;
 8. complete one pinned-target multi-step task end-to-end;
 9. continue the remaining real release gates.
 
