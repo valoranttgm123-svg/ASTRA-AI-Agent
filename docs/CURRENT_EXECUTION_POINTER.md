@@ -3,15 +3,15 @@
 ## Parallel ChatGPT repository status
 
 State: **BLOCKED**
-Substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**
+Substate: **REPO_DONE_TARGET_PENDING / WAITING_FOR_TARGET_PC_G0_G5**
 
-Draft PR #241 contains the non-conflicting preparation for the current target phase. Current documentation reconciliation head `4084936182a48f330888b445bff874e1bc9e7dee` passed ASTRA CI #723 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 22 unique files (18 current PR files + 4 additional baseline files). New Codex target evidence on 2026-09-25 reproduced a real remote STOP defect: cancelling the local SSH client did not prove termination of an ASTRA-owned remote parent/descendant. ChatGPT independently confirmed the current-main design gap and recorded review criteria; Codex owns the focused remote-job/heartbeat/lease fix. Do not create a competing implementation.
+Draft PR #241 remains the documentation/coordination surface for the current target phase. Live GitHub state supersedes older literal checkpoint SHAs below. Current `main` remains `c5d89375ef25601132b47da7d1c064df22d2d98f` with ASTRA CI #650 SUCCESS. The focused remote STOP remediation is repository-complete on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`; ASTRA CI #769 is SUCCESS and all 22 remote STOP regression tests PASS. PR #244 is frozen for real target-PC G0-G5 functional validation and must not be merged or rewritten merely because repository CI is green.
 
-## Remote STOP defect checkpoint — 2026-09-25
+## Remote STOP remediation checkpoint — 2026-09-25
 
-Real target testing has now advanced the long-running remote STOP/KILL gate from **untested** to **TESTED FAIL**. The local SSH client was cancelled, but an ASTRA-owned remote parent/descendant survived. Current `main` terminates the locally owned `ssh.exe` tree but has no committed remote job-id/heartbeat/lease lifecycle proving remote Windows work terminates.
+Historical target evidence remains **TESTED FAIL** for the original runtime: cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive. That historical FAIL must not be reused as PASS.
 
-Codex is validating a focused fix locally. Local Windows regression tests were reported PASS, but one configured Windows SSH shell still exposes a long-command lease/transport issue, so this is **not release-ready**. The fix has not yet been pushed to GitHub. ChatGPT must review the actual diff after push; do not implement a competing remote STOP design in parallel.
+Repository remediation is now accepted on PR #244, but repository success is not target proof. The next valid step is G0-G5 on the exact #244 head: build/identity pin, normal long-command completion, explicit STOP, timeout/transport-loss settlement, stale-lease/idempotent cleanup, and concurrent-job isolation. If G0-G5 exposes a concrete defect, reopen only that focused defect; otherwise preserve #244 and move to merge consideration after the target checkpoint.
 
 ## Codex token-saving execution preparation — 2026-09-25
 
@@ -24,7 +24,7 @@ ChatGPT completed a non-competing docs-only preparation slice for the post-Multi
 - M5 Windows: M5-0…M5-8;
 - M6 Final report: M6-0…M6-7.
 
-Purpose: Codex should execute/fill evidence from these matrices instead of spending context rebuilding test strategy. This did not change runtime code or take ownership of the active remote-job/heartbeat/lease fix.
+Purpose: the target specialist should execute/fill evidence from these matrices instead of spending context rebuilding test strategy. This preparation did not change runtime code and does not itself claim target validation.
 
 ## Extended JARVIS/NVIDIA execution ordering — 2026-09-25
 
@@ -68,7 +68,7 @@ Current multi-PC target work:
 4. capture safe service-control evidence, or record truthful BLOCKED if no disposable service exists;
 5. capture unreachable-node fail-closed evidence;
 6. capture wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS and must not be repeated;
-7. re-test long-running remote STOP/KILL after the focused fix; the 2026-09-25 target test is **FAIL** because remote parent/descendant work survived local SSH cancellation;
+7. re-test long-running remote STOP/KILL on exact PR #244 head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`; the earlier 2026-09-25 FAIL remains historical until G0-G5 produces new target evidence;
 8. complete one pinned-target multi-step task end-to-end;
 9. continue the remaining real release gates.
 
