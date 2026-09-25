@@ -1,5 +1,16 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-25 — M1–M6 Codex token-saving execution preparation
+
+- Converted the remaining core target/release sequence into deterministic execution matrices without touching runtime code owned by Codex.
+- M1 Automation now has M1-0…M1-8 target gates covering baseline, safe Level-0/1, Level-2 denial/approval, optional safe Level-3, STOP, restart/persistence and restoration.
+- M2 Sonor now prefers reversible ASTRA-side loopback outage injection, defines active-cancellation truth rules, restoration checks and a public-safe result schema.
+- M3 Performance now has M3-0…M3-8 for environment/build pin, runtime/Ollama latency, six HIGH captures, main UI, console review, evidence-backed optimization and bundle generation.
+- M4 Full-System now has M4-0…M4-8 for preflight, real A-E scenarios, failure variants, freeze-aware engineering flow and same-build reconciliation.
+- M5 Windows now has M5-0…M5-8 for preflight/install/start/provider truth/real update/reinstall/health/preservation evidence.
+- M6 Final report now has M6-0…M6-7 for frozen candidate, repository gate, target collector, manual gates, context, report, review and final checkpoint.
+- This work is intentionally non-competing: Codex still owns the active remote STOP runtime fix and target execution.
+
 ## 2026-09-25 — real remote STOP defect reproduced and reviewed
 
 - Codex target testing advanced the remote STOP/KILL gate from untested to **TESTED FAIL**: cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive.
