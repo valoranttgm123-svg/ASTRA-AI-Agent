@@ -1,5 +1,27 @@
 # ASTRA Codex Handoff
 
+## 2026-09-25 — extended JARVIS/NVIDIA execution order precomputed
+
+ACTOR: ChatGPT
+DATE: 2026-09-25
+AREA: Phase 21–30 + NVIDIA real-backend execution planning
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+COMPLETED:
+- dependency-aware E21–E30 order added to the final execution matrix;
+- NVIDIA N1–N9 real-backend order added without creating new abstractions;
+- core Multi-PC + M1–M6 remains the active priority;
+- no runtime/provider integration code changed.
+NEXT:
+- Codex should consume this order only after the core active blocker/evidence sequence permits extended work.
+DO NOT REPEAT:
+- do not create a second JARVIS execution roadmap;
+- do not create a second NVIDIA framework;
+- do not start N5/N6 before E21/E23 consent/runtime foundations;
+- do not let N3 replace Sonor as canonical memory;
+- do not run N9 as a final verdict before the exact integrated candidate exists.
+
 ## 2026-09-25 — M1–M6 execution strategy precomputed
 
 ACTOR: ChatGPT
