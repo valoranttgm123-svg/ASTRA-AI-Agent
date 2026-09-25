@@ -84,8 +84,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Debug working directory
+        run: |
+          pwd
+          ls -la
+          ls -la tests/
+
       - name: Unit and integration tests
-        run: npm test
+        run: npx tsx --test --test-concurrency=1 "tests/**/*.test.ts"
 
       - name: Typecheck
         run: npm run typecheck
