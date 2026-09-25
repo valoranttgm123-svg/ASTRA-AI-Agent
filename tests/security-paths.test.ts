@@ -6,6 +6,7 @@ import {
   symlink,
   writeFile,
 } from "node:fs/promises";
+import { realpathSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, before, test } from "node:test";
@@ -18,7 +19,11 @@ import {
 } from "../lib/projects/paths";
 
 function normalizePath(p: string): string {
-  return path.resolve(p);
+  try {
+    return realpathSync.native(p);
+  } catch {
+    return path.resolve(p);
+  }
 }
 
 let root = "";
