@@ -1,5 +1,13 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-25 — real remote STOP defect reproduced and reviewed
+
+- Codex target testing advanced the remote STOP/KILL gate from untested to **TESTED FAIL**: cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive.
+- Codex is validating a focused, still-unpushed remote-job/heartbeat/lease fix; reported local Windows regressions pass, while one normal long-command Windows SSH path still exposes a lease/transport issue.
+- ChatGPT independently reviewed current `main` and confirmed the design gap: `runBoundedProcess()` owns the local child tree and `runWindowsSshPowerShell()` launches remote PowerShell through local `ssh.exe`, so aborting local transport alone cannot prove remote work termination.
+- Review acceptance criteria were checkpointed on PR #241: exact-job cleanup, parent+descendant termination, bounded/idempotent lease expiry, concurrency isolation, wrong-identity protection, no late success after cancellation, and real target re-test after code-level regressions.
+- No competing runtime implementation was created. Codex retains ownership of the focused fix; ChatGPT resumes runtime review when the actual branch/commit is pushed.
+
 ## 2026-09-24 — full re-audit continuity remediation on draft PR #241
 
 - Re-audited live `main`, open PRs, current #241 diff/CI, canonical recovery/pointer/mission/tracker/handoff documents, relevant SSH/target branches, private-secret hygiene, and the critical PR #233 code safeguards.
