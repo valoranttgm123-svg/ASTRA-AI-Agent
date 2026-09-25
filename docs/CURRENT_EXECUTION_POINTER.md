@@ -26,6 +26,18 @@ ChatGPT completed a non-competing docs-only preparation slice for the post-Multi
 
 Purpose: Codex should execute/fill evidence from these matrices instead of spending context rebuilding test strategy. This did not change runtime code or take ownership of the active remote-job/heartbeat/lease fix.
 
+## Extended JARVIS/NVIDIA execution ordering — 2026-09-25
+
+A dependency-aware execution packet now exists for Phase 21–30 and real NVIDIA backends in `docs/FINAL_RELEASE_EXECUTION_MATRIX_2026-09-24.md`.
+
+Key rule:
+- core Multi-PC + M1–M6 retains priority;
+- E21–E30 must follow dependency/consent/runtime order rather than arbitrary phase-number pressure;
+- NVIDIA N1–N9 is real-backend integration only; repository contracts are already saturated;
+- N5/N6 align with E21/E23, N3 remains subordinate to Sonor, N9 runs last on the exact integrated candidate.
+
+This is planning-only and does not claim any new JARVIS/NVIDIA target capability is verified.
+
 ## Owner continuity rule — checkpoint every completed task
 
 Every completed ASTRA work slice by ChatGPT or Codex must create a durable GitHub checkpoint **before the next task starts**. During the current evidence freeze, checkpoints belong on the existing draft PR #241 rather than moving `main`.
