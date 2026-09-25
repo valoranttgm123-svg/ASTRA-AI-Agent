@@ -87,8 +87,8 @@ jobs:
       - name: Debug working directory
         run: |
           pwd
-          ls -la
-          ls -la tests/
+          Get-ChildItem
+          Get-ChildItem tests/
 
       - name: Unit and integration tests
         run: |
