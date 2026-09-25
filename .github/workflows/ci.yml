@@ -62,6 +62,9 @@ jobs:
   build-windows:
     runs-on: windows-latest
     timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -95,11 +98,10 @@ jobs:
 
       - name: Diff check (push)
         if: github.event_name == 'push'
-        shell: pwsh
         run: |
-          $before = "${{ github.event.before }}"
-          if ($before -match "^0+$") {
+          before="${{ github.event.before }}"
+          if [[ "$before" =~ ^0+$ ]]; then
             git diff --check "${{ github.sha }}^...${{ github.sha }}"
-          } else {
+          else
             git diff --check "$before...${{ github.sha }}"
-          }
+          fi
