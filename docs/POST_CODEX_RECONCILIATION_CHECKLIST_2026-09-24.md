@@ -17,9 +17,13 @@ After Codex finishes a meaningful target slice:
 5. if Codex found a repository defect:
    - record reproduction/evidence;
    - create or continue one focused fix branch;
+   - if the fix exists only locally/uncommitted, record that state but do **not** claim repository review completed;
+   - require the actual pushed commit/PR before ChatGPT reviews the implementation diff;
    - preserve the target evidence trail;
    - add regression coverage;
-   - merge only after CI passes;
+   - distinguish local regression PASS from real target PASS;
+   - after CI, re-run the failed target gate when the defect was discovered by target evidence;
+   - merge only after CI passes and the active evidence-freeze rules permit it;
 6. if the target gate passed:
    - mark only that exact gate complete;
    - do not infer neighboring gates;
