@@ -20,6 +20,8 @@
 
 ## Draft preparation while Codex owns target evidence
 
+- [x] Deterministic M1–M6 target/release execution sequences prepared to reduce Codex re-planning/token load while preserving runtime ownership.
+
 - [x] Prepare multi-PC target evidence runbook with bounded rollback and fail-closed criteria.
 - [x] Prepare final release execution matrix covering core M1-M6 and extended JARVIS/NVIDIA gates.
 - [x] Prepare non-destructive branch hygiene plan; no branch deletion authorized during target evidence.
