@@ -1,5 +1,24 @@
 # ASTRA Codex Handoff
 
+## 2026-09-25 — M1–M6 execution strategy precomputed
+
+ACTOR: ChatGPT
+DATE: 2026-09-25
+AREA: target/release execution planning
+STATE: ACTIVE
+SUBSTATE: COMPLETE_IN_DRAFT
+BRANCH/PR: `docs/release-evidence-freeze-and-status-cleanup-20260924` / #241
+COMPLETED:
+- deterministic execution matrices prepared for M1–M6 in their canonical documents;
+- evidence reuse/build-freeze/restoration/BLOCKED rules made explicit;
+- no runtime implementation files changed.
+NEXT:
+- Codex should consume these sequences after the active Multi-PC remote STOP fix rather than reconstructing target-test strategy from chat/history.
+DO NOT REPEAT:
+- do not author replacement M1–M6 runbooks;
+- do not infer target PASS from repository/local tests;
+- keep private target evidence under `.astra/`.
+
 ## 2026-09-25 — remote STOP target failure reconciled
 
 ACTOR: ChatGPT
