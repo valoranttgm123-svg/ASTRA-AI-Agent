@@ -15,10 +15,10 @@
 - [ ] Safe service-control evidence, or truthful BLOCKED when no disposable test service exists.
 - [ ] Unreachable-node fail-closed evidence.
 - [ ] Wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS.
-- [ ] Long-running remote STOP/KILL proving the remote work itself terminates — **TESTED FAIL on 2026-09-25**; Codex is validating a focused remote-job/heartbeat/lease fix and the target must be re-tested after that fix is pushed.
+- [ ] Long-running remote STOP/KILL proving the remote work itself terminates — historical target result remains **TESTED FAIL on 2026-09-25**; repository remediation is accepted on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9` with CI #769 SUCCESS, and real target G0-G5 is still pending.
 - [ ] One pinned-target multi-step project task end-to-end.
 
-## Draft preparation while Codex owns target evidence
+## Draft preparation while target evidence is pending
 
 - [x] Deterministic M1–M6 target/release execution sequences prepared to reduce Codex re-planning/token load while preserving runtime ownership.
 
@@ -34,7 +34,7 @@
 - [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
 - [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
 
-Current ChatGPT canonical state: **BLOCKED**; substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**. New target evidence has now been reconciled: remote STOP is **TESTED FAIL**, the defect path was independently confirmed from current `main`, and Codex owns the active focused fix. PR #241 final pre-defect-review head `e73afab3dc3d0fe324268013161f28a361555e96` passed ASTRA CI #719. Do not create a competing implementation; resume code review when Codex pushes the focused fix.
+Current ChatGPT canonical state: **BLOCKED**; substate: **REPO_DONE_TARGET_PENDING / WAITING_FOR_TARGET_PC_G0_G5**. The original remote STOP target observation remains historical **TESTED FAIL**, while the focused repository remediation is accepted on PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9` with CI #769 SUCCESS and all 22 remote STOP tests PASS. OpenCode has no active implementation slice and is waiting for target access. Do not create a competing implementation; the next valid STOP work is real G0-G5 target validation on that exact #244 head.
 
 ## Recovery
 
@@ -77,7 +77,7 @@ Ongoing invariant: every future meaningful change must preserve these synchroniz
 - [x] Identify the ASTRA hub/local machine: owner confirms PC1 is LOCAL/current hub; PC1 must not be duplicated into the SSH remote registry.
 - [x] Bootstrap only the three verified remote targets into the private registry and pass direct ASTRA marker validation on each.
 - [ ] Real remote administrator context, bounded file rollback, disposable process-control, and safe service-control evidence on selected trusted nodes.
-- [ ] Unknown-node fail-closed is proven; still capture unreachable-node and wrong-identity fail-closed evidence plus long-running remote STOP/KILL.
+- [ ] Unknown-node fail-closed is proven; still capture unreachable-node and wrong-identity fail-closed evidence plus long-running remote STOP/KILL G0-G5 target validation on the accepted PR #244 head.
 - [ ] One pinned-target multi-step project task end-to-end.
 Completion invariant: do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
 
