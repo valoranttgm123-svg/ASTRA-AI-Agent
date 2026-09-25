@@ -81,6 +81,8 @@ type RemoteJobInfo = {
   startedAt: string;
   localPid: number | null;
   remotePid: number | null;
+  status: "running" | "completed" | "aborted" | "timeout" | "disconnected";
+  lastHeartbeat: string;
 };
 
 const activeRemoteJobs = new Map<string, RemoteJobInfo>();
@@ -97,6 +99,8 @@ function registerRemoteJob(nodeId: string, localPid: number | null): string {
     startedAt: new Date().toISOString(),
     localPid,
     remotePid: null,
+    status: "running",
+    lastHeartbeat: new Date().toISOString(),
   });
   return jobId;
 }
@@ -340,20 +344,32 @@ function Update-Heartbeat {
   }
 }
 
+function Get-DescendantPids {
+  param($RootPid)
+  $allPids = @()
+  $queue = @($RootPid)
+  while ($queue.Count -gt 0) {
+    $current = $queue[0]
+    $queue = $queue[1..($queue.Count-1)]
+    $allPids += $current
+    $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$current" -ErrorAction SilentlyContinue
+    if ($children) {
+      foreach ($child in $children) {
+        $queue += $child.ProcessId
+      }
+    }
+  }
+  return $allPids
+}
+
 function Cleanup-Job {
   if (Test-Path $astraPidFile) {
     $pid = Get-Content $astraPidFile -Raw
     if ($pid -match '^\d+$') {
       try {
-        $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
-        if ($proc) {
-          $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$pid" -ErrorAction SilentlyContinue
-          if ($children) {
-            foreach ($child in $children) {
-              Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
-            }
-          }
-          Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+        $allPids = Get-DescendantPids -RootPid $pid
+        foreach ($p in $allPids) {
+          Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
         }
       } catch { }
     }
@@ -401,23 +417,38 @@ async function runRemoteCleanup(
 
   const cleanupScript = `
 $astraJobId="${jobId}"
+$astraNodeId="${node.id}"
+$astraExpectedComputerName="${node.expectedComputerName}"
 $astraJobDir="${REMOTE_JOB_DIR}"
 $astraJobFile="$astraJobDir\\$astraJobId.json"
 $astraPidFile="$astraJobDir\\$astraJobId.pid"
+
+# Identity guard before any cleanup
+$expected = "$astraExpectedComputerName"
+if ($env:COMPUTERNAME -ine $expected) {
+  [Console]::Error.WriteLine('ASTRA_IDENTITY_MISMATCH')
+  exit 86
+}
 
 if (Test-Path $astraPidFile) {
   $pid = Get-Content $astraPidFile -Raw
   if ($pid -match '^\d+$') {
     try {
-      $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
-      if ($proc) {
-        $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$pid" -ErrorAction SilentlyContinue
+      $allPids = @()
+      $queue = @($pid)
+      while ($queue.Count -gt 0) {
+        $current = $queue[0]
+        $queue = $queue[1..($queue.Count-1)]
+        $allPids += $current
+        $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$current" -ErrorAction SilentlyContinue
         if ($children) {
           foreach ($child in $children) {
-            Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
+            $queue += $child.ProcessId
           }
         }
-        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+      }
+      foreach ($p in $allPids) {
+        Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
       }
     } catch { }
   }
@@ -580,7 +611,12 @@ export class MultiNodeWindowsComputerTransport
   }
 
   private ssh() {
-    return this.options.runSsh ?? runWindowsSshPowerShellWithCleanup;
+    const customRunner = this.options.runSsh;
+    if (customRunner) {
+      return (node: AstraComputerNode, script: string, signal: AbortSignal) =>
+        runWindowsSshPowerShellWithCleanup(node, script, signal, customRunner);
+    }
+    return runWindowsSshPowerShellWithCleanup;
   }
 
   async status(signal?: AbortSignal): Promise<AstraComputerStatus> {
@@ -620,8 +656,6 @@ export class MultiNodeWindowsComputerTransport
 
     return {
       configured: localStatus.configured || nodes.length > 0,
-      // ASTRA_COMPUTER_ENABLED remains the global kill switch. Merely placing
-      // a private node file on disk must never enable remote execution.
       available: localStatus.available,
       provider: this.provider,
       detail:
