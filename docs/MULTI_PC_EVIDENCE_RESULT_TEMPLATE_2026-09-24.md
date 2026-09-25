@@ -85,21 +85,38 @@ WRONG_IDENTITY:
 
 ## Remote STOP/KILL
 
+Known historical result:
+- 2026-09-25 initial real target test: **FAIL** — local SSH cancellation did not prove remote parent/descendant termination.
+- Do not overwrite that historical FAIL. Record the post-fix re-test separately.
+
 ```text
+FIX_COMMIT:
+TARGET_RUNTIME_COMMIT:
+BUILD_IDENTITY_MATCH:
 TARGET_NODE:
-REMOTE_OWNED_PROCESS_ACTIVE_BEFORE_STOP:
-ASTRA_STOP_INVOKED:
+TEST_VARIANT: NORMAL_COMPLETION | EXPLICIT_STOP | TIMEOUT_OR_TRANSPORT_LOSS | STALE_LEASE | CONCURRENT_ISOLATION
+
+REMOTE_OWNED_PARENT_ACTIVE_BEFORE:
+REMOTE_OWNED_DESCENDANT_ACTIVE_BEFORE:
+ASTRA_STOP_OR_FAILURE_TRIGGER:
 LOCAL_SSH_CLIENT_SETTLED:
-REMOTE_OWNED_PROCESS_ABSENT_AFTER_STOP:
+REMOTE_OWNED_PARENT_ABSENT_AFTER:
+REMOTE_OWNED_DESCENDANT_ABSENT_AFTER:
+LEASE_OR_HEARTBEAT_SETTLED:
 NO_LATE_SUCCESS:
 NO_AUTOMATIC_RETRY:
 UNRELATED_PROCESS_UNAFFECTED:
+CONCURRENT_OTHER_JOB_UNAFFECTED:
+CLEANUP_IDEMPOTENT:
 RESULT: PASS | FAIL | BLOCKED
 SUMMARY:
 ```
 
-PASS requires the remote owned work itself to terminate. Local `ssh.exe`
-termination alone is insufficient.
+Do not commit private job IDs, PIDs, aliases, hostnames, paths or raw logs.
+
+PASS requires the remote owned work itself to terminate under the tested contract.
+Local `ssh.exe` termination alone is insufficient. A local unit/regression PASS
+does not replace the real target re-test.
 
 ## Pinned multi-step task
 
