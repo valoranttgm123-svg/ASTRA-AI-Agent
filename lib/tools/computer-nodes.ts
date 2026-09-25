@@ -73,7 +73,7 @@ const ALLOWED_NODE_KEYS = new Set([
 const JOB_ID_PREFIX = "astra-job-";
 const REMOTE_JOB_DIR = "$env:TEMP\\astra-jobs";
 const HEARTBEAT_INTERVAL_MS = 5000;
-const LEASE_TIMEOUT_MS = 30000;
+const _LEASE_TIMEOUT_MS = 30000;
 
 type RemoteJobInfo = {
   jobId: string;
@@ -105,11 +105,11 @@ function unregisterRemoteJob(jobId: string): void {
   activeRemoteJobs.delete(jobId);
 }
 
-function getRemoteJob(jobId: string): RemoteJobInfo | undefined {
+function _getRemoteJob(jobId: string): RemoteJobInfo | undefined {
   return activeRemoteJobs.get(jobId);
 }
 
-function setRemotePid(jobId: string, remotePid: number): void {
+function _setRemotePid(jobId: string, remotePid: number): void {
   const job = activeRemoteJobs.get(jobId);
   if (job) {
     job.remotePid = remotePid;
@@ -307,7 +307,7 @@ function buildRemoteScriptWithJobTracking(
   script: string,
   jobId: string,
 ): string {
-  const encodedScript = encodePowerShell(script);
+  const _encodedScript = encodePowerShell(script);
   const encodedJobId = powershellLiteralBase64(jobId);
   const encodedNodeId = powershellLiteralBase64(node.id);
 
@@ -482,7 +482,7 @@ export async function runWindowsSshPowerShell(
     "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " +
     encodePowerShell(buildRemoteScriptWithJobTracking(node, script, jobId));
 
-  let localPid: number | null = null;
+  const _localPid: number | null = null;
 
   const result = await runBoundedProcess({
     command: process.platform === "win32" ? "ssh.exe" : "ssh",
