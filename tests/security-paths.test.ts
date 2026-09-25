@@ -17,6 +17,10 @@ import {
   resolveWritableProjectFile,
 } from "../lib/projects/paths";
 
+function normalizePath(p: string): string {
+  return path.resolve(p);
+}
+
 let root = "";
 let workspace = "";
 let outside = "";
@@ -72,7 +76,7 @@ after(async () => {
 });
 
 test("Phase 15A resolves only a real registered workspace directory", async () => {
-  assert.equal(await resolveProjectWorkspace(project()), workspace);
+  assert.equal(normalizePath(await resolveProjectWorkspace(project())), normalizePath(workspace));
 
   const missing = project();
   missing.workspace = path.join(root, "missing");
@@ -87,13 +91,13 @@ test("Phase 15A accepts a normal registered text file and safe new write target"
   const existing = await resolveExistingProjectFile(project(), "docs/inside.md");
   assert.ok(existing);
   assert.equal(existing.relative, "docs/inside.md");
-  assert.equal(existing.workspace, workspace);
+  assert.equal(normalizePath(existing.workspace), normalizePath(workspace));
 
   const writable = await resolveWritableProjectFile(project(), "docs/new.md");
   assert.ok(writable);
   assert.equal(writable.relative, "docs/new.md");
-  assert.equal(writable.workspace, workspace);
-  assert.equal(writable.absolute, path.join(workspace, "docs", "new.md"));
+  assert.equal(normalizePath(writable.workspace), normalizePath(workspace));
+  assert.equal(normalizePath(writable.absolute), normalizePath(path.join(workspace, "docs", "new.md")));
 });
 
 test("Phase 15A rejects traversal and absolute paths outside the workspace", async () => {
