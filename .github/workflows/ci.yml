@@ -64,7 +64,7 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
-        shell: bash
+        shell: pwsh
         working-directory: ${{ github.workspace }}
     steps:
       - name: Checkout
@@ -91,7 +91,9 @@ jobs:
           ls -la tests/
 
       - name: Unit and integration tests
-        run: npx tsx --test --test-concurrency=1 tests/**/*.test.ts
+        run: |
+          $testFiles = Get-ChildItem tests/*.test.ts | ForEach-Object { $_.FullName }
+          npx tsx --test --test-concurrency=1 $testFiles
 
       - name: Typecheck
         run: npm run typecheck
@@ -106,9 +108,9 @@ jobs:
       - name: Diff check (push)
         if: github.event_name == 'push'
         run: |
-          before="${{ github.event.before }}"
-          if [[ "$before" =~ ^0+$ ]]; then
+          $before = "${{ github.event.before }}"
+          if ($before -match "^0+$") {
             git diff --check "${{ github.sha }}^...${{ github.sha }}"
-          else
+          } else {
             git diff --check "$before...${{ github.sha }}"
-          fi
+          }
