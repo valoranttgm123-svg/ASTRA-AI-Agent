@@ -267,6 +267,44 @@ function stopLeaseWatchdog(): void {
   }
 }
 
+// Test seam: deterministic one-shot watchdog tick (no 5s wait)
+export async function _tickLeaseWatchdogOnce(
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>,
+  cleanupRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>
+): Promise<void> {
+  const nowMs = getNowMs();
+  for (const [jobId, job] of activeRemoteJobs.entries()) {
+    if (job.status !== "running") continue;
+
+    // Try to refresh heartbeat from remote (authoritative source)
+    await updateLocalHeartbeatFromRemote(jobId, rawRunner);
+
+    // Check if local heartbeat is stale
+    const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
+    if (nowMs - lastHeartbeat > getEffectiveLeaseTimeoutMs()) {
+      // Stale lease detected - terminate the job via cleanup
+      job.status = "aborted";
+
+      // Get node info for cleanup - we need to look up the node
+      try {
+        const config = loadComputerNodesConfig();
+        const node = config.nodes.find(n => n.id === job.nodeId);
+        if (node && node.sshAlias) {
+          // Invoke cleanup for the stale job using provided runner or raw SSH
+          await runRemoteCleanupRaw(node, jobId, cleanupRunner ?? runWindowsSshPowerShellRaw).catch(() => {});
+        }
+      } catch {}
+
+      // Unregister after cleanup attempt
+      activeRemoteJobs.delete(jobId);
+    }
+  }
+
+  if (activeRemoteJobs.size === 0) {
+    stopLeaseWatchdog();
+  }
+}
+
 function findForbiddenNodeKey(value: unknown): string | null {
   if (Array.isArray(value)) {
     for (const item of value) {
@@ -386,7 +424,15 @@ export function parseComputerNodesConfig(raw: string): AstraComputerNodesConfig 
   return { version: 1, nodes };
 }
 
+// Test seam: override config for testing
+let _testConfigOverride: AstraComputerNodesConfig | null = null;
+
+export function _setTestConfig(config: AstraComputerNodesConfig | null): void {
+  _testConfigOverride = config;
+}
+
 export function loadComputerNodesConfig(): AstraComputerNodesConfig {
+  if (_testConfigOverride) return _testConfigOverride;
   try {
     return parseComputerNodesConfig(readFileSync(nodeConfigPath(), "utf8"));
   } catch (error) {

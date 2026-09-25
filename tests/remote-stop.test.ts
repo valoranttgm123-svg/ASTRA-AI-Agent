@@ -16,6 +16,8 @@ import {
   _startLeaseWatchdog,
   _stopLeaseWatchdog,
   _updateLocalHeartbeatFromRemote,
+  _tickLeaseWatchdogOnce,
+  _setTestConfig,
 } from "../lib/tools/computer-nodes";
 
 function localFixture(): AstraComputerTransport {
@@ -904,9 +906,22 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     assert.equal(cleanupTriggered, true);
   });
 
-  test("lease timeout watchdog cleans up exact job via injectable clock (deterministic, no 30s wait)", async () => {
-    // This test uses injectable clock and short lease timeout to prove
-    // lease expiry triggers exact-job cleanup without waiting real time.
+  test("lease timeout watchdog cleans up exact job via deterministic tick (no 5s wait)", async () => {
+    // This test uses injectable clock and short lease timeout + deterministic watchdog tick
+    // to prove lease expiry triggers exact-job cleanup without waiting real time.
+
+    // Set test config with pc2 node
+    _setTestConfig({
+      version: 1,
+      nodes: [{
+        id: "pc2",
+        label: "Workstation 2",
+        transport: "SSH",
+        trusted: true,
+        sshAlias: "pc2-windows",
+        expectedComputerName: "PC2",
+      }]
+    });
 
     // Set up injectable clock
     let virtualNow = 1000000;
@@ -914,77 +929,193 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     setTestClock(clock);
     setTestLeaseTimeoutMs(100); // 100ms lease timeout for test
 
+    // The heartbeat should return the ORIGINAL time (before advance) to simulate stale lease
+    const staleHeartbeatTime = new Date(1000000).toISOString();
+
+    let cleanupCalledForJob: string | null = null;
+    let cleanupCallCount = 0;
+
+    // Mock raw runner that captures cleanup calls
+    const mockRawRunner = async (node: any, script: string, signal: AbortSignal) => {
+      if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+        cleanupCallCount++;
+        const match = script.match(/\$astraJobId="([^"]+)"/);
+        if (match) cleanupCalledForJob = match[1];
+        return { exitCode: 0, stdout: "", stderr: "" };
+      }
+      // Heartbeat reader - return STALE heartbeat (original time) to trigger lease expiry
+      if (script.includes("heartbeat") || script.includes("Heartbeat")) {
+        return { exitCode: 0, stdout: staleHeartbeatTime, stderr: "" };
+      }
+      return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
+    };
+
     try {
       // Directly register a job to test lease watchdog
       const jobId = _registerRemoteJob("pc2", 1234);
-
-      // Start lease watchdog
-      _startLeaseWatchdog();
 
       // Verify job is registered and running
       const activeJobs = _getActiveRemoteJobs();
       const job = activeJobs.get(jobId);
       assert.ok(job, "job should be registered");
       assert.equal(job.status, "running", "job should be running");
+      const initialHeartbeat = job.lastHeartbeat;
 
       // Advance virtual clock past lease timeout (100ms)
       virtualNow += 200; // Now at 1000200, 200ms past start
 
-      // Give watchdog a moment to run its check
-      await new Promise(r => setTimeout(r, 100));
+      // Deterministic one-shot watchdog tick (no 5s interval wait)
+      await _tickLeaseWatchdogOnce(mockRawRunner, mockRawRunner);
 
-      // Verify lease expiry condition would be detected
-      const updatedJob = _getActiveRemoteJobs().get(jobId);
-      if (updatedJob) {
-        const lastHeartbeat = new Date(updatedJob.lastHeartbeat).getTime();
-        const nowMs = virtualNow;
-        if (nowMs - lastHeartbeat > 100) { // test lease timeout
-          // Lease expired - cleanup should be triggered
-          assert.ok(true, "lease expiry condition detected");
-        }
-      }
+      // Verify lease expired - job should be aborted and removed
+      const updatedJobs = _getActiveRemoteJobs();
+      assert.ok(!updatedJobs.has(jobId), "job should be removed after lease expiry");
+
+      // Verify cleanup was called with EXACT jobId
+      assert.equal(cleanupCallCount, 1, "cleanup should be called exactly once");
+      assert.equal(cleanupCalledForJob, jobId, "cleanup should receive exact jobId that expired");
     } finally {
-      _stopLeaseWatchdog();
       setTestClock(null);
       setTestLeaseTimeoutMs(null);
+      _setTestConfig(null);
     }
   });
 
-  test("authoritative heartbeat refresh reads remote and updates local timestamp", async () => {
-    // Verify that updateLocalHeartbeatFromRemote actually reads remote heartbeat
-    let heartbeatReadCount = 0;
+  test("authoritative heartbeat refresh calls remote reader, returns true, updates local lastHeartbeat", async () => {
+    // Verify that updateLocalHeartbeatFromRemote:
+    // 1. Calls remote heartbeat reader via SSH
+    // 2. Returns true (refreshed === true)
+    // 3. Updates local job.lastHeartbeat to the remote timestamp
 
-    const transport = makeTransport(
-      async (node, script, signal) => {
-        if (script.includes("heartbeat")) {
-          heartbeatReadCount++;
-          return {
-            exitCode: 0,
-            stdout: new Date(Date.now()).toISOString(),
-            stderr: ""
-          };
-        }
-        return {
-          exitCode: 0,
-          stdout: '{"computerName":"PC2"}',
-          stderr: "",
-        };
+    // Set test config with pc2 node
+    _setTestConfig({
+      version: 1,
+      nodes: [{
+        id: "pc2",
+        label: "Workstation 2",
+        transport: "SSH",
+        trusted: true,
+        sshAlias: "pc2-windows",
+        expectedComputerName: "PC2",
+      }]
+    });
+
+    // Verify that updateLocalHeartbeatFromRemote:
+    // 1. Calls remote heartbeat reader via SSH
+    // 2. Returns true (refreshed === true)
+    // 3. Updates local job.lastHeartbeat to the remote timestamp
+
+    let heartbeatReaderCalled = false;
+    let readerCallCount = 0;
+    const expectedRemoteTime = new Date("2026-09-25T12:00:00.000Z").toISOString();
+
+    const mockRawRunner = async (node: any, script: string, signal: AbortSignal) => {
+      // The heartbeat reader script contains $job.heartbeat
+      if (script.includes("heartbeat") || script.includes("Heartbeat")) {
+        readerCallCount++;
+        heartbeatReaderCalled = true;
+        return { exitCode: 0, stdout: expectedRemoteTime, stderr: "" };
       }
-    );
+      return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
+    };
 
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    // Test that the heartbeat refresh mechanism exists and works
     const jobId = _registerRemoteJob("pc2", null);
-    const rawRunner = (transport as any).rawSsh();
-    const refreshed = await _updateLocalHeartbeatFromRemote(jobId, rawRunner);
 
-    // The function should attempt to read remote heartbeat
-    assert.ok(typeof refreshed === "boolean", "should return boolean");
+    // Get initial heartbeat
+    const initialJob = _getActiveRemoteJobs().get(jobId);
+    const initialHeartbeat = initialJob?.lastHeartbeat;
+    assert.ok(initialHeartbeat, "job should have initial heartbeat");
 
-    // Cleanup
+    // Call the heartbeat refresh
+    const refreshed = await _updateLocalHeartbeatFromRemote(jobId, mockRawRunner);
+
+    // 1. Remote heartbeat reader was called
+    assert.ok(heartbeatReaderCalled, "remote heartbeat reader should be called");
+    assert.equal(readerCallCount, 1, "heartbeat reader should be called exactly once");
+
+    // 2. Returns true (refreshed === true)
+    assert.equal(refreshed, true, "should return true when remote heartbeat read succeeds");
+
+    // 3. Local job.lastHeartbeat updated to remote timestamp
+    const updatedJob = _getActiveRemoteJobs().get(jobId);
+    assert.ok(updatedJob, "job should still exist");
+    assert.notEqual(updatedJob.lastHeartbeat, initialHeartbeat, "lastHeartbeat should change");
+    assert.equal(updatedJob.lastHeartbeat, expectedRemoteTime, "lastHeartbeat should equal remote timestamp");
+
     _unregisterRemoteJob(jobId);
-    controller.abort();
+    _setTestConfig(null);
+  });
+
+  test("stale lease with deterministic tick proves exact-job cleanup and removal", async () => {
+    // Combined test: lease expires -> cleanup called with exact jobId -> job removed
+    let cleanupCalls: Array<{jobId: string, timestamp: number}> = [];
+
+    // Clear any existing jobs first
+    const existingJobs = _getActiveRemoteJobs();
+    for (const [id] of existingJobs) {
+      _unregisterRemoteJob(id);
+    }
+
+    // Set test config with pc2 node
+    _setTestConfig({
+      version: 1,
+      nodes: [{
+        id: "pc2",
+        label: "Workstation 2",
+        transport: "SSH",
+        trusted: true,
+        sshAlias: "pc2-windows",
+        expectedComputerName: "PC2",
+      }]
+    });
+
+    let virtualNow = 1000000;
+    const clock = { now: () => virtualNow };
+    setTestClock(clock);
+    setTestLeaseTimeoutMs(50); // 50ms lease timeout
+
+    // Use stale heartbeat time (original time before advance)
+    const staleHeartbeatTime = new Date(1000000).toISOString();
+
+    const mockRawRunner = async (node: any, script: string, signal: AbortSignal) => {
+      if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+        const match = script.match(/\$astraJobId="([^"]+)"/);
+        if (match) {
+          cleanupCalls.push({jobId: match[1], timestamp: virtualNow});
+        }
+        return { exitCode: 0, stdout: "", stderr: "" };
+      }
+      // Return STALE heartbeat to trigger lease expiry
+      if (script.includes("heartbeat") || script.includes("Heartbeat")) {
+        return { exitCode: 0, stdout: staleHeartbeatTime, stderr: "" };
+      }
+      return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
+    };
+
+    try {
+      // Register two jobs
+      const jobId1 = _registerRemoteJob("pc2", 100);
+      const jobId2 = _registerRemoteJob("pc2", 200);
+
+      assert.equal(_getActiveRemoteJobs().size, 2, "both jobs should be registered");
+
+      // Advance clock past lease for both
+      virtualNow += 100;
+
+      // Single deterministic tick
+      await _tickLeaseWatchdogOnce(mockRawRunner, mockRawRunner);
+
+      // Both jobs should be cleaned up and removed
+      assert.equal(_getActiveRemoteJobs().size, 0, "all expired jobs should be removed");
+
+      // Cleanup should have been called for both exact jobIds
+      assert.equal(cleanupCalls.length, 2, "cleanup should be called for each expired job");
+      const cleanedIds = cleanupCalls.map(c => c.jobId).sort();
+      assert.deepEqual(cleanedIds, [jobId1, jobId2].sort(), "cleanup should target exact expired jobIds");
+    } finally {
+      setTestClock(null);
+      setTestLeaseTimeoutMs(null);
+      _setTestConfig(null);
+    }
   });
 });
