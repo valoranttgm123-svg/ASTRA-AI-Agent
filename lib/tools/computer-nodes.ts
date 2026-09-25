@@ -229,16 +229,16 @@ function startLeaseWatchdog(): void {
     const nowMs = getNowMs();
     for (const [jobId, job] of activeRemoteJobs.entries()) {
       if (job.status !== "running") continue;
-      
+
       // Try to refresh heartbeat from remote (authoritative source)
       await updateLocalHeartbeatFromRemote(jobId);
-      
+
       // Check if local heartbeat is stale
       const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
       if (nowMs - lastHeartbeat > getEffectiveLeaseTimeoutMs()) {
         // Stale lease detected - terminate the job via cleanup
         job.status = "aborted";
-        
+
         // Get node info for cleanup - we need to look up the node
         try {
           const config = loadComputerNodesConfig();
@@ -248,12 +248,12 @@ function startLeaseWatchdog(): void {
             await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw).catch(() => {});
           }
         } catch {}
-        
+
         // Unregister after cleanup attempt
         activeRemoteJobs.delete(jobId);
       }
     }
-    
+
     if (activeRemoteJobs.size === 0) {
       stopLeaseWatchdog();
     }
@@ -710,7 +710,7 @@ async function runWindowsSshPowerShellWithCleanup(
   try {
     const result = await processPromise;
     signal.removeEventListener("abort", abortHandler);
-    
+
     // Fail closed: if signal was aborted (even if runner returned success), don't return success
     if (signal.aborted) {
       await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
@@ -721,7 +721,7 @@ async function runWindowsSshPowerShellWithCleanup(
         stderr: "Operation aborted before completion.",
       };
     }
-    
+
     // If runner returned non-zero exitCode, trigger cleanup
     if (result.exitCode !== 0) {
       await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});

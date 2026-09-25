@@ -792,7 +792,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "whoami" }, signal);
     assert.equal(wrapperCount, 1, "owner.exec should invoke tracked wrapper once");
     assert.equal(jobIds.length, 1, "should have exactly one jobId");
-    
+
     wrapperCount = 0;
     jobIds = [];
     await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "dir" }, signal);
@@ -833,7 +833,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     );
 
     setTimeout(() => controller.abort(), 5);
-    
+
     const result = await promise;
     assert.equal(result.verified, false, "should not report verified success after abort");
     assert.equal(result.ok, false, "should not report ok after abort");
@@ -843,12 +843,12 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   test("generated cleanup PowerShell has valid syntax (braces balanced)", async () => {
     const fs = await import("node:fs");
     const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
-    
+
     // Find the cleanup script template in runRemoteCleanupRaw - it's the template literal
     const cleanupFuncStart = source.indexOf("export async function runRemoteCleanupRaw");
     const cleanupFuncEnd = source.indexOf("export async function", cleanupFuncStart + 1);
     const cleanupFunc = source.slice(cleanupFuncStart, cleanupFuncEnd);
-    
+
     // Find the template literal (backticks) containing the PowerShell script
     const templateStart = cleanupFunc.indexOf("`");
     const templateEnd = cleanupFunc.indexOf("`", templateStart + 1);
@@ -856,7 +856,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       throw new Error("Could not find PowerShell template literal in runRemoteCleanupRaw");
     }
     const cleanupScript = cleanupFunc.slice(templateStart + 1, templateEnd);
-    
+
     // Count braces in the PowerShell script only
     const openBraces = (cleanupScript.match(/{/g) || []).length;
     const closeBraces = (cleanupScript.match(/}/g) || []).length;
@@ -907,7 +907,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   test("lease timeout watchdog cleans up exact job via injectable clock (deterministic, no 30s wait)", async () => {
     // This test uses injectable clock and short lease timeout to prove
     // lease expiry triggers exact-job cleanup without waiting real time.
-    
+
     // Set up injectable clock
     let virtualNow = 1000000;
     const clock = { now: () => virtualNow };
@@ -917,7 +917,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     try {
       // Directly register a job to test lease watchdog
       const jobId = _registerRemoteJob("pc2", 1234);
-      
+
       // Start lease watchdog
       _startLeaseWatchdog();
 
@@ -926,7 +926,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       const job = activeJobs.get(jobId);
       assert.ok(job, "job should be registered");
       assert.equal(job.status, "running", "job should be running");
-      
+
       // Advance virtual clock past lease timeout (100ms)
       virtualNow += 200; // Now at 1000200, 200ms past start
 
@@ -958,10 +958,10 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       async (node, script, signal) => {
         if (script.includes("heartbeat")) {
           heartbeatReadCount++;
-          return { 
-            exitCode: 0, 
-            stdout: new Date(Date.now()).toISOString(), 
-            stderr: "" 
+          return {
+            exitCode: 0,
+            stdout: new Date(Date.now()).toISOString(),
+            stderr: ""
           };
         }
         return {
@@ -979,10 +979,10 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     const jobId = _registerRemoteJob("pc2", null);
     const rawRunner = (transport as any).rawSsh();
     const refreshed = await _updateLocalHeartbeatFromRemote(jobId, rawRunner);
-    
+
     // The function should attempt to read remote heartbeat
     assert.ok(typeof refreshed === "boolean", "should return boolean");
-    
+
     // Cleanup
     _unregisterRemoteJob(jobId);
     controller.abort();
