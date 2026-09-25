@@ -4,6 +4,24 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, test } from "node:test";
 
+async function createSymlink(
+  target: string,
+  linkPath: string,
+  type?: "file" | "dir",
+) {
+  try {
+    await symlink(target, linkPath, type);
+    return true;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (["EPERM", "EACCES", "ENOSYS"].includes(code)) return false;
+    throw error;
+  }
+}
+
 import type {
   AstraEventSubscription,
   AstraIncomingEvent,
@@ -312,7 +330,7 @@ test("private Event Engine store persists subscriptions, events, and acknowledge
   );
 });
 
-test("Event Engine store rejects symbolic-link targets", async () => {
+test("Event Engine store rejects symbolic-link targets", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "astra-event-link-"));
   const target = path.join(root, "target.json");
   const linked = path.join(root, "events.json");
@@ -325,7 +343,11 @@ test("Event Engine store rejects symbolic-link targets", async () => {
     }),
     "utf8",
   );
-  await symlink(target, linked);
+  const created = await createSymlink(target, linked);
+  if (!created) {
+    t.skip("symlinks are unavailable in this environment");
+    return;
+  }
   process.env.ASTRA_EVENT_FILE = linked;
 
   const loaded = await loadEventStore();
