@@ -202,6 +202,157 @@ Phase 30:
 - diagnostics/recovery;
 - exact-runtime release evidence.
 
+### Extended dependency order — execute only after core M1–M6 is stable
+
+Do not start broad implementation from this section while the core release evidence still has an active reproducible blocker.
+
+Use this dependency-aware order:
+
+#### E21 — Phase 21 voice transport
+Prerequisites:
+- stable shared ASTRA runtime;
+- permission/STOP foundation;
+- real microphone consent path.
+
+Prove first:
+- push-to-talk fallback;
+- real LISTENING → THINKING → SPEAKING lifecycle;
+- interruption/barge-in;
+- STOP;
+- truthful OFFLINE/NOT_CONFIGURED.
+
+Do not make wake-word/always-on behavior the first proof if the simpler real microphone path is not yet verified.
+
+#### E22 — Phase 22 target identity/trust completion
+Prerequisites:
+- current trusted-session/device contracts;
+- existing secret abstraction.
+
+Prove:
+- real OS/session identity;
+- owner/device pairing UX;
+- lock/unlock;
+- secret-use evidence;
+- no speaker/face signal used as sole Level-3/4 authorization.
+
+E22 should be completed before broader non-SSH paired-device work.
+
+#### E23 — Phase 23 screen/vision
+Prerequisites:
+- explicit consent controls;
+- shared runtime/event path;
+- provider-neutral real-payload contract.
+
+Prove incrementally:
+1. active-window metadata;
+2. one user-approved screenshot/selected-region path;
+3. SCREEN OFF truly stops capture;
+4. only then camera/video vision;
+5. no retained raw visual payload unless explicitly required.
+
+Do not infer vision from MediaPipe gesture tracking.
+
+#### E24 — Phase 24 proactive Event Engine target proof
+Repository sources already exist. Prove real delivery in this order:
+1. GitHub Actions event;
+2. local service-health event;
+3. Automation lifecycle event;
+4. notification failure/STOP/restart;
+5. dedupe/rate-limit/quiet-hours behavior.
+
+Do not add more event-source abstractions before these real sources are proven.
+
+#### E25 — Phase 25 durable task execution
+Prerequisites:
+- production executor connection;
+- STOP/cancellation behavior;
+- permission preservation.
+
+Prove:
+1. one long-running disposable task;
+2. checkpoint;
+3. UI refresh survival;
+4. pause/resume/cancel;
+5. restart recovery;
+6. two independent read-only tasks in bounded parallel;
+7. Chief synthesis of real results.
+
+This produces Scenario J4 evidence.
+
+#### E26 — Phase 26 episodic/context fusion
+Prerequisites:
+- Sonor/MEM-X healthy;
+- real project/memory provenance;
+- active task state.
+
+Prove with one bounded project timeline first:
+- event/decision/reason/result/verification/follow-up;
+- provenance;
+- user correction;
+- source disable;
+- no cross-project contamination.
+
+Do not bulk-import unrelated history.
+
+#### E27 — Phase 27 broader multi-device
+SSH PC transport is already selected and must not be rebuilt.
+
+After the active Multi-PC evidence passes, add only the missing broader paired-device/mobile layer:
+1. secure pairing;
+2. authenticated capability advertisement;
+3. permitted dispatch/result return;
+4. synchronized high-level task state;
+5. immediate revoke;
+6. Scenario J6.
+
+Do not expose the loopback API publicly to achieve pairing.
+
+#### E28 — Phase 28 recovery/offline
+Prerequisites:
+- truthful Diagnostics health;
+- recovery-specific Tool Runtime capability, not generic command pretending to be recovery.
+
+Prove:
+1. explicit connectivity probe;
+2. Sonor Diagnostics health/search;
+3. one ASTRA-owned service recovery;
+4. audit log of attempt/result/verification;
+5. offline/degraded mode;
+6. J8.
+
+Do not perform privileged system repair automatically.
+
+#### E29 — Phase 29 real skill/device
+Repository registries are complete.
+
+Prove:
+1. one real provider-backed skill lifecycle: register → review → install → enable → health → update/rollback/disable;
+2. one real explicitly registered environment/device capability;
+3. read path first;
+4. any write only with the required approval/privacy consent;
+5. Tool Runtime telemetry + verification;
+6. J9.
+
+#### E30 — Phase 30 integration / soak
+Begin only after required E21–E29 capabilities intended for the release are real or truthfully external-configured.
+
+Execute J1–J10 against one release candidate, then soak:
+- repeated voice cycles;
+- provider outage;
+- network loss;
+- worker restart;
+- cancellation;
+- memory stress;
+- event flood/dedupe;
+- device reconnect;
+- tool timeout;
+- malformed output;
+- permission denial;
+- audit-log verification;
+- Humanoid performance.
+
+Any build-changing fix during Phase 30 invalidates affected evidence and requires re-capture.
+
 ## NVIDIA real-backend gates
 
 Repository contracts are already complete.
