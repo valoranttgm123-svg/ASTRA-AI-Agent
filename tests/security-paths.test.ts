@@ -22,7 +22,13 @@ function normalizePath(p: string): string {
   try {
     return realpathSync.native(p);
   } catch {
-    return path.resolve(p);
+    try {
+      const dir = path.dirname(p);
+      const resolvedDir = realpathSync.native(dir);
+      return path.join(resolvedDir, path.basename(p));
+    } catch {
+      return path.resolve(p);
+    }
   }
 }
 
