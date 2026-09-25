@@ -1,5 +1,42 @@
 # ASTRA Codex Handoff
 
+## 2026-09-25 — current handoff: PR #244 repo-ready, target G0-G5 required
+
+ACTOR: ChatGPT + OpenCode relay
+DATE: 2026-09-25
+AREA: Multi-PC remote STOP/KILL
+STATE: REPO_DONE_TARGET_PENDING
+SUBSTATE: WAITING_FOR_TARGET_PC_G0_G5
+BRANCH/PR: `fix/remote-job-stop-20260925` / #244
+HEAD: `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`
+MAIN: `c5d89375ef25601132b47da7d1c064df22d2d98f`
+COMPLETED:
+- OpenCode completed the focused remote job/heartbeat/lease remediation;
+- ChatGPT reviewed and accepted the exact pushed repository head;
+- ASTRA CI #769 SUCCESS;
+- all 22 repository remote STOP tests PASS;
+- G0-G5 runbook now names the real ASTRA UI STOP path and excludes test-only lease seams from target evidence.
+VALIDATED:
+- repository implementation only; no real target PASS is claimed;
+- the original target STOP result remains historical FAIL until re-tested.
+BLOCKED:
+- target PC access for G0-G5;
+- PR #244 merge remains blocked until functional target evidence exists.
+NEXT:
+- run G0 build/identity pin on exact #244 head;
+- run G1 normal long-command completion;
+- run G2 explicit ASTRA UI STOP and independently verify remote parent + descendants are gone;
+- run G3 timeout/transport-loss settlement;
+- run G4 stale production lease + idempotent exact-job cleanup;
+- run G5 concurrent-job isolation;
+- if all functional gates pass, checkpoint the target result before merge consideration.
+DO NOT REPEAT:
+- do not rebuild the remote STOP implementation from zero;
+- do not use local `ssh.exe` termination as STOP proof;
+- do not use `_tickLeaseWatchdogOnce()`, injected clocks or mocked runners as target evidence;
+- do not expose private aliases/IPs/usernames/key paths/credentials;
+- do not relabel repository CI as target PASS.
+
 ## 2026-09-25 — extended JARVIS/NVIDIA execution order precomputed
 
 ACTOR: ChatGPT
