@@ -160,8 +160,10 @@ This is stricter than killing the local `ssh.exe` client.
 
 Current known state (2026-09-25):
 - the first real target test **FAILED** because cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive;
-- Codex is validating a focused remote-job / heartbeat / lease refinement;
-- local regression success is not enough; this gate remains FAIL until the remote work itself is re-tested and proven terminated.
+- the focused remote-job / heartbeat / lease remediation is now repository-complete on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`;
+- ASTRA CI #769 is SUCCESS on that exact head and the repository remote-STOP regression suite is 22/22 PASS;
+- this is **repository evidence only**: Gate G remains **TARGET PENDING**, not PASS, until G0-G5 prove the real remote parent/descendant behavior on the target PC;
+- keep #244 frozen for functional G0-G5 re-test; if target evidence exposes a concrete defect, repair that defect on the same focused scope and rerun the affected target gate.
 
 Goal: prove ASTRA STOP terminates the actual remote owned work.
 
