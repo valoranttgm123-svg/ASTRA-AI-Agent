@@ -65,12 +65,12 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: ${{ github.workspace }}/ASTRA-AI-Agent
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          path: .
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
