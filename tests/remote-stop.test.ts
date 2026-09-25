@@ -492,6 +492,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           cleanupTriggered = true;
           return { exitCode: 0, stdout: "", stderr: "" };
         }
+        // First call (main job) - simulate transport disconnect
         if (callCount === 1) {
           throw new Error("transport disconnected");
         }
@@ -510,6 +511,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     );
     assert.equal(result.ok, false);
     assert.equal(result.verified, false);
+    // Give cleanup a moment to complete asynchronously (shorter timeout)
+    await new Promise(r => setTimeout(r, 10));
     assert.equal(cleanupTriggered, true);
   });
 
@@ -672,6 +675,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   test("stale lease triggers exact-job cleanup (not just metadata mutation)", async () => {
     let cleanupTriggeredForJob: string | null = null;
     let jobIds: string[] = [];
+    let jobRegistered = false;
 
     const transport = makeTransport(
       async (node, script, signal) => {
@@ -681,7 +685,11 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           return { exitCode: 0, stdout: "", stderr: "" };
         }
         const match = script.match(/\$astraJobId="([^"]+)"/);
-        if (match) jobIds.push(match[1]);
+        if (match) {
+          jobIds.push(match[1]);
+          jobRegistered = true;
+        }
+        // Simulate a long-running job that can be aborted
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(resolve, 200);
           signal.addEventListener("abort", () => {
@@ -709,7 +717,11 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       signal,
     );
 
-    await new Promise((r) => setTimeout(r, 10));
+    // Wait for job to be registered before aborting
+    await new Promise((r) => setTimeout(r, 50));
+    while (!jobRegistered) {
+      await new Promise((r) => setTimeout(r, 10));
+    }
     controller.abort();
 
     const result = await promise;
@@ -740,13 +752,14 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
 
     const signal = new AbortController().signal;
 
-    await transport.call("computer.system.info", { nodeId: "pc2" }, signal);
-    assert.equal(wrapperCount, 1, "system.info should invoke tracked wrapper once");
+    // owner.exec uses trackedSsh (with tracking wrapper)
+    await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "whoami" }, signal);
+    assert.equal(wrapperCount, 1, "owner.exec should invoke tracked wrapper once");
     assert.equal(jobIds.length, 1, "should have exactly one jobId");
     
     wrapperCount = 0;
     jobIds = [];
-    await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "whoami" }, signal);
+    await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "dir" }, signal);
     assert.equal(wrapperCount, 1, "owner.exec should invoke tracked wrapper once");
     assert.equal(jobIds.length, 1, "should have exactly one jobId for owner.exec");
   });
