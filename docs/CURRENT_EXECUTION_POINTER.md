@@ -5,7 +5,7 @@
 State: **BLOCKED**
 Substate: **SATURATED_WAITING_FOR_TARGET_EVIDENCE**
 
-Draft PR #241 contains the non-conflicting preparation for the current target phase. Pre-defect-review head `e73afab3dc3d0fe324268013161f28a361555e96` passed ASTRA CI #719 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 22 unique files (18 current PR files + 4 additional baseline files). New Codex target evidence on 2026-09-25 reproduced a real remote STOP defect: cancelling the local SSH client did not prove termination of an ASTRA-owned remote parent/descendant. ChatGPT independently confirmed the current-main design gap and recorded review criteria; Codex owns the focused remote-job/heartbeat/lease fix. Do not create a competing implementation.
+Draft PR #241 contains the non-conflicting preparation for the current target phase. Current documentation reconciliation head `4084936182a48f330888b445bff874e1bc9e7dee` passed ASTRA CI #723 (build/tests/typecheck/lint/dependency audit/PR diff check); the private-evidence audit is revalidated across 22 unique files (18 current PR files + 4 additional baseline files). New Codex target evidence on 2026-09-25 reproduced a real remote STOP defect: cancelling the local SSH client did not prove termination of an ASTRA-owned remote parent/descendant. ChatGPT independently confirmed the current-main design gap and recorded review criteria; Codex owns the focused remote-job/heartbeat/lease fix. Do not create a competing implementation.
 
 ## Remote STOP defect checkpoint — 2026-09-25
 
