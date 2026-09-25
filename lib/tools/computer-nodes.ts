@@ -128,21 +128,65 @@ function _setRemotePid(jobId: string, remotePid: number): void {
 let leaseWatchdogInterval: ReturnType<typeof setInterval> | null = null;
 
 // Test seam: configurable lease timeout for tests
-const testLeaseTimeoutMs: number | null = null;
+let testLeaseTimeoutMs: number | null = null;
+
+export function setTestLeaseTimeoutMs(ms: number | null): void {
+  testLeaseTimeoutMs = ms;
+}
 
 function getEffectiveLeaseTimeoutMs(): number {
   return testLeaseTimeoutMs ?? LEASE_TIMEOUT_MS;
 }
 
 // Test seam: injectable clock for deterministic lease testing
-const testClock: { now: () => number } | null = null;
+let testClock: { now: () => number } | null = null;
+
+export function setTestClock(clock: { now: () => number } | null): void {
+  testClock = clock;
+}
 
 function getNowMs(): number {
   return testClock?.now() ?? Date.now();
 }
 
-// Update local heartbeat from remote heartbeat file via SSH
-async function _updateLocalHeartbeatFromRemote(jobId: string, _rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>): Promise<boolean> {
+// Test seam: export activeRemoteJobs for testing
+export function _getActiveRemoteJobs(): Map<string, RemoteJobInfo> {
+  return activeRemoteJobs;
+}
+
+// Test seam: export registerRemoteJob for testing
+export function _registerRemoteJob(nodeId: string, localPid: number | null): string {
+  return registerRemoteJob(nodeId, localPid);
+}
+
+// Test seam: export unregisterRemoteJob for testing
+export function _unregisterRemoteJob(jobId: string): void {
+  unregisterRemoteJob(jobId);
+}
+
+// Test seam: export startLeaseWatchdog for testing
+export function _startLeaseWatchdog(): void {
+  startLeaseWatchdog();
+}
+
+// Test seam: export stopLeaseWatchdog for testing
+export function _stopLeaseWatchdog(): void {
+  stopLeaseWatchdog();
+}
+
+// Test seam: export updateLocalHeartbeatFromRemote for testing
+export async function _updateLocalHeartbeatFromRemote(
+  jobId: string,
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>
+): Promise<boolean> {
+  return updateLocalHeartbeatFromRemote(jobId, rawRunner);
+}
+
+// Internal: Update local heartbeat from remote heartbeat file via SSH (authoritative source)
+async function updateLocalHeartbeatFromRemote(
+  jobId: string,
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>
+): Promise<boolean> {
   const job = activeRemoteJobs.get(jobId);
   if (!job || job.status !== "running") return false;
 
@@ -151,7 +195,7 @@ async function _updateLocalHeartbeatFromRemote(jobId: string, _rawRunner?: (node
   if (!node || !node.sshAlias) return false;
 
   // Read the remote heartbeat file via SSH
-  const _script = `
+  const script = `
 $astraJobId="${jobId}"
 $astraJobDir="${REMOTE_JOB_DIR}"
 $astraJobFile="$astraJobDir\\$astraJobId.json"
@@ -163,9 +207,20 @@ if (Test-Path $astraJobFile) {
 }
 `;
 
-  // Note: In production this would use the raw SSH runner to read the heartbeat
-  // For now, we rely on the local timer-based heartbeat
-  return true;
+  const runner = rawRunner ?? runWindowsSshPowerShellRaw;
+  try {
+    const result = await runner(node, script, new AbortController().signal);
+    if (result.exitCode === 0 && result.stdout.trim() !== "NOT_FOUND") {
+      const remoteHeartbeat = new Date(result.stdout.trim()).getTime();
+      if (!isNaN(remoteHeartbeat)) {
+        job.lastHeartbeat = new Date(remoteHeartbeat).toISOString();
+        return true;
+      }
+    }
+  } catch {
+    // Ignore errors, fall back to local timer
+  }
+  return false;
 }
 
 function startLeaseWatchdog(): void {
@@ -174,6 +229,9 @@ function startLeaseWatchdog(): void {
     const nowMs = getNowMs();
     for (const [jobId, job] of activeRemoteJobs.entries()) {
       if (job.status !== "running") continue;
+      
+      // Try to refresh heartbeat from remote (authoritative source)
+      await updateLocalHeartbeatFromRemote(jobId);
       
       // Check if local heartbeat is stale
       const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
