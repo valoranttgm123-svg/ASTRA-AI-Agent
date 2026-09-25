@@ -127,17 +127,56 @@ function _setRemotePid(jobId: string, remotePid: number): void {
 // Lease watchdog - monitors stale heartbeats and terminates stale jobs
 let leaseWatchdogInterval: ReturnType<typeof setInterval> | null = null;
 
+function updateLocalHeartbeatFromRemote(jobId: string): boolean {
+  // Try to read the remote heartbeat file to sync local state
+  // In production, this would require SSH to read the remote file
+  // For now, we rely on the local timer-based heartbeat in the wrapper
+  const job = activeRemoteJobs.get(jobId);
+  if (job && job.status === "running") {
+    // The remote wrapper updates the heartbeat file every 5s
+    // Local lastHeartbeat is updated when we see the job is still alive
+    // We consider it fresh if the remote job file exists and was updated recently
+    // Since we can't easily read remote file from here without SSH,
+    // we trust the local timer that fires every 5s (same as remote heartbeat interval)
+    // If lease watchdog runs, it means 30s passed without local updates
+    // This is a simplified approach - the remote heartbeat file is the source of truth
+    return true;
+  }
+  return false;
+}
+
 function startLeaseWatchdog(): void {
   if (leaseWatchdogInterval) return;
-  leaseWatchdogInterval = setInterval(() => {
-    for (const [, job] of activeRemoteJobs.entries()) {
+  leaseWatchdogInterval = setInterval(async () => {
+    const nowMs = Date.now();
+    for (const [jobId, job] of activeRemoteJobs.entries()) {
       if (job.status !== "running") continue;
+      
+      // Check if local heartbeat is stale
       const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
-      const nowMs = Date.now();
       if (nowMs - lastHeartbeat > LEASE_TIMEOUT_MS) {
-        // Stale lease detected - mark as aborted (cleanup triggered via SSH runner)
+        // Stale lease detected - terminate the job via cleanup
         job.status = "aborted";
+        
+        // Get node info for cleanup - we need to look up the node
+        // Since we only have nodeId in the job, we need to find the node
+        // This requires access to the nodes config
+        try {
+          const config = loadComputerNodesConfig();
+          const node = config.nodes.find(n => n.id === job.nodeId);
+          if (node && node.sshAlias) {
+            // Invoke cleanup for the stale job using raw SSH
+            await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw).catch(() => {});
+          }
+        } catch {}
+        
+        // Unregister after cleanup attempt
+        activeRemoteJobs.delete(jobId);
       }
+    }
+    
+    if (activeRemoteJobs.size === 0) {
+      stopLeaseWatchdog();
     }
   }, 5000);
 }
@@ -379,7 +418,7 @@ function Get-DescendantPids {
   $queue = @($RootPid)
   while ($queue.Count -gt 0) {
     $current = $queue[0]
-    $queue = @($queue[1..($queue.Count-1)])
+    $queue = @($queue | Select-Object -Skip 1)
     $allPids += $current
     $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$current" -ErrorAction SilentlyContinue
     if ($children) {
@@ -436,10 +475,47 @@ try {
   return jobScript;
 }
 
-async function runRemoteCleanup(
+// Raw/untracked SSH execution primitive - no job tracking, no cleanup wrapper
+async function runWindowsSshPowerShellRaw(
+  node: AstraComputerNode,
+  script: string,
+  signal: AbortSignal,
+): Promise<AstraProcessResult> {
+  if (!node.sshAlias) {
+    throw new Error("SSH node has no configured alias.");
+  }
+
+  const remoteCommand =
+    "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " +
+    encodePowerShell(script);
+
+  return runBoundedProcess({
+    command: process.platform === "win32" ? "ssh.exe" : "ssh",
+    args: [
+      "-T",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=8",
+      "-o",
+      "ConnectionAttempts=1",
+      "-o",
+      "ServerAliveInterval=5",
+      "-o",
+      "ServerAliveCountMax=1",
+      node.sshAlias,
+      remoteCommand,
+    ],
+    cwd: process.cwd(),
+    signal,
+  });
+}
+
+// Cleanup using raw SSH (no job tracking, no nested wrappers)
+export async function runRemoteCleanupRaw(
   node: AstraComputerNode,
   jobId: string,
-  sshRunner?: AstraSshRunner,
+  runner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>,
 ): Promise<void> {
   if (!node.sshAlias) return;
 
@@ -479,23 +555,33 @@ if (Test-Path $astraPidFile) {
       foreach ($p in $allPids) {
         Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
       }
-    catch { }
+    } catch { }
   }
   if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
   if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
 `;
 
-  // Use the raw SSH runner (not the wrapper) for cleanup
-  const runner = sshRunner ?? runWindowsSshPowerShell;
+  const cleanupRunner = runner ?? runWindowsSshPowerShellRaw;
 
-  await runner(node, cleanupScript, new AbortController().signal);
+  await cleanupRunner(node, cleanupScript, new AbortController().signal);
 }
 
+// Legacy cleanup function for compatibility (uses raw SSH)
+async function runRemoteCleanup(
+  node: AstraComputerNode,
+  jobId: string,
+  _sshRunner?: AstraSshRunner,
+): Promise<void> {
+  await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw);
+}
+
+// Single tracking wrapper per logical job
 async function runWindowsSshPowerShellWithCleanup(
   node: AstraComputerNode,
   script: string,
   signal: AbortSignal,
   sshRunner?: AstraSshRunner,
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>,
 ): Promise<AstraProcessResult> {
   if (!node.sshAlias) {
     throw new Error("SSH node has no configured alias.");
@@ -503,13 +589,39 @@ async function runWindowsSshPowerShellWithCleanup(
 
   const jobId = registerRemoteJob(node.id, null);
 
-  const runner = sshRunner ?? runWindowsSshPowerShell;
+  // Build the script with job tracking (heartbeat, cleanup on error)
+  const trackedScript = buildRemoteScriptWithJobTracking(node, script, jobId);
 
-  const processPromise = runner(node, buildRemoteScriptWithJobTracking(node, script, jobId), signal);
+  // Use provided runner for testing, or real SSH execution for production
+  const processPromise = sshRunner
+    ? sshRunner(node, trackedScript, signal)
+    : runBoundedProcess({
+        command: process.platform === "win32" ? "ssh.exe" : "ssh",
+        args: [
+          "-T",
+          "-o",
+          "BatchMode=yes",
+          "-o",
+          "ConnectTimeout=8",
+          "-o",
+          "ConnectionAttempts=1",
+          "-o",
+          "ServerAliveInterval=5",
+          "-o",
+          "ServerAliveCountMax=1",
+          node.sshAlias,
+          "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " +
+            encodePowerShell(trackedScript),
+        ],
+        cwd: process.cwd(),
+        signal,
+      });
+
+  const rawRunnerForCleanup = rawRunner ?? runWindowsSshPowerShellRaw;
 
   const abortHandler = () => {
     if (jobId) {
-      runRemoteCleanup(node, jobId, sshRunner).catch(() => {});
+      runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
     }
   };
 
@@ -518,66 +630,35 @@ async function runWindowsSshPowerShellWithCleanup(
   try {
     const result = await processPromise;
     signal.removeEventListener("abort", abortHandler);
-    // If the runner returned a failed result (non-zero exitCode), trigger cleanup
+    
+    // Fail closed: if signal was aborted (even if runner returned success), don't return success
+    if (signal.aborted) {
+      await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
+      unregisterRemoteJob(jobId);
+      return {
+        exitCode: -1,
+        stdout: "",
+        stderr: "Operation aborted before completion.",
+      };
+    }
+    
+    // If runner returned non-zero exitCode, trigger cleanup
     if (result.exitCode !== 0) {
-      await runRemoteCleanup(node, jobId, sshRunner).catch(() => {});
+      await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
     }
     unregisterRemoteJob(jobId);
     return result;
   } catch (error) {
     signal.removeEventListener("abort", abortHandler);
-    await runRemoteCleanup(node, jobId, sshRunner).catch(() => {});
+    await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw).catch(() => {});
     unregisterRemoteJob(jobId);
-    // Return a failed result instead of throwing, so transport can handle it
+    // Return a failed result instead of throwing
     return {
       exitCode: error instanceof DOMException && error.name === "AbortError" ? -1 : 1,
       stdout: "",
       stderr: error instanceof Error ? error.message : String(error),
     };
   }
-}
-
-export async function runWindowsSshPowerShell(
-  node: AstraComputerNode,
-  script: string,
-  signal: AbortSignal,
-): Promise<AstraProcessResult> {
-  if (!node.sshAlias) {
-    throw new Error("SSH node has no configured alias.");
-  }
-
-  const jobId = registerRemoteJob(node.id, null);
-
-  const remoteCommand =
-    "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " +
-    encodePowerShell(buildRemoteScriptWithJobTracking(node, script, jobId));
-
-  const _localPid: number | null = null;
-
-  const result = await runBoundedProcess({
-    command: process.platform === "win32" ? "ssh.exe" : "ssh",
-    args: [
-      "-T",
-      "-o",
-      "BatchMode=yes",
-      "-o",
-      "ConnectTimeout=8",
-      "-o",
-      "ConnectionAttempts=1",
-      "-o",
-      "ServerAliveInterval=5",
-      "-o",
-      "ServerAliveCountMax=1",
-      node.sshAlias,
-      remoteCommand,
-    ],
-    cwd: process.cwd(),
-    signal,
-  });
-
-  unregisterRemoteJob(jobId);
-
-  return result;
 }
 
 function normalizeNodeId(input: unknown) {
@@ -604,8 +685,7 @@ function remoteFailure(
     return {
       ok: false,
       verified: false,
-      detail:
-        "SSH target identity did not match registered node " + node.id + ".",
+      detail: "SSH target identity did not match registered node " + node.id + ".",
       output: {
         nodeId: node.id,
         transport: "SSH",
@@ -638,6 +718,7 @@ export class MultiNodeWindowsComputerTransport
       local?: AstraComputerTransport;
       loadNodes?: () => AstraComputerNodesConfig;
       runSsh?: AstraSshRunner;
+      rawSsh?: AstraSshRunner;
     } = {},
   ) {}
 
@@ -649,13 +730,20 @@ export class MultiNodeWindowsComputerTransport
     return (this.options.loadNodes ?? loadComputerNodesConfig)().nodes;
   }
 
-  private ssh() {
+  // Raw SSH runner - no tracking wrapper (for system.info, process.list)
+  private rawSsh(): AstraSshRunner {
+    return this.options.rawSsh ?? runWindowsSshPowerShellRaw;
+  }
+
+  // Tracked SSH runner - single tracking wrapper per logical job (for owner.exec)
+  private trackedSsh(): AstraSshRunner {
     const customRunner = this.options.runSsh;
     if (customRunner) {
       return (node: AstraComputerNode, script: string, signal: AbortSignal) =>
-        runWindowsSshPowerShellWithCleanup(node, script, signal, customRunner);
+        runWindowsSshPowerShellWithCleanup(node, script, signal, customRunner, this.rawSsh());
     }
-    return runWindowsSshPowerShellWithCleanup;
+    return (node: AstraComputerNode, script: string, signal: AbortSignal) =>
+      runWindowsSshPowerShellWithCleanup(node, script, signal, undefined, this.rawSsh());
   }
 
   async status(signal?: AbortSignal): Promise<AstraComputerStatus> {
@@ -723,7 +811,7 @@ export class MultiNodeWindowsComputerTransport
       "$payload | ConvertTo-Json -Compress",
     ].join("; ");
 
-    const result = await this.ssh()(node, script, signal);
+    const result = await this.rawSsh()(node, script, signal);
     if (result.exitCode !== 0) {
       return remoteFailure(node, result, "SSH system-info probe failed for node " + node.id + ".");
     }
@@ -769,7 +857,7 @@ export class MultiNodeWindowsComputerTransport
       "$items=@(Get-Process | Sort-Object Id | Select-Object -First 250 | ForEach-Object {[pscustomobject]@{imageName=$_.ProcessName;pid=$_.Id;sessionName='';memory=[string]$_.WorkingSet64}})",
       "ConvertTo-Json -InputObject $items -Compress",
     ].join("; ");
-    const result = await this.ssh()(node, script, signal);
+    const result = await this.rawSsh()(node, script, signal);
     if (result.exitCode !== 0) {
       return remoteFailure(node, result, "SSH process-list probe failed for node " + node.id + ".");
     }
@@ -832,7 +920,8 @@ export class MultiNodeWindowsComputerTransport
     const cwd = safeString(input.cwd) || undefined;
     const script = remoteShellScript(node, shell, command, cwd);
 
-    const result = await this.ssh()(node, script, signal);
+    // Use tracked SSH for owner.exec (needs job tracking, heartbeat, cleanup)
+    const result = await this.trackedSsh()(node, script, signal);
 
     if (result.exitCode !== 0) {
       return remoteFailure(

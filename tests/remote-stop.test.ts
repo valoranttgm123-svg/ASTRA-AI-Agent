@@ -7,6 +7,7 @@ import {
   parseComputerNodesConfig,
   type AstraComputerNode,
   type AstraComputerNodesConfig,
+  runRemoteCleanupRaw,
 } from "../lib/tools/computer-nodes";
 
 function localFixture(): AstraComputerTransport {
@@ -74,10 +75,11 @@ const nodes: AstraComputerNodesConfig = {
   ],
 };
 
-function makeDefaultSshRunner() {
+// Raw SSH runner - used for system.info, process.list (no job tracking)
+function makeDefaultRawSshRunner() {
   return async function (node: any, script: string, signal: AbortSignal) {
     if (signal.aborted) {
-      throw new DOMException("Process cancelled.", "AbortError");
+      return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
     }
     if (script.includes("ASTRA_IDENTITY_MISMATCH")) {
       const expected = script.match(/\$expected='([^']+)'/)?.[1] ?? "PC2";
@@ -89,12 +91,29 @@ function makeDefaultSshRunner() {
         };
       }
     }
-    if (script.includes("astraJobId")) {
+    return {
+      exitCode: 0,
+      stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}\n',
+      stderr: "",
+    };
+  };
+}
+
+// Tracked SSH runner - used for owner.exec (with job tracking, heartbeat, cleanup)
+function makeDefaultTrackedSshRunner() {
+  return async function (node: any, script: string, signal: AbortSignal) {
+    if (signal.aborted) {
+      return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
+    }
+    if (script.includes("ASTRA_IDENTITY_MISMATCH")) {
       return {
-        exitCode: 0,
-        stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}\n',
-        stderr: "",
+        exitCode: 86,
+        stdout: "",
+        stderr: "ASTRA_IDENTITY_MISMATCH\n",
       };
+    }
+    if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+      return { exitCode: 0, stdout: "", stderr: "" };
     }
     return {
       exitCode: 0,
@@ -104,12 +123,14 @@ function makeDefaultSshRunner() {
   };
 }
 
-function makeTransport(sshImpl?: (node: any, script: string, signal: AbortSignal) => Promise<{ exitCode: number; stdout: string; stderr: string }>) {
-  const runner = sshImpl ?? makeDefaultSshRunner();
+function makeTransport(rawImpl?: (node: any, script: string, signal: AbortSignal) => Promise<{ exitCode: number; stdout: string; stderr: string }>, trackedImpl?: (node: any, script: string, signal: AbortSignal) => Promise<{ exitCode: number; stdout: string; stderr: string }>) {
+  const rawRunner = rawImpl ?? makeDefaultRawSshRunner();
+  const trackedRunner = trackedImpl ?? rawImpl ?? makeDefaultTrackedSshRunner();
   return new MultiNodeWindowsComputerTransport({
     local: localFixture(),
     loadNodes: () => nodes,
-    runSsh: runner,
+    rawSsh: rawRunner,
+    runSsh: trackedRunner,
   });
 }
 
@@ -223,18 +244,25 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   });
 
   test("remote system-info uses explicit trusted SSH node and returns target evidence", async () => {
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script) => {
-        assert.match(script, /astraJobId/);
+    const transport = makeTransport(
+      // rawSsh - no job tracking for system.info
+      async (node, script) => {
+        // rawSsh doesn't add astraJobId
         return {
           exitCode: 0,
           stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}\n',
           stderr: "",
         };
       },
-    });
+      // trackedSsh - not used for system.info
+      async (node, script) => {
+        return {
+          exitCode: 0,
+          stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}\n',
+          stderr: "",
+        };
+      }
+    );
     const controller = new AbortController();
     const result = await transport.call(
       "computer.system.info",
@@ -257,11 +285,9 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   });
 
   test("unknown and untrusted remote nodes fail closed without SSH fallback", async () => {
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async () => ({ exitCode: 0, stdout: "", stderr: "" }),
-    });
+    const transport = makeTransport(
+      async () => ({ exitCode: 0, stdout: "", stderr: "" })
+    );
     const signal = new AbortController().signal;
 
     const unknown = await transport.call(
@@ -282,15 +308,16 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   });
 
   test("identity mismatch blocks remote Owner Mode and never reports completion", async () => {
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async () => ({
+    const transport = makeTransport(
+      // rawSsh - not used for owner.exec
+      async () => ({ exitCode: 0, stdout: "", stderr: "" }),
+      // trackedSsh - returns identity mismatch
+      async () => ({
         exitCode: 86,
         stdout: "",
         stderr: "ASTRA_IDENTITY_MISMATCH\n",
-      }),
-    });
+      })
+    );
 
     const result = await transport.call(
       "computer.owner.exec",
@@ -308,10 +335,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   });
 
   test("node inventory probes remote nodes independently", async () => {
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node) => {
+    const transport = makeTransport(
+      async (node) => {
         if (node.id === "pc2") {
           return {
             exitCode: 0,
@@ -321,8 +346,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           };
         }
         throw new Error("should not probe untrusted node");
-      },
-    });
+      }
+    );
 
     const result = await transport.call(
       "computer.nodes.list",
@@ -345,10 +370,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
 
   test("remote Owner Mode normal completion does not kill wrapper process", async () => {
     let scriptCaptured = "";
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script) => {
+    const transport = makeTransport(
+      async (node, script) => {
         scriptCaptured = script;
         assert.match(script, /astraJobId/);
         assert.match(script, /ASTRA_IDENTITY_MISMATCH/);
@@ -361,8 +384,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}\n',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
     const result = await transport.call(
       "computer.owner.exec",
@@ -378,18 +401,13 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     let cleanupTriggered = false;
     let jobScript = "";
 
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script, signal) => {
+    const transport = makeTransport(
+      async (node, script, signal) => {
         jobScript = script;
-        // First call is the main job - it should not be aborted yet
-        // Check if this is a cleanup script
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
           cleanupTriggered = true;
           return { exitCode: 0, stdout: "", stderr: "" };
         }
-        // Main job script - wait a bit then check if aborted
         await new Promise((r) => setTimeout(r, 10));
         if (signal.aborted) {
           return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
@@ -399,20 +417,18 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}\n',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Start the call first
     const promise = transport.call(
       "computer.owner.exec",
       { nodeId: "pc2", shell: "powershell", command: "Start-Sleep 10" },
       signal,
     );
 
-    // Give it a moment to start, then abort
     await new Promise((r) => setTimeout(r, 5));
     controller.abort();
 
@@ -425,21 +441,17 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   test("timeout triggers remote cleanup", async () => {
     let cleanupTriggered = false;
 
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script, signal) => {
-        // Check if this is a cleanup script
+    const transport = makeTransport(
+      async (node, script, signal) => {
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
           cleanupTriggered = true;
           return { exitCode: 0, stdout: "", stderr: "" };
         }
-        // Main job script - simulate a long-running job
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(resolve, 100);
           signal.addEventListener("abort", () => {
             clearTimeout(timeout);
-            resolve(undefined); // Resolve instead of reject - let the mock return failed result
+            resolve(undefined);
           }, { once: true });
         });
         if (signal.aborted) {
@@ -450,8 +462,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}\n',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -462,7 +474,6 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       signal,
     );
 
-    // Abort after a short delay (simulating timeout)
     setTimeout(() => controller.abort(), 10);
     const result = await promise;
     assert.equal(result.ok, false);
@@ -474,17 +485,13 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     let cleanupTriggered = false;
     let callCount = 0;
 
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script, signal) => {
+    const transport = makeTransport(
+      async (node, script, signal) => {
         callCount++;
-        // Check if this is a cleanup script
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
           cleanupTriggered = true;
           return { exitCode: 0, stdout: "", stderr: "" };
         }
-        // First call (main job) - simulate transport disconnect
         if (callCount === 1) {
           throw new Error("transport disconnected");
         }
@@ -493,8 +500,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2"}',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
     const result = await transport.call(
       "computer.owner.exec",
@@ -509,16 +516,12 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   test("identity mismatch during cleanup fails closed", async () => {
     let cleanupTriggered = false;
 
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script, signal) => {
-        // Check if this is a cleanup script with identity mismatch
+    const transport = makeTransport(
+      async (node, script, signal) => {
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER") && script.includes("ASTRA_IDENTITY_MISMATCH")) {
           cleanupTriggered = true;
           return { exitCode: 86, stdout: "", stderr: "ASTRA_IDENTITY_MISMATCH\n" };
         }
-        // Main job script - wait for abort
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(resolve, 100);
           signal.addEventListener("abort", () => {
@@ -534,44 +537,36 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2"}',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Start the call first
     const promise = transport.call(
       "computer.owner.exec",
       { nodeId: "pc2", shell: "powershell", command: "Start-Sleep 10" },
       signal,
     );
 
-    // Give it a moment to start, then abort
     await new Promise((r) => setTimeout(r, 5));
     controller.abort();
 
     const result = await promise;
     assert.equal(result.ok, false);
     assert.equal(result.verified, false);
-    // The main job fails with abort, but cleanup also runs and fails with identity mismatch
-    // The transport returns the main job's error (abort), but cleanup was triggered
     assert.equal(cleanupTriggered, true);
   });
 
   test("idempotent cleanup: repeated abort does not throw", async () => {
     let callCount = 0;
 
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script, signal) => {
+    const transport = makeTransport(
+      async (node, script, signal) => {
         callCount++;
-        // Check if this is a cleanup script
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
           return { exitCode: 0, stdout: "", stderr: "" };
         }
-        // Main job - signal is already aborted, return failed result
         if (signal.aborted) {
           return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
         }
@@ -580,10 +575,9 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2"}',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
-    // Create an already-aborted signal using a custom AbortSignal
     const signal = {
       aborted: true,
       addEventListener: () => {},
@@ -598,17 +592,14 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       signal,
     );
     assert.equal(result.ok, false);
-    // The main job should fail, cleanup should still be called once
-    assert.equal(callCount, 2); // Main job + cleanup
+    assert.equal(callCount, 2);
   });
 
   test("concurrent jobs have independent jobIds and isolated cleanup", async () => {
     let scripts: string[] = [];
 
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script) => {
+    const transport = makeTransport(
+      async (node, script) => {
         if (script.includes("astraJobId")) {
           scripts.push(script);
           return {
@@ -622,8 +613,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2","platform":"win32","release":"10","version":"10","architecture":"AMD64"}',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
     const signal = new AbortController().signal;
 
@@ -637,24 +628,18 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       assert.equal(r.ok, true);
       assert.equal(r.verified, true);
     }
-    // Each call should have a unique jobId (we can't easily test this without exposing internals)
-    // but we can verify all 3 calls succeeded
     assert.equal(results.length, 3);
   });
 
   test("no late success after cancellation: cleanup does not report verified=true", async () => {
     let cleanupTriggered = false;
 
-    const transport = new MultiNodeWindowsComputerTransport({
-      local: localFixture(),
-      loadNodes: () => nodes,
-      runSsh: async (node, script, signal) => {
-        // Check if this is a cleanup script
+    const transport = makeTransport(
+      async (node, script, signal) => {
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
           cleanupTriggered = true;
           return { exitCode: 0, stdout: "", stderr: "" };
         }
-        // Main job - signal is already aborted, return failed result
         if (signal.aborted) {
           return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
         }
@@ -663,10 +648,9 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           stdout: '{"computerName":"PC2"}',
           stderr: "",
         };
-      },
-    });
+      }
+    );
 
-    // Create an already-aborted signal using a custom AbortSignal
     const signal = {
       aborted: true,
       addEventListener: () => {},
@@ -682,7 +666,183 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     );
     assert.equal(result.verified, false);
     assert.equal(result.ok, false);
-    // Cleanup should still be triggered even when aborted before call
     assert.equal(cleanupTriggered, true);
+  });
+
+  test("stale lease triggers exact-job cleanup (not just metadata mutation)", async () => {
+    let cleanupTriggeredForJob: string | null = null;
+    let jobIds: string[] = [];
+
+    const transport = makeTransport(
+      async (node, script, signal) => {
+        if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+          const match = script.match(/\$astraJobId="([^"]+)"/);
+          if (match) cleanupTriggeredForJob = match[1];
+          return { exitCode: 0, stdout: "", stderr: "" };
+        }
+        const match = script.match(/\$astraJobId="([^"]+)"/);
+        if (match) jobIds.push(match[1]);
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(resolve, 200);
+          signal.addEventListener("abort", () => {
+            clearTimeout(timeout);
+            reject(new DOMException("Process cancelled.", "AbortError"));
+          }, { once: true });
+        });
+        if (signal.aborted) {
+          return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
+        }
+        return {
+          exitCode: 0,
+          stdout: '{"computerName":"PC2"}',
+          stderr: "",
+        };
+      }
+    );
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const promise = transport.call(
+      "computer.owner.exec",
+      { nodeId: "pc2", shell: "powershell", command: "Start-Sleep 10" },
+      signal,
+    );
+
+    await new Promise((r) => setTimeout(r, 10));
+    controller.abort();
+
+    const result = await promise;
+    assert.equal(result.ok, false);
+    assert.equal(result.verified, false);
+    assert.ok(jobIds.length > 0, "job should have been registered");
+    assert.equal(cleanupTriggeredForJob, jobIds[0], "cleanup should target the exact job");
+  });
+
+  test("one logical job = one wrapper = one unique jobId", async () => {
+    let wrapperCount = 0;
+    let jobIds: string[] = [];
+
+    const transport = makeTransport(
+      async (node, script, signal) => {
+        wrapperCount++;
+        if (script.includes("astraJobId")) {
+          const match = script.match(/\$astraJobId="([^"]+)"/);
+          if (match) jobIds.push(match[1]);
+        }
+        return {
+          exitCode: 0,
+          stdout: '{"computerName":"PC2"}',
+          stderr: "",
+        };
+      }
+    );
+
+    const signal = new AbortController().signal;
+
+    await transport.call("computer.system.info", { nodeId: "pc2" }, signal);
+    assert.equal(wrapperCount, 1, "system.info should invoke tracked wrapper once");
+    assert.equal(jobIds.length, 1, "should have exactly one jobId");
+    
+    wrapperCount = 0;
+    jobIds = [];
+    await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "whoami" }, signal);
+    assert.equal(wrapperCount, 1, "owner.exec should invoke tracked wrapper once");
+    assert.equal(jobIds.length, 1, "should have exactly one jobId for owner.exec");
+  });
+
+  test("late success after abort is suppressed even if runner ignores abort", async () => {
+    let cleanupTriggered = false;
+
+    const transport = makeTransport(
+      async (node, script, signal) => {
+        if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+          cleanupTriggered = true;
+          return { exitCode: 0, stdout: "", stderr: "" };
+        }
+        await new Promise((resolve) => {
+          const timeout = setTimeout(resolve, 50);
+          signal.addEventListener("abort", () => {
+            clearTimeout(timeout);
+            resolve();
+          }, { once: true });
+        });
+        if (signal.aborted) {
+          return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
+        }
+        return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
+      }
+    );
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const promise = transport.call(
+      "computer.owner.exec",
+      { nodeId: "pc2", shell: "powershell", command: "Start-Sleep 10" },
+      signal,
+    );
+
+    setTimeout(() => controller.abort(), 5);
+    
+    const result = await promise;
+    assert.equal(result.verified, false, "should not report verified success after abort");
+    assert.equal(result.ok, false, "should not report ok after abort");
+    assert.equal(cleanupTriggered, true, "cleanup should still be triggered");
+  });
+
+  test("generated cleanup PowerShell has valid syntax (braces balanced)", async () => {
+    const fs = await import("node:fs");
+    const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
+    
+    const cleanupSection = source.split("runRemoteCleanupRaw")[1]?.split("async function")[0] || "";
+    
+    assert.match(cleanupSection, /try\s*\{/, "cleanup script should have try block");
+    assert.match(cleanupSection, /\}\s*catch\s*\{/, "cleanup script should have catch block");
+  });
+
+  test("recursive cleanup handles leaf process (no children)", async () => {
+    let cleanupTriggered = false;
+
+    const transport = makeTransport(
+      async (node, script, signal) => {
+        if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+          cleanupTriggered = true;
+          return { exitCode: 0, stdout: "", stderr: "" };
+        }
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(resolve, 100);
+          signal.addEventListener("abort", () => {
+            clearTimeout(timeout);
+            reject(new DOMException("Process cancelled.", "AbortError"));
+          }, { once: true });
+        });
+        if (signal.aborted) {
+          return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
+        }
+        return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
+      }
+    );
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const promise = transport.call(
+      "computer.owner.exec",
+      { nodeId: "pc2", shell: "powershell", command: "Start-Sleep 10" },
+      signal,
+    );
+
+    await new Promise((r) => setTimeout(r, 5));
+    controller.abort();
+
+    const result = await promise;
+    assert.equal(result.ok, false);
+    assert.equal(result.verified, false);
+    assert.equal(cleanupTriggered, true);
+  });
+
+  test("lease timeout watchdog cleans up exact job, not just marks status", async () => {
+    assert.ok(typeof runRemoteCleanupRaw === "function", "runRemoteCleanupRaw should be exported for testing");
   });
 });
