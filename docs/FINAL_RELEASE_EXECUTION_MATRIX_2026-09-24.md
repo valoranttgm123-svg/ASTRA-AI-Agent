@@ -67,10 +67,13 @@ After this point, begin the **evidence freeze**:
 Canonical: `docs/AUTOMATION_VALIDATION.md`
 
 Need real:
+- deterministic M1-0…M1-8 target sequence from `docs/AUTOMATION_VALIDATION.md`;
 - Level-2/3 approval boundaries;
 - exact occurrence/scope;
 - denial/cancellation;
 - STOP during a real running occurrence;
+- restart/persistence behavior where required;
+- restoration of the owner's original Automation enable/disable state;
 - truthful UI/service status.
 
 ### Gate M2 — Sonor degradation / cancellation
@@ -85,9 +88,11 @@ Already done:
 - Obsidian provenance.
 
 Still need:
-- outage/degradation;
-- active-query cancellation;
-- Diagnostics health/search evidence where separately required.
+- non-destructive/reversible outage/degradation evidence from Test E/E1;
+- active-query cancellation from Test F;
+- post-restore health/search proof;
+- Diagnostics health/search evidence where separately required;
+- truthful BLOCKED when active cancellation cannot be observed because the query completes before cancellation can be exercised.
 
 ### Gate M3 — browser/Humanoid HIGH performance
 Canonical:
