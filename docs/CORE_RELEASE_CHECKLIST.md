@@ -30,6 +30,8 @@ RC status: **PENDING**
 
 ## Phase 19 — Windows ready-to-use release
 
+Follow M5-0…M5-8 in `docs/WINDOWS_RELEASE.md`; install, update, reinstall and bounded-health are separate evidence gates and must not be inferred from one another.
+
 ### Install/start
 
 - [ ] fresh or clean Windows-path validation
@@ -64,6 +66,8 @@ Windows status: **PENDING**
 ---
 
 ## Phase 20 — ASTRA MAX Core Release Gate
+
+Follow M6-0…M6-7 in `docs/CORE_RELEASE_REPORT.md`. Official evidence must belong to one frozen candidate; any build-changing fix requires affected evidence to be recaptured.
 
 ### Repository evidence/report tooling
 
