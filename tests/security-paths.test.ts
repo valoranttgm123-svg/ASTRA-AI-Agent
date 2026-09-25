@@ -76,7 +76,9 @@ after(async () => {
 });
 
 test("Phase 15A resolves only a real registered workspace directory", async () => {
-  assert.equal(normalizePath(await resolveProjectWorkspace(project())), normalizePath(workspace));
+  const resolved = await resolveProjectWorkspace(project());
+  assert.ok(resolved);
+  assert.equal(normalizePath(resolved), normalizePath(workspace));
 
   const missing = project();
   missing.workspace = path.join(root, "missing");
