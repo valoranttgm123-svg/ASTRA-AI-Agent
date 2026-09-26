@@ -15,7 +15,7 @@
 - [ ] Safe service-control evidence, or truthful BLOCKED when no disposable test service exists.
 - [ ] Unreachable-node fail-closed evidence.
 - [ ] Wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS.
-- [ ] Long-running remote STOP/KILL proving the remote work itself terminates — historical target result remains **TESTED FAIL on 2026-09-25**; repository remediation is accepted on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9` with CI #769 SUCCESS, and real target G0-G5 is still pending.
+- [ ] Remote STOP target revalidation — historical target result remains **TESTED FAIL on 2026-09-25**; repository remediation is accepted and frozen on draft PR #244 at exact head `11f01291009a01964f289cff6abe100bf61799b4` with CI #786 / run `36240360640` SUCCESS. G1 normal-completion RETEST is RELEASED but currently BLOCKED / NOT EXECUTED while target access is unavailable; G2 is NOT RELEASED.
 - [ ] One pinned-target multi-step project task end-to-end.
 
 ## Draft preparation while target evidence is pending
@@ -34,7 +34,7 @@
 - [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
 - [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
 
-Current ChatGPT canonical state: **BLOCKED**; substate: **REPO_DONE_TARGET_PENDING / WAITING_FOR_TARGET_PC_G0_G5**. The original remote STOP target observation remains historical **TESTED FAIL**, while the focused repository remediation is accepted on PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9` with CI #769 SUCCESS and all 22 remote STOP tests PASS. OpenCode has no active implementation slice and is waiting for target access. Do not create a competing implementation; the next valid STOP work is real G0-G5 target validation on that exact #244 head.
+Current ChatGPT canonical state: **REPO_DONE_TARGET_PENDING**; substate: **G1_BLOCKED_TARGET_ACCESS_UNAVAILABLE / G2_NOT_RELEASED**. The original remote STOP target observation remains historical **TESTED FAIL**, while the focused repository remediation is accepted and frozen on PR #244 at exact head `11f01291009a01964f289cff6abe100bf61799b4`; CI #786 / run `36240360640` is SUCCESS, remote STOP 22/22 PASS and generated PowerShell structure 5/5 PASS. OpenCode is working only on the target-execution/access slice. Do not create a competing implementation. The next valid STOP work is only exact-head G1 when real target access exists; broad G0 must not be restarted, and G2 must wait for ChatGPT's explicit `G1 PASS / G2 RELEASED`.
 
 ## Recovery
 
@@ -77,7 +77,7 @@ Ongoing invariant: every future meaningful change must preserve these synchroniz
 - [x] Identify the ASTRA hub/local machine: owner confirms PC1 is LOCAL/current hub; PC1 must not be duplicated into the SSH remote registry.
 - [x] Bootstrap only the three verified remote targets into the private registry and pass direct ASTRA marker validation on each.
 - [ ] Real remote administrator context, bounded file rollback, disposable process-control, and safe service-control evidence on selected trusted nodes.
-- [ ] Unknown-node fail-closed is proven; still capture unreachable-node and wrong-identity fail-closed evidence plus long-running remote STOP/KILL G0-G5 target validation on the accepted PR #244 head.
+- [ ] Unknown-node fail-closed is proven; still capture unreachable-node and wrong-identity fail-closed evidence. For PR #244, run only the released exact-head G1 normal-completion retest when target access is available; G2 STOP/KILL remains NOT RELEASED until ChatGPT accepts G1.
 - [ ] One pinned-target multi-step project task end-to-end.
 Completion invariant: do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
 

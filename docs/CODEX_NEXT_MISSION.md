@@ -1,6 +1,6 @@
 # CODEX NEXT MISSION — CURRENT EXECUTION PLAN
 
-Status date: **2026-09-24**
+Status date: **2026-09-26**
 
 This file is the current executable mission. Historical implementation chronology belongs in `docs/ASTRA_WORKLOG.md`, not here.
 
@@ -49,11 +49,11 @@ Current work:
 - safe service-control evidence (or truthful BLOCKED when no disposable service exists);
 - unreachable-node fail-closed evidence;
 - wrong-identity fail-closed evidence;
-- long-running remote STOP/KILL proof that the remote work itself terminates;
+- exact-head G1 normal-completion retest for the remote STOP remediation when real target access is available; G2 STOP/KILL remains gated;
 - one pinned-target multi-step task;
 - remaining M1-M6 gates.
 
-Remote STOP repository remediation is complete on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`; ASTRA CI #769 is SUCCESS and all 22 repository remote-STOP regression tests PASS. Do not rebuild that implementation. The next remote STOP step is functional target-PC G0-G5 on that exact PR head. Treat the earlier target FAIL as historical and do not claim PASS until the remote parent/descendant behavior is re-tested.
+Remote STOP repository remediation is complete and frozen on draft PR #244 at exact head `11f01291009a01964f289cff6abe100bf61799b4`; ASTRA CI #786 / run `36240360640` is SUCCESS, with 491 tests / 487 PASS / 0 FAIL / 4 SKIP, all 22 remote-STOP tests PASS and all 5 generated PowerShell structure regressions PASS. Do not rebuild that implementation. The released next step is only the exact-head G1 normal-completion target retest after the actual target runtime/worktree/build identity is refreshed to this commit. G1 is currently BLOCKED / NOT EXECUTED while real target access is unavailable. G2 is NOT RELEASED and must not start until ChatGPT audits G1 PASS evidence. Treat all target evidence from older candidates as historical only.
 
 For official release evidence, obey `docs/ASTRA_COLLABORATION_PROTOCOL.md` section "Exact-build evidence freeze": choose a final clean commit, install/build it on PC1, freeze `main`, and capture all commit-bound evidence without intervening merges.
 
@@ -124,10 +124,11 @@ The repository implementation and private-node bootstrap are already complete. P
 4. validate safe service control, or record truthful BLOCKED when no disposable test service exists;
 5. validate unreachable-node fail-closed behavior;
 6. validate wrong-identity fail-closed behavior; do not repeat the already-PASS unknown-node check;
-7. prove long-running remote STOP/KILL terminates the remote work itself;
-8. complete one pinned-target multi-step task end-to-end;
-9. continue M1-M6 in canonical order;
-10. when official release capture begins, freeze `main` and keep runtime/evidence/repository on the same final clean commit.
+7. when real target access is available, run only the released G1 normal-completion retest on #244 exact head `11f01291009a01964f289cff6abe100bf61799b4` after minimum exact-build identity refresh; do not restart broad G0;
+8. do not run G2 explicit STOP/KILL until ChatGPT records `G1 PASS / G2 RELEASED`; after that release, execute only G2 and checkpoint before later gates;
+9. complete one pinned-target multi-step task end-to-end when it does not conflict with the active exact-build evidence gate;
+10. continue M1-M6 in canonical order;
+11. when official release capture begins, freeze `main` and keep runtime/evidence/repository on the same final clean commit.
 
 Do not invent replacement aliases/IPs, expose private SSH topology in Git, or rebuild the Computer Agent.
 
