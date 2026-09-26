@@ -874,81 +874,119 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
 });
 
 describe("generated PowerShell structure regression", () => {
+  // Helper to find the matching closing brace of a function
+  function findFunctionEnd(body: string, start: number): number {
+    let braceCount = 0;
+    let inFunction = false;
+    for (let i = start; i < body.length; i++) {
+      const ch = body[i];
+      if (ch === "{") {
+        braceCount++;
+        inFunction = true;
+      } else if (ch === "}" && inFunction) {
+        braceCount--;
+        if (braceCount === 0) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
   test("generated tracked script contains Remove-TrackingArtifacts function", async () => {
     const fs = await import("node:fs");
     const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
 
-  const funcStart = source.indexOf("function buildRemoteScriptWithJobTracking");
-  const funcEnd = source.indexOf("function ", funcStart + 1);
-  const funcBody = source.slice(funcStart, funcEnd);
+    // Find the template literal inside buildRemoteScriptWithJobTracking
+    const funcStart = source.indexOf("function buildRemoteScriptWithJobTracking");
+    const templateStart = source.indexOf("const jobScript = `", funcStart);
+    const templateEnd = source.indexOf("`;", templateStart);
+    const templateBody = source.slice(templateStart, templateEnd);
 
-  assert.ok(funcBody.includes("function Remove-TrackingArtifacts {"), "generated script should contain Remove-TrackingArtifacts function");
-  assert.ok(funcBody.includes("Remove-Item -Path \$astraJobFile"), "Remove-TrackingArtifacts should remove job JSON");
-  assert.ok(funcBody.includes("Remove-Item -Path \$astraPidFile"), "Remove-TrackingArtifacts should remove PID file");
-  assert.ok(!funcBody.includes("Stop-Process"), "Remove-TrackingArtifacts should not contain Stop-Process");
-});
+    // Extract Remove-TrackingArtifacts function specifically
+    const removeStart = templateBody.indexOf("function Remove-TrackingArtifacts {");
+    assert.ok(removeStart !== -1, "generated script should contain Remove-TrackingArtifacts function");
+    const removeEnd = findFunctionEnd(templateBody, removeStart);
+    assert.ok(removeEnd !== -1, "Remove-TrackingArtifacts function should have closing brace");
+    const removeFunc = templateBody.slice(removeStart, removeEnd + 1);
 
-test("generated tracked script finally block calls Remove-TrackingArtifacts not Cleanup-Job", async () => {
-  const fs = await import("node:fs");
-  const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
+    assert.ok(removeFunc.includes("Remove-Item -Path \$astraJobFile"), "Remove-TrackingArtifacts should remove job JSON");
+    assert.ok(removeFunc.includes("Remove-Item -Path \$astraPidFile"), "Remove-TrackingArtifacts should remove PID file");
+    assert.ok(!removeFunc.includes("Stop-Process"), "Remove-TrackingArtifacts should not contain Stop-Process");
+  });
 
-  const funcStart = source.indexOf("function buildRemoteScriptWithJobTracking");
-  const funcEnd = source.indexOf("function ", source.indexOf("function buildRemoteScriptWithJobTracking") + 1);
-  const funcBody = source.slice(funcStart, funcEnd);
+  test("generated tracked script finally block calls Remove-TrackingArtifacts not Cleanup-Job", async () => {
+    const fs = await import("node:fs");
+    const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
 
-  const finallyStart = funcBody.indexOf("} finally {");
-  assert.ok(finallyStart !== -1, "generated script should have finally block");
+    const funcStart = source.indexOf("function buildRemoteScriptWithJobTracking");
+    const templateStart = source.indexOf("const jobScript = `", funcStart);
+    const templateEnd = source.indexOf("`;", templateStart);
+    const templateBody = source.slice(templateStart, templateEnd);
 
-  const finallyEnd = funcBody.indexOf("}", finallyStart + 1);
-  const finallyBlock = funcBody.slice(finallyStart, finallyEnd);
+    const finallyStart = templateBody.indexOf("} finally {");
+    assert.ok(finallyStart !== -1, "generated script should have finally block");
 
-  assert.ok(finallyBlock.includes("Remove-TrackingArtifacts"), "finally block should call Remove-TrackingArtifacts");
-  assert.ok(!finallyBlock.includes("Cleanup-Job"), "finally block should not call Cleanup-Job on normal completion");
-  assert.ok(!finallyBlock.includes("Stop-Process"), "finally block should not contain Stop-Process");
-});
+    // Find the end of the finally block - it ends before the closing ` of the template
+    const finallyEnd = templateBody.indexOf("`", finallyStart);
+    const finallyBlock = templateBody.slice(finallyStart, finallyEnd);
 
-test("Cleanup-Job function still contains process-tree termination for error paths", async () => {
-  const fs = await import("node:fs");
-  const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
+    assert.ok(finallyBlock.includes("Remove-TrackingArtifacts"), "finally block should call Remove-TrackingArtifacts");
+    assert.ok(!finallyBlock.includes("Cleanup-Job"), "finally block should not call Cleanup-Job on normal completion");
+    assert.ok(!finallyBlock.includes("Stop-Process"), "finally block should not contain Stop-Process");
+  });
 
-  const cleanupStart = source.indexOf("function Cleanup-Job");
-  const cleanupEnd = source.indexOf("function ", cleanupStart + 1);
-  const cleanupFunc = source.slice(cleanupStart, cleanupEnd);
+  test("Cleanup-Job function still contains process-tree termination for error paths", async () => {
+    const fs = await import("node:fs");
+    const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
 
-  assert.ok(cleanupFunc.includes("Stop-Process -Id \$p"), "Cleanup-Job should contain Stop-Process for process termination");
-  assert.ok(cleanupFunc.includes("Get-DescendantPids"), "Cleanup-Job should use Get-DescendantPids for process tree");
-  assert.ok(cleanupFunc.includes('Get-CimInstance Win32_Process -Filter "ParentProcessId=$current"'), "Cleanup-Job should use WMI for process tree");
-  assert.ok(cleanupFunc.includes("Remove-Item -Path \$astraJobFile"), "Cleanup-Job should remove job JSON");
-  assert.ok(cleanupFunc.includes("Remove-Item -Path \$astraPidFile"), "Cleanup-Job should remove PID file");
-});
+    const funcStart = source.indexOf("function buildRemoteScriptWithJobTracking");
+    const templateStart = source.indexOf("const jobScript = `", funcStart);
+    const templateEnd = source.indexOf("`;", templateStart);
+    const templateBody = source.slice(templateStart, templateEnd);
 
-test("error path in tracked script calls Cleanup-Job", async () => {
-  const fs = await import("node:fs");
-  const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
+    const cleanupStart = templateBody.indexOf("function Cleanup-Job {");
+    assert.ok(cleanupStart !== -1, "generated script should contain Cleanup-Job function");
+    const cleanupEnd = findFunctionEnd(templateBody, cleanupStart);
+    assert.ok(cleanupEnd !== -1, "Cleanup-Job function should have closing brace");
+    const cleanupFunc = templateBody.slice(cleanupStart, cleanupEnd + 1);
 
-  const funcStart = source.indexOf("function buildRemoteScriptWithJobTracking");
-  const funcEnd = source.indexOf("function ", source.indexOf("function buildRemoteScriptWithJobTracking") + 1);
-  const funcBody = source.slice(funcStart, funcEnd);
+    assert.ok(cleanupFunc.includes("Stop-Process -Id \$p"), "Cleanup-Job should contain Stop-Process for process termination");
+    assert.ok(cleanupFunc.includes("Get-DescendantPids"), "Cleanup-Job should use Get-DescendantPids for process tree");
+    // Get-CimInstance is in Get-DescendantPids, not directly in Cleanup-Job
+    assert.ok(templateBody.includes('Get-CimInstance Win32_Process -Filter "ParentProcessId=$current"'), "Get-DescendantPids should use WMI for process tree");
+    assert.ok(cleanupFunc.includes("Remove-Item -Path \$astraJobFile"), "Cleanup-Job should remove job JSON");
+    assert.ok(cleanupFunc.includes("Remove-Item -Path \$astraPidFile"), "Cleanup-Job should remove PID file");
+  });
 
-  const catchStart = funcBody.indexOf("} catch {");
-  assert.ok(catchStart !== -1, "generated script should have catch block");
+  test("error path in tracked script calls Cleanup-Job", async () => {
+    const fs = await import("node:fs");
+    const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
 
-  const catchEnd = funcBody.indexOf("}", catchStart + 1);
-  const catchBlock = funcBody.slice(catchStart, catchEnd);
+    const funcStart = source.indexOf("function buildRemoteScriptWithJobTracking");
+    const templateStart = source.indexOf("const jobScript = `", funcStart);
+    const templateEnd = source.indexOf("`;", templateStart);
+    const templateBody = source.slice(templateStart, templateEnd);
 
-  assert.ok(catchBlock.includes("Cleanup-Job"), "catch block should call Cleanup-Job on error");
-});
+    const catchStart = templateBody.indexOf("} catch {");
+    assert.ok(catchStart !== -1, "generated script should have catch block");
 
-test("lease watchdog tick uses Cleanup-Job with process termination", async () => {
-  const fs = await import("node:fs");
-  const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
+    const catchEnd = templateBody.indexOf("} finally {", catchStart);
+    const catchBlock = templateBody.slice(catchStart, catchEnd);
 
-  const funcStart = source.indexOf("function _tickLeaseWatchdogOnce");
-  const funcEnd = source.indexOf("function ", funcStart + 1);
-  const funcBody = source.slice(funcStart, funcEnd);
+    assert.ok(catchBlock.includes("Cleanup-Job"), "catch block should call Cleanup-Job on error");
+  });
 
-  assert.ok(funcBody.includes("runRemoteCleanupRaw"), "watchdog tick should call runRemoteCleanupRaw");
-});
+  test("lease watchdog tick uses Cleanup-Job with process termination", async () => {
+    const fs = await import("node:fs");
+    const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
+
+    const funcStart = source.indexOf("function _tickLeaseWatchdogOnce");
+    const funcEnd = source.indexOf("function ", funcStart + 1);
+    const funcBody = source.slice(funcStart, funcEnd);
+
+    assert.ok(funcBody.includes("runRemoteCleanupRaw"), "watchdog tick should call runRemoteCleanupRaw");
+  });
 });
 
 
