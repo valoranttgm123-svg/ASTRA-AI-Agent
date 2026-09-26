@@ -102,6 +102,115 @@ Real execution is still required for:
 - Command Center active render behavior using the main UI evidence probe;
 - Automation panel open render behavior using the main UI evidence probe.
 
+## Deterministic target execution sequence — M3
+
+Run this sequence on one pinned target/browser environment. Record **PASS | FAIL | BLOCKED** per sub-gate. Never fabricate measurements for a state that cannot be physically/technically exercised.
+
+### M3-0 — environment/build pin
+
+Record before measuring:
+- exact repository/runtime commit;
+- clean-tree/build attestation;
+- Windows version;
+- CPU/GPU/RAM;
+- browser/version;
+- Node version;
+- display resolution/DPR;
+- Ollama/model;
+- whether software rendering is detected.
+
+If the runtime/build identity changes during capture, discard the affected evidence.
+
+### M3-1 — runtime/status latency baseline
+
+Run the loopback runtime harness without LLM turns first.
+
+Require:
+- Brain status samples;
+- Automation status/service samples;
+- cold + warm/P50/P95 values;
+- evidence file under `.astra/performance/`;
+- same clean commit before/after capture.
+
+### M3-2 — local Ollama stream latency
+
+When Ollama is healthy, run the harness with bounded `--ollama-turns`.
+
+Require:
+- first SSE/event timing;
+- provider-selected timing where present;
+- final response timing;
+- no response text persisted;
+- same build/commit at start and completion.
+
+If Ollama is unavailable, record **BLOCKED/UNAVAILABLE** rather than inventing latency.
+
+### M3-3 — six required Humanoid HIGH captures
+
+Capture exactly:
+1. IDLE;
+2. LISTENING;
+3. THINKING;
+4. SPEAKING;
+5. Assembly;
+6. Shockwave.
+
+Rules:
+- resolved quality must be HIGH;
+- normal runtime states must be real, not synthetic;
+- LISTENING requires the owner's actual microphone session;
+- SPEAKING requires actual enabled speech output;
+- missing physical-device/state evidence stays BLOCKED;
+- each capture must carry clean start/end runtime provenance.
+
+### M3-4 — main UI captures
+
+Using `/?perf=1` capture:
+- MAIN IDLE;
+- COMMAND CENTER with real ASTRA activity observed;
+- AUTOMATION PANEL while the real panel remains open.
+
+Do not substitute Humanoid-lab captures for these UI paths.
+
+### M3-5 — console / renderer review
+
+Review:
+- browser console outside the capture windows;
+- window errors/unhandled rejections;
+- software-renderer flags;
+- release-blocking WebGL/renderer issues;
+- any recurring warning that indicates a real functional/performance defect.
+
+Record the conclusion without copying sensitive console content into public Git.
+
+### M3-6 — populate measured baseline
+
+Only after the real captures exist:
+- fill the environment table;
+- fill Humanoid/UI measurements;
+- fill runtime latency values;
+- reference private evidence paths/IDs without committing their contents.
+
+### M3-7 — evidence-backed optimization loop
+
+Only when measurements show a concrete bottleneck:
+1. record the before measurement;
+2. identify one bounded cause;
+3. apply one focused fix;
+4. repeat the same measurement on the same class of environment;
+5. compare before/after;
+6. preserve HIGH visual quality first.
+
+Do not create speculative performance work merely because a metric looks imperfect.
+
+### M3-8 — release bundle
+
+After all six required HIGH captures exist on the same clean commit, run:
+
+`npm run release:browser-bundle`
+
+PASS requires the bundle validator to accept every required scenario and provenance check. Individual captures alone do not satisfy the Phase-20 browser/Humanoid gate.
+
 ## Test environment
 
 | Field | Value |

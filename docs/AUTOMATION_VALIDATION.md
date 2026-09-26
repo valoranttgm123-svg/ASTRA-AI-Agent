@@ -97,6 +97,108 @@ Open the ASTRA UI and verify:
 9. for a Level-3 tool action, inspect scope before **APPROVE ONCE**;
 10. trigger **STOP ACTIVE** during a running occurrence and verify cancellation.
 
+## Deterministic target evidence sequence — M1
+
+Use this exact sequence on the target PC after the active Multi-PC defect slice is complete. Record every sub-gate as **PASS | FAIL | BLOCKED**. Do not infer neighboring gates.
+
+### M1-0 — build and starting-state pin
+
+Before enabling or changing Automation:
+
+1. record the exact repository/runtime commit;
+2. require the working tree/build identity required by the active release-evidence rules;
+3. record whether `ASTRA_AUTOMATION_SERVICE_ENABLED` was originally enabled or disabled without exposing secret values;
+4. record current service/API status and queue counts;
+5. plan to restore the original enable/disable state after testing.
+
+### M1-1 — read-only baseline
+
+Run `validate-automation.ps1` without `-RunSafeTick`.
+
+PASS requires:
+- loopback Automation API available;
+- truthful service state;
+- no Level-2+ occurrence in unattended ready queue;
+- no Level-4 definition loaded;
+- no mutation required for the baseline check.
+
+### M1-2 — safe Level-0/1 execution
+
+Using only a disposable read-only definition:
+
+1. create or select one bounded Level-0/1 occurrence;
+2. run one explicit safe tick;
+3. require one durable claim;
+4. require real lifecycle telemetry;
+5. require exactly one completion;
+6. prove a repeated tick does not replay the same claimed occurrence.
+
+### M1-3 — Level-2 waiting/denial boundary
+
+Using a disposable Level-2 definition:
+
+1. make one occurrence due;
+2. require it to appear as waiting approval, never unattended ready;
+3. deny/cancel that exact occurrence;
+4. require no tool side effect;
+5. require truthful denied/cancelled state;
+6. require no automatic retry or silent execution.
+
+### M1-4 — exact Level-2 approval
+
+Using a harmless disposable Level-2 action:
+
+1. approve only the exact due occurrence;
+2. require execution once;
+3. require the approval not to authorize another occurrence;
+4. require no replay after refresh/restart/tick;
+5. record real lifecycle evidence.
+
+If no harmless disposable Level-2 action exists, record **BLOCKED** rather than inventing proof.
+
+### M1-5 — Level-3 scoped approval
+
+Only when a safe configured Level-3 provider/action exists:
+
+1. inspect the exact scope before approval;
+2. use **APPROVE ONCE**;
+3. require one exact scoped execution;
+4. require token/scope not to be persisted into public evidence;
+5. require a second action/occurrence to need a new approval.
+
+If no safe configured Level-3 integration exists, record **BLOCKED: external/configured Level-3 action unavailable**.
+
+### M1-6 — STOP during active occurrence
+
+Use a harmless cancellable occurrence:
+
+1. prove the occurrence is actively running;
+2. invoke **STOP ACTIVE** / global STOP;
+3. require the owned work to settle within its bound;
+4. require no late success/completed event;
+5. require no automatic retry;
+6. require UI, service state and Command Center telemetry to settle truthfully.
+
+### M1-7 — restart/persistence check
+
+When safe and required by the target gate:
+
+1. capture the durable claim/queue state;
+2. restart only the ASTRA-owned local runtime through the approved Windows path;
+3. require already-claimed completed work not to replay;
+4. require waiting-approval work to remain approval-bound;
+5. require service/UI state to match after recovery.
+
+### M1-8 — restore and final check
+
+1. remove disposable definitions/evidence-only state where appropriate;
+2. restore the owner's original Automation enable/disable state;
+3. run the read-only validator again;
+4. require no leftover active disposable occurrence;
+5. record final PASS/FAIL/BLOCKED for each sub-gate.
+
+Target-PC PASS requires the actual target behavior above. Repository CI or unit tests alone do not satisfy M1.
+
 ## Completion terminology
 
 Use these statuses truthfully:

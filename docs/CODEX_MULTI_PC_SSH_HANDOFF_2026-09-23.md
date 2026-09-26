@@ -206,7 +206,7 @@ powershell -ExecutionPolicy Bypass -File .\\scripts\\windows\\validate-owner-mod
 
 Use the actual local ASTRA port if it differs. The script fails closed unless Owner Mode is READY and the direct probe returns verified tool lifecycle evidence without memory/planner/model use.
 
-That repository sequence is now complete through PR #225/#226. Codex must not reimplement the local executor or multi-PC transport. Continue only with physical verification of the owner-reported connected targets, private-registry bootstrap for true remote nodes, and the remaining remote admin/STOP-KILL/multi-step evidence.
+That repository sequence is now complete through PR #225/#226. Later target work also confirmed PC1 as LOCAL and privately registered/marker-validated three remote Windows nodes. Codex must not reimplement the local executor, multi-PC transport, alias verification or registry bootstrap. Continue only with remaining remote admin/file/process/service, unreachable/wrong-identity, STOP/KILL and pinned multi-step evidence.
 
 ## Do not redo completed work
 

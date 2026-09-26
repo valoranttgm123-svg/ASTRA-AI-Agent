@@ -27,6 +27,105 @@ It is conservative by design:
 - the tool never reads evidence outside `.astra/`;
 - generated output stays under `.astra/release/`.
 
+## Deterministic final evidence sequence — M6
+
+M6 begins only after the release candidate is intentionally frozen. Do not mix artifacts from different commits.
+
+### M6-0 — freeze one final candidate
+
+Before official capture:
+1. reconcile/merge all approved repository fixes and documentation required by the freeze policy;
+2. choose one full Git commit as the candidate;
+3. require clean checkout;
+4. install/run that same commit on the target PC;
+5. do not move HEAD or hand-edit evidence during the official capture.
+
+If a release-blocking defect requires code changes, stop M6, fix it, select a new candidate, and recapture affected evidence.
+
+### M6-1 — repository gate
+
+Run:
+
+`npm run release:repo-gate`
+
+Require PASS evidence bound to the frozen commit. A prior green CI run is useful but does not replace current repository-gate evidence.
+
+### M6-2 — target-PC collector
+
+Run the target-PC evidence collector on the same frozen commit.
+
+Require:
+- clean-tree provenance;
+- start/end runtime attestation;
+- exact loopback/runtime identity;
+- every included check PASS with no duplicate names;
+- no stale runtime/build.
+
+Optional performance/preflight collection may be included, but those do not replace their separate real/manual gates.
+
+### M6-3 — bind manual gates to real evidence
+
+Record all six required manual gates using the official recorders:
+
+1. `automation-approval-stop` — M1 evidence;
+2. `sonor-graph-memory` — M2 evidence plus already-validated retrieval/provenance where the recorder contract requires it;
+3. `browser-humanoid-performance` — M3 six-scenario HIGH bundle;
+4. `full-system-approved-actions` — M4 approved-action evidence;
+5. `emergency-stop` — M4 STOP evidence;
+6. `windows-install-update-reinstall` — M5 evidence.
+
+Rules:
+- FAIL remains FAIL;
+- missing execution remains NOT_RUN/BLOCKED;
+- evidence must belong to the frozen commit when the recorder/report contract requires it;
+- do not copy an older PASS across a build-changing fix.
+
+### M6-4 — final context labels
+
+Run the context recorder on the same frozen commit.
+
+Populate only truthful bounded labels:
+- CONNECTED;
+- REQUIRES USER LOGIN;
+- NOT IMPLEMENTED;
+- whether external configuration remains required.
+
+Do not include secrets, private topology, raw notes, credentials or private evidence contents.
+
+### M6-5 — generate report
+
+Run:
+
+`npm run release:core-report`
+
+The generator must consume the actual private evidence set. Do not hand-edit a READY verdict.
+
+### M6-6 — review report consistency
+
+Before owner handoff verify:
+- COMPLETED matches implemented/evidenced work;
+- VERIFIED contains only real verified capabilities;
+- CONNECTED matches live configured integrations;
+- REQUIRES USER LOGIN is explicit;
+- REQUIRES PHYSICAL TEST does not hide an unperformed mandatory gate;
+- NOT IMPLEMENTED is honest;
+- SECURITY/PERFORMANCE/TEST statuses match evidence;
+- release status is one of the allowed values.
+
+Missing/stale/mismatched mandatory evidence means **BLOCKED**.
+
+### M6-7 — durable final checkpoint
+
+Persist only public-safe conclusions in Git:
+- frozen commit;
+- CI/repository-gate result;
+- PASS/FAIL/BLOCKED gate summary;
+- final allowed release status;
+- optional external blockers;
+- exact next roadmap phase.
+
+Keep private artifacts under `.astra/` and never commit them.
+
 ## 1. Run the repository gate
 
 ```powershell
@@ -108,6 +207,7 @@ Allowed release status remains:
 
 - `READY`
 - `READY WITH EXTERNAL CONFIGURATION REQUIRED`
+- `BLOCKED`
 - `BLOCKED`
 
 A nonzero exit code with `BLOCKED` is intentional so automation cannot silently treat an incomplete core release as ready.

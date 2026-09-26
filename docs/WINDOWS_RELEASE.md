@@ -192,6 +192,119 @@ Follow:
 
 The readiness self-check intentionally reports Sonor as unresolved until the real local Sonor structured search API is audited and MEM-X is executed.
 
+## Deterministic target execution sequence — M5
+
+Run this only after the active functional defect gates are closed enough to select a release candidate. Record every sub-gate as **PASS | FAIL | BLOCKED** and preserve private owner state.
+
+### M5-0 — release-candidate and private-state pin
+
+Before any install/update/reinstall mutation:
+
+1. record the exact intended release commit;
+2. require a clean working tree;
+3. record running ASTRA build identity;
+4. privately record existence/hash/size metadata for state that must survive, including applicable `.env.local`, `.astra/` project/automation/config artifacts, without exposing contents;
+5. record current startup-task/shortcut state;
+6. record current loopback listener state.
+
+Do not continue official evidence on a moving commit.
+
+### M5-1 — read-only preflight
+
+Run `preflight-local.ps1`.
+
+Require:
+- supported Node/npm/Git;
+- expected repository metadata;
+- no unsafe non-loopback listener on the ASTRA port;
+- truthful elevation state;
+- private-state presence reported without reading secret values.
+
+A preflight FAIL blocks later mutation until repaired.
+
+### M5-2 — production build/install/start
+
+Use the approved install path for the pinned candidate.
+
+Require:
+- dependency installation/build succeeds;
+- ASTRA-Agent and ASTRA-Ollama tasks are registered with the intended bounded/user context;
+- startup health gate succeeds;
+- ASTRA reports ready only on loopback;
+- Ollama version/model status is truthful;
+- Automation service endpoint responds truthfully;
+- desktop launcher/shortcut resolves to the intended loopback ASTRA URL.
+
+### M5-3 — startup/restart invariants
+
+Using the native read-only task/runtime probes:
+
+1. verify exact scheduled-task identity/principal/path invariants;
+2. stop/restart only ASTRA-owned runtime through approved scripts when required;
+3. require no orphaned wrong-checkout server;
+4. require the expected runtime commit after restart;
+5. require no public/non-loopback listener.
+
+### M5-4 — provider and subsystem truth
+
+Capture truthful target status for:
+- Ollama/model;
+- Codex;
+- Automation;
+- Sonor;
+- any enabled NVIDIA/cloud provider;
+- private runtime directories.
+
+Do not turn NOT_CONFIGURED/OFFLINE/BLOCKED into READY.
+
+### M5-5 — actual update path
+
+PASS requires a real supported transition into the pinned candidate, for example from a known safe ancestor/installed release using the normal fast-forward updater.
+
+Require:
+- tracked local changes block automatic update;
+- update uses fast-forward only;
+- dependencies/build complete;
+- runtime restarts on the intended commit;
+- private owner state survives;
+- read-only self-check passes afterward.
+
+If no legitimate update transition exists in the test environment, record **BLOCKED / NOT EXERCISED**. `-SkipPull` validates rebuild/restart, not the Git fast-forward update behavior.
+
+### M5-6 — reinstall/repair path
+
+On the pinned candidate:
+
+1. record pre-reinstall private-state hashes/metadata;
+2. run the supported reinstall/repair path;
+3. require dependency/build success before destructive startup-registration removal;
+4. require tasks/launcher to be restored;
+5. require runtime/build identity to remain the pinned commit;
+6. require private owner state to survive unchanged where preservation is required;
+7. run the read-only self-check again.
+
+### M5-7 — bounded startup health
+
+Test the bounded startup health gate under the real installed runtime.
+
+Require:
+- readiness succeeds within the documented bound when healthy;
+- a genuine startup failure does not become false READY;
+- timeout/failure leaves a truthful diagnostic state;
+- no unrelated process/service is killed as cleanup.
+
+### M5-8 — final Windows evidence reconciliation
+
+After install/update/reinstall work:
+- re-check clean repository/build identity;
+- re-check loopback-only listeners;
+- re-check startup tasks;
+- compare required private-state preservation metadata;
+- run target-PC evidence collection;
+- record PASS/FAIL/BLOCKED for install, update, reinstall and health separately.
+
+Do not collapse a PASSing install into an assumed update/reinstall PASS.
+
 ## Phase 19 truth status
 
 Repository tooling can be CI-verified.

@@ -1,6 +1,6 @@
 # CODEX NEXT MISSION — CURRENT EXECUTION PLAN
 
-Status date: **2026-09-24**
+Status date: **2026-09-26**
 
 This file is the current executable mission. Historical implementation chronology belongs in `docs/ASTRA_WORKLOG.md`, not here.
 
@@ -36,19 +36,37 @@ That is a complete instruction.
 
 Resume automatically from repository truth. Do not ask the owner to restate the roadmap.
 
-## Audit remediation merged — resume exact-build target evidence
+## Current target checkpoint — PR #239 runtime installed
 
-The 2026-09-24 repository follow-up is complete in PR #233, merge `52135e16f4113460807ff9005a72ba7efc53d911`.
+PR #239 merged as `290164a8787cf895a9c1a32018c700cf8d6ad551`. Codex reported its clean runtime source installed on PC1, self-check and Windows release validator PASS, and a private registry containing three individually reverified remote Windows targets. Direct ASTRA marker checks passed on all three and unknown-node fail-closed passed.
 
-Codex must now:
-- update/install the exact clean current `main` build on the target PC;
-- verify runtime build identity before collecting evidence;
-- resolve/verify the existing SSH aliases without inventing replacements;
-- bootstrap the private node registry;
-- continue PC2-PC4 Owner Mode/admin/file/service/STOP-KILL/multi-step evidence;
-- continue remaining release gates from the canonical order.
+Do not repeat install/bootstrap/marker validation merely because later documentation commits advanced `main`.
 
-Do not rebuild the Computer Agent, SSH transport, or Sonor retrieval/provenance work.
+Current work:
+- remote administrator-context evidence;
+- bounded remote file mutation/readback/rollback evidence;
+- remote process-control evidence;
+- safe service-control evidence (or truthful BLOCKED when no disposable service exists);
+- unreachable-node fail-closed evidence;
+- wrong-identity fail-closed evidence;
+- exact-head G1 normal-completion retest for the remote STOP remediation when real target access is available; G2 STOP/KILL remains gated;
+- one pinned-target multi-step task;
+- remaining M1-M6 gates.
+
+Remote STOP repository remediation is complete and frozen on draft PR #244 at exact head `11f01291009a01964f289cff6abe100bf61799b4`; ASTRA CI #786 / run `36240360640` is SUCCESS, with 491 tests / 487 PASS / 0 FAIL / 4 SKIP, all 22 remote-STOP tests PASS and all 5 generated PowerShell structure regressions PASS. Do not rebuild that implementation. The released next step is only the exact-head G1 normal-completion target retest after the actual target runtime/worktree/build identity is refreshed to this commit. G1 is currently BLOCKED / NOT EXECUTED while real target access is unavailable. G2 is NOT RELEASED and must not start until ChatGPT audits G1 PASS evidence. Treat all target evidence from older candidates as historical only.
+
+For official release evidence, obey `docs/ASTRA_COLLABORATION_PROTOCOL.md` section "Exact-build evidence freeze": choose a final clean commit, install/build it on PC1, freeze `main`, and capture all commit-bound evidence without intervening merges.
+
+## Prepared target/release runbooks — draft PR #241
+
+Use these draft files as execution aids while the PR remains unmerged:
+
+- `docs/MULTI_PC_TARGET_EVIDENCE_RUNBOOK_2026-09-24.md`;
+- `docs/FINAL_RELEASE_EXECUTION_MATRIX_2026-09-24.md`.
+
+The multi-PC runbook gives PASS/FAIL/rollback boundaries for the remaining remote admin/file/process/service, unreachable/wrong-identity, STOP/KILL and pinned multi-step gates.
+
+Do not merge PR #241 merely to make these instructions visible on `main` while commit-bound evidence is active.
 
 ## Shared work ownership rule
 
@@ -98,16 +116,19 @@ Cross-session reconciliation:
 
 ### Active owner-priority override — multi-PC target evidence
 
-The repository implementation for local and multi-PC SSH is already merged. The owner now reports four PC targets connected in Codex, superseding the older name-resolution observation. Finish this real-environment sequence before starting another repository architecture pass:
+The repository implementation and private-node bootstrap are already complete. PC1 is LOCAL; three remote Windows targets are privately registered and direct marker-validated. Finish this real-environment sequence before starting another repository architecture pass:
 
-1. use the owner's current private SSH/Codex aliases from the local runtime; do not commit them;
-2. verify each alias with `ssh -G` and remote `$env:COMPUTERNAME`;
-3. treat PC1 as the confirmed ASTRA hub/local machine and exclude it from the remote registry;
-4. run `scripts/windows/configure-ssh-computer-nodes.ps1` using only verified remote aliases;
-5. restart ASTRA-Agent and run `scripts/windows/validate-multi-pc-owner-mode.ps1`;
-6. validate administrator/file/service execution independently on each verified remote node;
-7. validate wrong/unreachable-node fail-closed behavior and long-running remote STOP/KILL;
-8. complete one pinned-target multi-step task end-to-end.
+1. validate administrator context independently on each selected remote node;
+2. validate bounded file mutation/readback/rollback on each selected remote node;
+3. validate remote process control with a disposable owned process;
+4. validate safe service control, or record truthful BLOCKED when no disposable test service exists;
+5. validate unreachable-node fail-closed behavior;
+6. validate wrong-identity fail-closed behavior; do not repeat the already-PASS unknown-node check;
+7. when real target access is available, run only the released G1 normal-completion retest on #244 exact head `11f01291009a01964f289cff6abe100bf61799b4` after minimum exact-build identity refresh; do not restart broad G0;
+8. do not run G2 explicit STOP/KILL until ChatGPT records `G1 PASS / G2 RELEASED`; after that release, execute only G2 and checkpoint before later gates;
+9. complete one pinned-target multi-step task end-to-end when it does not conflict with the active exact-build evidence gate;
+10. continue M1-M6 in canonical order;
+11. when official release capture begins, freeze `main` and keep runtime/evidence/repository on the same final clean commit.
 
 Do not invent replacement aliases/IPs, expose private SSH topology in Git, or rebuild the Computer Agent.
 
@@ -279,7 +300,7 @@ Build on the audited real Sonor/Graphify/Obsidian system. Do not create a compet
 
 ### Phase 27 — real multi-device transport
 
-PC-to-PC SSH transport is selected and repository-implemented through PR #225/#226. Validate the real PC2-PC4 targets rather than selecting another PC transport. The broader Phase-27 device work still requires actual pairing/authenticated dispatch/result return/revoke evidence, especially for mobile or non-SSH devices. Do not expose the current loopback API directly.
+PC-to-PC SSH transport is selected and repository-implemented through PR #225/#226. PC1 is LOCAL and three remote Windows targets are already privately registered and marker-validated; finish the remaining deep remote evidence instead of selecting another PC transport. The broader Phase-27 device work still requires actual pairing/authenticated dispatch/result return/revoke evidence, especially for mobile or non-SSH devices. Do not expose the current loopback API directly.
 
 ### Phase 29 — real skills/environment devices
 

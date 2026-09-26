@@ -8,9 +8,33 @@
 - [x] Private registry contains only three individually reverified remote Windows targets; PC1 remains LOCAL.
 - [x] Direct ASTRA marker checks passed on all three registered remotes.
 - [x] Unknown-node fail-closed check passed.
-- [ ] Remote administrator/file/service-control evidence on each selected trusted node.
-- [ ] Unreachable/wrong-node fail-closed evidence plus long-running remote STOP/KILL.
+- [x] Real remote STOP/KILL test executed on 2026-09-25 and reproduced a concrete defect: cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive. This is truthful FAIL evidence, not a PASS.
+- [ ] Remote administrator-context evidence on each selected trusted node.
+- [ ] Bounded remote file mutation/readback/rollback evidence.
+- [ ] Remote process-control evidence using an owned disposable process.
+- [ ] Safe service-control evidence, or truthful BLOCKED when no disposable test service exists.
+- [ ] Unreachable-node fail-closed evidence.
+- [ ] Wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS.
+- [ ] Remote STOP target revalidation — historical target result remains **TESTED FAIL on 2026-09-25**; repository remediation is accepted and frozen on draft PR #244 at exact head `11f01291009a01964f289cff6abe100bf61799b4` with CI #786 / run `36240360640` SUCCESS. G1 normal-completion RETEST is RELEASED but currently BLOCKED / NOT EXECUTED while target access is unavailable; G2 is NOT RELEASED.
 - [ ] One pinned-target multi-step project task end-to-end.
+
+## Draft preparation while target evidence is pending
+
+- [x] Deterministic M1–M6 target/release execution sequences prepared to reduce Codex re-planning/token load while preserving runtime ownership.
+
+- [x] Prepare multi-PC target evidence runbook with bounded rollback and fail-closed criteria.
+- [x] Prepare final release execution matrix covering core M1-M6 and extended JARVIS/NVIDIA gates.
+- [x] Prepare non-destructive branch hygiene plan; no branch deletion authorized during target evidence.
+- [x] Prepare public-safe multi-PC evidence result template; private topology/results stay under `.astra/`.
+- [x] Prepare final release freeze checklist.
+- [x] Prepare post-Codex reconciliation checklist.
+- [x] Verify 12 recent merged branch candidates have `ahead_by = 0` against current main; re-check before any future deletion.
+- [x] Audit PR #241 + baseline SSH/config/security files for private alias/IP/key-path/credential leakage: PASS across 22 unique inspected files (18 current PR files + 4 additional baseline files).
+- [x] Audit authoritative draft docs for stale multi-PC/PR #239 status and mark current instructions/snapshots correctly as post-bootstrap or historical/superseded.
+- [x] Prepare exact-build evidence-freeze protocol in draft PR #241.
+- [ ] Merge draft preparation only after the current commit-bound target checkpoint is complete.
+
+Current ChatGPT canonical state: **REPO_DONE_TARGET_PENDING**; substate: **G1_BLOCKED_TARGET_ACCESS_UNAVAILABLE / G2_NOT_RELEASED**. The original remote STOP target observation remains historical **TESTED FAIL**, while the focused repository remediation is accepted and frozen on PR #244 at exact head `11f01291009a01964f289cff6abe100bf61799b4`; CI #786 / run `36240360640` is SUCCESS, remote STOP 22/22 PASS and generated PowerShell structure 5/5 PASS. OpenCode is working only on the target-execution/access slice. Do not create a competing implementation. The next valid STOP work is only exact-head G1 when real target access exists; broad G0 must not be restarted, and G2 must wait for ChatGPT's explicit `G1 PASS / G2 RELEASED`.
 
 ## Recovery
 
@@ -52,8 +76,8 @@ Ongoing invariant: every future meaningful change must preserve these synchroniz
 - [x] Verify the owner-reported connected targets: PC1 is LOCAL and three remote Windows targets were individually reverified; exact aliases remain private.
 - [x] Identify the ASTRA hub/local machine: owner confirms PC1 is LOCAL/current hub; PC1 must not be duplicated into the SSH remote registry.
 - [x] Bootstrap only the three verified remote targets into the private registry and pass direct ASTRA marker validation on each.
-- [ ] Real remote administrator/file/service control evidence on each selected trusted node.
-- [ ] Unknown-node fail-closed is proven; still capture unreachable/wrong-node evidence plus long-running remote STOP/KILL.
+- [ ] Real remote administrator context, bounded file rollback, disposable process-control, and safe service-control evidence on selected trusted nodes.
+- [ ] Unknown-node fail-closed is proven; still capture unreachable-node and wrong-identity fail-closed evidence. For PR #244, run only the released exact-head G1 normal-completion retest when target access is available; G2 STOP/KILL remains NOT RELEASED until ChatGPT accepts G1.
 - [ ] One pinned-target multi-step project task end-to-end.
 Completion invariant: do not mark multi-PC Owner Mode fully complete until all target-only evidence above passes.
 
@@ -124,6 +148,8 @@ Provider health integration:
 - [ ] Scenario J9 evidence.
 
 ## Deferred environment-gated work
+
+- [x] Dependency-aware Phase 21–30 + NVIDIA real-backend execution order prepared in the final execution matrix; this is planning only, not real integration evidence.
 
 - [ ] Phase 21 real always-on voice transport.
 - [ ] Phase 23 real screen/camera pixel transport.

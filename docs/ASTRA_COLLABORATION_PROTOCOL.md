@@ -63,6 +63,50 @@ If the change affects Codex execution order, also update:
 
 A meaningful code/runtime/provider change is not considered properly handed off until these state documents are synchronized.
 
+## 3A. Mandatory checkpoint after every completed work slice
+
+Owner rule: **every completed ASTRA work slice must immediately produce a durable checkpoint before the next work slice begins.**
+
+This applies to both ChatGPT and Codex.
+
+A completed work slice means any of:
+- a PR/branch implementation is finished;
+- a target-PC/runtime validation step reaches PASS/FAIL/BLOCKED;
+- a documentation/release-preparation slice is finished;
+- a bug fix or refinement is merged;
+- a target evidence checkpoint is completed.
+
+The checkpoint must be written to GitHub and must include:
+
+```text
+ACTOR:
+DATE:
+AREA:
+STATE:
+BRANCH/PR:
+HEAD/MERGE COMMIT:
+COMPLETED:
+VALIDATED:
+FAILED:
+BLOCKED:
+NEXT:
+DO NOT REPEAT:
+```
+
+Minimum durable update:
+- update `docs/CURRENT_EXECUTION_POINTER.md`;
+- update `docs/JARVIS_PROGRESS_TRACKER.md`;
+- update `docs/ASTRA_WORKLOG.md`;
+- update the relevant handoff;
+- when the work slice is a meaningful session boundary, create/update a dedicated session checkpoint and make `docs/SESSION_RECOVERY.md` point to it.
+
+Rules:
+- checkpoint **before** starting the next task;
+- do not rely on chat history as the checkpoint;
+- do not mark work DONE until the checkpoint is written;
+- if `main` is frozen for commit-bound evidence, write the checkpoint on the existing active draft branch/PR and do not move `main`;
+- the next session/agent resumes from the newest checkpoint and must not reconstruct completed work from scratch.
+
 ## 4. Required task states
 
 Every active ASTRA task must be treated as one of:
@@ -77,6 +121,17 @@ Every active ASTRA task must be treated as one of:
 Do not convert `BLOCKED` into `NOT_STARTED`.
 Do not convert `REPO_DONE_TARGET_PENDING` into "needs implementation".
 Do not mark `DONE` from code inspection when real target evidence is part of the completion gate.
+
+### Coordination substates for unmerged/frozen work
+
+The canonical `STATE` field must remain one of the required task states above.
+
+When extra precision is needed, use a separate `SUBSTATE` field:
+
+- `STATE: ACTIVE` + `SUBSTATE: COMPLETE_IN_DRAFT` — the draft slice is internally complete/validated but is intentionally not repository-complete because its PR is unmerged.
+- `STATE: BLOCKED` + `SUBSTATE: SATURATED_WAITING_FOR_TARGET_EVIDENCE` — no additional independent safe work remains; continuation depends on named target evidence, a reproduced defect, target-checkpoint completion, or an owner requirement change.
+
+Do not use `COMPLETE_IN_DRAFT` or `SATURATED_WAITING_FOR_TARGET_EVIDENCE` as standalone canonical `STATE` values.
 
 ## 5. Interrupted-session rule
 
@@ -176,6 +231,21 @@ ChatGPT: read Codex changes and continue the next safe repository slice
 
 No agent should redo work merely to claim ownership of it.
 
+## 7B. Exact-build evidence freeze
+
+ASTRA release evidence is commit-bound. When Codex is collecting official target-PC/release evidence that requires the running build commit to match repository `HEAD`, ChatGPT and Codex must treat `main` as temporarily frozen.
+
+During an evidence freeze:
+
+- do not merge unrelated code or documentation into `main`;
+- repository work may continue on clearly named branches/draft PRs only;
+- do not rewrite, force-push or delete the evidence branch/commit;
+- if a required bug fix must merge, the in-progress evidence is invalidated and must be recaptured from the new final clean commit;
+- functional exploratory tests may continue on the installed runtime, but they must not be represented as final current-HEAD release evidence after `main` advances;
+- once the required target evidence checkpoint completes, merge queued non-conflicting repository work, choose the final clean release commit, install/build that commit on PC1, then capture the official commit-bound release evidence without further merges until capture completes.
+
+This rule exists because the release collector/report requires the repository, persisted evidence and running ASTRA build to use the same clean commit at capture start and completion.
+
 ### Improvement acceptance rule
 
 Suggestions from either ChatGPT or Codex should be evaluated on technical merit, evidence and fit with the ASTRA roadmap.
@@ -227,7 +297,8 @@ After a meaningful work slice, record a concise handoff with:
 ACTOR: ChatGPT | Codex
 DATE:
 AREA:
-STATE: DONE | REPO_DONE_TARGET_PENDING | ACTIVE | BLOCKED | SUPERSEDED
+STATE: DONE | REPO_DONE_TARGET_PENDING | ACTIVE | BLOCKED | NOT_STARTED | SUPERSEDED
+SUBSTATE: optional coordination detail such as COMPLETE_IN_DRAFT or SATURATED_WAITING_FOR_TARGET_EVIDENCE
 BRANCH/PR:
 MERGE/COMMIT:
 CHANGED:
@@ -274,7 +345,7 @@ As of this protocol's creation:
 - PC1 Owner Mode and direct no-model execution are complete and target-validated;
 - trusted multi-PC SSH repository transport is merged;
 - safe SSH bootstrap/diagnostic tooling is merged;
-- current remaining multi-PC work is physical PC2-PC4 connectivity/identity/admin/STOP-KILL/multi-step evidence;
+- PC1 is LOCAL; three remote Windows targets are privately registered and marker-validated; current remaining multi-PC work is admin/file/process/service, unreachable/wrong-identity, remote STOP/KILL and pinned multi-step evidence;
 - older instructions that say to rebuild PC1 or select a new PC transport are superseded.
 
 Always re-check live `main` before relying on this historical baseline.

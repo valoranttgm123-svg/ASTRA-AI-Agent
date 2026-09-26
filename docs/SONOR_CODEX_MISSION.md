@@ -526,21 +526,83 @@ Expected:
 - provenance source type `graphify`;
 - relationship/project reference preserved.
 
-## Test E — Sonor unavailable
+## Test E — Sonor unavailable / degradation
 
-Stop Sonor temporarily.
+Do not stop or rebuild the real Sonor service merely to create evidence when a safer reversible ASTRA-side failure injection is available.
+
+### Test E1 — preferred non-destructive outage path
+
+Preferred sequence:
+
+1. record the exact ASTRA runtime commit and current Sonor health/search baseline;
+2. privately back up/hash the relevant ASTRA Sonor configuration without exposing values;
+3. temporarily point only ASTRA's Sonor client at a deliberately unused **loopback** endpoint/port, or use an equivalent reversible local failure injection;
+4. reload/restart only the ASTRA-owned runtime if the configuration mechanism requires it;
+5. issue a project/memory request that would normally consult Sonor;
+6. require Sonor to report unavailable/degraded truthfully;
+7. require ASTRA to remain usable through local/project memory where applicable;
+8. require no fabricated Sonor records/provenance;
+9. restore the original private configuration exactly;
+10. verify the original config hash/state and healthy Sonor search again.
+
+If the implementation cannot support a safe reversible failure injection, use an already naturally unavailable Sonor state or record **BLOCKED**. Do not stop unrelated services or alter Sonor data.
 
 Expected:
-- ASTRA keeps working with local/project memory;
-- Sonor reports unavailable truthfully.
+- ASTRA keeps working with the capabilities that remain real;
+- Sonor reports unavailable/degraded truthfully;
+- no fake READY state;
+- restoration returns health/search to the previously verified baseline.
 
-## Test F — cancellation
+## Test F — active-query cancellation
 
-Cancel during Sonor retrieval.
+Goal: prove an in-flight Sonor-backed ASTRA request settles cleanly when cancelled.
 
-Expected:
-- clean abort;
-- no stuck Brain request.
+Sequence:
+
+1. start a real ASTRA request that is confirmed to have entered Sonor retrieval;
+2. while retrieval is actually active, trigger the normal ASTRA cancellation/STOP path;
+3. require the ASTRA request to settle as cancelled/aborted;
+4. require no later Sonor-backed success to overwrite the terminal cancellation;
+5. require no stuck Brain request;
+6. require Sonor itself to remain healthy after the cancellation;
+7. run one normal post-cancel health/search probe.
+
+If the local Sonor query completes too quickly to produce a truthful active-cancellation observation, record **BLOCKED / NOT REPRODUCIBLE WITH CURRENT LATENCY** rather than fabricating a cancellation PASS.
+
+---
+
+## M2 target result record
+
+Keep raw/private evidence under `.astra/`; only public-safe conclusions belong in Git.
+
+```text
+ASTRA_RUNTIME_COMMIT:
+SONOR_BASELINE_HEALTH: PASS | FAIL
+SONOR_BASELINE_SEARCH: PASS | FAIL
+OUTAGE_FAILURE_INJECTION: LOOPBACK_UNUSED_ENDPOINT | NATURAL_OUTAGE | OTHER_SAFE_REVERSIBLE | BLOCKED
+OUTAGE_DEGRADATION_RESULT: PASS | FAIL | BLOCKED
+LOCAL_PROJECT_MEMORY_STILL_TRUTHFUL:
+NO_FAKE_SONOR_PROVENANCE:
+CONFIG_RESTORED:
+RESTORE_HASH_MATCH:
+POST_RESTORE_HEALTH: PASS | FAIL
+POST_RESTORE_SEARCH: PASS | FAIL
+
+ACTIVE_QUERY_CONFIRMED:
+CANCEL_TRIGGERED:
+ASTRA_REQUEST_SETTLED_CANCELLED:
+NO_LATE_SUCCESS:
+NO_STUCK_BRAIN_REQUEST:
+SONOR_HEALTHY_AFTER_CANCEL:
+POST_CANCEL_SEARCH: PASS | FAIL
+CANCELLATION_RESULT: PASS | FAIL | BLOCKED
+
+DIAGNOSTICS_HEALTH_STATE_TRUTHFUL:
+DIAGNOSTICS_SEARCH_EVIDENCE:
+M2_OVERALL: PASS | FAIL | BLOCKED
+```
+
+Do not commit private graph data, note content, paths, indexes, tokens, raw queries, or raw result payloads.
 
 ---
 

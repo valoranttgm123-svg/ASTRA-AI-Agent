@@ -2,6 +2,16 @@
 
 > Use this when a Codex/ChatGPT session is new, interrupted, truncated, or uncertain about what happened previously.
 
+## Latest active checkpoint — 2026-09-24 15:42 WIB
+
+If draft PR #241 is still open, read:
+
+`docs/SESSION_CHECKPOINT_2026-09-24_1542_WIB.md`
+
+**before implementing anything.** It records the frozen-main rule, completed Codex target work, pending Multi-PC evidence, the prepared #241 draft artifacts, and the exact DO NOT REPEAT scope.
+
+Resume the existing #241 branch rather than creating a replacement.
+
 ## One-line owner command
 
 The repository owner may say only:
@@ -26,7 +36,7 @@ Read in this order:
 8. `docs/JARVIS_PROGRESS_TRACKER.md`;
 9. only then use `docs/ASTRA_WORKLOG.md`, `docs/CODEX_PROGRESS_TRACKER.md`, the latest section of `docs/CODEX_HANDOFF.md`, and task-specific validation/security documents when extra history is needed.
 
-Older checkpoint sections later in this file are chronological history. They must never override live GitHub state, `docs/CURRENT_EXECUTION_POINTER.md`, or the ChatGPT saturation checkpoint.
+Older checkpoint sections later in this file are chronological history. They must never override live GitHub state, an open active PR/branch, `docs/CURRENT_EXECUTION_POINTER.md`, or the latest authoritative session checkpoint.
 
 Then:
 
@@ -35,12 +45,29 @@ Then:
 3. never assume an unmerged branch is complete;
 4. if a previous PR CI failed, inspect the failure before starting a replacement;
 5. if a branch was merged, use the merge result as repository truth and continue from the next unchecked task;
-6. if docs conflict, prefer:
-   - actual `main` code/CI;
-   - then `ASTRA_WORKLOG.md`;
-   - then `CODEX_PROGRESS_TRACKER.md`;
-   - then latest `CODEX_HANDOFF.md`;
-   - then roadmap/older history.
+6. if docs conflict, use this authority order:
+   - live current `main` code and newest CI;
+   - live open PR / active-branch state;
+   - `docs/CURRENT_EXECUTION_POINTER.md`;
+   - the latest authoritative session checkpoint named by this recovery file;
+   - `docs/JARVIS_PROGRESS_TRACKER.md`;
+   - `docs/CODEX_NEXT_MISSION.md`;
+   - latest relevant `ASTRA_WORKLOG.md` / `CODEX_HANDOFF.md` / `CODEX_PROGRESS_TRACKER.md`;
+   - dated continuation notes, roadmap history, old branches and chat transcripts last.
+
+## Mandatory completion-checkpoint rule
+
+The owner requires a durable checkpoint **after every completed work slice**.
+
+Before beginning a new task, confirm the previous completed task has a GitHub checkpoint containing:
+- completed work;
+- validation result;
+- branch/PR/commit;
+- blocker if any;
+- exact next action;
+- DO NOT REPEAT scope.
+
+If that checkpoint is missing, create/update it first. Never use a new chat/session as a reason to redo the completed work.
 
 ## Mandatory collaboration-memory rule — 2026-09-24
 
