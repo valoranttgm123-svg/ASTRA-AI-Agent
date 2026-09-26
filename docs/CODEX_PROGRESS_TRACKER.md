@@ -287,3 +287,23 @@ Repository contracts implemented on `feature/nvidia-max-subsystem-contracts`:
 The canonical real-integration checklist is the single NVA-2 through NVA-9 list above; do not count or execute a duplicate second checklist.
 
 Once this PR merges, repository-only NVIDIA architecture should be considered saturated. Do not invent backend schemas to create more repo churn. Continue real target-PC/core release work when access is available.
+
+## PR #244 Remediation — remote STOP normal-completion tracking residue fix
+
+**Branch**: `fix/remote-job-stop-20260925` | **PR**: #244 | **Commit**: `f1d35a3` | **CI**: #36228868077
+
+- [x] Separated process termination from metadata cleanup in generated PowerShell
+- [x] Added `Remove-TrackingArtifacts` function (metadata-only: removes JSON/PID files, no `Stop-Process`)
+- [x] `Cleanup-Job` retained for error/abort/timeout/lease watchdog (terminates owned process tree + metadata)
+- [x] Normal completion `finally` block calls `Remove-TrackingArtifacts` (metadata only)
+- [x] STOP/abort/timeout/lease watchdog unchanged — still uses `Cleanup-Job` (process tree termination)
+- [x] 5 focused regression tests for generated PowerShell structure — **ALL PASS**
+- [x] Typecheck: PASS
+- [x] Lint: PASS
+- [x] Build: PASS
+- [ ] Target-PC G0-G5 evidence (requires physical PC2-PC4, SSH aliases, Sonor loopback — NOT AVAILABLE)
+- [ ] G1 retest on NEW_HEAD when target-PC available
+- [ ] G2 (ASTRA UI STOP) awaits `G1 PASS / G2 RELEASED` from ChatGPT
+- [ ] ChatGPT audit of exact diff and target evidence
+
+**Status**: `REPO_REMEDIATED_REVIEW_PENDING`

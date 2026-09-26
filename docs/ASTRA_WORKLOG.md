@@ -1068,3 +1068,32 @@ Next responsiveness validation on the target PC:
 3. record time-to-first-token and total latency;
 4. distinguish provider-generation delay from memory/routing/UI delay;
 5. fix only the measured remaining bottleneck.
+
+## 2026-09-26 — PR #244 remediation: separate process termination from metadata cleanup for normal completion
+
+- **Problem**: PR #244 introduced a regression where normal completion incorrectly called `Cleanup-Job`, which terminates the owned process tree (wrapper process). This was wrong — normal completion should only clean up tracking metadata (JSON/PID files), not terminate processes.
+
+- **Fix** (branch `fix/remote-job-stop-20260925`, commit `f1d35a3`):
+  - Added `Remove-TrackingArtifacts` function in generated PowerShell: removes only `$astraJobFile` and `$astraPidFile` (metadata only, no `Stop-Process`).
+  - `Cleanup-Job` retained for error/abort/timeout/lease watchdog paths — terminates owned process tree via `Get-DescendantPids` + `Stop-Process` + WMI `Get-CimInstance Win32_Process -Filter "ParentProcessId=$current"` + metadata cleanup.
+  - Normal completion `finally` block now calls `Remove-TrackingArtifacts` (metadata only).
+  - STOP/abort/timeout/lease watchdog cleanup unchanged — still uses `Cleanup-Job` (terminates process tree).
+  - No source changes outside `lib/tools/computer-nodes.ts` and `tests/remote-stop.test.ts`.
+
+- **Verification**:
+  - All 5 focused regression tests for generated PowerShell structure **PASS** (CI #36228868077):
+    - generated tracked script contains Remove-TrackingArtifacts function
+    - generated tracked script finally block calls Remove-TrackingArtifacts not Cleanup-Job
+    - Cleanup-Job function still contains process-tree termination for error paths
+    - error path in tracked script calls Cleanup-Job
+    - lease watchdog tick uses Cleanup-Job with process termination
+  - Typecheck: PASS
+  - Lint: PASS
+  - Build: PASS
+  - 481/489 tests pass (4 Remote STOP integration tests fail due to missing SSH targets in CI; 7 symlink EPERM pre-existing Windows environment limits; 1 git dirty working tree)
+
+- **State**: `REPO_REMEDIATED_REVIEW_PENDING` — awaiting ChatGPT audit of exact diff and target evidence. G1 retest on NEW_HEAD required when target-PC access available. G2 (ASTRA UI STOP) awaits explicit `G1 PASS / G2 RELEASED` from ChatGPT.
+
+- **OLD_HEAD**: `c66aeb6f266e251a377634d25240421df6bb2040`
+- **NEW_HEAD**: `f1d35a3` (PR #244 fix branch)
+- **CI Run**: #36228868077 (Build + Typecheck + Lint PASS; 4 integration test failures are environment limits)

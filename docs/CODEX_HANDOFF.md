@@ -2616,3 +2616,34 @@ Codex continuation:
 - collect real target-runtime evidence;
 - keep Automation approval/STOP authoritative;
 - do not implement recovery execution until a real recovery-specific Tool Runtime primitive is available.
+
+## 2026-09-26 — PR #244 remediation: remote STOP normal-completion tracking residue fix
+
+ACTOR: Codex
+DATE: 2026-09-26
+AREA: remote job tracking / PowerShell cleanup / process termination separation
+STATE: REPO_REMEDIATED_REVIEW_PENDING
+BRANCH/PR: `fix/remote-job-stop-20260925` / #244
+MERGE/COMMIT: `f1d35a3` (PR head)
+CHANGED:
+- `lib/tools/computer-nodes.ts`: added `Remove-TrackingArtifacts` function (metadata-only cleanup); `Cleanup-Job` retained for error/abort/timeout/lease watchdog (process-tree termination); normal completion `finally` block calls `Remove-TrackingArtifacts`
+- `tests/remote-stop.test.ts`: added 5 focused regression tests for generated PowerShell structure
+VALIDATED:
+- CI #36228868077: Build + Typecheck + Lint PASS
+- 5/5 focused regression tests PASS (generated PowerShell structure verified)
+- 481/489 tests pass (4 Remote STOP integration tests fail due to missing SSH targets in CI; 7 symlink EPERM pre-existing; 1 git dirty)
+- Typecheck: PASS, Lint: PASS, Build: PASS
+BLOCKER / REMAINING:
+- Target-PC G0-G5 evidence required (requires physical PC2-PC4 access, SSH aliases, Sonor loopback) — NOT AVAILABLE in this environment
+- G1 retest on NEW_HEAD required when target-PC access available
+- G2 (ASTRA UI STOP) awaits explicit `G1 PASS / G2 RELEASED` from ChatGPT
+- ChatGPT audit of exact diff and target evidence required
+NEXT:
+- ChatGPT audits exact diff and target evidence
+- ChatGPT explicitly writes `G1 PASS / G2 RELEASED`
+- Execute G1 retest on NEW_HEAD when target-PC available
+- Proceed to G2 after ChatGPT explicit release
+DO NOT REPEAT:
+- Do not rebuild the PR #244 fix — production code is correct
+- Do not claim target-PC validation without real evidence
+- Do not treat CI integration test failures (missing SSH targets) as regressions
