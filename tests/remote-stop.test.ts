@@ -747,6 +747,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
         }
       }
 
+    }
+    
     assert.equal(result.ok, false);
     assert.equal(result.verified, false);
     assert.ok(jobIds.length > 0, "job should have been registered");
@@ -992,7 +994,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       job.lastHeartbeat = new Date(Date.now() - 10000).toISOString(); // 10 seconds ago
 
       // Set very short lease timeout for deterministic test
-      const originalLeaseMs = setTestLeaseTimeoutMs(50);
+      const originalLeaseMs = 30000; // default LEASE_TIMEOUT_MS
+      setTestLeaseTimeoutMs(50);
 
       // Run one deterministic watchdog tick
       await _tickLeaseWatchdogOnce(rawRunner, cleanupRunner);
