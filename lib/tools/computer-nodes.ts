@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 import type {
   AstraComputerCapability,
   AstraComputerStatus,
@@ -67,6 +68,242 @@ const ALLOWED_NODE_KEYS = new Set([
   "sshAlias",
   "expectedComputerName",
 ]);
+
+// Remote job tracking types and constants
+const JOB_ID_PREFIX = "astra-job-";
+const REMOTE_JOB_DIR = "$env:TEMP\\astra-jobs";
+const HEARTBEAT_INTERVAL_MS = 5000;
+const LEASE_TIMEOUT_MS = 30000;
+
+type RemoteJobInfo = {
+  jobId: string;
+  nodeId: string;
+  startedAt: string;
+  localPid: number | null;
+  remotePid: number | null;
+  status: "running" | "completed" | "aborted" | "timeout" | "disconnected";
+  lastHeartbeat: string;
+};
+
+const activeRemoteJobs = new Map<string, RemoteJobInfo>();
+
+function generateJobId(): string {
+  return JOB_ID_PREFIX + randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
+function registerRemoteJob(nodeId: string, localPid: number | null): string {
+  const jobId = generateJobId();
+  activeRemoteJobs.set(jobId, {
+    jobId,
+    nodeId,
+    startedAt: new Date().toISOString(),
+    localPid,
+    remotePid: null,
+    status: "running",
+    lastHeartbeat: new Date().toISOString(),
+  });
+  startLeaseWatchdog();
+  return jobId;
+}
+
+function unregisterRemoteJob(jobId: string): void {
+  activeRemoteJobs.delete(jobId);
+  if (activeRemoteJobs.size === 0) {
+    stopLeaseWatchdog();
+  }
+}
+
+function _getRemoteJob(jobId: string): RemoteJobInfo | undefined {
+  return activeRemoteJobs.get(jobId);
+}
+
+function _setRemotePid(jobId: string, remotePid: number): void {
+  const job = activeRemoteJobs.get(jobId);
+  if (job) {
+    job.remotePid = remotePid;
+  }
+}
+
+// Lease watchdog - monitors stale heartbeats and terminates stale jobs
+let leaseWatchdogInterval: ReturnType<typeof setInterval> | null = null;
+
+// Test seam: configurable lease timeout for tests
+let testLeaseTimeoutMs: number | null = null;
+
+export function setTestLeaseTimeoutMs(ms: number | null): void {
+  testLeaseTimeoutMs = ms;
+}
+
+function getEffectiveLeaseTimeoutMs(): number {
+  return testLeaseTimeoutMs ?? LEASE_TIMEOUT_MS;
+}
+
+// Test seam: injectable clock for deterministic lease testing
+let testClock: { now: () => number } | null = null;
+
+export function setTestClock(clock: { now: () => number } | null): void {
+  testClock = clock;
+}
+
+function getNowMs(): number {
+  return testClock?.now() ?? Date.now();
+}
+
+// Test seam: export activeRemoteJobs for testing
+export function _getActiveRemoteJobs(): Map<string, RemoteJobInfo> {
+  return activeRemoteJobs;
+}
+
+// Test seam: export registerRemoteJob for testing
+export function _registerRemoteJob(nodeId: string, localPid: number | null): string {
+  return registerRemoteJob(nodeId, localPid);
+}
+
+// Test seam: export unregisterRemoteJob for testing
+export function _unregisterRemoteJob(jobId: string): void {
+  unregisterRemoteJob(jobId);
+}
+
+// Test seam: export startLeaseWatchdog for testing
+export function _startLeaseWatchdog(): void {
+  startLeaseWatchdog();
+}
+
+// Test seam: export stopLeaseWatchdog for testing
+export function _stopLeaseWatchdog(): void {
+  stopLeaseWatchdog();
+}
+
+// Test seam: export updateLocalHeartbeatFromRemote for testing
+export async function _updateLocalHeartbeatFromRemote(
+  jobId: string,
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>
+): Promise<boolean> {
+  return updateLocalHeartbeatFromRemote(jobId, rawRunner);
+}
+
+// Internal: Update local heartbeat from remote heartbeat file via SSH (authoritative source)
+async function updateLocalHeartbeatFromRemote(
+  jobId: string,
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>
+): Promise<boolean> {
+  const job = activeRemoteJobs.get(jobId);
+  if (!job || job.status !== "running") return false;
+
+  const nodeConfig = loadComputerNodesConfig();
+  const node = nodeConfig.nodes.find(n => n.id === job.nodeId);
+  if (!node || !node.sshAlias) return false;
+
+  // Read the remote heartbeat file via SSH
+  const script = `
+$astraJobId="${jobId}"
+$astraJobDir="${REMOTE_JOB_DIR}"
+$astraJobFile="$astraJobDir\\$astraJobId.json"
+if (Test-Path $astraJobFile) {
+  $job = Get-Content $astraJobFile -Raw | ConvertFrom-Json
+  $job.heartbeat
+} else {
+  "NOT_FOUND"
+}
+`;
+
+  const runner = rawRunner ?? runWindowsSshPowerShellRaw;
+  try {
+    const result = await runner(node, script, new AbortController().signal);
+    if (result.exitCode === 0 && result.stdout.trim() !== "NOT_FOUND") {
+      const remoteHeartbeat = new Date(result.stdout.trim()).getTime();
+      if (!isNaN(remoteHeartbeat)) {
+        job.lastHeartbeat = new Date(remoteHeartbeat).toISOString();
+        return true;
+      }
+    }
+  } catch {
+    // Ignore errors, fall back to local timer
+  }
+  return false;
+}
+
+function startLeaseWatchdog(): void {
+  if (leaseWatchdogInterval) return;
+  leaseWatchdogInterval = setInterval(async () => {
+    const nowMs = getNowMs();
+    for (const [jobId, job] of activeRemoteJobs.entries()) {
+      if (job.status !== "running") continue;
+
+      // Try to refresh heartbeat from remote (authoritative source)
+      await updateLocalHeartbeatFromRemote(jobId);
+
+      // Check if local heartbeat is stale
+      const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
+      if (nowMs - lastHeartbeat > getEffectiveLeaseTimeoutMs()) {
+        // Stale lease detected - terminate the job via cleanup
+        job.status = "aborted";
+
+        // Get node info for cleanup - we need to look up the node
+        try {
+          const config = loadComputerNodesConfig();
+          const node = config.nodes.find(n => n.id === job.nodeId);
+          if (node && node.sshAlias) {
+            // Invoke cleanup for the stale job using raw SSH
+            await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw).catch(() => {});
+          }
+        } catch {}
+
+        // Unregister after cleanup attempt
+        activeRemoteJobs.delete(jobId);
+      }
+    }
+
+    if (activeRemoteJobs.size === 0) {
+      stopLeaseWatchdog();
+    }
+  }, 5000);
+}
+
+function stopLeaseWatchdog(): void {
+  if (leaseWatchdogInterval) {
+    clearInterval(leaseWatchdogInterval);
+    leaseWatchdogInterval = null;
+  }
+}
+
+// Test seam: deterministic one-shot watchdog tick (no 5s wait)
+export async function _tickLeaseWatchdogOnce(
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>,
+  cleanupRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>
+): Promise<void> {
+  const nowMs = getNowMs();
+  for (const [jobId, job] of activeRemoteJobs.entries()) {
+    if (job.status !== "running") continue;
+
+    // Try to refresh heartbeat from remote (authoritative source)
+    await updateLocalHeartbeatFromRemote(jobId, rawRunner);
+
+    // Check if local heartbeat is stale
+    const lastHeartbeat = new Date(job.lastHeartbeat).getTime();
+    if (nowMs - lastHeartbeat > getEffectiveLeaseTimeoutMs()) {
+      // Stale lease detected - terminate the job via cleanup
+      job.status = "aborted";
+
+      // Get node info for cleanup - we need to look up the node
+      try {
+        const config = loadComputerNodesConfig();
+        const node = config.nodes.find(n => n.id === job.nodeId);
+        if (node && node.sshAlias) {
+          // Invoke cleanup for the stale job using provided runner or raw SSH
+          await runRemoteCleanupRaw(node, jobId, cleanupRunner ?? runWindowsSshPowerShellRaw).catch(() => {});
+        }
+      } catch {}
+
+      // Unregister after cleanup attempt
+      activeRemoteJobs.delete(jobId);
+    }
+  }
+
+  if (activeRemoteJobs.size === 0) {
+    stopLeaseWatchdog();
+  }
+}
 
 function findForbiddenNodeKey(value: unknown): string | null {
   if (Array.isArray(value)) {
@@ -187,7 +424,15 @@ export function parseComputerNodesConfig(raw: string): AstraComputerNodesConfig 
   return { version: 1, nodes };
 }
 
+// Test seam: override config for testing
+let _testConfigOverride: AstraComputerNodesConfig | null = null;
+
+export function _setTestConfig(config: AstraComputerNodesConfig | null): void {
+  _testConfigOverride = config;
+}
+
 export function loadComputerNodesConfig(): AstraComputerNodesConfig {
+  if (_testConfigOverride) return _testConfigOverride;
   try {
     return parseComputerNodesConfig(readFileSync(nodeConfigPath(), "utf8"));
   } catch (error) {
@@ -254,11 +499,120 @@ function remoteShellScript(
   return parts.join("; ");
 }
 
-export async function runWindowsSshPowerShell(
+function buildRemoteScriptWithJobTracking(
+  node: AstraComputerNode,
+  script: string,
+  jobId: string,
+): string {
+  const _encodedScript = encodePowerShell(script);
+  const encodedJobId = powershellLiteralBase64(jobId);
+  const encodedNodeId = powershellLiteralBase64(node.id);
+
+  const jobScript = `
+$astraJobId=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${encodedJobId}'))
+$astraNodeId=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${encodedNodeId}'))
+$astraJobDir="${REMOTE_JOB_DIR}"
+$astraJobFile="$astraJobDir\\$astraJobId.json"
+$astraPidFile="$astraJobDir\\$astraJobId.pid"
+
+if (-not (Test-Path $astraJobDir)) { New-Item -ItemType Directory -Path $astraJobDir -Force | Out-Null }
+
+$jobInfo = @{
+  jobId = $astraJobId
+  nodeId = $astraNodeId
+  startedAt = (Get-Date).ToString("o")
+  localPid = $null
+  remotePid = $PID
+  status = "running"
+  heartbeat = (Get-Date).ToString("o")
+} | ConvertTo-Json -Compress
+$jobInfo | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
+$PID | Out-File -FilePath $astraPidFile -Encoding ASCII -Force
+
+function Update-Heartbeat {
+  if (Test-Path $astraJobFile) {
+    $job = Get-Content $astraJobFile -Raw | ConvertFrom-Json
+    $job.heartbeat = (Get-Date).ToString("o")
+    $job | ConvertTo-Json -Compress | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
+  }
+}
+
+function Get-DescendantPids {
+  param($RootPid)
+  $allPids = @()
+  $queue = @($RootPid)
+  while ($queue.Count -gt 0) {
+    $current = $queue[0]
+    $queue = @($queue | Select-Object -Skip 1)
+    $allPids += $current
+    $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$current" -ErrorAction SilentlyContinue
+    if ($children) {
+      foreach ($child in $children) {
+        $queue += $child.ProcessId
+      }
+    }
+  }
+  return $allPids
+}
+
+function Cleanup-Job {
+  if (Test-Path $astraPidFile) {
+    $pid = Get-Content $astraPidFile -Raw
+    if ($pid -match '^\d+$') {
+      try {
+        $allPids = Get-DescendantPids -RootPid $pid
+        foreach ($p in $allPids) {
+          Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
+        }
+      } catch { }
+    }
+  }
+  if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
+  if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
+}
+
+function Remove-TrackingArtifacts {
+  if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
+  if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
+}
+
+$timer = New-Object System.Timers.Timer
+$timer.Interval = ${HEARTBEAT_INTERVAL_MS}
+$timer.AutoReset = $true
+$timer.Elapsed += { Update-Heartbeat }
+$timer.Start()
+
+try {
+  ${script}
+  $exitCode = $LASTEXITCODE
+  exit $exitCode
+} catch {
+  $exitCode = 1
+  Cleanup-Job
+  exit $exitCode
+} finally {
+  $timer.Stop()
+  $timer.Dispose()
+  if (Test-Path $astraJobFile) {
+    $job = Get-Content $astraJobFile -Raw | ConvertFrom-Json
+    $job.status = "completed"
+    $job.heartbeat = (Get-Date).ToString("o")
+    $job | ConvertTo-Json -Compress | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
+  }
+  # Clean up tracking artifacts after job completion (metadata only, no process termination)
+  Remove-TrackingArtifacts
+}
+`;
+
+  return jobScript;
+}
+
+// Raw/untracked SSH execution primitive - no job tracking, no cleanup wrapper
+async function runWindowsSshPowerShellRaw(
   node: AstraComputerNode,
   script: string,
   signal: AbortSignal,
-) {
+): Promise<AstraProcessResult> {
   if (!node.sshAlias) {
     throw new Error("SSH node has no configured alias.");
   }
@@ -289,6 +643,157 @@ export async function runWindowsSshPowerShell(
   });
 }
 
+// Cleanup using raw SSH (no job tracking, no nested wrappers)
+export async function runRemoteCleanupRaw(
+  node: AstraComputerNode,
+  jobId: string,
+  runner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>,
+): Promise<void> {
+  if (!node.sshAlias) return;
+
+  const cleanupScript = `
+# ASTRA_REMOTE_CLEANUP_MARKER
+$astraJobId="${jobId}"
+$astraNodeId="${node.id}"
+$astraExpectedComputerName="${node.expectedComputerName}"
+$astraJobDir="${REMOTE_JOB_DIR}"
+$astraJobFile="$astraJobDir\\$astraJobId.json"
+$astraPidFile="$astraJobDir\\$astraJobId.pid"
+
+# Identity guard before any cleanup
+$expected = "$astraExpectedComputerName"
+if ($env:COMPUTERNAME -ine $expected) {
+  [Console]::Error.WriteLine('ASTRA_IDENTITY_MISMATCH')
+  exit 86
+}
+
+if (Test-Path $astraPidFile) {
+  $pid = Get-Content $astraPidFile -Raw
+  if ($pid -match '^\d+$') {
+    try {
+      $allPids = @()
+      $queue = @($pid)
+      while ($queue.Count -gt 0) {
+        $current = $queue[0]
+        $queue = @($queue | Select-Object -Skip 1)
+        $allPids += $current
+        $children = Get-CimInstance Win32_Process -Filter "ParentProcessId=$current" -ErrorAction SilentlyContinue
+        if ($children) {
+          foreach ($child in $children) {
+            $queue += $child.ProcessId
+          }
+        }
+      }
+      foreach ($p in $allPids) {
+        Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
+      }
+    } catch { }
+  }
+  if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
+  if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
+}
+`;
+
+  const cleanupRunner = runner ?? runWindowsSshPowerShellRaw;
+
+  await cleanupRunner(node, cleanupScript, new AbortController().signal);
+}
+
+// Legacy cleanup function for compatibility (uses raw SSH)
+async function _runRemoteCleanup(
+  node: AstraComputerNode,
+  jobId: string,
+  _sshRunner?: AstraSshRunner,
+): Promise<void> {
+  await runRemoteCleanupRaw(node, jobId, runWindowsSshPowerShellRaw);
+}
+
+// Single tracking wrapper per logical job
+async function runWindowsSshPowerShellWithCleanup(
+  node: AstraComputerNode,
+  script: string,
+  signal: AbortSignal,
+  sshRunner?: AstraSshRunner,
+  rawRunner?: (node: AstraComputerNode, script: string, signal: AbortSignal) => Promise<AstraProcessResult>,
+): Promise<AstraProcessResult> {
+  if (!node.sshAlias) {
+    throw new Error("SSH node has no configured alias.");
+  }
+
+  const jobId = registerRemoteJob(node.id, null);
+
+  // Build the script with job tracking (heartbeat, cleanup on error)
+  const trackedScript = buildRemoteScriptWithJobTracking(node, script, jobId);
+
+  // Use provided runner for testing, or real SSH execution for production
+  const processPromise = sshRunner
+    ? sshRunner(node, trackedScript, signal)
+    : runBoundedProcess({
+        command: process.platform === "win32" ? "ssh.exe" : "ssh",
+        args: [
+          "-T",
+          "-o",
+          "BatchMode=yes",
+          "-o",
+          "ConnectTimeout=8",
+          "-o",
+          "ConnectionAttempts=1",
+          "-o",
+          "ServerAliveInterval=5",
+          "-o",
+          "ServerAliveCountMax=1",
+          node.sshAlias,
+          "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " +
+            encodePowerShell(trackedScript),
+        ],
+        cwd: process.cwd(),
+        signal,
+      });
+
+  const rawRunnerForCleanup = rawRunner ?? runWindowsSshPowerShellRaw;
+
+  const abortHandler = () => {
+    if (jobId) {
+      runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
+    }
+  };
+
+  signal.addEventListener("abort", abortHandler, { once: true });
+
+  try {
+    const result = await processPromise;
+    signal.removeEventListener("abort", abortHandler);
+
+    // Fail closed: if signal was aborted (even if runner returned success), don't return success
+    if (signal.aborted) {
+      await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
+      unregisterRemoteJob(jobId);
+      return {
+        exitCode: -1,
+        stdout: "",
+        stderr: "Operation aborted before completion.",
+      };
+    }
+
+    // If runner returned non-zero exitCode, trigger cleanup
+    if (result.exitCode !== 0) {
+      await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
+    }
+    unregisterRemoteJob(jobId);
+    return result;
+  } catch (error) {
+    signal.removeEventListener("abort", abortHandler);
+    await runRemoteCleanupRaw(node, jobId, rawRunnerForCleanup).catch(() => {});
+    unregisterRemoteJob(jobId);
+    // Return a failed result instead of throwing
+    return {
+      exitCode: error instanceof DOMException && error.name === "AbortError" ? -1 : 1,
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 function normalizeNodeId(input: unknown) {
   if (!isRecord(input)) return "local";
   const value = safeString(input.nodeId).toLowerCase();
@@ -313,8 +818,7 @@ function remoteFailure(
     return {
       ok: false,
       verified: false,
-      detail:
-        "SSH target identity did not match registered node " + node.id + ".",
+      detail: "SSH target identity did not match registered node " + node.id + ".",
       output: {
         nodeId: node.id,
         transport: "SSH",
@@ -347,6 +851,7 @@ export class MultiNodeWindowsComputerTransport
       local?: AstraComputerTransport;
       loadNodes?: () => AstraComputerNodesConfig;
       runSsh?: AstraSshRunner;
+      rawSsh?: AstraSshRunner;
     } = {},
   ) {}
 
@@ -358,8 +863,20 @@ export class MultiNodeWindowsComputerTransport
     return (this.options.loadNodes ?? loadComputerNodesConfig)().nodes;
   }
 
-  private ssh() {
-    return this.options.runSsh ?? runWindowsSshPowerShell;
+  // Raw SSH runner - no tracking wrapper (for system.info, process.list)
+  private rawSsh(): AstraSshRunner {
+    return this.options.rawSsh ?? this.options.runSsh ?? runWindowsSshPowerShellRaw;
+  }
+
+  // Tracked SSH runner - single tracking wrapper per logical job (for owner.exec)
+  private trackedSsh(): AstraSshRunner {
+    const customRunner = this.options.runSsh ?? this.options.rawSsh;
+    if (customRunner) {
+      return (node: AstraComputerNode, script: string, signal: AbortSignal) =>
+        runWindowsSshPowerShellWithCleanup(node, script, signal, customRunner, this.rawSsh());
+    }
+    return (node: AstraComputerNode, script: string, signal: AbortSignal) =>
+      runWindowsSshPowerShellWithCleanup(node, script, signal, undefined, this.rawSsh());
   }
 
   async status(signal?: AbortSignal): Promise<AstraComputerStatus> {
@@ -399,8 +916,6 @@ export class MultiNodeWindowsComputerTransport
 
     return {
       configured: localStatus.configured || nodes.length > 0,
-      // ASTRA_COMPUTER_ENABLED remains the global kill switch. Merely placing
-      // a private node file on disk must never enable remote execution.
       available: localStatus.available,
       provider: this.provider,
       detail:
@@ -429,7 +944,7 @@ export class MultiNodeWindowsComputerTransport
       "$payload | ConvertTo-Json -Compress",
     ].join("; ");
 
-    const result = await this.ssh()(node, script, signal);
+    const result = await this.rawSsh()(node, script, signal);
     if (result.exitCode !== 0) {
       return remoteFailure(node, result, "SSH system-info probe failed for node " + node.id + ".");
     }
@@ -475,7 +990,7 @@ export class MultiNodeWindowsComputerTransport
       "$items=@(Get-Process | Sort-Object Id | Select-Object -First 250 | ForEach-Object {[pscustomobject]@{imageName=$_.ProcessName;pid=$_.Id;sessionName='';memory=[string]$_.WorkingSet64}})",
       "ConvertTo-Json -InputObject $items -Compress",
     ].join("; ");
-    const result = await this.ssh()(node, script, signal);
+    const result = await this.rawSsh()(node, script, signal);
     if (result.exitCode !== 0) {
       return remoteFailure(node, result, "SSH process-list probe failed for node " + node.id + ".");
     }
@@ -536,11 +1051,10 @@ export class MultiNodeWindowsComputerTransport
     const shell =
       safeString(input.shell).toLowerCase() === "cmd" ? "cmd" : "powershell";
     const cwd = safeString(input.cwd) || undefined;
-    const result = await this.ssh()(
-      node,
-      remoteShellScript(node, shell, command, cwd),
-      signal,
-    );
+    const script = remoteShellScript(node, shell, command, cwd);
+
+    // Use tracked SSH for owner.exec (needs job tracking, heartbeat, cleanup)
+    const result = await this.trackedSsh()(node, script, signal);
 
     if (result.exitCode !== 0) {
       return remoteFailure(
@@ -663,7 +1177,23 @@ export class MultiNodeWindowsComputerTransport
     input: unknown,
     signal: AbortSignal,
   ) {
-    signal.throwIfAborted();
+    try {
+      signal.throwIfAborted();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        // For owner.exec, let the SSH runner handle the abort so cleanup can be triggered
+        if (capability !== "computer.owner.exec") {
+          return {
+            ok: false,
+            verified: false,
+            detail: "Operation was aborted before execution.",
+          };
+        }
+        // For owner.exec, fall through to let SSH runner handle abort and trigger cleanup
+      } else {
+        throw error;
+      }
+    }
 
     const localStatus = await this.local().status(signal);
     if (!localStatus.available) {
