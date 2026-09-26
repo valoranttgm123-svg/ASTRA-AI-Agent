@@ -1,5 +1,17 @@
 # ASTRA DURABLE WORKLOG
 
+## 2026-09-26 — #244 repo accepted; G1 target retest blocked by unavailable target access
+
+- PR #244 is frozen at exact head `11f01291009a01964f289cff6abe100bf61799b4`.
+- ChatGPT accepted the repository remediation as `REPO_DONE_TARGET_PENDING / REMEDIATED_AND_CI_VALIDATED`.
+- Exact ASTRA CI #786 / run `36240360640` is SUCCESS: 491 tests / 487 PASS / 0 FAIL / 4 SKIP; remote STOP 22/22 PASS; generated PowerShell structure 5/5 PASS; Build/Typecheck/Brain lint/dependency audit/diff-check PASS.
+- No production or test change is justified while target access is merely unavailable.
+- G1 normal-completion RETEST is RELEASED for this exact frozen candidate but is currently `BLOCKED / NOT EXECUTED` because the available executor has no real target access.
+- Repo-side HEAD/clean status is not a substitute for actual target runtime/worktree/build identity or target clean-state evidence.
+- G2 is NOT RELEASED. Only after real exact-head G1 evidence is posted and audited by ChatGPT may the state advance to `G1 PASS / G2 RELEASED`.
+- Do not restart broad G0, redo #242/#243, reopen #244, merge, auto-merge, direct-push main, or fabricate target evidence.
+- ChatGPT owns only the non-overlapping PR #241 docs/status reconciliation slice while OpenCode remains blocked on target execution.
+
 ## 2026-09-25 — PR #244 remote STOP repo remediation accepted; G0-G5 target retest pending
 
 - OpenCode completed the focused remote-job / heartbeat / lease remediation on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`.

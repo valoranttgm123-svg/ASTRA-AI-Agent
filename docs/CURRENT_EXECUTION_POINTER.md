@@ -2,16 +2,16 @@
 
 ## Parallel ChatGPT repository status
 
-State: **BLOCKED**
-Substate: **REPO_DONE_TARGET_PENDING / WAITING_FOR_TARGET_PC_G0_G5**
+State: **REPO_DONE_TARGET_PENDING**
+Substate: **G1_BLOCKED_TARGET_ACCESS_UNAVAILABLE / G2_NOT_RELEASED**
 
-Draft PR #241 remains the documentation/coordination surface for the current target phase. Live GitHub state supersedes older literal checkpoint SHAs below. Current `main` remains `c5d89375ef25601132b47da7d1c064df22d2d98f` with ASTRA CI #650 SUCCESS. The focused remote STOP remediation is repository-complete on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`; ASTRA CI #769 is SUCCESS and all 22 remote STOP regression tests PASS. PR #244 is frozen for real target-PC G0-G5 functional validation and must not be merged or rewritten merely because repository CI is green.
+Draft PR #241 remains the documentation/coordination surface for the current target phase. Live GitHub state supersedes older literal checkpoint SHAs below. Current `main` remains `c5d89375ef25601132b47da7d1c064df22d2d98f` with ASTRA CI #650 SUCCESS. The focused remote STOP remediation is repository-complete on draft PR #244 at exact head `11f01291009a01964f289cff6abe100bf61799b4`; ASTRA CI #786 / run `36240360640` is SUCCESS, with 491 tests / 487 PASS / 0 FAIL / 4 SKIP, all 22 remote STOP tests PASS and all 5 generated PowerShell structure regressions PASS. PR #244 is frozen: repository remediation is complete, the exact-head G1 target retest is released but currently BLOCKED because the available executor has no real target access, and G2 is NOT RELEASED.
 
 ## Remote STOP remediation checkpoint — 2026-09-25
 
 Historical target evidence remains **TESTED FAIL** for the original runtime: cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive. That historical FAIL must not be reused as PASS.
 
-Repository remediation is now accepted on PR #244, but repository success is not target proof. The next valid step is G0-G5 on the exact #244 head: build/identity pin, normal long-command completion, explicit STOP, timeout/transport-loss settlement, stale-lease/idempotent cleanup, and concurrent-job isolation. If G0-G5 exposes a concrete defect, reopen only that focused defect; otherwise preserve #244 and move to merge consideration after the target checkpoint.
+Repository remediation is accepted on PR #244, but repository success is not target proof. Broad G0 must not be restarted. The next valid #244 action is only the already-released G1 normal-completion target retest on the exact frozen head, after refreshing the real target runtime/worktree/build identity to that commit. G1 is currently BLOCKED / NOT EXECUTED because target access is unavailable. G2 and later target gates remain NOT RELEASED until ChatGPT audits exact-head G1 PASS evidence. If a target gate exposes a concrete defect, reopen only that focused defect; otherwise preserve #244.
 
 ## Codex token-saving execution preparation — 2026-09-25
 
@@ -68,7 +68,7 @@ Current multi-PC target work:
 4. capture safe service-control evidence, or record truthful BLOCKED if no disposable service exists;
 5. capture unreachable-node fail-closed evidence;
 6. capture wrong-identity fail-closed evidence; unknown-node fail-closed is already PASS and must not be repeated;
-7. re-test long-running remote STOP/KILL on exact PR #244 head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`; the earlier 2026-09-25 FAIL remains historical until G0-G5 produces new target evidence;
+7. run only the released G1 normal-completion retest on exact PR #244 head `11f01291009a01964f289cff6abe100bf61799b4` when real target access is available; G2 remote STOP/KILL remains NOT RELEASED until ChatGPT audits G1 PASS;
 8. complete one pinned-target multi-step task end-to-end;
 9. continue the remaining real release gates.
 

@@ -1,5 +1,43 @@
 # ASTRA Codex Handoff
 
+## 2026-09-26 — current handoff: #244 repo accepted; G1 released but target access unavailable
+
+ACTOR: ChatGPT
+DATE: 2026-09-26
+AREA: Multi-PC remote STOP/KILL target gate
+STATE: REPO_DONE_TARGET_PENDING
+SUBSTATE: G1_BLOCKED_TARGET_ACCESS_UNAVAILABLE / G2_NOT_RELEASED
+BRANCH/PR: `fix/remote-job-stop-20260925` / #244
+HEAD: `11f01291009a01964f289cff6abe100bf61799b4`
+MAIN: `c5d89375ef25601132b47da7d1c064df22d2d98f`
+REPO VALIDATED:
+- ASTRA CI #786 / run `36240360640` SUCCESS;
+- 491 tests / 487 PASS / 0 FAIL / 4 SKIP;
+- remote STOP suite 22/22 PASS;
+- generated PowerShell structure regression 5/5 PASS;
+- Build, Typecheck, Brain lint, dependency audit and PR diff-check PASS;
+- production normal completion uses metadata-only `Remove-TrackingArtifacts`; STOP/error/abort/timeout/lease cleanup retains process-tree `Cleanup-Job`.
+TARGET STATUS:
+- prior target evidence belongs to older candidate(s) and is historical only;
+- G1 RETEST is RELEASED for this exact frozen candidate, but the available executor currently has no real target access;
+- G1 RESULT = BLOCKED / NOT EXECUTED;
+- G2 = NOT RELEASED.
+NEXT:
+- do not restart broad G0;
+- when a real target executor is available, bind the actual target runtime/worktree/build to this exact commit and prove target clean state;
+- run only G1 normal long-command completion through ASTRA Owner Mode;
+- prove tracking while running and no owned process/job JSON/PID residue after normal completion;
+- post public-safe target evidence and STOP for ChatGPT audit;
+- only ChatGPT may advance to `G1 PASS / G2 RELEASED`.
+DO NOT REPEAT:
+- do not change frozen #244 code/tests without a concrete target-proven defect;
+- do not use repository CI as target evidence;
+- do not redo DONE #242/#243 or broad G0;
+- do not start G2, merge, auto-merge, or direct-push main;
+- do not expose private topology, credentials, raw job IDs/PIDs or private paths.
+
+> The 2026-09-25 handoff immediately below is retained as historical chronology and is superseded by this block for current execution.
+
 ## 2026-09-25 — current handoff: PR #244 repo-ready, target G0-G5 required
 
 ACTOR: ChatGPT + OpenCode relay

@@ -158,16 +158,21 @@ PASS:
 
 This is stricter than killing the local `ssh.exe` client.
 
-Current known state (2026-09-25):
-- the first real target test **FAILED** because cancelling the local SSH client left an ASTRA-owned remote parent/descendant alive;
-- the focused remote-job / heartbeat / lease remediation is now repository-complete on draft PR #244 at exact head `0ac4093f8ab5ecf9346dd8053f36822e7ab033f9`;
-- ASTRA CI #769 is SUCCESS on that exact head and the repository remote-STOP regression suite is 22/22 PASS;
-- this is **repository evidence only**: Gate G remains **TARGET PENDING**, not PASS, until G0-G5 prove the real remote parent/descendant behavior on the target PC;
-- keep #244 frozen for functional G0-G5 re-test; if target evidence exposes a concrete defect, repair that defect on the same focused scope and rerun the affected target gate.
+Current known state (2026-09-26):
+- the first real target test on an older candidate **FAILED** because cancelling the local SSH client left ASTRA-owned remote work alive; that evidence remains historical and must not be reused as PASS;
+- the focused remote-job / heartbeat / lease remediation is repository-complete and accepted on draft PR #244 at exact frozen head `11f01291009a01964f289cff6abe100bf61799b4`;
+- ASTRA CI #786 / run `36240360640` is SUCCESS on that exact head; 491 tests / 487 PASS / 0 FAIL / 4 SKIP, remote STOP 22/22 PASS, generated PowerShell structure 5/5 PASS;
+- this is **repository evidence only**, not target proof;
+- broad G0 must not be restarted: the released next action is only G1 normal-completion retest after refreshing actual target runtime/worktree/build identity to the exact frozen head;
+- G1 is currently **BLOCKED / NOT EXECUTED** because the available executor has no real target access;
+- G2 is **NOT RELEASED** until ChatGPT audits exact-head G1 PASS evidence;
+- keep #244 frozen; if a real target gate exposes a concrete defect, repair only that focused defect and rerun the affected gate.
 
 Goal: prove ASTRA STOP terminates the actual remote owned work.
 
 ### G0 — post-fix identity / build pin
+
+Status for the current frozen candidate: **do not restart broad G0**. Before the released G1 retest, perform only the minimum identity refresh needed to prove the actual target runtime/worktree/build matches the exact frozen commit.
 
 Before any re-test:
 1. record the pushed fix commit and target runtime commit;
@@ -177,6 +182,8 @@ Before any re-test:
 
 ### G1 — normal long-command completion
 
+Current release state: **RETEST RELEASED / BLOCKED UNTIL REAL TARGET ACCESS EXISTS**. Do not infer PASS from repository CI or an older candidate.
+
 Prove the fix does not break ordinary completion:
 1. run one harmless bounded long command on the pinned remote;
 2. let it complete normally;
@@ -185,6 +192,8 @@ Prove the fix does not break ordinary completion:
 5. verify no owned-job residue remains.
 
 ### G2 — explicit STOP
+
+Current release state: **NOT RELEASED**. Do not start G2 until ChatGPT has audited exact-head G1 target evidence and explicitly recorded `G1 PASS / G2 RELEASED`.
 
 1. start a harmless long-running Owner Mode command with a unique private marker/job identity;
 2. independently prove the remote parent and at least one descendant/owned child are active when the test deliberately creates descendants;
