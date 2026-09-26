@@ -594,6 +594,8 @@ try {
     $job.heartbeat = (Get-Date).ToString("o")
     $job | ConvertTo-Json -Compress | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
   }
+  # Clean up tracking artifacts after job completion (success or failure)
+  Cleanup-Job
 }
 `;
 
