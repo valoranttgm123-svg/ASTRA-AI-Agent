@@ -686,7 +686,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     let trackedScriptCaptured = "";
 
     const transport = makeTransport(
-      async (node, script) => {
+      async (node, script, signal) => {
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
           // Cleanup script uses literal jobId: $astraJobId="job-id"
           const match = script.match(/\$astraJobId="([^"]+)"/);
@@ -697,12 +697,17 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
         if (script.includes("FromBase64String")) {
           trackedScriptCaptured = script;
         }
-        // Return success for identity check and command execution
-        return {
-          exitCode: 0,
-          stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}',
-          stderr: "",
-        };
+        // Return a promise that waits for abort signal
+        const trackedPromise = new Promise<{ exitCode: number; stdout: string; stderr: string }>((resolve) => {
+          if (signal.aborted) {
+            resolve({ exitCode: -1, stdout: "", stderr: "Process cancelled." });
+          } else {
+            signal.addEventListener("abort", () => {
+              resolve({ exitCode: -1, stdout: "", stderr: "Process cancelled." });
+            }, { once: true });
+          }
+        });
+        return trackedPromise;
       }
     );
 
@@ -746,15 +751,13 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           } catch {}
         }
       }
-
     }
-    
+
     assert.equal(result.ok, false);
     assert.equal(result.verified, false);
     assert.ok(jobIds.length > 0, "job should have been registered");
     assert.equal(cleanupTriggeredForJob, jobIds[0], "cleanup should target the exact job");
   });
-
   test("one logical job = one wrapper = one unique jobId", async () => {
     let wrapperCount = 0;
     let jobIds: string[] = [];
