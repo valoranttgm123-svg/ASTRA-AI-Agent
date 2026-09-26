@@ -17,7 +17,13 @@ import {
   _stopLeaseWatchdog,
   _updateLocalHeartbeatFromRemote,
   _tickLeaseWatchdogOnce,
+  _setTestConfig,
 } from "../lib/tools/computer-nodes";
+
+// Helper to encode jobId the same way production does (Base64 of UTF-8)
+function encodeJobIdForPowerShell(jobId: string): string {
+  return Buffer.from(jobId, "utf8").toString("base64");
+}
 
 function localFixture(): AstraComputerTransport {
   return {
@@ -677,23 +683,21 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
 
   test("stale lease triggers exact-job cleanup (not just metadata mutation)", async () => {
     let cleanupTriggeredForJob: string | null = null;
-    let jobIds: string[] = [];
-    let jobRegistered = false;
-    let scriptCaptured = "";
+    let trackedScriptCaptured = "";
 
     const transport = makeTransport(
       async (node, script) => {
-        scriptCaptured = script;
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+          // Cleanup script uses literal jobId: $astraJobId="job-id"
           const match = script.match(/\$astraJobId="([^"]+)"/);
           if (match) cleanupTriggeredForJob = match[1];
           return { exitCode: 0, stdout: "", stderr: "" };
         }
-        const match = script.match(/\$astraJobId="([^"]+)"/);
-        if (match) {
-          jobIds.push(match[1]);
-          jobRegistered = true;
+        // Tracked script uses Base64 encoded jobId - capture it (flexible match)
+        if (script.includes("FromBase64String")) {
+          trackedScriptCaptured = script;
         }
+        // Return success for identity check and command execution
         return {
           exitCode: 0,
           stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}',
@@ -711,17 +715,38 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       signal,
     );
 
-    const startTime = Date.now();
-    const maxWaitMs = 2000;
-    while (!jobRegistered) {
-      if (Date.now() - startTime > maxWaitMs) {
-        throw new Error("Timeout waiting for job registration");
-      }
-      await new Promise((r) => setTimeout(r, 10));
-    }
+    // Wait a bit for the tracked script to be sent and job to be registered
+    await new Promise((r) => setTimeout(r, 50));
     controller.abort();
 
     const result = await promise;
+
+    // Extract jobId from the captured tracked script (Base64 encoded)
+    // Be very permissive - match any Base64-like string that decodes to a valid jobId
+    let jobIds: string[] = [];
+    // Try to match FromBase64String pattern first
+    let trackedMatch = trackedScriptCaptured.match(/FromBase64String\s*\(\s*['"]([^'"]+)['"]\s*\)/i);
+    if (trackedMatch) {
+      const decoded = Buffer.from(trackedMatch[1], "base64").toString("utf8");
+      if (decoded.startsWith("astra-job-")) {
+        jobIds = [decoded];
+      }
+    }
+    // Fallback: find any Base64 string that decodes to a valid jobId
+    if (jobIds.length === 0) {
+      const base64Matches = trackedScriptCaptured.match(/[A-Za-z0-9+/=]{30,}/g);
+      if (base64Matches) {
+        for (const match of base64Matches) {
+          try {
+            const decoded = Buffer.from(match, "base64").toString("utf8");
+            if (decoded.startsWith("astra-job-")) {
+              jobIds = [decoded];
+              break;
+            }
+          } catch {}
+        }
+      }
+
     assert.equal(result.ok, false);
     assert.equal(result.verified, false);
     assert.ok(jobIds.length > 0, "job should have been registered");
@@ -735,10 +760,8 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     const transport = makeTransport(
       async (node, script) => {
         wrapperCount++;
-        if (script.includes("$astraJobId")) {
-          const match = script.match(/\$astraJobId="([^"]+)"/);
-          if (match) jobIds.push(match[1]);
-        }
+        const match = script.match(/\$astraJobId=\[Text\.Encoding\]::UTF8\.GetString\(\[Convert\]::FromBase64String\('([^']+)'\)\)/);
+        if (match) jobIds.push(Buffer.from(match[1], "base64").toString("utf8"));
         return {
           exitCode: 0,
           stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}',
@@ -876,17 +899,45 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       };
     };
 
-    // First register a job so it exists in activeRemoteJobs
-    const jobId = _registerRemoteJob("pc2", 12345);
-    assert.ok(jobId, "job should be registered");
+    // Provide test config so loadComputerNodesConfig() returns our test node
+    _setTestConfig({
+      version: 1,
+      nodes: [
+        {
+          id: "pc2",
+          label: "Workstation 2",
+          transport: "SSH",
+          trusted: true,
+          sshAlias: "pc2-windows",
+          expectedComputerName: "PC2",
+        },
+      ],
+    });
 
-    const result = await _updateLocalHeartbeatFromRemote(jobId, rawRunner);
+    try {
+      // First register a job so it exists in activeRemoteJobs
+      const jobId = _registerRemoteJob("pc2", 12345);
+      assert.ok(jobId, "job should be registered");
 
-    assert.equal(result, true, "should return true on successful heartbeat read");
-    // Heartbeat refresh uses raw SSH to read job file and return heartbeat value
-    assert.match(readScript, /Get-Content.*astraJobFile/, "should read the job file for heartbeat");
-    assert.match(readScript, /ConvertFrom-Json/, "should parse JSON");
-    assert.match(readScript, /\$job\.heartbeat/, "should read heartbeat field from job object");
+      const initialJob = _getActiveRemoteJobs().get(jobId);
+      const initialHeartbeat = initialJob?.lastHeartbeat;
+
+      const result = await _updateLocalHeartbeatFromRemote(jobId, rawRunner);
+
+      assert.equal(result, true, "should return true on successful heartbeat read");
+      // Heartbeat refresh uses raw SSH to read job file and return heartbeat value
+      assert.match(readScript, /Get-Content.*astraJobFile/, "should read the job file for heartbeat");
+      assert.match(readScript, /ConvertFrom-Json/, "should parse JSON");
+      assert.match(readScript, /\$job\.heartbeat/, "should read heartbeat field from job object");
+
+      // Verify lastHeartbeat was updated
+      const updatedJob = _getActiveRemoteJobs().get(jobId);
+      assert.ok(updatedJob, "job should still exist");
+      assert.notEqual(updatedJob.lastHeartbeat, initialHeartbeat, "lastHeartbeat should be updated to remote value");
+      assert.equal(updatedJob.lastHeartbeat, "2026-01-01T00:00:01.000Z", "lastHeartbeat should match remote heartbeat");
+    } finally {
+      _setTestConfig(null);
+    }
   });
 
   test("stale lease with deterministic tick proves exact-job cleanup and removal", async () => {
@@ -897,6 +948,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     const cleanupRunner = async (node: any, script: string, signal: AbortSignal) => {
       if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
         cleanupCalled = true;
+        // Cleanup script uses literal jobId: $astraJobId="job-id"
         const match = script.match(/\$astraJobId="([^"]+)"/);
         if (match) cleanupTriggeredForJob = match[1];
         return { exitCode: 0, stdout: "", stderr: "" };
@@ -907,35 +959,54 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
       return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
     };
 
-    // Custom raw runner for heartbeat refresh
+    // Custom raw runner for heartbeat refresh - return stale heartbeat
     const rawRunner = async (node: any, script: string, signal: AbortSignal) => {
       // Return a stale heartbeat to trigger cleanup
       return { exitCode: 0, stdout: "2026-01-01T00:00:00.000Z", stderr: "" };
     };
 
-    // Register a job directly with a known PID
-    const registeredJobId = _registerRemoteJob("pc2", 12345);
-    assert.ok(registeredJobId, "job should be registered");
+    // Provide test config so loadComputerNodesConfig() returns our test node
+    _setTestConfig({
+      version: 1,
+      nodes: [
+        {
+          id: "pc2",
+          label: "Workstation 2",
+          transport: "SSH",
+          trusted: true,
+          sshAlias: "pc2-windows",
+          expectedComputerName: "PC2",
+        },
+      ],
+    });
 
-    // Manually set the job's lease to be expired (heartbeat very old)
-    const activeJobs = _getActiveRemoteJobs();
-    const job = activeJobs.get(registeredJobId);
-    assert.ok(job, "job should exist in active jobs");
-    job.lastHeartbeat = new Date(Date.now() - 10000).toISOString(); // 10 seconds ago
+    try {
+      // Register a job directly with a known PID
+      const registeredJobId = _registerRemoteJob("pc2", 12345);
+      assert.ok(registeredJobId, "job should be registered");
 
-    // Set very short lease timeout for deterministic test
-    const originalLeaseMs = setTestLeaseTimeoutMs(50);
+      // Manually set the job's lease to be expired (heartbeat very old)
+      const activeJobs = _getActiveRemoteJobs();
+      const job = activeJobs.get(registeredJobId);
+      assert.ok(job, "job should exist in active jobs");
+      job.lastHeartbeat = new Date(Date.now() - 10000).toISOString(); // 10 seconds ago
 
-    // Run one deterministic watchdog tick
-    await _tickLeaseWatchdogOnce(rawRunner, cleanupRunner);
+      // Set very short lease timeout for deterministic test
+      const originalLeaseMs = setTestLeaseTimeoutMs(50);
 
-    setTestLeaseTimeoutMs(originalLeaseMs);
+      // Run one deterministic watchdog tick
+      await _tickLeaseWatchdogOnce(rawRunner, cleanupRunner);
 
-    // Job should have been cleaned up and removed
-    const activeJobsAfter = _getActiveRemoteJobs();
-    assert.ok(!activeJobsAfter.has(registeredJobId), "job should have been removed after stale lease cleanup");
-    assert.ok(cleanupCalled, "cleanup should have been triggered for expired lease");
-    assert.equal(cleanupTriggeredForJob, registeredJobId, "cleanup should target the exact registered job");
+      setTestLeaseTimeoutMs(originalLeaseMs);
+
+      // Job should have been cleaned up and removed
+      const activeJobsAfter = _getActiveRemoteJobs();
+      assert.ok(!activeJobsAfter.has(registeredJobId), "job should have been removed after stale lease cleanup");
+      assert.ok(cleanupCalled, "cleanup should have been triggered for expired lease");
+      assert.equal(cleanupTriggeredForJob, registeredJobId, "cleanup should target the exact registered job");
+    } finally {
+      _setTestConfig(null);
+    }
   });
 });
 
