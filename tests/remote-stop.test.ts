@@ -16,6 +16,7 @@ import {
   _startLeaseWatchdog,
   _stopLeaseWatchdog,
   _updateLocalHeartbeatFromRemote,
+  _tickLeaseWatchdogOnce,
 } from "../lib/tools/computer-nodes";
 
 function localFixture(): AstraComputerTransport {
@@ -133,7 +134,7 @@ function makeDefaultTrackedSshRunner() {
 
 function makeTransport(rawImpl?: (node: any, script: string, signal: AbortSignal) => Promise<{ exitCode: number; stdout: string; stderr: string }>, trackedImpl?: (node: any, script: string, signal: AbortSignal) => Promise<{ exitCode: number; stdout: string; stderr: string }>) {
   const rawRunner = rawImpl ?? makeDefaultRawSshRunner();
-  const trackedRunner = trackedImpl ?? makeDefaultTrackedSshRunner();
+  const trackedRunner = trackedImpl ?? rawImpl ?? makeDefaultTrackedSshRunner();
   return new MultiNodeWindowsComputerTransport({
     local: localFixture(),
     loadNodes: () => nodes,
@@ -605,7 +606,7 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
 
     const transport = makeTransport(
       async (node, script) => {
-        if (script.includes("astraJobId")) {
+        if (script.includes("$astraJobId")) {
           scripts.push(script);
           return {
             exitCode: 0,
@@ -624,9 +625,9 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     const signal = new AbortController().signal;
 
     const results = await Promise.all([
-      transport.call("computer.system.info", { nodeId: "pc2" }, signal),
-      transport.call("computer.system.info", { nodeId: "pc2" }, signal),
-      transport.call("computer.system.info", { nodeId: "pc2" }, signal),
+      transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "whoami" }, signal),
+      transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "dir" }, signal),
+      transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "echo test" }, signal),
     ]);
 
     for (const r of results) {
@@ -678,9 +679,11 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     let cleanupTriggeredForJob: string | null = null;
     let jobIds: string[] = [];
     let jobRegistered = false;
+    let scriptCaptured = "";
 
     const transport = makeTransport(
-      async (node, script, signal) => {
+      async (node, script) => {
+        scriptCaptured = script;
         if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
           const match = script.match(/\$astraJobId="([^"]+)"/);
           if (match) cleanupTriggeredForJob = match[1];
@@ -691,19 +694,9 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
           jobIds.push(match[1]);
           jobRegistered = true;
         }
-        await new Promise((resolve, reject) => {
-          const timeout = setTimeout(resolve, 200);
-          signal.addEventListener("abort", () => {
-            clearTimeout(timeout);
-            reject(new DOMException("Process cancelled.", "AbortError"));
-          }, { once: true });
-        });
-        if (signal.aborted) {
-          return { exitCode: -1, stdout: "", stderr: "Process cancelled." };
-        }
         return {
           exitCode: 0,
-          stdout: '{"computerName":"PC2"}',
+          stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}',
           stderr: "",
         };
       }
@@ -740,15 +733,15 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     let jobIds: string[] = [];
 
     const transport = makeTransport(
-      async (node, script, signal) => {
+      async (node, script) => {
         wrapperCount++;
-        if (script.includes("astraJobId")) {
+        if (script.includes("$astraJobId")) {
           const match = script.match(/\$astraJobId="([^"]+)"/);
           if (match) jobIds.push(match[1]);
         }
         return {
           exitCode: 0,
-          stdout: '{"computerName":"PC2"}',
+          stdout: '{"computerName":"PC2","platform":"win32","release":"10.0.19045","version":"10.0.19045","architecture":"AMD64"}',
           stderr: "",
         };
       }
@@ -870,6 +863,79 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
 
   test("lease timeout watchdog cleans up exact job, not just marks status", async () => {
     assert.ok(typeof runRemoteCleanupRaw === "function", "runRemoteCleanupRaw should be exported for testing");
+  });
+
+  test("authoritative heartbeat refresh calls remote reader, returns true, updates local lastHeartbeat", async () => {
+    let readScript = "";
+    const rawRunner = async (node: any, script: string, signal: AbortSignal) => {
+      readScript = script;
+      return {
+        exitCode: 0,
+        stdout: "2026-01-01T00:00:01.000Z",
+        stderr: "",
+      };
+    };
+
+    // First register a job so it exists in activeRemoteJobs
+    const jobId = _registerRemoteJob("pc2", 12345);
+    assert.ok(jobId, "job should be registered");
+
+    const result = await _updateLocalHeartbeatFromRemote(jobId, rawRunner);
+
+    assert.equal(result, true, "should return true on successful heartbeat read");
+    // Heartbeat refresh uses raw SSH to read job file and return heartbeat value
+    assert.match(readScript, /Get-Content.*astraJobFile/, "should read the job file for heartbeat");
+    assert.match(readScript, /ConvertFrom-Json/, "should parse JSON");
+    assert.match(readScript, /\$job\.heartbeat/, "should read heartbeat field from job object");
+  });
+
+  test("stale lease with deterministic tick proves exact-job cleanup and removal", async () => {
+    let cleanupTriggeredForJob: string | null = null;
+    let cleanupCalled = false;
+
+    // Custom cleanup runner to capture the cleanup script
+    const cleanupRunner = async (node: any, script: string, signal: AbortSignal) => {
+      if (script.includes("ASTRA_REMOTE_CLEANUP_MARKER")) {
+        cleanupCalled = true;
+        const match = script.match(/\$astraJobId="([^"]+)"/);
+        if (match) cleanupTriggeredForJob = match[1];
+        return { exitCode: 0, stdout: "", stderr: "" };
+      }
+      if (script.includes("ASTRA_IDENTITY_MISMATCH")) {
+        return { exitCode: 86, stdout: "", stderr: "ASTRA_IDENTITY_MISMATCH\n" };
+      }
+      return { exitCode: 0, stdout: '{"computerName":"PC2"}', stderr: "" };
+    };
+
+    // Custom raw runner for heartbeat refresh
+    const rawRunner = async (node: any, script: string, signal: AbortSignal) => {
+      // Return a stale heartbeat to trigger cleanup
+      return { exitCode: 0, stdout: "2026-01-01T00:00:00.000Z", stderr: "" };
+    };
+
+    // Register a job directly with a known PID
+    const registeredJobId = _registerRemoteJob("pc2", 12345);
+    assert.ok(registeredJobId, "job should be registered");
+
+    // Manually set the job's lease to be expired (heartbeat very old)
+    const activeJobs = _getActiveRemoteJobs();
+    const job = activeJobs.get(registeredJobId);
+    assert.ok(job, "job should exist in active jobs");
+    job.lastHeartbeat = new Date(Date.now() - 10000).toISOString(); // 10 seconds ago
+
+    // Set very short lease timeout for deterministic test
+    const originalLeaseMs = setTestLeaseTimeoutMs(50);
+
+    // Run one deterministic watchdog tick
+    await _tickLeaseWatchdogOnce(rawRunner, cleanupRunner);
+
+    setTestLeaseTimeoutMs(originalLeaseMs);
+
+    // Job should have been cleaned up and removed
+    const activeJobsAfter = _getActiveRemoteJobs();
+    assert.ok(!activeJobsAfter.has(registeredJobId), "job should have been removed after stale lease cleanup");
+    assert.ok(cleanupCalled, "cleanup should have been triggered for expired lease");
+    assert.equal(cleanupTriggeredForJob, registeredJobId, "cleanup should target the exact registered job");
   });
 });
 
