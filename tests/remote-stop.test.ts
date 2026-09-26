@@ -780,7 +780,6 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "whoami" }, signal);
     assert.equal(wrapperCount, 1, "owner.exec should invoke tracked wrapper once");
     assert.equal(jobIds.length, 1, "should have exactly one jobId");
-    
     wrapperCount = 0;
     jobIds = [];
     await transport.call("computer.owner.exec", { nodeId: "pc2", shell: "powershell", command: "dir" }, signal);
@@ -821,7 +820,6 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
     );
 
     setTimeout(() => controller.abort(), 5);
-    
     const result = await promise;
     assert.equal(result.verified, false, "should not report verified success after abort");
     assert.equal(result.ok, false, "should not report ok after abort");
@@ -831,18 +829,15 @@ describe("Remote STOP / remote-job / heartbeat / lease / cleanup", () => {
   test("generated cleanup PowerShell has valid syntax (braces balanced)", async () => {
     const fs = await import("node:fs");
     const source = fs.readFileSync("lib/tools/computer-nodes.ts", "utf8");
-    
     const cleanupFuncStart = source.indexOf("export async function runRemoteCleanupRaw");
     const cleanupFuncEnd = source.indexOf("export async function", cleanupFuncStart + 1);
     const cleanupFunc = source.slice(cleanupFuncStart, cleanupFuncEnd);
-    
     const templateStart = cleanupFunc.indexOf("`");
     const templateEnd = cleanupFunc.indexOf("`", templateStart + 1);
     if (templateStart === -1 || templateEnd === -1) {
       throw new Error("Could not find PowerShell template literal in runRemoteCleanupRaw");
     }
     const cleanupScript = cleanupFunc.slice(templateStart + 1, templateEnd);
-    
     const openBraces = (cleanupScript.match(/{/g) || []).length;
     const closeBraces = (cleanupScript.match(/}/g) || []).length;
     assert.equal(openBraces, closeBraces, "cleanup script braces should be balanced");
@@ -1131,7 +1126,3 @@ describe("generated PowerShell structure regression", () => {
     assert.ok(funcBody.includes("runRemoteCleanupRaw"), "watchdog tick should call runRemoteCleanupRaw");
   });
 });
-
-
-
-
