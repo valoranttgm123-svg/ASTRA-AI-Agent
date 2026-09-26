@@ -571,6 +571,11 @@ function Cleanup-Job {
   if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
 }
 
+function Remove-TrackingArtifacts {
+  if (Test-Path $astraJobFile) { Remove-Item -Path $astraJobFile -Force -ErrorAction SilentlyContinue }
+  if (Test-Path $astraPidFile) { Remove-Item -Path $astraPidFile -Force -ErrorAction SilentlyContinue }
+}
+
 $timer = New-Object System.Timers.Timer
 $timer.Interval = ${HEARTBEAT_INTERVAL_MS}
 $timer.AutoReset = $true
@@ -594,8 +599,8 @@ try {
     $job.heartbeat = (Get-Date).ToString("o")
     $job | ConvertTo-Json -Compress | Out-File -FilePath $astraJobFile -Encoding UTF8 -Force
   }
-  # Clean up tracking artifacts after job completion (success or failure)
-  Cleanup-Job
+  # Clean up tracking artifacts after job completion (metadata only, no process termination)
+  Remove-TrackingArtifacts
 }
 `;
 
